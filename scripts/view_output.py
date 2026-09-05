@@ -1,75 +1,63 @@
 import argparse
+import sys
 from pathlib import Path
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.panel import Panel
-from rich.table import Table
 
-console = Console()
+def process_file(
+    file_path: Path, 
+    export_html: bool = False, 
+    export_svg: bool = False
+) -> None:
+    if not file_path.is_file():
+        console = Console()
+        console.print(f"[bold red]Error:[/bold red] File not found: [yellow]{file_path}[/yellow]")
+        sys.exit(1)
 
-def get_outputs_dir() -> Path:
-    outputs_dir = Path(__file__).parent.parent / "outputs"
-    outputs_dir.mkdir(parents=True, exist_ok=True)
-    return outputs_dir
+    # Read markdown content
+    content = file_path.read_text(encoding="utf-8")
+    md = Markdown(content)
 
-def list_output_files():
-    outputs_dir = get_outputs_dir()
-    files = sorted([f for f in outputs_dir.glob("*.md") if f.name != ".gitkeep"], reverse=True)
-    return files
+    # Enable recording on the console instance
+    console = Console(record=True)
+    
+    # Render markdown to terminal
+    console.print(md)
 
-def render_file(file_path: Path):
-    if not file_path.exists():
-        console.print(f"[bold red]Error:[/bold red] File not found at {file_path}")
-        return
+    # Export to HTML if requested
+    if export_html:
+        html_path = file_path.with_suffix(".html")
+        console.save_html(str(html_path))
+        console.print(f"\n[bold green]✓[/bold green] Saved HTML export to: [cyan]{html_path}[/cyan]")
 
-    with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
+    # Export to SVG if requested
+    if export_svg:
+        svg_path = file_path.with_suffix(".svg")
+        console.save_svg(str(svg_path), title=f"OOTK Analysis - {file_path.name}")
+        console.print(f"[bold green]✓[/bold green] Saved SVG export to: [cyan]{svg_path}[/cyan]")
 
-    console.clear()
-    console.print(Panel(f"[bold green]OOTK REPORT VIEWER[/bold green]\n[yellow]File:[/yellow] {file_path.name}", expand=False))
-    console.print(Markdown(content))
-    console.print("\n")
+def main():
+    parser = argparse.ArgumentParser(
+        description="Render OOTK Markdown output files in terminal with optional HTML/SVG exports."
+    )
+    parser.add_argument(
+        "filepath", 
+        type=str, 
+        help="Path to the Markdown file in outputs/"
+    )
+    parser.add_argument(
+        "--html", 
+        action="store_true", 
+        help="Export rendered output as an HTML file alongside the Markdown file"
+    )
+    parser.add_argument(
+        "--svg", 
+        action="store_true", 
+        help="Export rendered output as an SVG terminal image alongside the Markdown file"
+    )
 
-def interactive_menu():
-    files = list_output_files()
-
-    if not files:
-        console.print("[yellow]No saved reports found in outputs/ directory.[/yellow]")
-        console.print("[dim]Run an analysis first using scripts/execute.py[/dim]")
-        return
-
-    table = Table(title="Saved OOTK Analysis Reports", show_header=True, header_style="bold cyan")
-    table.add_column("Index", style="dim", width=6)
-    table.add_column("Filename", style="bold white")
-    table.add_column("Size (KB)", justify="right")
-
-    for idx, file_path in enumerate(files, start=1):
-        size_kb = f"{file_path.stat().st_size / 1024:.1f}"
-        table.add_column if False else None
-        table.add_row(str(idx), file_path.name, size_kb)
-
-    console.print(table)
-
-    try:
-        choice = console.input("\n[bold yellow]Enter index number to view (or 'q' to quit): [/bold yellow]").strip()
-        if choice.lower() == 'q':
-            return
-        
-        idx = int(choice)
-        if 1 <= idx <= len(files):
-            render_file(files[idx - 1])
-        else:
-            console.print("[bold red]Invalid selection index.[/bold red]")
-    except ValueError:
-        console.print("[bold red]Invalid input. Please enter a valid number.[/bold red]")
+    args = parser.parse_args()
+    process_file(Path(args.filepath), export_html=args.html, export_svg=args.svg)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="View saved OOTK reports with Rich terminal rendering.")
-    parser.add_argument("--file", type=str, default="", help="Specific file name in outputs/ to view directly")
-    args = parser.parse_args()
-
-    if args.file:
-        target_path = get_outputs_dir() / args.file
-        render_file(target_path)
-    else:
-        interactive_menu()
+    main()
