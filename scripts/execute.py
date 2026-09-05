@@ -1,7 +1,9 @@
 import os
+import time
 import argparse
 from pathlib import Path
 from google import genai
+from google.genai.errors import ServerError, ClientError
 
 def run_ootk(operation_file: str, topic: str, seed: str, significator: str = ""):
     prompt_path = Path(__file__).parent.parent / "prompts" / operation_file
@@ -19,16 +21,31 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "")
     full_prompt = system_instruction + execution_block
 
     client = genai.Client()
-    print(f"Executing {operation_file} via Gemini 3.6 Flash...")
+    model_name = "gemini-3.6-flash"
+    print(f"Executing {operation_file} via {model_name}...")
     
-    response = client.models.generate_content(
-        model="gemini-3.6-flash",
-        contents=full_prompt,
-        config={"temperature": 0.0}
-    )
+    max_retries = 3
+    delay = 5
     
-    print("\n=== OOTK ENGINE OUTPUT ===\n")
-    print(response.text)
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=full_prompt,
+                config={"temperature": 0.0}
+            )
+            print("\n=== OOTK ENGINE OUTPUT ===\n")
+            print(response.text)
+            return
+        except (ServerError, ClientError) as e:
+            if "503" in str(e) or "429" in str(e):
+                print(f"Server busy or rate limited (Attempt {attempt}/{max_retries}). Retrying in {delay} seconds...")
+                time.sleep(delay)
+                delay *= 2
+            else:
+                raise e
+
+    print("Error: Could not complete request due to high server demand. Please try again in a few minutes.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run OOTK Thoth Engine via Gemini API")
