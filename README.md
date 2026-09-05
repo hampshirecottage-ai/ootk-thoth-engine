@@ -1,14 +1,13 @@
-# OOTK Thoth Engine
+# OOTK Thoth Vector & PRNG Engine
 
-A deterministic, rule-based algorithmic framework for executing Opening of the Key (OOTK) Thoth Tarot vector analysis.
+A deterministic, rule-based algorithmic framework for executing Opening of the Key (OOTK) Thoth Tarot vector analysis driven by a seed-based PRNG Fisher-Yates shuffle.
 
 ## Features
-- Eliminates intuitive/speculative LLM output.
-- Enforces strict suit nomenclature (Disks) and elemental weighting.
-- Provides structured JSON data output.
+- **Deterministic Shuffling:** Uses an LCG PRNG paired with the Fisher-Yates algorithm for reproducible card dealing.
+- **Elemental Dignity Matrix:** Calculates vector interactions across Fire, Water, Air, and Earth.
+- **Strict Nomenclature:** Enforces standard Thoth suit nomenclature (Disks) and explicit output schemas.
 
 ## Usage
-Run the main script:
+Run the unified pipeline:
 ```bash
 python3 ootk_engine.py
-
