@@ -1,5 +1,4 @@
 import argparse
-import json
 from pathlib import Path
 
 def load_prompt_template():
@@ -27,5 +26,4 @@ if __name__ == "__main__":
     parser.add_argument("--operation", type=str, default="Operation 1", help="OOTK Operation (1 to 5)")
     
     args = parser.parse_args()
-    compiled_prompt = format_execution_block(args.topic, args.seed, args.operation)
-    print(compiled_prompt)
+    print(format_execution_block(args.topic, args.seed, args.operation))
