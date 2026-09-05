@@ -1,4 +1,6 @@
 # OOTK Thoth Vector Engine
+![OOTK Architecture Diagram](assets/social.jpeg)
+
 
 > A deterministic, non-conversational LLM system protocol for executing Opening of the Key (OOTK) Hermetic Tarot operations, Elemental Dignity calculations, and quantitative vector analysis using Aleister Crowley’s Thoth Tarot framework.
 
