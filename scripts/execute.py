@@ -19,10 +19,10 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "")
     full_prompt = system_instruction + execution_block
 
     client = genai.Client()
-    print(f"Executing {operation_file} via Gemini 3.1 Pro...")
+    print(f"Executing {operation_file} via Gemini 2.5 Flash...")
     
     response = client.models.generate_content(
-        model="gemini-3.1-pro-preview",
+        model="gemini-2.5-flash",
         contents=full_prompt,
         config={"temperature": 0.0}
     )
