@@ -1,0 +1,16 @@
+{
+  "system_name": "OOTK Deterministic Vector Engine",
+  "version": "1.0.0",
+  "suits": {
+    "Wands": {"element": "Fire", "weight": 1.0},
+    "Cups": {"element": "Water", "weight": 0.75},
+    "Swords": {"element": "Air", "weight": 0.50},
+    "Disks": {"element": "Earth", "weight": 0.25}
+  },
+  "elemental_relationships": {
+    "Fire": {"Fire": 1.0, "Air": 0.5, "Water": -1.0, "Earth": -0.5},
+    "Water": {"Water": 1.0, "Earth": 0.5, "Fire": -1.0, "Air": -0.5},
+    "Air": {"Air": 1.0, "Fire": 0.5, "Earth": -1.0, "Water": -0.5},
+    "Earth": {"Earth": 1.0, "Water": 0.5, "Air": -1.0, "Fire": -0.5}
+  }
+}
