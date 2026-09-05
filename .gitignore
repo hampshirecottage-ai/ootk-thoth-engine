@@ -1,0 +1,4 @@
+# Ignore generated analysis outputs
+outputs/*
+# Do not ignore .gitkeep so the directory remains tracked
+!outputs/.gitkeep
