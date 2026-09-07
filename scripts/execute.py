@@ -1,83 +1,97 @@
 import os
+import re
 import time
+import random
 import argparse
 from pathlib import Path
 from google import genai
-from google.genai.errors import ServerError, ClientError
+from google.genai import types
+from google.genai.errors import APIError
 from rich.console import Console
-from rich.markdown import Markdown
-from rich.panel import Panel
 
 console = Console()
 
-def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "", save_file: bool = True):
+def clean_terminal_text(text: str) -> str:
+    """Strips LaTeX environments and converts operators to clean terminal text."""
+    if not text:
+        return ""
+    # Remove LaTeX math environments
+    cleaned = re.sub(r'\\begin\{[a-zA-Z]+\}', '', text)
+    cleaned = re.sub(r'\\end\{[a-zA-Z]+\}', '', cleaned)
+    
+    # Clean standard LaTeX commands and math formatting
+    cleaned = cleaned.replace(r'\times', '*').replace(r'\mathbf', '')
+    cleaned = cleaned.replace(r'\sum', 'SUM').replace(r'\cdot', '*')
+    cleaned = cleaned.replace('$$', '').replace('$', '')
+    cleaned = cleaned.replace('{', '').replace('}', '').replace('\\', '')
+    
+    return cleaned
+
+def run_ootk(operation_file: str, topic: str, seed: str, significator: str = ""):
     prompt_path = Path(__file__).parent.parent / "prompts" / operation_file
     if not prompt_path.exists():
         console.print(f"[bold red]Error:[/bold red] Could not find prompt file at {prompt_path}")
         return
 
     with open(prompt_path, "r", encoding="utf-8") as f:
-        system_instruction = f.read()
+        system_instruction_content = f.read()
 
-    execution_block = f"\n\n[RUNTIME PARAMETER EXECUTION BLOCK]\n* Target Topic: {topic}\n* PRNG Seed: {seed}"
+    # Runtime parameters passed as the primary user prompt
+    user_prompt = f"[RUNTIME PARAMETER EXECUTION BLOCK]\n* Target Topic: {topic}\n* PRNG Seed: {seed}"
     if significator:
-        execution_block += f"\n* Significator Card: {significator}"
-    
-    full_prompt = system_instruction + execution_block
+        user_prompt += f"\n* Significator Card: {significator}"
 
     client = genai.Client()
-    model_name = "gemini-3.6-flash"
     
-    console.print(f"\n[bold cyan]Executing {operation_file} via {model_name}...[/bold cyan]\n")
+    # Model resilience setup with automatic fallback endpoint
+    primary_model = "gemini-3.8-flash"
+    fallback_model = "gemini-3.1-flash-lite"
     
-    max_retries = 3
-    delay = 5
+    max_retries = 4
+    base_delay = 3
+
+    console.print(f"[bold cyan]Executing {operation_file} via {primary_model}...[/bold cyan]")
     
     for attempt in range(1, max_retries + 1):
+        # Switch to secondary model on later retries if primary is congested
+        current_model = primary_model if attempt <= 2 else fallback_model
+        
         try:
             response = client.models.generate_content(
-                model=model_name,
-                contents=full_prompt,
-                config={"temperature": 0.0}
+                model=current_model,
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_instruction_content,
+                    temperature=0.0
+                )
             )
             
-            console.print(Panel(f"[bold green]OOTK ENGINE ANALYSIS RESULT[/bold green]\n[yellow]Topic:[/yellow] {topic} | [yellow]Seed:[/yellow] {seed}", expand=False))
-            
-            md = Markdown(response.text)
-            console.print(md)
+            console.print("\n[bold green]=== OOTK ENGINE OUTPUT ===[/bold green]\n")
+            cleaned_output = clean_terminal_text(response.text)
+            console.print(cleaned_output)
 
-            if save_file:
-                # Ensure outputs directory exists (parents=True handles missing parent folders)
-                output_dir = Path(__file__).parent.parent / "outputs"
-                output_dir.mkdir(parents=True, exist_ok=True)
-                
-                clean_op = operation_file.replace(".md", "")
-                filename = f"{clean_op}_seed_{seed}.md"
-                file_path = output_dir / filename
-                
-                with open(file_path, "w", encoding="utf-8") as out_f:
-                    out_f.write(response.text)
-                
-                console.print(f"\n[dim]Report saved to: {file_path}[/dim]\n")
-                
             return response.text
 
-        except (ServerError, ClientError) as e:
-            if "503" in str(e) or "429" in str(e):
-                console.print(f"[yellow]Server busy or rate limited (Attempt {attempt}/{max_retries}). Retrying in {delay}s...[/yellow]")
-                time.sleep(delay)
-                delay *= 2
+        except APIError as e:
+            status_code = getattr(e, "code", None)
+            if status_code in [429, 503] or "429" in str(e) or "503" in str(e):
+                # Backoff delay with randomized jitter to break server collisions
+                sleep_time = (base_delay * (2 ** (attempt - 1))) + random.uniform(0.5, 2.0)
+                console.print(
+                    f"[yellow]Server busy or rate limited on {current_model} (Attempt {attempt}/{max_retries}). "
+                    f"Retrying in {sleep_time:.1f}s...[/yellow]"
+                )
+                time.sleep(sleep_time)
             else:
+                console.print(f"[bold red]API Error ({status_code}):[/bold red] {e}")
                 raise e
 
-    console.print("[bold red]Error:[/bold red] Request timed out due to high server demand.")
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run OOTK Thoth Engine via Gemini API with Rich terminal formatting")
-    parser.add_argument("--file", type=str, default="ootk_thoth_vector_engine.md", help="Prompt file in prompts/")
-    parser.add_argument("--topic", type=str, required=True, help="Target topic for calculation")
-    parser.add_argument("--seed", type=str, required=True, help="PRNG Seed value")
-    parser.add_argument("--significator", type=str, default="", help="Optional Significator card")
+    parser = argparse.ArgumentParser(description="Run OOTK Thoth Engine via Gemini API")
+    parser.add_argument("--file", type=str, default="ootk_thoth_vector_engine.md")
+    parser.add_argument("--topic", type=str, required=True)
+    parser.add_argument("--seed", type=str, required=True)
+    parser.add_argument("--significator", type=str, default="")
     
     args = parser.parse_args()
     run_ootk(args.file, args.topic, args.seed, args.significator)
