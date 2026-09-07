@@ -4,11 +4,14 @@ import time
 import random
 import argparse
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
 from rich.console import Console
+from rich.panel import Panel
+from rich.markdown import Markdown
 
 # Try importing markdown for HTML generation
 try:
@@ -18,49 +21,96 @@ except ImportError:
 
 console = Console()
 
-# GitHub-Dark / Esoteric Theme CSS Template
+# Modern GitHub-Dark / Esoteric Theme CSS Template
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OOTK Engine Output - {title}</title>
-<!-- MathJax for rendering LaTeX math formulas cleanly -->
-<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<!-- MathJax Configuration for explicit inline and block math rendering -->
+<script>
+MathJax = {{
+  tex: {{
+    inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+    displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']],
+    processEscapes: true
+  }},
+  options: {{
+    ignoreHtmlClass: 'tex2jax_ignore',
+    processHtmlClass: 'tex2jax_process'
+  }}
+}};
+</script>
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 <style>
+  :root {{
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --border-color: #30363d;
+    --text-primary: #c9d1d9;
+    --text-heading: #f0f6fc;
+    --accent-blue: #58a6ff;
+    --accent-purple: #bc8cff;
+    --accent-cyan: #39c5cf;
+    --accent-gold: #d2a8ff;
+  }}
   body {{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #0d1117;
-    color: #c9d1d9;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     margin: 0 auto;
-    padding: 30px 20px;
-    max-width: 850px;
-    line-height: 1.6;
+    padding: 40px 20px;
+    max-width: 900px;
+    line-height: 1.65;
   }}
-  h1, h2, h3 {{ color: #f0f6fc; margin-top: 1.8em; border-bottom: 1px solid #21262d; padding-bottom: 6px; }}
-  h1 {{ color: #58a6ff; font-size: 1.8em; border-bottom: 2px solid #30363d; }}
-  h2 {{ color: #79c0ff; font-size: 1.3em; }}
-  h3 {{ color: #d2a8ff; font-size: 1.1em; }}
-  code {{ font-family: "SFMono-Regular", Consolas, monospace; background: #161b22; padding: 3px 6px; border-radius: 4px; color: #79c0ff; }}
-  pre {{ background: #161b22; border: 1px solid #30363d; padding: 14px; border-radius: 6px; overflow-x: auto; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
-  th, td {{ padding: 10px 12px; border: 1px solid #30363d; text-align: left; }}
-  th {{ background-color: #161b22; color: #f0f6fc; }}
-  tr:nth-child(even) {{ background-color: rgba(22, 27, 34, 0.5); }}
-  blockquote {{ border-left: 4px solid #58a6ff; margin: 0; padding-left: 16px; color: #8b949e; background: rgba(56, 139, 253, 0.05); }}
   .header-meta {{
-    border-bottom: 2px solid #30363d;
-    padding-bottom: 12px;
-    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 16px;
+    margin-bottom: 30px;
+    background: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }}
+  .header-meta h1 {{
+    color: var(--accent-blue);
+    margin: 0 0 10px 0;
+    font-size: 1.8em;
+    border: none;
+    padding: 0;
+  }}
+  .meta-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    font-size: 0.9em;
     color: #8b949e;
   }}
+  .meta-item strong {{ color: var(--text-heading); }}
+  h1, h2, h3 {{ color: var(--text-heading); margin-top: 1.8em; border-bottom: 1px solid #21262d; padding-bottom: 8px; }}
+  h2 {{ color: var(--accent-blue); font-size: 1.4em; }}
+  h3 {{ color: var(--accent-purple); font-size: 1.15em; }}
+  code {{ font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; background: var(--bg-secondary); padding: 3px 6px; border-radius: 4px; color: var(--accent-cyan); font-size: 0.9em; }}
+  pre {{ background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 0.9em; }}
+  table {{ width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 0.95em; }}
+  th, td {{ padding: 12px 14px; border: 1px solid var(--border-color); text-align: left; }}
+  th {{ background-color: var(--bg-secondary); color: var(--text-heading); font-weight: 600; }}
+  tr:nth-child(even) {{ background-color: rgba(22, 27, 34, 0.6); }}
+  tr:hover {{ background-color: rgba(56, 139, 253, 0.08); }}
+  blockquote {{ border-left: 4px solid var(--accent-blue); margin: 20px 0; padding: 10px 18px; color: #8b949e; background: rgba(56, 139, 253, 0.05); border-radius: 0 6px 6px 0; }}
+  .mjx-chtml {{ font-size: 105% !important; padding: 2px 0; }}
 </style>
 </head>
-<body>
+<body class="tex2jax_process">
 <div class="header-meta">
-  <h1>OOTK Engine Output</h1>
-  <p><strong>Target Topic:</strong> {title}</p>
+  <h1>OOTK Vector Engine</h1>
+  <div class="meta-grid">
+    <div class="meta-item"><strong>Target Topic:</strong> {title}</div>
+    <div class="meta-item"><strong>PRNG Seed:</strong> {seed}</div>
+    <div class="meta-item"><strong>Significator:</strong> {significator}</div>
+    <div class="meta-item"><strong>Execution Timestamp:</strong> {timestamp}</div>
+  </div>
 </div>
 {content}
 </body>
@@ -75,15 +125,15 @@ def clean_terminal_text(text: str) -> str:
     cleaned = re.sub(r'\\end\{[a-zA-Z]+\}', '', cleaned)
     cleaned = cleaned.replace(r'\times', '*').replace(r'\mathbf', '')
     cleaned = cleaned.replace(r'\sum', 'SUM').replace(r'\cdot', '*')
+    cleaned = cleaned.replace(r'\to', '->').replace(r'\rightarrow', '->')
     cleaned = cleaned.replace('$$', '').replace('$', '')
     cleaned = cleaned.replace('{', '').replace('}', '').replace('\\', '')
     return cleaned
 
-def generate_html_document(title: str, markdown_content: str) -> str:
-    """Converts markdown content to styled HTML using the GitHub-Dark theme template."""
+def generate_html_document(title: str, seed: str, significator: str, markdown_content: str) -> str:
+    """Converts markdown content to styled HTML using the modern GitHub-Dark theme template."""
     if markdown:
-        # Markdown extensions matching your export script
-        extensions = ['tables', 'fenced_code']
+        extensions = ['tables', 'fenced_code', 'extra']
         try:
             import codehilite
             extensions.append('codehilite')
@@ -94,7 +144,16 @@ def generate_html_document(title: str, markdown_content: str) -> str:
     else:
         html_body = f"<pre>{markdown_content}</pre>"
 
-    return HTML_TEMPLATE.format(title=title, content=html_body)
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sig_str = significator if significator else "Auto / Unassigned"
+
+    return HTML_TEMPLATE.format(
+        title=title,
+        seed=seed,
+        significator=sig_str,
+        timestamp=timestamp,
+        content=html_body
+    )
 
 def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "", export_html: bool = False):
     prompt_path = Path(__file__).parent.parent / "prompts" / operation_file
@@ -105,7 +164,6 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "",
     with open(prompt_path, "r", encoding="utf-8") as f:
         system_instruction_content = f.read()
 
-    # Runtime parameters passed as primary user prompt
     user_prompt = f"[RUNTIME PARAMETER EXECUTION BLOCK]\n* Target Topic: {topic}\n* PRNG Seed: {seed}"
     if significator:
         user_prompt += f"\n* Significator Card: {significator}"
@@ -129,7 +187,10 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "",
                 contents=user_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=system_instruction_content,
-                    temperature=0.0
+                    temperature=0.0,
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                        disable=True
+                    )
                 )
             )
             
@@ -139,7 +200,7 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "",
                 if not markdown:
                     console.print("[yellow]Warning: 'markdown' library not installed. Run 'pip install markdown' for formatted rendering.[/yellow]")
                 
-                html_output = generate_html_document(topic, raw_text)
+                html_output = generate_html_document(topic, seed, significator, raw_text)
                 output_dir = Path(__file__).parent.parent / "output"
                 output_dir.mkdir(exist_ok=True)
                 html_file = output_dir / f"ootk_output_{seed}.html"
@@ -150,8 +211,14 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "",
                 console.print(f"\n[bold green]✓ Exported GitHub-Dark HTML to:[/bold green] {html_file}")
                 webbrowser.open(f"file://{html_file.absolute()}")
             else:
-                console.print("\n[bold green]=== OOTK ENGINE OUTPUT ===[/bold green]\n")
-                console.print(clean_terminal_text(raw_text))
+                cleaned_text = clean_terminal_text(raw_text)
+                console.print("\n")
+                console.print(Panel(
+                    Markdown(cleaned_text),
+                    title="[bold green]OOTK VECTOR ENGINE OUTPUT[/bold green]",
+                    border_style="cyan",
+                    padding=(1, 2)
+                ))
 
             return raw_text
 
