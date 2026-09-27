@@ -88,6 +88,44 @@ MathJax = {{
     color: #8b949e;
   }}
   .meta-item strong {{ color: var(--text-heading); }}
+
+  /* Vector Calculation Sheet Header Card Styling */
+  .vector-sheet-card {{
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+  }}
+  .vector-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }}
+  .vector-item {{
+    background: rgba(13, 17, 23, 0.6);
+    border: 1px solid var(--border-color);
+    padding: 12px 14px;
+    border-radius: 6px;
+    font-size: 0.9em;
+  }}
+  .vector-item strong {{ color: var(--accent-blue); }}
+  .vector-result-box {{
+    background: rgba(88, 166, 255, 0.08);
+    border: 1px solid var(--accent-blue);
+    padding: 16px;
+    border-radius: 6px;
+    margin-top: 16px;
+    text-align: center;
+  }}
+  .vector-result-box h3 {{
+    margin: 0 0 6px 0;
+    border: none;
+    padding: 0;
+    color: var(--text-heading);
+  }}
+
   h1, h2, h3 {{ color: var(--text-heading); margin-top: 1.8em; border-bottom: 1px solid #21262d; padding-bottom: 8px; }}
   h2 {{ color: var(--accent-blue); font-size: 1.4em; }}
   h3 {{ color: var(--accent-purple); font-size: 1.15em; }}
@@ -118,10 +156,11 @@ MathJax = {{
 """
 
 def clean_terminal_text(text: str) -> str:
-    """Strips LaTeX math environments and converts operators for clean terminal viewing."""
+    """Strips HTML tags, LaTeX math environments, and converts operators for clean terminal viewing."""
     if not text:
         return ""
-    cleaned = re.sub(r'\\begin\{[a-zA-Z]+\}', '', text)
+    cleaned = re.sub(r'<[^>]+>', '', text)
+    cleaned = re.sub(r'\\begin\{[a-zA-Z]+\}', '', cleaned)
     cleaned = re.sub(r'\\end\{[a-zA-Z]+\}', '', cleaned)
     cleaned = cleaned.replace(r'\times', '*').replace(r'\mathbf', '')
     cleaned = cleaned.replace(r'\sum', 'SUM').replace(r'\cdot', '*')
@@ -133,13 +172,7 @@ def clean_terminal_text(text: str) -> str:
 def generate_html_document(title: str, seed: str, significator: str, markdown_content: str) -> str:
     """Converts markdown content to styled HTML using the modern GitHub-Dark theme template."""
     if markdown:
-        extensions = ['tables', 'fenced_code', 'extra']
-        try:
-            import codehilite
-            extensions.append('codehilite')
-        except ImportError:
-            pass
-            
+        extensions = ['tables', 'fenced_code', 'extra', 'codehilite']
         html_body = markdown.markdown(markdown_content, extensions=extensions)
     else:
         html_body = f"<pre>{markdown_content}</pre>"
@@ -176,22 +209,50 @@ def run_ootk(operation_file: str, topic: str, seed: str, significator: str = "",
     max_retries = 4
     base_delay = 3
 
+    # Initialize Native System Cache
+    cached_content_name = None
+    try:
+        console.print(f"[bold dim]Caching system prompt for {primary_model}...[/bold dim]")
+        cache = client.caches.create(
+            model=primary_model,
+            config=types.CreateCachedContentConfig(
+                contents=[system_instruction_content],
+                ttl="3600s",  # Cache system instruction for 1 hour
+            )
+        )
+        cached_content_name = cache.name
+        console.print(f"[bold green]✓ Native Prompt Cache Active:[/bold green] {cached_content_name}")
+    except Exception as cache_err:
+        console.print(f"[yellow]Cache Initialization Skipped (using standard inline system instructions): {cache_err}[/yellow]")
+
     console.print(f"[bold cyan]Executing {operation_file} via {primary_model}...[/bold cyan]")
     
     for attempt in range(1, max_retries + 1):
         current_model = primary_model if attempt <= 2 else fallback_model
         
         try:
-            response = client.models.generate_content(
-                model=current_model,
-                contents=user_prompt,
-                config=types.GenerateContentConfig(
+            # Configure request with cached content if available and matching model tier
+            if cached_content_name and current_model == primary_model:
+                config = types.GenerateContentConfig(
+                    cached_content=cached_content_name,
+                    temperature=0.0,
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                        disable=True
+                    )
+                )
+            else:
+                config = types.GenerateContentConfig(
                     system_instruction=system_instruction_content,
                     temperature=0.0,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(
                         disable=True
                     )
                 )
+
+            response = client.models.generate_content(
+                model=current_model,
+                contents=user_prompt,
+                config=config
             )
             
             raw_text = response.text

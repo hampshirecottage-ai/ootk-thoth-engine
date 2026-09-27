@@ -2,3 +2,14 @@
 outputs/*
 # Do not ignore .gitkeep so the directory remains tracked
 !outputs/.gitkeep
+# Environment and local configs
+.env
+*.env
+
+# Python runtime
+__pycache__/
+*.pyc
+
+# System files
+.DS_Store
+
