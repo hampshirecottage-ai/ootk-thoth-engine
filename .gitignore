@@ -13,3 +13,16 @@ __pycache__/
 # System files
 .DS_Store
 
+output/
+outputs/
+
+# Generated session output reports
+output/*.html
+output/*.md
+output/*.svg
+
+# Environment files & Database configs
+.env
+__pycache__/
+*.pyc
+.DS_Store
