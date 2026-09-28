@@ -10,8 +10,8 @@ load_dotenv()
 
 # Database Connection Configuration loaded securely from Environment Variables
 DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "ootk_db"),
-    "user": os.getenv("DB_USER", "postgres"),
+    "dbname": os.getenv("DB_NAME", "my_tarot_db"),
+    "user": os.getenv("DB_USER", "dbuser"),
     "password": os.getenv("DB_PASSWORD", ""),
     "host": os.getenv("DB_HOST", "localhost"),
     "port": int(os.getenv("DB_PORT", 5432))
@@ -185,22 +185,24 @@ def fetch_all_cards(conn):
         return cur.fetchall()
 
 def fetch_card_correspondences(conn, title):
-    """Fetch card details and joined 777 correspondences using context management."""
+    """Fetch card details and joined Liber 777 correspondences using key_scale."""
     query = """
     SELECT 
+        tc.card_id,
         tc.title,
         tc.arcana_type,
         tc.suit,
         tc.number_or_rank,
         tc.description,
-        c.key_scale,
+        tc.key_scale,
         c.name AS path_or_sephira,
-        c.hebrew_letter,
+        COALESCE(c.hebrew_letter, 'N/A') AS hebrew_letter,
+        c.element_or_planet_or_sign AS element,
         c.element_or_planet_or_sign AS attribution,
         c.king_scale_color,
         c.attributions
     FROM thoth_cards tc
-    JOIN correspondences c ON tc.key_scale = c.key_scale
+    LEFT JOIN correspondences c ON tc.key_scale = c.key_scale
     WHERE tc.title = %s;
     """
     with conn.cursor() as cur:
@@ -208,34 +210,54 @@ def fetch_card_correspondences(conn, title):
         return cur.fetchone()
 
 def save_spread_session(conn, spread_name, query_prompt, notes, spread_results):
-    """Persists parent session metadata and child card pulls securely inside an atomic transaction block."""
+    """
+    Persists parent session metadata, spread instance, and child card pulls 
+    securely inside an atomic transaction block using the normalized schema.
+    """
     insert_session_query = """
-    INSERT INTO tarot_sessions (spread_name, query_prompt, notes)
+    INSERT INTO tarot_sessions (operation_type, significator, notes)
     VALUES (%s, %s, %s)
     RETURNING session_id;
     """
     
-    insert_pull_query = """
-    INSERT INTO session_card_pulls (session_id, position_number, position_name, card_title, key_scale)
-    VALUES (%s, %s, %s, %s, %s);
+    insert_spread_query = """
+    INSERT INTO spread_pulls (session_id, spread_name, pull_order)
+    VALUES (%s, %s, %s)
+    RETURNING spread_id;
     """
+    
+    insert_pull_query = """
+    INSERT INTO session_card_pulls (session_id, spread_id, card_id, position_index, is_dignified, notes)
+    VALUES (%s, %s, %s, %s, %s, %s);
+    """
+    
+    # Consolidate user prompt and notes into the single notes field
+    full_notes = f"Prompt: {query_prompt} | Notes: {notes}" if query_prompt and notes else (query_prompt or notes)
     
     try:
         with conn.transaction():
             with conn.cursor() as cur:
-                cur.execute(insert_session_query, (spread_name, query_prompt, notes))
+                # 1. Insert parent session record
+                cur.execute(insert_session_query, ('OOTK', 'Knight of Swords', full_notes))
                 session_id = cur.fetchone()["session_id"]
                 
+                # 2. Insert child spread pull instance
+                cur.execute(insert_spread_query, (session_id, spread_name, 1))
+                spread_id = cur.fetchone()["spread_id"]
+                
+                # 3. Insert individual card pulls referencing card_id
                 for item in spread_results:
+                    card_data = item["card_data"]
                     cur.execute(insert_pull_query, (
                         session_id,
+                        spread_id,
+                        card_data["card_id"],
                         item["position_number"],
-                        item["position_name"],
-                        item["card_data"]["title"],
-                        item["card_data"]["key_scale"]
+                        True,  # Default elemental dignity status
+                        item["position_name"]
                     ))
                     
-        print(f"\n[SUCCESS] Session #{session_id} and {len(spread_results)} card pulls recorded to PostgreSQL.")
+        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to my_tarot_db.")
     except Exception as e:
         print(f"\n[ERROR] Failed to record session to database: {e}")
 
@@ -344,7 +366,7 @@ def display_card_selection(cards):
     """Print numbered list of cards for easy selection."""
     print("\n--- AVAILABLE THOTH CARDS ---")
     for idx, card in enumerate(cards, start=1):
-        print(f"{idx:2d}. {card['title']} (Scale {card['key_scale']})")
+        print(f"{idx:2d}. {card['title']} (Card ID {card['card_id']})")
 
 def run_spread_session():
     """Main CLI Execution Loop."""
@@ -455,14 +477,14 @@ def run_spread_session():
 
         for item in spread_results:
             data = item["card_data"]
-            attr = data.get("attributions", {}) or {}
+            letter_val = data.get('hebrew_letter')
+            letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
 
             print(f"\nPOSITION {item['position_number']}: {item['position_name']}")
             print("-" * 50)
             print(f"Card Drawn    : {data['title']}")
             print(f"Arcana / Suit : {data['arcana_type']} | {data['suit'] or 'N/A'}")
-            print(f"Key Scale     : {data['key_scale']} ({data['path_or_sephira']})")
-            print(f"Hebrew Letter : {data['hebrew_letter']}")
+            print(f"Path / Sephira: {data['path_or_sephira']}{letter_str}")
             print(f"Attribution   : {data['attribution']}")
             print(f"Color Scale   : {data['king_scale_color']}")
 
