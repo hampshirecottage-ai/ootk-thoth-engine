@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import argparse
 import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
@@ -165,9 +166,19 @@ SPREADS = {
     # --- 4. MASTER COMPREHENSIVE PIPELINE ---
     "12": {
         "name": "Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline",
-        "operations": ["8", "9", "10", "11"]  # Sequences Ops 1 through 4
+        "operations": ["8", "9", "10", "11"]
     }
 }
+
+def parse_args():
+    """Parses command-line arguments for automated or non-interactive runs."""
+    parser = argparse.ArgumentParser(description="Thoth Tarot & Liber 777 Calculation Engine")
+    parser.add_argument("--topic", type=str, help="Query or topic intent string", default=None)
+    parser.add_argument("--seed", type=str, help="PRNG numeric seed for deterministic draws", default=None)
+    parser.add_argument("--significator", type=str, help="Significator card title", default="Knight of Swords")
+    parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
+    parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
+    return parser.parse_args()
 
 def get_db_connection():
     """Establishes and returns a connection to the PostgreSQL database."""
@@ -209,114 +220,24 @@ def fetch_card_correspondences(conn, title):
         cur.execute(query, (title,))
         return cur.fetchone()
 
-def save_spread_session(conn, spread_name, query_prompt, notes, spread_results):
-    """
-    Persists parent session metadata, spread instance, and child card pulls 
-    securely inside an atomic transaction block using the normalized schema.
-    """
-    insert_session_query = """
-    INSERT INTO tarot_sessions (operation_type, significator, notes)
-    VALUES (%s, %s, %s)
-    RETURNING session_id;
-    """
+def prng_shuffle_deck(cards, seed_val):
+    """Deterministically shuffles card deck using LCG / Fisher-Yates and seed value."""
+    import hashlib
+    seed_int = int(hashlib.sha256(str(seed_val).encode('utf-8')).hexdigest(), 16)
     
-    insert_spread_query = """
-    INSERT INTO spread_pulls (session_id, spread_name, pull_order)
-    VALUES (%s, %s, %s)
-    RETURNING spread_id;
-    """
+    deck = list(cards)
+    n = len(deck)
+    m = 2**32
+    a = 1664525
+    c = 1013904223
+    state = seed_int % m
+
+    for i in range(n - 1, 0, -1):
+        state = (a * state + c) % m
+        j = state % (i + 1)
+        deck[i], deck[j] = deck[j], deck[i]
     
-    insert_pull_query = """
-    INSERT INTO session_card_pulls (session_id, spread_id, card_id, position_index, is_dignified, notes)
-    VALUES (%s, %s, %s, %s, %s, %s);
-    """
-    
-    # Consolidate user prompt and notes into the single notes field
-    full_notes = f"Prompt: {query_prompt} | Notes: {notes}" if query_prompt and notes else (query_prompt or notes)
-    
-    try:
-        with conn.transaction():
-            with conn.cursor() as cur:
-                # 1. Insert parent session record
-                cur.execute(insert_session_query, ('OOTK', 'Knight of Swords', full_notes))
-                session_id = cur.fetchone()["session_id"]
-                
-                # 2. Insert child spread pull instance
-                cur.execute(insert_spread_query, (session_id, spread_name, 1))
-                spread_id = cur.fetchone()["spread_id"]
-                
-                # 3. Insert individual card pulls referencing card_id
-                for item in spread_results:
-                    card_data = item["card_data"]
-                    cur.execute(insert_pull_query, (
-                        session_id,
-                        spread_id,
-                        card_data["card_id"],
-                        item["position_number"],
-                        True,  # Default elemental dignity status
-                        item["position_name"]
-                    ))
-                    
-        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to my_tarot_db.")
-    except Exception as e:
-        print(f"\n[ERROR] Failed to record session to database: {e}")
-
-def guide_ootk_preparation():
-    """Provides step-by-step terminal prompts for the traditional OOTK First Operation physical setup."""
-    steps = [
-        ("PHASE 1: SIGNIFICATOR SELECTION", [
-            "1. Select the Significator card representing the querent or core focus.",
-            "2. For an active, analytical, or intellectual intent, the Knight of Swords is traditionally placed.",
-            "3. Return the Significator to the full 78-card deck."
-        ]),
-        ("PHASE 2: SHUFFLING & INVOCATION", [
-            "1. Hold the full deck in your hands.",
-            "2. State the intent or question clearly, focusing on the primary dynamic.",
-            "3. Shuffle the 78 cards thoroughly until you feel the sequence is randomized."
-        ]),
-        ("PHASE 3: THE TETRAGRAMMATON CUT", [
-            "1. Place the full deck face-down on your working space.",
-            "2. Cut the deck approximately in half to your left.",
-            "3. Cut both of those piles in half again to your left, creating FOUR heaps in a line.",
-            "4. From RIGHT to LEFT, these heaps correspond to:",
-            "   - Heap 1 (Far Right) : Yod   (Fire / Atziluth - Creative Impulse)",
-            "   - Heap 2             : Heh   (Water / Briah - Emotional/Mental Basis)",
-            "   - Heap 3             : Vav   (Air / Yetzirah - Formative Processing)",
-            "   - Heap 4 (Far Left)  : Heh-f (Earth / Assiah - Material Manifestation)"
-        ]),
-        ("PHASE 4: LOCATING THE ACTIVE HEAP", [
-            "1. Turn over each heap face up.",
-            "2. Locate which of the four heaps contains your designated Significator.",
-            "3. Note the elemental quadrant it landed in (Fire, Water, Air, or Earth).",
-            "4. Take that specific heap for the 15-card layout extraction."
-        ]),
-        ("PHASE 5: DEALING THE 15 CARDS", [
-            "1. Fan the active heap face-up and locate your Significator.",
-            "2. Place the Significator into Position 1 (Center/Core Focus).",
-            "3. METHOD A (Static Array): Deal the next 14 consecutive cards from the heap directly into Positions 2 through 15.",
-            "4. METHOD B (Traditional OOTK Counting Protocol):",
-            "   - Count forward from the Significator using card weights:",
-            "     * Major Arcana = 11 cards",
-            "     * Court Cards  = 4 cards",
-            "     * Minor Cards  = Face value (2-10)",
-            "   - Extract each landed card sequentially to form the 7 active pairs + final resolution card.",
-            "5. Enter each card into the CLI in position order (1 through 15)."
-        ])
-    ]
-
-    print("\n" + "="*65)
-    print("      OPENING OF THE KEY (OOTK) - TRADITIONAL DRAW PROTOCOL")
-    print("="*65)
-
-    for phase_title, instructions in steps:
-        print(f"\n---> {phase_title}")
-        for line in instructions:
-            print(f"  {line}")
-        input("\n[Press ENTER when you have completed this step...]")
-
-    print("\n" + "="*65)
-    print("  PHYSICAL SETUP COMPLETE. PROCEEDING TO CARD ENTRY MATRIX.")
-    print("="*65 + "\n")
+    return deck
 
 def analyze_elemental_balance(spread_results):
     """Calculates the dominant Liber 777 elemental vector distribution across drawn cards."""
@@ -352,15 +273,133 @@ def analyze_elemental_balance(spread_results):
         if not matched:
             element_counts["Spirit"] += 1
 
-    print("\n" + "="*60)
-    print("         LIBER 777 ELEMENTAL VECTOR ANALYSIS")
-    print("="*60)
-    total = sum(element_counts.values()) or 1
+    return element_counts
+
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts):
+    """Generates the full Hermetic analytical interpretation prompt as produced by execute.py."""
+    total_cards = sum(element_counts.values()) or 1
+    
+    prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
+**Operation/Spread:** {spread_name}
+**Query/Intent Topic:** {query_prompt or 'General Operation'}
+**Significator:** {significator}
+**PRNG Seed:** {seed_val or 'Manual Entry'}
+
+---
+
+## 1. ELEMENTAL VECTOR DISTRIBUTION (LIBER 777)
+"""
     for elem, count in element_counts.items():
-        percentage = (count / total) * 100
+        pct = (count / total_cards) * 100
         bar = "█" * int(count * 2)
-        print(f"{elem:7s} | {bar:20s} {count} ({percentage:.0f}%)")
-    print("="*60)
+        prompt_md += f"* **{elem:6s}**: {bar} {count} ({pct:.1f}%)\n"
+
+    prompt_md += "\n---\n\n## 2. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+
+    for item in spread_results:
+        data = item["card_data"]
+        letter_val = data.get('hebrew_letter')
+        letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
+        
+        prompt_md += f"### Position {item['position_number']}: {item['position_name']}\n"
+        prompt_md += f"- **Card Drawn**: {data['title']}\n"
+        prompt_md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
+        prompt_md += f"- **Path/Sephira**: {data['path_or_sephira']}{letter_str}\n"
+        prompt_md += f"- **Attribution**: {data['attribution']}\n"
+        prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
+
+    prompt_md += """---
+
+## 3. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+
+Act as an expert Hermetic scholar and Aleister Crowley Thoth Tarot authority. Synthesize the above spread matrix following these dynamic rules:
+
+1. **Elemental Dignity Analysis:** Examine adjacent card pairs. Evaluate where friendly elements reinforce each other (Fire/Air, Water/Earth) vs. where hostile pairs create friction or blocking (Fire/Water, Air/Earth).
+2. **Kabbalistic Tree of Life Pathworking:** Trace the motion from higher Sephiroth to lower physical manifestations across the drawn paths.
+3. **Decan & Planetary Rulers:** Evaluate astrological decan rulers and zodiacal signs to pinpoint precise timing and behavioral archetypes.
+4. **Actionable Resolution:** Conclude with a clear, direct executive summary synthesizing the dominant elemental vector and primary outcome card.
+"""
+    return prompt_md
+
+def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results):
+    """Persists parent session metadata, spread instance, and child card pulls into PostgreSQL."""
+    insert_session_query = """
+    INSERT INTO tarot_sessions (operation_type, significator, notes)
+    VALUES (%s, %s, %s)
+    RETURNING session_id;
+    """
+    insert_spread_query = """
+    INSERT INTO spread_pulls (session_id, spread_name, pull_order)
+    VALUES (%s, %s, %s)
+    RETURNING spread_id;
+    """
+    insert_pull_query = """
+    INSERT INTO session_card_pulls (session_id, spread_id, card_id, position_index, is_dignified, notes)
+    VALUES (%s, %s, %s, %s, %s, %s);
+    """
+    
+    full_notes = f"Prompt: {query_prompt} | Notes: {notes}" if query_prompt and notes else (query_prompt or notes)
+    
+    try:
+        with conn.transaction():
+            with conn.cursor() as cur:
+                cur.execute(insert_session_query, ('OOTK', significator, full_notes))
+                session_id = cur.fetchone()["session_id"]
+                
+                cur.execute(insert_spread_query, (session_id, spread_name, 1))
+                spread_id = cur.fetchone()["spread_id"]
+                
+                for item in spread_results:
+                    card_data = item["card_data"]
+                    cur.execute(insert_pull_query, (
+                        session_id,
+                        spread_id,
+                        card_data["card_id"],
+                        item["position_number"],
+                        True,
+                        item["position_name"]
+                    ))
+                    
+        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to my_tarot_db.")
+        return session_id
+    except Exception as e:
+        print(f"\n[ERROR] Failed to record session to database: {e}")
+        return None
+
+def generate_html_output(session_id, spread_name, query_prompt, analytical_prompt):
+    """Generates an HTML report file in output/ directory incorporating markdown prompt analysis."""
+    os.makedirs("output", exist_ok=True)
+    filename = f"output/ootk_output_{session_id or 'latest'}.html"
+    
+    # Convert newline formatted analysis to HTML pre blocks for clear display
+    html_analysis = analytical_prompt.replace("<", "&lt;").replace(">", "&gt;")
+
+    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Spread Report - {spread_name}</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: #121212; color: #e0e0e0; padding: 30px; line-height: 1.6; }}
+        h1, h2, h3 {{ color: #bb86fc; }}
+        .meta {{ background: #1f1f1f; padding: 20px; border-radius: 8px; border-left: 4px solid #03dac6; margin-bottom: 25px; }}
+        pre {{ background: #1e1e1e; color: #a9b7c6; padding: 20px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; font-family: "Fira Code", monospace; }}
+    </style>
+</head>
+<body>
+    <h1>OOTK Thoth Engine - Analytical Synthesis Report</h1>
+    <div class="meta">
+        <p><strong>Spread Operation:</strong> {spread_name}</p>
+        <p><strong>Query / Topic:</strong> {query_prompt or 'N/A'}</p>
+        <p><strong>Database Session ID:</strong> #{session_id or 'N/A'}</p>
+    </div>
+    <h2>Generated Operational Prompt & Matrix</h2>
+    <pre>{html_analysis}</pre>
+</body>
+</html>
+"""
+    with open(filename, "w", encoding="utf-8") as f:
+        f.write(html_content)
+    print(f"[HTML EXPORT] Report generated at: {filename}")
 
 def display_card_selection(cards):
     """Print numbered list of cards for easy selection."""
@@ -369,88 +408,69 @@ def display_card_selection(cards):
         print(f"{idx:2d}. {card['title']} (Card ID {card['card_id']})")
 
 def run_spread_session():
-    """Main CLI Execution Loop."""
+    """Main Execution Loop supporting CLI flags, database logging, and LLM analysis generation."""
+    args = parse_args()
+
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
         card_lookup = {str(idx): card["title"] for idx, card in enumerate(cards, start=1)}
         card_titles_set = {card["title"].lower(): card["title"] for card in cards}
 
-        # Step 1: Select Spread Layout
+        shuffled_deck = prng_shuffle_deck(cards, args.seed) if args.seed else None
+        auto_draw_index = 0
+
         print("==================================================")
         print("       THOTH TAROT & LIBER 777 ENGINE           ")
         print("==================================================")
-        print("Select a spread layout:\n")
-        print("--- CORE & PROGRESSIVE SPREADS ---")
-        for key in ["1", "2", "3", "4", "5"]:
-            print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
-            
-        print("\n--- HERMETIC & MACROCOSMIC LAYOUTS ---")
-        for key in ["6", "7"]:
-            print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
-        print("\n--- OPENING OF THE KEY (OOTK) OPERATIONS ---")
-        for key in ["8", "9", "10", "11"]:
-            print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
+        if args.spread and args.spread in SPREADS:
+            spread_choice = args.spread
+        else:
+            print("Select a spread layout:\n")
+            print("--- CORE & PROGRESSIVE SPREADS ---")
+            for key in ["1", "2", "3", "4", "5"]:
+                print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
+                
+            print("\n--- HERMETIC & MACROCOSMIC LAYOUTS ---")
+            for key in ["6", "7"]:
+                print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
-        print("\n--- MASTER PIPELINE ---")
-        print(f" [12] {SPREADS['12']['name']} (75 cards total)")
+            print("\n--- OPENING OF THE KEY (OOTK) OPERATIONS ---")
+            for key in ["8", "9", "10", "11"]:
+                print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
-        spread_choice = input("\nEnter spread number (1-12): ").strip()
+            print("\n--- MASTER PIPELINE ---")
+            print(f" [12] {SPREADS['12']['name']} (75 cards total)")
+
+            spread_choice = input("\nEnter spread number (1-12): ").strip()
+
         selected_spread = SPREADS.get(spread_choice, SPREADS["1"])
         print(f"\n---> Selected Spread: {selected_spread['name']}\n")
 
-        # Capture optional metadata
-        query_prompt = input("Enter Query / Intent Prompt (optional, press ENTER to skip): ").strip() or None
-        session_notes = input("Enter Session Notes (optional, press ENTER to skip): ").strip() or None
+        query_prompt = args.topic if args.topic else (input("Enter Query / Intent Prompt (optional, press ENTER to skip): ").strip() or None)
+        session_notes = f"PRNG Seed: {args.seed}" if args.seed else (input("Enter Session Notes (optional, press ENTER to skip): ").strip() or None)
+        significator = args.significator
 
         spread_results = []
 
-        # MASTER PIPELINE SELECTION (Option 12)
+        # Single or Pipeline Execution
+        target_positions = []
         if spread_choice == "12":
-            target_ops = selected_spread["operations"]
-            global_pos_idx = 1
-
-            for op_key in target_ops:
+            for op_key in selected_spread["operations"]:
                 op_spread = SPREADS[op_key]
-                print("\n" + "="*60)
-                print(f"  EXECUTING: {op_spread['name'].upper()}")
-                print("="*60)
-
-                if op_key == "8":  # First Operation setup guide
-                    guide_ootk_preparation()
-
-                for position_name in op_spread["positions"]:
-                    formatted_pos = f"[{op_spread['name'][:6]}] {position_name}"
-                    print(f"\n[Card {global_pos_idx} | {formatted_pos}]")
-                    
-                    selected_title = None
-                    while not selected_title:
-                        user_input = input("Enter card index or name: ").strip()
-                        if user_input in card_lookup:
-                            selected_title = card_lookup[user_input]
-                        elif user_input.lower() in card_titles_set:
-                            selected_title = card_titles_set[user_input.lower()]
-                        else:
-                            print("Invalid card selection. Type 'list' or try again.")
-                            if user_input.lower() == 'list':
-                                display_card_selection(cards)
-
-                    card_data = fetch_card_correspondences(conn, selected_title)
-                    spread_results.append({
-                        "position_number": global_pos_idx,
-                        "position_name": formatted_pos,
-                        "card_data": card_data
-                    })
-                    global_pos_idx += 1
-
-        # SINGLE SPREAD SELECTION (Options 1 - 11)
+                for p in op_spread["positions"]:
+                    target_positions.append(f"[{op_spread['name'][:6]}] {p}")
         else:
-            if spread_choice == "8":  # First Operation setup guide
-                guide_ootk_preparation()
+            target_positions = selected_spread["positions"]
 
-            for pos_idx, position_name in enumerate(selected_spread["positions"], start=1):
-                print(f"\n[Position {pos_idx}: {position_name}]")
-                
+        for pos_idx, position_name in enumerate(target_positions, start=1):
+            print(f"\n[Position {pos_idx}: {position_name}]")
+            
+            if shuffled_deck:
+                selected_title = shuffled_deck[auto_draw_index % len(shuffled_deck)]["title"]
+                auto_draw_index += 1
+                print(f"--> PRNG Auto-Drawn: {selected_title}")
+            else:
                 selected_title = None
                 while not selected_title:
                     user_input = input("Enter card index number (or type full name): ").strip()
@@ -463,36 +483,30 @@ def run_spread_session():
                         if user_input.lower() == 'list':
                             display_card_selection(cards)
 
-                card_data = fetch_card_correspondences(conn, selected_title)
-                spread_results.append({
-                    "position_number": pos_idx,
-                    "position_name": position_name,
-                    "card_data": card_data
-                })
+            card_data = fetch_card_correspondences(conn, selected_title)
+            spread_results.append({
+                "position_number": pos_idx,
+                "position_name": position_name,
+                "card_data": card_data
+            })
 
-        # Step 4: Render Analytical Synthesis Report
-        print("\n\n" + "="*60)
-        print(f"         SPREAD ANALYSIS REPORT: {selected_spread['name'].upper()}")
-        print("="*60)
+        # Calculate Elemental Balance
+        element_counts = analyze_elemental_balance(spread_results)
 
-        for item in spread_results:
-            data = item["card_data"]
-            letter_val = data.get('hebrew_letter')
-            letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
+        # Build Full Analytical Interpretation System Prompt
+        analytical_prompt = build_analytical_prompt(
+            selected_spread["name"], query_prompt, significator, args.seed, spread_results, element_counts
+        )
 
-            print(f"\nPOSITION {item['position_number']}: {item['position_name']}")
-            print("-" * 50)
-            print(f"Card Drawn    : {data['title']}")
-            print(f"Arcana / Suit : {data['arcana_type']} | {data['suit'] or 'N/A'}")
-            print(f"Path / Sephira: {data['path_or_sephira']}{letter_str}")
-            print(f"Attribution   : {data['attribution']}")
-            print(f"Color Scale   : {data['king_scale_color']}")
+        # Print Prompt Directly to Terminal
+        print("\n" + analytical_prompt)
 
-        # Step 5: Master Elemental Vector Synthesis
-        analyze_elemental_balance(spread_results)
+        # Save to Database
+        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator, spread_results)
 
-        # Step 6: Save Complete Operational Sequence to DB
-        save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, spread_results)
+        # Save HTML Output Report
+        if args.html:
+            generate_html_output(session_id, selected_spread["name"], query_prompt, analytical_prompt)
 
 if __name__ == "__main__":
     run_spread_session()
