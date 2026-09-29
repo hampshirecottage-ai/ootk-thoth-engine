@@ -18,30 +18,10 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", 5432))
 }
 
-# Reordered Spreads Hierarchy (12 Total Operations / Layouts)
 SPREADS = {
-    # --- 1. CORE & PROGRESSIVE SPREADS ---
-    "1": {
-        "name": "Single Card / Daily Operations",
-        "positions": [
-            "Core Theme / Focus"
-        ]
-    },
-    "2": {
-        "name": "Dyad (Polarity & Dynamics)",
-        "positions": [
-            "Active Force (Thesis)", 
-            "Receptive / Resistance Force (Antithesis)"
-        ]
-    },
-    "3": {
-        "name": "Triad (Timeline & Motion)",
-        "positions": [
-            "Past / Root Cause", 
-            "Present / Active Dynamics", 
-            "Future / Manifest Result"
-        ]
-    },
+    "1": {"name": "Single Card / Daily Operations", "positions": ["Core Theme / Focus"]},
+    "2": {"name": "Dyad (Polarity & Dynamics)", "positions": ["Active Force (Thesis)", "Receptive / Resistance Force (Antithesis)"]},
+    "3": {"name": "Triad (Timeline & Motion)", "positions": ["Past / Root Cause", "Present / Active Dynamics", "Future / Manifest Result"]},
     "4": {
         "name": "Sub-Elemental Quadrant Cross (Elemental Sub-Division)",
         "positions": [
@@ -60,8 +40,6 @@ SPREADS = {
             "Assiah / Heh Final (Earth - Material Result)"
         ]
     },
-
-    # --- 2. HERMETIC & MACROCOSMIC LAYOUTS ---
     "6": {
         "name": "Hexagram Spread (Planetary Operations & Macrocosm)",
         "positions": [
@@ -89,81 +67,41 @@ SPREADS = {
             "10. Malkuth (Kingdom / Manifest World)"
         ]
     },
-
-    # --- 3. OPENING OF THE KEY (OOTK) OPERATIONS ---
     "8": {
         "name": "OOTK - First Operation (15-Card Active Heap)",
         "positions": [
             "1. Significator / Core Nature of Question",
-            "2. Development of Question (Left Pair A)",
-            "3. Development of Question (Left Pair B)",
-            "4. Further Outcome (Right Pair A)",
-            "5. Further Outcome (Right Pair B)",
-            "6. Unexpected / External Factors (Center Pair A)",
-            "7. Unexpected / External Factors (Center Pair B)",
-            "8. Psychological / Subconscious Basis (Base Left A)",
-            "9. Psychological / Subconscious Basis (Base Left B)",
-            "10. Environmental / Material Basis (Base Right A)",
-            "11. Environmental / Material Basis (Base Right B)",
-            "12. Final Synthesis / Karma (Top Apex A)",
-            "13. Final Synthesis / Karma (Top Apex B)",
-            "14. Key Counter-Balance / Receptivity",
-            "15. Ultimate Climax / Resolution"
+            "2. Development of Question (Left Pair A)", "3. Development of Question (Left Pair B)",
+            "4. Further Outcome (Right Pair A)", "5. Further Outcome (Right Pair B)",
+            "6. Unexpected / External Factors (Center Pair A)", "7. Unexpected / External Factors (Center Pair B)",
+            "8. Psychological / Subconscious Basis (Base Left A)", "9. Psychological / Subconscious Basis (Base Left B)",
+            "10. Environmental / Material Basis (Base Right A)", "11. Environmental / Material Basis (Base Right B)",
+            "12. Final Synthesis / Karma (Top Apex A)", "13. Final Synthesis / Karma (Top Apex B)",
+            "14. Key Counter-Balance / Receptivity", "15. Ultimate Climax / Resolution"
         ]
     },
     "9": {
         "name": "OOTK - Second Operation (12 Astrological Houses)",
         "positions": [
-            "1. First House (Ascendant / Physical Self & Vitality)",
-            "2. Second House (Finances, Possessions & Values)",
-            "3. Third House (Siblings, Local Travel & Mental Habits)",
-            "4. Fourth House (Imum Coeli / Home, Roots & Endings)",
-            "5. Fifth House (Creativity, Children & Speculation)",
-            "6. Sixth House (Health, Daily Work & Service)",
-            "7. Seventh House (Descendant / Partnerships & Open Enemies)",
-            "8. Eighth House (Shared Assets, Death & Transformation)",
-            "9. Ninth House (Higher Learning, Philosophy & Foreign Travel)",
-            "10. Tenth House (Midheaven / Career, Public Standing & Authority)",
-            "11. Eleventh House (Hopes, Friends & Collective Alliances)",
-            "12. Twelfth House (Subconscious, Hidden Enemies & Self-Undoings)"
+            "1. First House (Ascendant / Physical Self)", "2. Second House (Finances & Values)",
+            "3. Third House (Local Mind & Travel)", "4. Fourth House (Home & Roots)",
+            "5. Fifth House (Creativity & Will)", "6. Sixth House (Health & Work)",
+            "7. Seventh House (Partnerships)", "8. Eighth House (Shared Assets & Death)",
+            "9. Ninth House (Philosophy & Higher Mind)", "10. Tenth House (Career & Public Standing)",
+            "11. Eleventh House (Alliances & Hopes)", "12. Twelfth House (Subconscious & Hidden)"
         ]
     },
     "10": {
         "name": "OOTK - Third Operation (12 Zodiacal Signs)",
         "positions": [
-            "1. Aries (0°-30° / Cardinal Fire - Impulse)",
-            "2. Taurus (0°-30° / Fixed Earth - Consolidation)",
-            "3. Gemini (0°-30° / Mutable Air - Synthesis)",
-            "4. Cancer (0°-30° / Cardinal Water - Enclosure)",
-            "5. Leo (0°-30° / Fixed Fire - Radiance)",
-            "6. Virgo (0°-30° / Mutable Earth - Analysis)",
-            "7. Libra (0°-30° / Cardinal Air - Equilibrium)",
-            "8. Scorpio (0°-30° / Fixed Water - Transformation)",
-            "9. Sagittarius (0°-30° / Mutable Fire - Vector)",
-            "10. Capricorn (0°-30° / Cardinal Earth - Structure)",
-            "11. Aquarius (0°-30° / Fixed Air - Collective)",
-            "12. Pisces (0°-30° / Mutable Water - Dissolution)"
+            "1. Aries", "2. Taurus", "3. Gemini", "4. Cancer", "5. Leo", "6. Virgo",
+            "7. Libra", "8. Scorpio", "9. Sagittarius", "10. Capricorn", "11. Aquarius", "12. Pisces"
         ]
     },
     "11": {
         "name": "OOTK - Fourth Operation (36 Zodiacal Decans)",
-        "positions": [
-            "1. Cardinal Fire (Aries I)", "2. Cardinal Fire (Aries II)", "3. Cardinal Fire (Aries III)",
-            "4. Fixed Earth (Taurus I)", "5. Fixed Earth (Taurus II)", "6. Fixed Earth (Taurus III)",
-            "7. Mutable Air (Gemini I)", "8. Mutable Air (Gemini II)", "9. Mutable Air (Gemini III)",
-            "10. Cardinal Water (Cancer I)", "11. Cardinal Water (Cancer II)", "12. Cardinal Water (Cancer III)",
-            "13. Fixed Fire (Leo I)", "14. Fixed Fire (Leo II)", "15. Fixed Fire (Leo III)",
-            "16. Mutable Earth (Virgo I)", "17. Mutable Earth (Virgo II)", "18. Mutable Earth (Virgo III)",
-            "19. Cardinal Air (Libra I)", "20. Cardinal Air (Libra II)", "21. Cardinal Air (Libra III)",
-            "22. Fixed Water (Scorpio I)", "23. Fixed Water (Scorpio II)", "24. Fixed Water (Scorpio III)",
-            "25. Mutable Fire (Sagittarius I)", "26. Mutable Fire (Sagittarius II)", "27. Mutable Fire (Sagittarius III)",
-            "28. Cardinal Earth (Capricorn I)", "29. Cardinal Earth (Capricorn II)", "30. Cardinal Earth (Capricorn III)",
-            "31. Fixed Air (Aquarius I)", "32. Fixed Air (Aquarius II)", "33. Fixed Air (Aquarius III)",
-            "34. Mutable Water (Pisces I)", "35. Mutable Water (Pisces II)", "36. Mutable Water (Pisces III)"
-        ]
+        "positions": [f"Decan {i}" for i in range(1, 37)]
     },
-
-    # --- 4. MASTER COMPREHENSIVE PIPELINE ---
     "12": {
         "name": "Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline",
         "operations": ["8", "9", "10", "11"]
@@ -171,7 +109,6 @@ SPREADS = {
 }
 
 def parse_args():
-    """Parses command-line arguments for automated or non-interactive runs."""
     parser = argparse.ArgumentParser(description="Thoth Tarot & Liber 777 Calculation Engine")
     parser.add_argument("--topic", type=str, help="Query or topic intent string", default=None)
     parser.add_argument("--seed", type=str, help="PRNG numeric seed for deterministic draws", default=None)
@@ -181,7 +118,6 @@ def parse_args():
     return parser.parse_args()
 
 def get_db_connection():
-    """Establishes and returns a connection to the PostgreSQL database."""
     try:
         conn = psycopg.connect(**DB_CONFIG, row_factory=dict_row)
         return conn
@@ -190,13 +126,11 @@ def get_db_connection():
         sys.exit(1)
 
 def fetch_all_cards(conn):
-    """Retrieve indexed list of all 78 cards from DB using context management."""
     with conn.cursor() as cur:
         cur.execute("SELECT card_id, title, arcana_type, key_scale FROM thoth_cards ORDER BY card_id ASC;")
         return cur.fetchall()
 
 def fetch_card_correspondences(conn, title):
-    """Fetch card details and joined Liber 777 correspondences using key_scale."""
     query = """
     SELECT 
         tc.card_id,
@@ -221,7 +155,6 @@ def fetch_card_correspondences(conn, title):
         return cur.fetchone()
 
 def prng_shuffle_deck(cards, seed_val):
-    """Deterministically shuffles card deck using LCG / Fisher-Yates and seed value."""
     import hashlib
     seed_int = int(hashlib.sha256(str(seed_val).encode('utf-8')).hexdigest(), 16)
     
@@ -239,44 +172,77 @@ def prng_shuffle_deck(cards, seed_val):
     
     return deck
 
+def derive_primary_element(card_data):
+    """Maps card correspondence/suit to one of the 4 classic elements or Spirit."""
+    suit = str(card_data.get("suit") or "").lower()
+    attr = str(card_data.get("attribution") or "").lower()
+    title = str(card_data.get("title") or "").lower()
+
+    if "wand" in suit or "fire" in attr or "aries" in attr or "leo" in attr or "sagittarius" in attr or "fire" in title:
+        return "Fire"
+    elif "cup" in suit or "water" in attr or "cancer" in attr or "scorpio" in attr or "pisces" in attr or "water" in title:
+        return "Water"
+    elif "sword" in suit or "air" in attr or "gemini" in attr or "libra" in attr or "aquarius" in attr or "air" in title:
+        return "Air"
+    elif "disk" in suit or "pentacle" in suit or "earth" in attr or "taurus" in attr or "virgo" in attr or "capricorn" in attr or "earth" in title:
+        return "Earth"
+    return "Spirit"
+
+def calculate_elemental_dignities(spread_results):
+    """
+    Computes pairwise elemental dignity interaction scores across adjacent cards.
+    Scores: +2 (Friendly/Active), +1 (Same Element), 0 (Neutral), -2 (Hostile/Weakened).
+    """
+    dignity_matrix = []
+    if len(spread_results) < 2:
+        return dignity_matrix
+
+    for i in range(len(spread_results) - 1):
+        c1 = spread_results[i]
+        c2 = spread_results[i+1]
+        
+        elem1 = derive_primary_element(c1["card_data"])
+        elem2 = derive_primary_element(c2["card_data"])
+
+        # Dignity Scoring Logic
+        if elem1 == "Spirit" or elem2 == "Spirit":
+            score = 0
+            rel = "Neutral / Spiritual Synthesis"
+        elif elem1 == elem2:
+            score = 1
+            rel = f"Direct Reinforcement ({elem1} + {elem2})"
+        elif (elem1 == "Fire" and elem2 == "Air") or (elem1 == "Air" and elem2 == "Fire"):
+            score = 2
+            rel = "Active Attraction / Combustion (Fire + Air)"
+        elif (elem1 == "Water" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Water"):
+            score = 2
+            rel = "Active Nourishment / Receptivity (Water + Earth)"
+        elif (elem1 == "Fire" and elem2 == "Water") or (elem1 == "Water" and elem2 == "Fire"):
+            score = -2
+            rel = "Active Hostility / Extinction (Fire + Water)"
+        elif (elem1 == "Air" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Air"):
+            score = -2
+            rel = "Active Hostility / Resistance (Air + Earth)"
+        else:
+            score = 0
+            rel = f"Passive / Neutral ({elem1} + {elem2})"
+
+        dignity_matrix.append({
+            "pair": f"Pos {c1['position_number']} ({c1['card_data']['title']}) <-> Pos {c2['position_number']} ({c2['card_data']['title']})",
+            "score": score,
+            "relationship": rel
+        })
+
+    return dignity_matrix
+
 def analyze_elemental_balance(spread_results):
-    """Calculates the dominant Liber 777 elemental vector distribution across drawn cards."""
     element_counts = {"Fire": 0, "Water": 0, "Air": 0, "Earth": 0, "Spirit": 0}
-    
-    element_keywords = {
-        "Fire": ["fire", "aries", "leo", "sagittarius", "wands", "yod", "shin", "south"],
-        "Water": ["water", "cancer", "scorpio", "pisces", "cups", "heh", "mem", "west"],
-        "Air": ["air", "gemini", "libra", "aquarius", "swords", "vav", "aleph", "east"],
-        "Earth": ["earth", "taurus", "virgo", "capricorn", "disks", "pentacles", "final", "tau", "north"]
-    }
-
     for item in spread_results:
-        data = item.get("card_data", {}) or {}
-        
-        title = str(data.get("title") or "").lower()
-        suit = str(data.get("suit") or "").lower()
-        arcana = str(data.get("arcana_type") or "").lower()
-        attribution = str(data.get("attribution") or "").lower()
-        
-        attr_json = data.get("attributions") or {}
-        json_str = json.dumps(attr_json).lower() if isinstance(attr_json, dict) else str(attr_json).lower()
-
-        combined_text = f"{title} {suit} {arcana} {attribution} {json_str}"
-
-        matched = False
-        for elem, keywords in element_keywords.items():
-            if any(kw in combined_text for kw in keywords):
-                element_counts[elem] += 1
-                matched = True
-                break
-
-        if not matched:
-            element_counts["Spirit"] += 1
-
+        elem = derive_primary_element(item["card_data"])
+        element_counts[elem] += 1
     return element_counts
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts):
-    """Generates the full Hermetic analytical interpretation prompt as produced by execute.py."""
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix):
     total_cards = sum(element_counts.values()) or 1
     
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
@@ -294,7 +260,12 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         bar = "█" * int(count * 2)
         prompt_md += f"* **{elem:6s}**: {bar} {count} ({pct:.1f}%)\n"
 
-    prompt_md += "\n---\n\n## 2. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    prompt_md += "\n---\n\n## 2. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    for d in dignity_matrix:
+        score_str = f"+{d['score']}" if d['score'] > 0 else str(d['score'])
+        prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
+
+    prompt_md += "\n---\n\n## 3. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
     for item in spread_results:
         data = item["card_data"]
@@ -310,11 +281,11 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 
     prompt_md += """---
 
-## 3. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Aleister Crowley Thoth Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
-1. **Elemental Dignity Analysis:** Examine adjacent card pairs. Evaluate where friendly elements reinforce each other (Fire/Air, Water/Earth) vs. where hostile pairs create friction or blocking (Fire/Water, Air/Earth).
+1. **Elemental Dignity Analysis:** Utilize the Pairwise Dignity interactions scored above. Focus heavily on where hostile pairs (-2) create friction or where active attraction (+2) accelerates momentum.
 2. **Kabbalistic Tree of Life Pathworking:** Trace the motion from higher Sephiroth to lower physical manifestations across the drawn paths.
 3. **Decan & Planetary Rulers:** Evaluate astrological decan rulers and zodiacal signs to pinpoint precise timing and behavioral archetypes.
 4. **Actionable Resolution:** Conclude with a clear, direct executive summary synthesizing the dominant elemental vector and primary outcome card.
@@ -322,7 +293,6 @@ Act as an expert Hermetic scholar and Aleister Crowley Thoth Tarot authority. Sy
     return prompt_md
 
 def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results):
-    """Persists parent session metadata, spread instance, and child card pulls into PostgreSQL."""
     insert_session_query = """
     INSERT INTO tarot_sessions (operation_type, significator, notes)
     VALUES (%s, %s, %s)
@@ -367,11 +337,9 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
         return None
 
 def generate_html_output(session_id, spread_name, query_prompt, analytical_prompt):
-    """Generates an HTML report file in output/ directory incorporating markdown prompt analysis."""
     os.makedirs("output", exist_ok=True)
     filename = f"output/ootk_output_{session_id or 'latest'}.html"
     
-    # Convert newline formatted analysis to HTML pre blocks for clear display
     html_analysis = analytical_prompt.replace("<", "&lt;").replace(">", "&gt;")
 
     html_content = f"""<!DOCTYPE html>
@@ -402,13 +370,11 @@ def generate_html_output(session_id, spread_name, query_prompt, analytical_promp
     print(f"[HTML EXPORT] Report generated at: {filename}")
 
 def display_card_selection(cards):
-    """Print numbered list of cards for easy selection."""
     print("\n--- AVAILABLE THOTH CARDS ---")
     for idx, card in enumerate(cards, start=1):
         print(f"{idx:2d}. {card['title']} (Card ID {card['card_id']})")
 
 def run_spread_session():
-    """Main Execution Loop supporting CLI flags, database logging, and LLM analysis generation."""
     args = parse_args()
 
     with get_db_connection() as conn:
@@ -453,7 +419,6 @@ def run_spread_session():
 
         spread_results = []
 
-        # Single or Pipeline Execution
         target_positions = []
         if spread_choice == "12":
             for op_key in selected_spread["operations"]:
@@ -490,21 +455,17 @@ def run_spread_session():
                 "card_data": card_data
             })
 
-        # Calculate Elemental Balance
         element_counts = analyze_elemental_balance(spread_results)
+        dignity_matrix = calculate_elemental_dignities(spread_results)
 
-        # Build Full Analytical Interpretation System Prompt
         analytical_prompt = build_analytical_prompt(
-            selected_spread["name"], query_prompt, significator, args.seed, spread_results, element_counts
+            selected_spread["name"], query_prompt, significator, args.seed, spread_results, element_counts, dignity_matrix
         )
 
-        # Print Prompt Directly to Terminal
         print("\n" + analytical_prompt)
 
-        # Save to Database
         session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator, spread_results)
 
-        # Save HTML Output Report
         if args.html:
             generate_html_output(session_id, selected_spread["name"], query_prompt, analytical_prompt)
 

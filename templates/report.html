@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Report - {{ spread_name }}</title>
+    <style>
+        body { font-family: monospace; background: #121212; color: #e0e0e0; padding: 30px; line-height: 1.6; }
+        h1, h2 { color: #bb86fc; }
+        .meta { background: #1e1e1e; padding: 15px; border-radius: 6px; border-left: 4px solid #03dac6; margin-bottom: 20px; }
+        pre { background: #1a1a1a; padding: 20px; border-radius: 8px; color: #a9b7c6; white-space: pre-wrap; font-size: 0.95em; }
+        a.btn-back { display: inline-block; background: #bb86fc; color: #000; padding: 10px 18px; text-decoration: none; font-weight: bold; border-radius: 4px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <a href="/" class="btn-back">&larr; Back to Deck Selector</a>
+    <h1>Session Report #{{ session_id }}</h1>
+    <div class="meta">
+        <p><strong>Operation:</strong> {{ spread_name }}</p>
+        <p><strong>Query Topic:</strong> {{ topic or 'N/A' }}</p>
+    </div>
+    <pre>{{ prompt }}</pre>
+</body>
+</html>
