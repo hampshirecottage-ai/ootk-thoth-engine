@@ -13,8 +13,8 @@ __pycache__/
 # System files
 .DS_Store
 
+# Exclude the output directory
 output/
-outputs/
 
 # Generated session output reports
 output/*.html
