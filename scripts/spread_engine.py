@@ -107,7 +107,6 @@ SPREADS = {
     }
 }
 
-# Fallback spatial geometry coordinates (Normalized 2D Plane)
 SPREAD_DEFAULT_COORDINATES = {
     "1": [(0.0, 0.0)],
     "2": [(-0.5, 0.0), (0.5, 0.0)],
@@ -163,7 +162,9 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         CASE WHEN %s = 'french_egyptian' AND c.attribution_french IS NOT NULL THEN c.attribution_french ELSE c.element_or_planet_or_sign END AS attribution,
         c.element_or_planet_or_sign AS element,
         c.king_scale_color,
-        c.attributions
+        c.attributions,
+        c.spatial_type,
+        c.spatial_dimension
     FROM thoth_cards tc
     LEFT JOIN correspondences c ON tc.key_scale = c.key_scale
     WHERE tc.title = %s;
@@ -256,7 +257,6 @@ def analyze_elemental_balance(spread_results):
     return element_counts
 
 def calculate_spatial_aspect(angle_deg):
-    """Classifies geometric angular relationships based on classical aspects."""
     norm_angle = abs(angle_deg) % 360
     if norm_angle > 180:
         norm_angle = 360 - norm_angle
@@ -275,7 +275,6 @@ def calculate_spatial_aspect(angle_deg):
         return f"Inconjunct/Minor ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
 
 def analyze_spatial_vectors(spread_results, spread_key):
-    """Calculates spatial distances, angular aspects, and vector forces across cards (Stanislavivsky Model)."""
     spatial_matrix = []
     if len(spread_results) < 2:
         return spatial_matrix
@@ -311,6 +310,43 @@ def analyze_spatial_vectors(spread_results, spread_key):
         })
 
     return spatial_matrix
+
+def analyze_hebrew_spatial_distribution(spread_results):
+    distribution = {
+        "Mother_Axis": 0,
+        "Double_Direction": 0,
+        "Simple_Edge": 0,
+        "Sephira_Point": 0,
+        "Unmapped": 0
+    }
+    spatial_details = []
+
+    for item in spread_results:
+        data = item["card_data"]
+        stype = data.get("spatial_type")
+        sdim = data.get("spatial_dimension")
+
+        if stype in distribution:
+            distribution[stype] += 1
+        else:
+            if data.get("arcana_type") == "Minor" or "Sephira" in str(data.get("path_or_sephira")):
+                distribution["Sephira_Point"] += 1
+                stype = "Sephira_Point"
+                sdim = "Nodal Sphere (Sephira)"
+            else:
+                distribution["Unmapped"] += 1
+                stype = "Unmapped"
+                sdim = "General Form"
+
+        spatial_details.append({
+            "position": item["position_number"],
+            "title": data["title"],
+            "letter": data.get("hebrew_letter") or "N/A",
+            "spatial_type": stype,
+            "spatial_dimension": sdim or "Standard Continuum"
+        })
+
+    return distribution, spatial_details
 
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
     if forced_framework != "auto":
@@ -353,7 +389,7 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     return "3. Incarnational Life Path & Psychological Evolution"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
     mapping_label = "Golden Dawn / English System (Liber 777)" if mapping_system == "golden_dawn" else "French / Egyptian System (Lévi / Papus / Wirth)"
 
@@ -374,12 +410,21 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         bar = "█" * int(count * 2)
         prompt_md += f"* **{elem:6s}**: {bar} {count} ({pct:.1f}%)\n"
 
-    prompt_md += "\n---\n\n## 2. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    prompt_md += "\n---\n\n## 2. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Stanislavivsky)\n"
+    prompt_md += f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
+    prompt_md += f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
+    prompt_md += f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
+    prompt_md += f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n\n"
+    prompt_md += "**Card Spatial Vectors:**\n"
+    for sd in spatial_details:
+        prompt_md += f"- Pos {sd['position']} ({sd['title']}): Letter `{sd['letter']}` -> **{sd['spatial_type']}** [{sd['spatial_dimension']}]\n"
+
+    prompt_md += "\n---\n\n## 3. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
     for d in dignity_matrix:
         score_str = f"+{d['score']}" if d['score'] > 0 else str(d['score'])
         prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
 
-    prompt_md += "\n---\n\n## 3. SPATIAL & GEOMETRIC VECTOR ANALYSIS (Stanislavivsky Model)\n"
+    prompt_md += "\n---\n\n## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
     if spatial_matrix:
         for s in spatial_matrix:
             mod_str = f"+{s['score_modifier']}" if s['score_modifier'] > 0 else str(s['score_modifier'])
@@ -389,7 +434,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     else:
         prompt_md += "* Single-card operation or no vector relations evaluated.\n"
 
-    prompt_md += "\n---\n\n## 4. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    prompt_md += "\n---\n\n## 5. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
     for item in spread_results:
         data = item["card_data"]
@@ -405,20 +450,19 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"- **Path/Sephira**: {data['path_or_sephira']}{letter_str}\n"
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
         prompt_md += f"- **Comparative Hebrew Mapping**: GD: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
+        prompt_md += f"- **Spatial Dimension**: `{data.get('spatial_type', 'N/A')}` ({data.get('spatial_dimension', 'N/A')})\n"
         prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
 
     prompt_md += f"""---
 
-## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 6. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
-1. **Active System Context ({mapping_label}):** 
-   - Analyze how the cards function under the `{mapping_system}` mapping.
-   - Note key shifts where French/Egyptian attributions diverge from Golden Dawn (e.g., The Fool as Shin vs. Aleph, Strength vs. Justice position swaps).
-2. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
-3. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions and Spatial Vector Aspects (distances, angular deltas, quadrature/trine modifiers) calculated above.
-4. **Kabbalistic Tree of Life Pathworking:** Trace path transitions across the Tree of Life.
+1. **Active System Context ({mapping_label}):** Analyze how the cards function under the `{mapping_system}` mapping.
+2. **Hebrew Letter Spatial Geometry:** Consider the balance between Mother Axes (Elemental Primordial Planes), Double Directions (Cardinal Boundaries), and Simple Edges (Structural Constraints).
+3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
+4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions and Spatial Vector Aspects (distances, angular deltas, quadrature/trine modifiers) calculated above.
 5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
     return prompt_md
@@ -589,11 +633,13 @@ def run_spread_session():
         element_counts = analyze_elemental_balance(spread_results)
         dignity_matrix = calculate_elemental_dignities(spread_results)
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
+        spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], query_prompt, significator, args.seed,
-            spread_results, element_counts, dignity_matrix, spatial_matrix, macro_framework, mapping_system=args.mapping
+            spread_results, element_counts, dignity_matrix, spatial_matrix, 
+            spatial_dist, spatial_details, macro_framework, mapping_system=args.mapping
         )
 
         print("\n" + analytical_prompt)
