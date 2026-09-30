@@ -16,6 +16,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 from src.prng_shuffler import shuffle_deck
+from src.decan_aspects import analyze_spread_decan_aspects
+
 CONFIG_PATH = BASE_DIR / "config" / "config.json"
 
 DB_ENV_VARS = {
@@ -39,7 +41,6 @@ def load_db_config():
                 json_data = json.load(f)
                 db_json = json_data.get("database", {})
                 for key in config:
-                    # config.json only fills a value when the matching env var is unset
                     if key in db_json and not os.getenv(DB_ENV_VARS[key]):
                         config[key] = db_json[key]
         except Exception as e:
@@ -218,15 +219,12 @@ ZODIAC_ELEMENTS = {
     "gemini": "Air", "libra": "Air", "aquarius": "Air",
     "cancer": "Water", "scorpio": "Water", "pisces": "Water",
 }
-# Planet-only Major attributions (same convention as ootk_engine's Major table).
 PLANET_ELEMENTS = {
     "sun": "Fire", "mars": "Fire", "jupiter": "Fire",
     "moon": "Water", "venus": "Earth", "mercury": "Air", "saturn": "Earth",
 }
 
 def derive_primary_element(card_data):
-    """Suit wins; otherwise the first element, zodiac sign or planet word found in the
-    attribution, then the title. Whole-word matching, so 'chair' never reads as 'air'."""
     if not card_data:
         return "Spirit"
     suit = str(card_data.get("suit") or "").lower()
@@ -309,11 +307,6 @@ def calculate_spatial_aspect(angle_deg):
         return f"Inconjunct/Minor ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
 
 def analyze_spatial_vectors(spread_results, spread_key):
-    """Pairwise geometry between consecutive positions, measured around the layout's centroid.
-
-    Spreads without a defined layout return [] (no fake geometry). A position sitting on
-    the centroid has no direction, so pairs involving it are reported as a centre/axis node.
-    """
     if len(spread_results) < 2:
         return []
 
@@ -483,7 +476,7 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     return "3. Incarnational Life Path & Psychological Evolution"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, decan_aspects=None, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
     mapping_labels = {
         "golden_dawn": "Golden Dawn / English System (Liber 777)",
@@ -541,7 +534,20 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     else:
         prompt_md += "* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.\n"
 
-    prompt_md += "\n---\n\n## 6. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    prompt_md += "\n---\n\n## 6. DECANIC PLANETARY ASPECTS (Book of Thoth Zodiacal Dynamics)\n"
+    if decan_aspects:
+        for asp in decan_aspects:
+            score_str = f"+{asp['composite_score']}" if asp['composite_score'] > 0 else str(asp['composite_score'])
+            prompt_md += (
+                f"* **{asp['positions']} ({asp['card_a']} <-> {asp['card_b']})**:\n"
+                f"  - Decans: `{asp['decan_a']}` vs `{asp['decan_b']}`\n"
+                f"  - Ecliptic Angle: `{asp['delta_deg']}°` -> **{asp['aspect_name']}** ({asp['nature']})\n"
+                f"  - Composite Score: `{score_str}` (Planetary Synergy: {asp['planetary_synergy']})\n"
+            )
+    else:
+        prompt_md += "* No active major decanic aspects present between adjacent small cards.\n"
+
+    prompt_md += "\n---\n\n## 7. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
     for item in spread_results:
         data = item["card_data"]
@@ -564,20 +570,19 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 
     prompt_md += f"""---
 
-## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 8. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
 1. **Active System Context ({mapping_label}):** Analyze how the cards function under the `{mapping_system}` mapping.
-2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
+2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries.
 3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
-4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
+4. **Elemental Dignity, Decanic Aspects & Spatial Geometry Analysis:** Utilize Pairwise Elemental Dignity interactions, Astrological Decan Aspects, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
 5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
     return prompt_md
 
 def card_is_dignified(index, dignity_matrix):
-    """A card is dignified when the pairwise scores touching it (left and right neighbour) sum to >= 0."""
     if not dignity_matrix:
         return True
     touching = []
@@ -760,13 +765,14 @@ def run_spread_session():
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
+        decan_aspects = analyze_spread_decan_aspects(spread_results)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], query_prompt, significator, args.seed,
             spread_results, element_counts, dignity_matrix, spatial_matrix, 
             spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings,
-            macro_framework, mapping_system=args.mapping
+            decan_aspects=decan_aspects, macro_framework=macro_framework, mapping_system=args.mapping
         )
 
         print("\n" + analytical_prompt)

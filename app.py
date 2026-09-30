@@ -15,6 +15,7 @@ from src.spread_engine import (
     analyze_platonic_topology, evaluate_macro_framework,
     build_analytical_prompt, save_spread_session
 )
+from src.decan_aspects import analyze_spread_decan_aspects
 
 load_dotenv()
 
@@ -49,7 +50,6 @@ def resolve_positions(spread: dict) -> list:
 
 @app.get("/", response_class=HTMLResponse)
 def main_gui(request: Request):
-    # Sync endpoint: FastAPI runs it in a threadpool, so blocking psycopg calls are fine.
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
     return templates.TemplateResponse(
@@ -69,11 +69,6 @@ def generate_report(
     mapping_system: str = Form("golden_dawn"),
     selected_cards: str = Form(...)
 ):
-    """Builds the spread, runs the analyses, and renders the report.
-
-    Values are stored and used raw (only stripped). Jinja2 autoescapes the
-    templates, so escaping here would double-escape and pollute the LLM prompt.
-    """
     topic = topic.strip()
     significator = significator.strip() or "Knight of Swords"
     spread_key = spread_key.strip()
@@ -126,6 +121,7 @@ def generate_report(
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
+        decan_aspects = analyze_spread_decan_aspects(spread_results)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=framework)
 
         analytical_prompt = build_analytical_prompt(
@@ -142,6 +138,7 @@ def generate_report(
             solid_counts=solid_counts,
             topology_details=topology_details,
             dual_pairings=dual_pairings,
+            decan_aspects=decan_aspects,
             macro_framework=macro_framework,
             mapping_system=mapping_system
         )
