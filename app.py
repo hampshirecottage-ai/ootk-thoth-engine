@@ -8,7 +8,6 @@ import os
 import json
 from dotenv import load_dotenv
 
-# Import calculation helpers from spread_engine
 from scripts.spread_engine import (
     DB_CONFIG, SPREADS, fetch_all_cards, fetch_card_correspondences,
     analyze_elemental_balance, calculate_elemental_dignities,
@@ -25,10 +24,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-
 def get_db_connection():
     return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
-
 
 @app.get("/", response_class=HTMLResponse)
 async def main_gui(request: Request):
@@ -37,12 +34,8 @@ async def main_gui(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={
-            "cards": cards,
-            "spreads": SPREADS
-        }
+        context={"cards": cards, "spreads": SPREADS}
     )
-
 
 @app.post("/generate_report", response_class=HTMLResponse)
 async def generate_report(
@@ -51,6 +44,7 @@ async def generate_report(
     topic: str = Form(""),
     significator: str = Form("Knight of Swords"),
     framework: str = Form("auto"),
+    mapping_system: str = Form("golden_dawn"),
     selected_cards: str = Form(...)
 ):
     card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
@@ -60,7 +54,7 @@ async def generate_report(
     spread_results = []
     with get_db_connection() as conn:
         for idx, title in enumerate(card_titles):
-            card_data = fetch_card_correspondences(conn, title)
+            card_data = fetch_card_correspondences(conn, title, system=mapping_system)
             pos_name = positions[idx] if idx < len(positions) else f"Position {idx+1}"
             spread_results.append({
                 "position_number": idx + 1,
@@ -74,11 +68,11 @@ async def generate_report(
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], topic, significator, "Graphical Selection",
-            spread_results, element_counts, dignity_matrix, macro_framework
+            spread_results, element_counts, dignity_matrix, macro_framework, mapping_system=mapping_system
         )
 
         session_id = save_spread_session(
-            conn, selected_spread["name"], topic, f"GUI Selection | Framework: {macro_framework}", significator, spread_results
+            conn, selected_spread["name"], topic, f"GUI Selection | Mapping: {mapping_system} | Framework: {macro_framework}", significator, spread_results
         )
 
     return templates.TemplateResponse(
@@ -91,6 +85,7 @@ async def generate_report(
             "prompt": analytical_prompt,
             "spread_results": spread_results,
             "dignity_matrix": dignity_matrix,
-            "element_counts": element_counts
+            "element_counts": element_counts,
+            "mapping_system": mapping_system
         }
     )

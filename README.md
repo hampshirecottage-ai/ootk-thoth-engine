@@ -46,3 +46,18 @@ ootk-thoth-engine/
     ├── ootk_engine.py       # Terminal interactive CLI engine loop
     ├── execute.py           # Command-line execution entry point
     └── view_output.py       # Rich terminal log viewer & report renderer
+
+
+Parameter Flag	Accepted Values	Default	Description
+--mapping	golden_dawn
+french_egyptian	golden_dawn	Controls the Tarot-Kabbalah correspondence system (e.g., swapping Hebrew letters/attributions for Major Arcana).
+--framework	auto
+light_descent
+soul_formation
+life_path
+post_mortem	auto	Overrides the Cabbalistic Macro Framework lens used during synthesis evaluation.
+--html	(None — Flag)	False	When present, generates an HTML report inside the output/ directory.
+--spread	1 through 12	None	Selects the spread layout or pipeline operation.
+--seed	Any string/integer	None	Sets the PRNG seed for deterministic card draws.
+--topic	Quoted String	None	Defines the question or topic for the spread session.
+--significator	Card Title String	Knight of Swords	Defines the central significator card.

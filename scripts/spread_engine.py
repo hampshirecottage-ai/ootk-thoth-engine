@@ -6,10 +6,8 @@ import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Database Connection Configuration loaded securely from Environment Variables
 DB_CONFIG = {
     "dbname": os.getenv("DB_NAME", "my_tarot_db"),
     "user": os.getenv("DB_USER", "dbuser"),
@@ -115,6 +113,7 @@ def parse_args():
     parser.add_argument("--significator", type=str, help="Significator card title", default="Knight of Swords")
     parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework")
+    parser.add_argument("--mapping", type=str, choices=["golden_dawn", "french_egyptian"], default="golden_dawn", help="Tarot-Kabbalah Mapping Scheme")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
     return parser.parse_args()
 
@@ -131,7 +130,7 @@ def fetch_all_cards(conn):
         cur.execute("SELECT card_id, title, arcana_type, key_scale FROM thoth_cards ORDER BY card_id ASC;")
         return cur.fetchall()
 
-def fetch_card_correspondences(conn, title):
+def fetch_card_correspondences(conn, title, system="golden_dawn"):
     query = """
     SELECT 
         tc.card_id,
@@ -141,10 +140,12 @@ def fetch_card_correspondences(conn, title):
         tc.number_or_rank,
         tc.description,
         tc.key_scale,
-        c.name AS path_or_sephira,
-        COALESCE(c.hebrew_letter, 'N/A') AS hebrew_letter,
+        CASE WHEN %s = 'french_egyptian' AND c.path_or_sephira_french IS NOT NULL THEN c.path_or_sephira_french ELSE c.name END AS path_or_sephira,
+        CASE WHEN %s = 'french_egyptian' AND c.hebrew_letter_french IS NOT NULL THEN c.hebrew_letter_french ELSE COALESCE(c.hebrew_letter, 'N/A') END AS hebrew_letter,
+        c.hebrew_letter AS gd_hebrew_letter,
+        c.hebrew_letter_french AS french_hebrew_letter,
+        CASE WHEN %s = 'french_egyptian' AND c.attribution_french IS NOT NULL THEN c.attribution_french ELSE c.element_or_planet_or_sign END AS attribution,
         c.element_or_planet_or_sign AS element,
-        c.element_or_planet_or_sign AS attribution,
         c.king_scale_color,
         c.attributions
     FROM thoth_cards tc
@@ -152,13 +153,12 @@ def fetch_card_correspondences(conn, title):
     WHERE tc.title = %s;
     """
     with conn.cursor() as cur:
-        cur.execute(query, (title,))
+        cur.execute(query, (system, system, system, title))
         return cur.fetchone()
 
 def prng_shuffle_deck(cards, seed_val):
     import hashlib
     seed_int = int(hashlib.sha256(str(seed_val).encode('utf-8')).hexdigest(), 16)
-    
     deck = list(cards)
     n = len(deck)
     m = 2**32
@@ -174,7 +174,8 @@ def prng_shuffle_deck(cards, seed_val):
     return deck
 
 def derive_primary_element(card_data):
-    """Maps card correspondence/suit to one of the 4 classic elements or Spirit."""
+    if not card_data:
+        return "Spirit"
     suit = str(card_data.get("suit") or "").lower()
     attr = str(card_data.get("attribution") or "").lower()
     title = str(card_data.get("title") or "").lower()
@@ -190,10 +191,6 @@ def derive_primary_element(card_data):
     return "Spirit"
 
 def calculate_elemental_dignities(spread_results):
-    """
-    Computes pairwise elemental dignity interaction scores across adjacent cards.
-    Scores: +2 (Friendly/Active), +1 (Same Element), 0 (Neutral), -2 (Hostile/Weakened).
-    """
     dignity_matrix = []
     if len(spread_results) < 2:
         return dignity_matrix
@@ -243,13 +240,6 @@ def analyze_elemental_balance(spread_results):
     return element_counts
 
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
-    """
-    Evaluates which of the 4 Macro Conceptual Frameworks from Kabbalistic/Tarot synthesis applies:
-    1. Ascent/Descent of Divine Light (Aleph -> Tav)
-    2. Soul Formation Before Incarnation (Sephirotic Descent)
-    3. Life Path & Evolution during Physical Embodiment
-    4. Post-Mortem Ascent & Spiritual Return (Book of the Dead / Path Reversal)
-    """
     if forced_framework != "auto":
         framework_names = {
             "light_descent": "1. Divine Light Flow (Aleph -> Tav Pathway)",
@@ -262,22 +252,21 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     if not spread_results:
         return "3. Incarnational Life Path & Psychological Evolution"
 
-    # Analyze Key Scale / Arcana types present in spread
-    has_majors = any(item["card_data"].get("arcana_type") == "Major" for item in spread_results)
+    has_majors = any(item["card_data"].get("arcana_type") == "Major" for item in spread_results if item.get("card_data"))
     sephiroth_ranks = []
-    
     sephiroth_map = {
         "kether": 1, "chokmah": 2, "binah": 3, "chesed": 4, "geburah": 5,
         "tiphareth": 6, "netzach": 7, "hod": 8, "yesod": 9, "malkuth": 10
     }
 
     for item in spread_results:
+        if not item.get("card_data"):
+            continue
         path = str(item["card_data"].get("path_or_sephira") or "").lower()
         for seph, rank in sephiroth_map.items():
             if seph in path:
                 sephiroth_ranks.append(rank)
 
-    # Contextual Traversal Evaluation
     if sephiroth_ranks:
         if sephiroth_ranks[0] < sephiroth_ranks[-1]:
             return "1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)"
@@ -291,19 +280,21 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     return "3. Incarnational Life Path & Psychological Evolution"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, macro_framework="3. Incarnational Life Path"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
-    
+    mapping_label = "Golden Dawn / English System (Liber 777)" if mapping_system == "golden_dawn" else "French / Egyptian System (Lévi / Papus / Wirth)"
+
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 **Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
 **PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
+**Active Mapping System:** {mapping_label}
 
 ---
 
-## 1. ELEMENTAL VECTOR DISTRIBUTION (LIBER 777)
+## 1. ELEMENTAL VECTOR DISTRIBUTION
 """
     for elem, count in element_counts.items():
         pct = (count / total_cards) * 100
@@ -322,28 +313,30 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         letter_val = data.get('hebrew_letter')
         letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
         
+        gd_letter = data.get('gd_hebrew_letter') or 'N/A'
+        french_letter = data.get('french_hebrew_letter') or 'N/A'
+
         prompt_md += f"### Position {item['position_number']}: {item['position_name']}\n"
         prompt_md += f"- **Card Drawn**: {data['title']}\n"
         prompt_md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
         prompt_md += f"- **Path/Sephira**: {data['path_or_sephira']}{letter_str}\n"
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
+        prompt_md += f"- **Comparative Hebrew Mapping**: GD: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
         prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
 
     prompt_md += f"""---
 
 ## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
-Act as an expert Hermetic scholar and Aleister Crowley Thoth Tarot authority. Synthesize the above spread matrix following these dynamic rules:
+Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
-1. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**:
-   - *If Divine Light Ascent/Descent:* Trace the flow of light from the unmanifested into form.
-   - *If Soul Formation:* Analyze how the Sephiroth build structure into the soul prior to incarnation.
-   - *If Incarnational Life Path:* Focus on psychological evolution, maturity, and life cycles.
-   - *If Post-Mortem Return:* Evaluate the reversal of paths, clearing karmic debts, and spiritual ascension.
-2. **Elemental Dignity Analysis:** Utilize the Pairwise Dignity interactions scored above. Focus heavily on where hostile pairs (-2) create friction or where active attraction (+2) accelerates momentum.
-3. **Kabbalistic Tree of Life Pathworking:** Trace the motion from higher Sephiroth to lower physical manifestations across the drawn paths.
-4. **Decan & Planetary Rulers:** Evaluate astrological decan rulers and zodiacal signs to pinpoint precise timing and behavioral archetypes.
-5. **Actionable Resolution:** Conclude with a clear, direct executive summary synthesizing the dominant elemental vector and primary outcome card.
+1. **Active System Context ({mapping_label}):** 
+   - Analyze how the cards function under the `{mapping_system}` mapping.
+   - Note key shifts where French/Egyptian attributions diverge from Golden Dawn (e.g., The Fool as Shin vs. Aleph, Strength vs. Justice position swaps).
+2. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
+3. **Elemental Dignity Analysis:** Utilize the Pairwise Dignity interactions scored above.
+4. **Kabbalistic Tree of Life Pathworking:** Trace path transitions across the Tree of Life.
+5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
     return prompt_md
 
@@ -475,13 +468,13 @@ def run_spread_session():
         spread_results = []
 
         target_positions = []
-        if spread_choice == "12":
+        if "operations" in selected_spread:
             for op_key in selected_spread["operations"]:
                 op_spread = SPREADS[op_key]
                 for p in op_spread["positions"]:
                     target_positions.append(f"[{op_spread['name'][:6]}] {p}")
         else:
-            target_positions = selected_spread["positions"]
+            target_positions = selected_spread.get("positions", [])
 
         for pos_idx, position_name in enumerate(target_positions, start=1):
             print(f"\n[Position {pos_idx}: {position_name}]")
@@ -503,7 +496,7 @@ def run_spread_session():
                         if user_input.lower() == 'list':
                             display_card_selection(cards)
 
-            card_data = fetch_card_correspondences(conn, selected_title)
+            card_data = fetch_card_correspondences(conn, selected_title, system=args.mapping)
             spread_results.append({
                 "position_number": pos_idx,
                 "position_name": position_name,
@@ -515,7 +508,8 @@ def run_spread_session():
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
-            selected_spread["name"], query_prompt, significator, args.seed, spread_results, element_counts, dignity_matrix, macro_framework
+            selected_spread["name"], query_prompt, significator, args.seed,
+            spread_results, element_counts, dignity_matrix, macro_framework, mapping_system=args.mapping
         )
 
         print("\n" + analytical_prompt)
