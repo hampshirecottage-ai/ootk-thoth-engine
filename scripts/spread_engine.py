@@ -164,7 +164,12 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         c.king_scale_color,
         c.attributions,
         c.spatial_type,
-        c.spatial_dimension
+        c.spatial_dimension,
+        c.platonic_solid,
+        c.solid_faces,
+        c.solid_vertices,
+        c.dual_solid,
+        c.topological_role
     FROM thoth_cards tc
     LEFT JOIN correspondences c ON tc.key_scale = c.key_scale
     WHERE tc.title = %s;
@@ -348,6 +353,54 @@ def analyze_hebrew_spatial_distribution(spread_results):
 
     return distribution, spatial_details
 
+def analyze_platonic_topology(spread_results):
+    solid_counts = {
+        "Dodecahedron": 0,
+        "Tetrahedron": 0,
+        "Icosahedron": 0,
+        "Octahedron": 0,
+        "Hexahedron (Cube)": 0,
+        "Unmapped": 0
+    }
+    topology_details = []
+
+    for item in spread_results:
+        data = item["card_data"]
+        solid = data.get("platonic_solid") or "Unmapped"
+        role = data.get("topological_role") or "Standard Node"
+        dual = data.get("dual_solid") or "N/A"
+
+        if solid in solid_counts:
+            solid_counts[solid] += 1
+        else:
+            solid_counts["Unmapped"] += 1
+
+        topology_details.append({
+            "position": item["position_number"],
+            "title": data["title"],
+            "solid": solid,
+            "faces": data.get("solid_faces") or "N/A",
+            "vertices": data.get("solid_vertices") or "N/A",
+            "dual_solid": dual,
+            "role": role
+        })
+
+    dual_pairings = []
+    for i in range(len(topology_details) - 1):
+        s1 = topology_details[i]["solid"]
+        s2 = topology_details[i+1]["solid"]
+        p1 = topology_details[i]["position"]
+        p2 = topology_details[i+1]["position"]
+
+        if (s1 == "Hexahedron (Cube)" and s2 == "Octahedron") or (s1 == "Octahedron" and s2 == "Hexahedron (Cube)"):
+            dual_pairings.append(f"Positions {p1} & {p2}: Earth/Air Inversion Dual (Cube <-> Octahedron)")
+        elif (s1 == "Dodecahedron" and s2 == "Icosahedron") or (s1 == "Icosahedron" and s2 == "Dodecahedron"):
+            dual_pairings.append(f"Positions {p1} & {p2}: Spirit/Water Inversion Dual (Dodecahedron <-> Icosahedron)")
+        elif s1 == "Tetrahedron" and s2 == "Tetrahedron":
+            dual_pairings.append(f"Positions {p1} & {p2}: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)")
+
+    return solid_counts, topology_details, dual_pairings
+
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
     if forced_framework != "auto":
         framework_names = {
@@ -389,7 +442,7 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     return "3. Incarnational Life Path & Psychological Evolution"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
     mapping_label = "Golden Dawn / English System (Liber 777)" if mapping_system == "golden_dawn" else "French / Egyptian System (Lévi / Papus / Wirth)"
 
@@ -419,12 +472,21 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     for sd in spatial_details:
         prompt_md += f"- Pos {sd['position']} ({sd['title']}): Letter `{sd['letter']}` -> **{sd['spatial_type']}** [{sd['spatial_dimension']}]\n"
 
-    prompt_md += "\n---\n\n## 3. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    prompt_md += "\n---\n\n## 3. PLATONIC SOLID TOPOLOGY MATRIX\n"
+    for solid, count in solid_counts.items():
+        prompt_md += f"* **{solid:20s}**: `{count}`\n"
+
+    if dual_pairings:
+        prompt_md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
+        for dp in dual_pairings:
+            prompt_md += f"* {dp}\n"
+
+    prompt_md += "\n---\n\n## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
     for d in dignity_matrix:
         score_str = f"+{d['score']}" if d['score'] > 0 else str(d['score'])
         prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
 
-    prompt_md += "\n---\n\n## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
+    prompt_md += "\n---\n\n## 5. SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
     if spatial_matrix:
         for s in spatial_matrix:
             mod_str = f"+{s['score_modifier']}" if s['score_modifier'] > 0 else str(s['score_modifier'])
@@ -434,7 +496,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     else:
         prompt_md += "* Single-card operation or no vector relations evaluated.\n"
 
-    prompt_md += "\n---\n\n## 5. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    prompt_md += "\n---\n\n## 6. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
     for item in spread_results:
         data = item["card_data"]
@@ -451,18 +513,20 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
         prompt_md += f"- **Comparative Hebrew Mapping**: GD: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
         prompt_md += f"- **Spatial Dimension**: `{data.get('spatial_type', 'N/A')}` ({data.get('spatial_dimension', 'N/A')})\n"
+        prompt_md += f"- **Platonic Topology**: `{data.get('platonic_solid', 'N/A')}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
+        prompt_md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
         prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
 
     prompt_md += f"""---
 
-## 6. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
 1. **Active System Context ({mapping_label}):** Analyze how the cards function under the `{mapping_system}` mapping.
-2. **Hebrew Letter Spatial Geometry:** Consider the balance between Mother Axes (Elemental Primordial Planes), Double Directions (Cardinal Boundaries), and Simple Edges (Structural Constraints).
+2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
 3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
-4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions and Spatial Vector Aspects (distances, angular deltas, quadrature/trine modifiers) calculated above.
+4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
 5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
     return prompt_md
@@ -634,12 +698,14 @@ def run_spread_session():
         dignity_matrix = calculate_elemental_dignities(spread_results)
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
+        solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], query_prompt, significator, args.seed,
             spread_results, element_counts, dignity_matrix, spatial_matrix, 
-            spatial_dist, spatial_details, macro_framework, mapping_system=args.mapping
+            spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings,
+            macro_framework, mapping_system=args.mapping
         )
 
         print("\n" + analytical_prompt)
