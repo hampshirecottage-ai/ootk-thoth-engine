@@ -1,194 +1,147 @@
-Thoth Tarot & Liber 777 Calculation Engine
+# OOTK Thoth Engine
 
-Technical Documentation & Spread Reference Guide
+A high-precision Hermetic tarot calculation and analytical engine built around the 78-card Thoth Tarot deck, Liber 777 correspondence mappings, and Tree of Life spatial-platonic geometry.
 
-1. Command-Line Options Reference
+The engine automates and formalizes the Opening of the Key (OOTK) master pipeline, evaluating quantitative elemental dignities, Sefer Yetzirah dimensional coordinates, dynamic Gematria reduction matrices, Platonic solid dual inversions, and decanic zodiacal dynamics.
 
-The calculation engine (scripts/spread_engine.py) provides an extensive command-line interface for running manual, automated, and deterministic Hermetic tarot analysis sessions.
+---
 
-CLI Flags & Arguments
+## Key Features
 
-Flag	Type / Choices	Default	Description
---topic	str	None	Optional query or intent topic string.
---seed	str	None	PRNG seed for deterministic deck shuffling and drawing.
---significator	str	"Knight of Swords"	Title of the card acting as the operation's significator.
---spread	str (1–12)	None	Key identifier for selecting a spread layout.
---framework	auto, light_descent, soul_formation, life_path, post_mortem	"auto"	Overrides the automatic Macro Conceptual Framework detection.
---mapping	golden_dawn, french_egyptian	"golden_dawn"	Selects the Tarot-Kabbalah correspondence system.
---html	Flag	False	Auto-generates an HTML report inside output/.
+- 4-Operation OOTK Master Pipeline:
+  - Operation 1 (Core & Climax): Analyzes core nature, subconscious psychological roots, environmental conditions, and material climax.
+  - Operation 2 (Zodiacal Houses): Evaluates spatial distribution across the 12 Astrological Houses.
+  - Operation 3 (Zodiacal Progression): Tracks developmental progression across the 12 signs of the Zodiac (Aries through Pisces).
+  - Operation 4 (Decanic Cycle): Processes complete structural closure across all 36 Decans.
+- Liber 777 & Cabbalistic Calculation:
+  - Dynamic Gematria matrix mapping and reduction formulas.
+  - Multi-layer elemental vector scoring (Fire, Water, Air, Earth).
+  - Hebrew letter path attributions and Tree of Life topological coordinates.
+  - PRNG deck shuffling with Fisher–Yates algorithms and Linear Congruential Generators.
+- Robust Persistence & Reporting:
+  - PostgreSQL 16+ Data Layer: Structured relational schema for operation sessions, card pulls, and geometry.
+  - Rich CLI: Terminal interface with styled visual tables and audit logging.
+  - FastAPI Web Server: Interactive API endpoints and rendered SVG/HTML report dashboards.
 
-2. Command-Line Usage Examples
+---
 
-Basic Interactive Run
+## Architectural Layout
 
-Prompts the user interactively to select a spread and input card titles manually:
+ootk-thoth-engine/
+├── app/                      # FastAPI Web Application
+│   ├── routes/               # API endpoints & session views
+│   ├── templates/            # Jinja2 HTML/SVG dashboards
+│   └── main.py               # Application entry point
+├── db/                       # Database Schema & Seed Data
+│   ├── schema.sql            # Core relational DDL & indexes
+│   └── seed.sql              # Static reference data (cards, geometries)
+├── scripts/                  # CLI Operational Tools
+│   ├── execute.py            # Primary pipeline execution script
+│   ├── view_output.py        # CLI log and session renderer
+│   └── prng_shuffler.py      # LCG & Fisher–Yates engine
+├── .env.example              # Environment variable template
+├── .gitignore                # Git untracked pattern rules
+├── requirements.txt          # Python dependency pin manifest
+└── README.md                 # Project documentation
 
-[bash]
-python scripts/spread_engine.py
+---
 
+## Tech Stack & Prerequisites
 
-Deterministic PRNG Auto-Draw
+- Core Runtime: Python 3.12+
+- Database: PostgreSQL 16+
+- Primary Dependencies: FastAPI, Uvicorn, Jinja2, Psycopg 3, Python-Dotenv, Rich
 
-Draws cards automatically for Spread 3 (Triad) using a seed for reproducible results:
+---
 
-[bash]
-python scripts/spread_engine.py --spread 3 --seed 42 --topic "Career Progression"
+## Quick Start Guide
 
+### 1. Repository Setup
 
-Auto-Generating HTML Reports
+Clone the repository and navigate into the project directory:
 
-Executes Spread 1 (Single Card) and exports an HTML report into output/:
+git clone git@github.com:hampshirecottage-ai/ootk-thoth-engine.git
+cd ootk-thoth-engine
 
-[bash]
-python scripts/spread_engine.py --spread 1 --topic "Daily Reflection" --html
+### 2. Environment Configuration
 
+Create and activate an isolated virtual environment:
 
-Full Configuration Override
+python3 -m venv venv
+source venv/bin/activate
 
-Configures a custom significator, alternative French/Egyptian mapping scheme, and forced macro conceptual framework:
+Install core dependencies:
 
-[bash]
-python scripts/spread_engine.py \
-  --spread 5 \
-  --significator "Queen of Wands" \
-  --mapping french_egyptian \
-  --framework soul_formation \
-  --topic "Spiritual Alignment" \
-  --html
+pip install -r requirements.txt
 
+### 3. Database Initialization
 
-3. Detailed Spread Layout Catalog
+1. Create a local environment file from the template:
+   cp .env.example .env
 
-The engine supports 12 distinct spread configurations categorized into four operational tiers.
+2. Configure your local PostgreSQL connection settings in .env:
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=my_tarot_db
+   DB_USER=postgres
+   DB_PASSWORD=your_password_here
 
-Tier I: Core & Progressive Spreads
+3. Initialize the database schema and populate reference mappings:
+   createdb -U postgres -h localhost my_tarot_db
+   psql -U postgres -h localhost -d my_tarot_db -f db/schema.sql
+   psql -U postgres -h localhost -d my_tarot_db -f db/seed.sql
 
-1. Single Card / Daily Operations (1 Card)
+---
 
-⚬ Position 1: Core Theme / Focus
+## Execution Workflows
 
-2. Dyad — Polarity & Dynamics (2 Cards)
+### Command Line Interface (CLI)
 
-⚬ Position 1: Active Force (Thesis)
+Run an automated OOTK pipeline operation with custom PRNG seeding:
 
-⚬ Position 2: Receptive / Resistance Force (Antithesis)
+python scripts/execute.py --spread ootk_4op --seed 777-7 --significator "Knight of Swords"
 
-3. Triad — Timeline & Motion (3 Cards)
+Render detailed session results directly to the terminal:
 
-⚬ Position 1: Past / Root Cause
+python scripts/view_output.py --latest
 
-⚬ Position 2: Present / Active Dynamics
+### Interactive Web Server
 
-⚬ Position 3: Future / Manifest Result
+Launch the local FastAPI development server:
 
-4. Sub-Elemental Quadrant Cross — Elemental Sub-Division (4 Cards)
+uvicorn app.main:app --reload --port 8000
 
-⚬ Position 1: Yod of Yod (Fire of Fire — Pure Flash)
+Open your browser to http://localhost:8000 to inspect interactive visual dashboards and API documentation at http://localhost:8000/docs.
 
-⚬ Position 2: Heh of Yod (Water of Fire — Emotional Will)
+---
 
-⚬ Position 3: Vav of Yod (Air of Fire — Directed Focus)
+## Database Schema Model
 
-⚬ Position 4: Heh Final of Yod (Earth of Fire — Physicalized Action)
+┌──────────────────┐        ┌──────────────────┐        ┌─────────────────────┐
+│  tarot_sessions  │ 1    * │   spread_pulls   │ 1    * │ session_card_pulls  │
+├──────────────────┤────────┼──────────────────┤────────┼─────────────────────┤
+│ session_id (PK)  │        │ spread_id (PK)   │        │ pull_id (PK)        │
+│ operation_type   │        │ session_id (FK)  │        │ session_id (FK)     │
+│ significator     │        │ spread_name      │        │ spread_id (FK)      │
+│ created_at       │        │ pull_order       │        │ card_id (FK)        │
+└──────────────────┘        └──────────────────┘        │ position_index      │
+                                                        │ is_dignified        │
+                                                        └──────────┬──────────┘
+                                                                   │ *
+                                                                   │
+                                                                   │ 1
+                                                        ┌──────────┴──────────┐
+                                                        │     thoth_cards     │
+                                                        ├─────────────────────┤
+                                                        │ card_id (PK)        │
+                                                        │ title               │
+                                                        │ arcana_type         │
+                                                        │ suit / key_scale    │
+                                                        └─────────────────────┘
 
-5. Tetragrammaton Spread — 4 Elemental Vectors (4 Cards)
+---
 
-⚬ Position 1: Atziluth / Yod (Fire — Creative Spark)
+## License & Operational Directives
 
-⚬ Position 2: Briah / Heh (Water — Mental/Emotional Container)
+Distributed under the MIT License. See LICENSE for further details.
 
-⚬ Position 3: Yetzirah / Vav (Air — Formative Processing)
-
-⚬ Position 4: Assiah / Heh Final (Earth — Material Result)
-
-Tier II: Hermetic & Macrocosmic Layouts
-
-6. Hexagram Spread — Planetary Operations & Macrocosm (7 Cards)
-
-⚬ Position 1: Saturn (Top Apex / Form, Constraints & Karma)
-
-⚬ Position 2: Jupiter (Right Top / Expansion, Luck & Growth)
-
-⚬ Position 3: Mars (Right Bottom / Drive, Severity & Force)
-
-⚬ Position 4: Venus (Bottom Apex / Harmony, Affection & Value)
-
-⚬ Position 5: Mercury (Left Bottom / Intellect, Logic & Communication)
-
-⚬ Position 6: Sun (Left Top / Core Vitality, Identity & Spirit)
-
-⚬ Position 7: Moon (Center Core / Subconscious, Instinct & Foundation)
-
-7. Tree of Life Layout — 10 Sephiroth Mapping (10 Cards)
-
-⚬ Position 1: Kether (Crown / Primary Impulse)
-
-⚬ Position 2: Chokmah (Wisdom / Dynamic Force)
-
-⚬ Position 3: Binah (Understanding / Structural Form)
-
-⚬ Position 4: Chesed (Mercy / Expansion)
-
-⚬ Position 5: Geburah (Severity / Action & Severity)
-
-⚬ Position 6: Tiphareth (Beauty / Harmony & Core Self)
-
-⚬ Position 7: Netzach (Victory / Emotions & Instinct)
-
-⚬ Position 8: Hod (Splendor / Intellect & Logic)
-
-⚬ Position 9: Yesod (Foundation / Subconscious & Astral)
-
-⚬ Position 10: Malkuth (Kingdom / Manifest World)
-
-Tier III: Opening of the Key (OOTK) Operations
-
-8. OOTK — First Operation (15 Cards)
-
-⚬ Position 1: Significator / Core Nature of Question
-
-⚬ Positions 2–3: Development of Question (Left Pair A & B)
-
-⚬ Positions 4–5: Further Outcome (Right Pair A & B)
-
-⚬ Positions 6–7: Unexpected / External Factors (Center Pair A & B)
-
-⚬ Positions 8–9: Psychological / Subconscious Basis (Base Left A & B)
-
-⚬ Positions 10–11: Environmental / Material Basis (Base Right A & B)
-
-⚬ Positions 12–13: Final Synthesis / Karma (Top Apex A & B)
-
-⚬ Position 14: Key Counter-Balance / Receptivity
-
-⚬ Position 15: Ultimate Climax / Resolution
-
-9. OOTK — Second Operation — 12 Astrological Houses (12 Cards)
-
-⚬ Positions 1–12: Mapped sequentially from First House (Ascendant / Physical Self) through Twelfth House (Subconscious & Hidden).
-
-10. OOTK — Third Operation — 12 Zodiacal Signs (12 Cards)
-
-⚬ Positions 1–12: Mapped sequentially from Aries through Pisces.
-
-11. OOTK — Fourth Operation — 36 Zodiacal Decans (36 Cards)
-
-⚬ Positions 1–36: Mapped sequentially from Decan 1 through Decan 36.
-
-Tier IV: Master Pipeline
-
-12. Complete Opening of the Key (OOTK) — 4-Operation Master Pipeline (75 Cards)
-
-Executes Operations 1 through 4 (8, 9, 10, and 11) sequentially in a single automated pass.
-
-4. Mathematics of the 75-Card Master Pipeline
-
-A common question regarding Option 12 is why exactly 75 cards are drawn during the full Opening of the Key sequence:
-
-$$\text{Operation 1 (15 cards)} + \text{Operation 2 (12 cards)} + \text{Operation 3 (12 cards)} + \text{Operation 4 (36 cards)} = 75\text{ cards total}$$
-
-Golden Dawn Protocol
-
-In traditional Hermetic Golden Dawn protocol, the full tarot deck consists of 78 cards. Before starting the First Operation, the Significator card is selected separately to represent the querent or topic, removing it from the active deck before drawing the remaining 15 cards for Operation 1.
-
-While all 78 cards participate in the complete ceremonial framework, the active draw sequence across the four operations total exactly 75 pulls.
