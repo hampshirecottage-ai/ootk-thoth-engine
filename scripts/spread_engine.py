@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import math
 import argparse
 import psycopg
 from psycopg.rows import dict_row
@@ -104,6 +105,21 @@ SPREADS = {
         "name": "Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline",
         "operations": ["8", "9", "10", "11"]
     }
+}
+
+# Fallback spatial geometry coordinates (Normalized 2D Plane)
+SPREAD_DEFAULT_COORDINATES = {
+    "1": [(0.0, 0.0)],
+    "2": [(-0.5, 0.0), (0.5, 0.0)],
+    "3": [(-1.0, 0.0), (0.0, 0.0), (1.0, 0.0)],
+    "4": [(0.0, 1.0), (1.0, 0.0), (0.0, -1.0), (-1.0, 0.0)],
+    "5": [(0.0, 1.0), (1.0, 0.0), (-1.0, 0.0), (0.0, -1.0)],
+    "6": [(0.0, 1.0), (0.866, 0.5), (0.866, -0.5), (0.0, -1.0), (-0.866, -0.5), (-0.866, 0.5), (0.0, 0.0)],
+    "10": [
+        (1.0, 0.0), (0.866, 0.5), (0.5, 0.866), (0.0, 1.0),
+        (-0.5, 0.866), (-0.866, 0.5), (-1.0, 0.0), (-0.866, -0.5),
+        (-0.5, -0.866), (0.0, -1.0), (0.5, -0.866), (0.866, -0.5)
+    ]
 }
 
 def parse_args():
@@ -239,6 +255,63 @@ def analyze_elemental_balance(spread_results):
         element_counts[elem] += 1
     return element_counts
 
+def calculate_spatial_aspect(angle_deg):
+    """Classifies geometric angular relationships based on classical aspects."""
+    norm_angle = abs(angle_deg) % 360
+    if norm_angle > 180:
+        norm_angle = 360 - norm_angle
+
+    if norm_angle <= 15:
+        return "Conjunction (0°)", "Direct Focus / Synthesis", 2
+    elif 50 <= norm_angle <= 70:
+        return "Sextile (60°)", "Harmonic Alignment / Opportunity", 1
+    elif 80 <= norm_angle <= 100:
+        return "Square (90°)", "Dynamic Tension / Quadrature Friction", -2
+    elif 110 <= norm_angle <= 130:
+        return "Trine (120°)", "Equilateral Flow / Resonance", 2
+    elif 165 <= norm_angle <= 180:
+        return "Opposition (180°)", "Polar Complement / Axis Tension", -1
+    else:
+        return f"Inconjunct/Minor ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
+
+def analyze_spatial_vectors(spread_results, spread_key):
+    """Calculates spatial distances, angular aspects, and vector forces across cards (Stanislavivsky Model)."""
+    spatial_matrix = []
+    if len(spread_results) < 2:
+        return spatial_matrix
+
+    coords = SPREAD_DEFAULT_COORDINATES.get(spread_key)
+
+    for i in range(len(spread_results) - 1):
+        item1 = spread_results[i]
+        item2 = spread_results[i + 1]
+
+        if coords and i + 1 < len(coords):
+            x1, y1 = coords[i]
+            x2, y2 = coords[i + 1]
+        else:
+            x1, y1 = (float(i), 0.0)
+            x2, y2 = (float(i + 1), 0.0)
+
+        dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+        angle1 = math.degrees(math.atan2(y1, x1)) % 360
+        angle2 = math.degrees(math.atan2(y2, x2)) % 360
+        delta_angle = abs(angle1 - angle2)
+
+        aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
+
+        spatial_matrix.append({
+            "pair": f"Pos {item1['position_number']} ({item1['card_data']['title']}) <-> Pos {item2['position_number']} ({item2['card_data']['title']})",
+            "distance": round(dist, 3),
+            "delta_angle": round(delta_angle, 1),
+            "aspect": aspect_name,
+            "description": aspect_desc,
+            "score_modifier": modifier
+        })
+
+    return spatial_matrix
+
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
     if forced_framework != "auto":
         framework_names = {
@@ -280,7 +353,7 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     return "3. Incarnational Life Path & Psychological Evolution"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
     mapping_label = "Golden Dawn / English System (Liber 777)" if mapping_system == "golden_dawn" else "French / Egyptian System (Lévi / Papus / Wirth)"
 
@@ -306,7 +379,17 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         score_str = f"+{d['score']}" if d['score'] > 0 else str(d['score'])
         prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
 
-    prompt_md += "\n---\n\n## 3. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    prompt_md += "\n---\n\n## 3. SPATIAL & GEOMETRIC VECTOR ANALYSIS (Stanislavivsky Model)\n"
+    if spatial_matrix:
+        for s in spatial_matrix:
+            mod_str = f"+{s['score_modifier']}" if s['score_modifier'] > 0 else str(s['score_modifier'])
+            prompt_md += f"* **{s['pair']}**:\n"
+            prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
+            prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
+    else:
+        prompt_md += "* Single-card operation or no vector relations evaluated.\n"
+
+    prompt_md += "\n---\n\n## 4. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
     for item in spread_results:
         data = item["card_data"]
@@ -326,7 +409,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 
     prompt_md += f"""---
 
-## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
@@ -334,7 +417,7 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
    - Analyze how the cards function under the `{mapping_system}` mapping.
    - Note key shifts where French/Egyptian attributions diverge from Golden Dawn (e.g., The Fool as Shin vs. Aleph, Strength vs. Justice position swaps).
 2. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
-3. **Elemental Dignity Analysis:** Utilize the Pairwise Dignity interactions scored above.
+3. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions and Spatial Vector Aspects (distances, angular deltas, quadrature/trine modifiers) calculated above.
 4. **Kabbalistic Tree of Life Pathworking:** Trace path transitions across the Tree of Life.
 5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
@@ -505,11 +588,12 @@ def run_spread_session():
 
         element_counts = analyze_elemental_balance(spread_results)
         dignity_matrix = calculate_elemental_dignities(spread_results)
+        spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], query_prompt, significator, args.seed,
-            spread_results, element_counts, dignity_matrix, macro_framework, mapping_system=args.mapping
+            spread_results, element_counts, dignity_matrix, spatial_matrix, macro_framework, mapping_system=args.mapping
         )
 
         print("\n" + analytical_prompt)
