@@ -1,63 +1,101 @@
-# OOTK Thoth Engine (`ootk-thoth-engine`)
+OOTK Thoth Engine
 
-An open-source Hermetic operational engine, database architecture, and FastAPI web application designed to automate Tarot operations using Aleister Crowley’s Thoth Tarot framework. The engine performs dynamic card selection, automated Hermetic synthesis reporting, elemental balance and dignity calculations, and direct asset integration with Lady Frieda Harris’s original artwork.
+A high-precision Hermetic tarot calculation and reporting engine built around the 78-card Thoth Tarot deck, Liber 777 correspondence mappings, and Tree of Life spatial-platonic geometry.
 
----
+The engine executes the full Opening of the Key (OOTK) master pipeline, evaluating elemental dignities, Sefer Yetzirah dimensional coordinates, Platonic solid dual inversions, and decanic zodiacal dynamics.
 
-## Features
+Features
 
-- **Interactive Graphic Web GUI (`FastAPI` + `Jinja2`):**
-  - Grid-based visual card selector operating at `http://localhost:8000`.
-  - Dynamic spread slotting (Opening of the Key 15-card spread, 3-card, 5-card, and custom layouts).
-  - Built-in visual previews for card selections and active position assignment.
+⚬ 4-Operation OOTK Pipeline:
+  ⚬ Op 1: Core Nature, Psychological Basis, Environmental Factors, and Final Synthesis.
+  ⚬ Op 2: 12 Astrological Houses (Ascendant, Asset, Mind, Home, etc.).
+  ⚬ Op 3: 12 Zodiacal Progression Paths (Aries through Pisces).
+  ⚬ Op 4: 36 Decanic Zodiacal Cycle.
+⚬ Liber 777 & Cabbalistic Engine: Dynamic PRNG deck shuffling, dynamic Gematria matrix reduction, Hebrew letter paths, and elemental vector scoring.
+⚬ PostgreSQL Persistence: Structured schema for storing operation sessions, card vector distributions, and analytical outputs.
+⚬ Rich CLI & Modern Web UI: Execute operations directly via command line or launch the FastAPI web server for interactive reports.
 
-- **Hermetic Synthesis & Calculation Engine:**
-  - **Elemental Dignities Matrix:** Quantitative calculation of passive/active elemental interactions (Mutual Strengths, Weaknesses, Neutralities, Incompatibilities).
-  - **Elemental Distribution Analysis:** Automatic tally and percentage balance for Fire, Water, Air, and Earth vectors across positions.
-  - **Liber 777 Correspondences:** Direct SQL query mappings for Golden Dawn/Thoth attributions, including astrological decans, Hebrew letters, Kabbalistic Tree of Life paths, and Chaldean zodiacal decans.
+Tech Stack & Requirements
 
-- **Asset Management & Artwork Retrieval Pipeline:**
-  - Automated download script (`scripts/download_images.py`) to fetch and normalize high-resolution scans of Lady Frieda Harris’s Thoth card paintings.
-  - Multi-CDN fallback mechanism with alias resolution mapping idiosyncratic Thoth card titles (*The Magus*, *The Priestess*, *Adjustment*, *Lust*, *Art*, *The Aeon*, *The Universe*).
+⚬ Language: Python 3.12+
+⚬ Database: PostgreSQL 16+
+⚬ Frameworks & Core Libraries: FastAPI, Uvicorn, Jinja2, Psycopg 3, Python-Dotenv, Rich
 
-- **Database-Driven Session Logging:**
-  - PostgreSQL integration via `psycopg3` (`dict_row`) storing session parameters, topic inputs, active significators, card position assignments, and generated Hermetic prompts into `my_tarot_db`.
+Project Structure
 
----
-
-## Project Structure
-
-```text
 ootk-thoth-engine/
-├── app.py                   # FastAPI web application server & endpoint handlers
-├── schema.sql               # PostgreSQL database schema and index definitions
-├── .env                     # Database connection credentials (git-ignored)
-├── .gitignore               # Version control exclusion rules
-├── README.md                # System documentation
-├── templates/
-│   ├── index.html           # Visual card selector grid & interactive spread board
-│   └── report.html          # HTML Hermetic synthesis report generator
-├── static/
-│   └── images/              # Local storage for Lady Frieda Harris artwork (.jpg)
-│       └── .gitkeep         # Placeholder maintaining directory structure in Git
-└── scripts/
-    ├── download_images.py   # Multi-CDN artwork downloader & title alias resolver
-    ├── spread_engine.py     # Core elemental calculation & database helper modules
-    ├── ootk_engine.py       # Terminal interactive CLI engine loop
-    ├── execute.py           # Command-line execution entry point
-    └── view_output.py       # Rich terminal log viewer & report renderer
+├── app/                  # FastAPI web application & routes
+├── db/                   # Database scripts & schema definition
+│   ├── schema.sql        # Core database tables & constraints
+│   └── seed.sql          # Sample data & initial setup
+├── scripts/              # CLI execution scripts (execute.py, view_output.py, etc.)
+├── .env.example          # Template for local environment configuration
+├── .gitignore            # Git exclusion rules
+├── requirements.txt      # Python dependencies
+└── README.md
 
 
-Parameter Flag	Accepted Values	Default	Description
---mapping	golden_dawn
-french_egyptian	golden_dawn	Controls the Tarot-Kabbalah correspondence system (e.g., swapping Hebrew letters/attributions for Major Arcana).
---framework	auto
-light_descent
-soul_formation
-life_path
-post_mortem	auto	Overrides the Cabbalistic Macro Framework lens used during synthesis evaluation.
---html	(None — Flag)	False	When present, generates an HTML report inside the output/ directory.
---spread	1 through 12	None	Selects the spread layout or pipeline operation.
---seed	Any string/integer	None	Sets the PRNG seed for deterministic card draws.
---topic	Quoted String	None	Defines the question or topic for the spread session.
---significator	Card Title String	Knight of Swords	Defines the central significator card.
+Getting Started
+
+1. Clone the Repository
+
+git clone git@github.com:hampshirecottage-ai/ootk-thoth-engine.git
+cd ootk-thoth-engine
+
+
+2. Environment Setup
+
+Create and activate a virtual environment:
+
+python3 -m venv venv
+source venv/bin/activate
+
+
+Install required dependencies:
+
+pip install "fastapi[standard]" uvicorn jinja2 python-multipart psycopg[binary] python-dotenv rich
+
+
+3. Database Configuration
+
+1. Copy the environment template:
+   cp .env.example .env
+   
+2. Update .env with your local PostgreSQL credentials:
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=ootk_db
+   DB_USER=postgres
+   DB_PASSWORD=your_password_here
+   
+3. Create the database and import the schema:
+   createdb -U postgres -h localhost ootk_db
+   psql -U postgres -h localhost -d ootk_db -f db/schema.sql
+   
+
+Running the Engine
+
+CLI Execution
+
+Run an OOTK operation pipeline directly from the command line:
+
+python scripts/execute.py --spread ootk_4op --seed 777-7
+
+
+Render HTML/SVG analytical reports:
+
+python scripts/view_output.py
+
+
+Web Application
+
+Populate required local assets (if applicable) and launch the web server:
+
+uvicorn app:app --reload --port 8000
+
+
+Access the interactive engine at http://localhost:8000.
+
+Contributing & License
+
+This project is open-source and licensed under the MIT License. Contributions, bug reports, and pull requests are welcome!
