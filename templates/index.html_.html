@@ -41,8 +41,7 @@
                 {% for card in cards %}
                 {% set slug = card.title.lower().replace(' ', '-').replace("'", '') %}
                 <div class="card-item" onclick="selectCard('{{ card.title }}')">
-                    <!-- Standardized Wikimedia/Tarot Image CDN link with placeholder fallback -->
-            <img src="/static/images/{{ slug }}.jpg" 
+                    <img src="/static/images/{{ slug }}.jpg" 
                             alt="{{ card.title }}" 
                             onerror="this.onerror=null; this.src='https://placehold.co/200x320/1e1e1e/bb86fc?text={{ card.title | replace(' ', '+') }}';">
                     <div class="card-title">{{ card.title }}</div>
@@ -60,6 +59,15 @@
                     {% for key, spread in spreads.items() %}
                     <option value="{{ key }}">{{ spread.name }}</option>
                     {% endfor %}
+                </select>
+
+                <label>Macro Conceptual Framework:</label>
+                <select name="framework">
+                    <option value="auto">Auto-Detect Framework from Draw</option>
+                    <option value="light_descent">1. Divine Light Flow (Aleph -> Tav)</option>
+                    <option value="soul_formation">2. Pre-Incarnation Soul Formation</option>
+                    <option value="life_path">3. Incarnational Life Path & Evolution</option>
+                    <option value="post_mortem">4. Post-Mortem Return (Book of the Dead)</option>
                 </select>
 
                 <label>Query Topic:</label>

@@ -114,6 +114,7 @@ def parse_args():
     parser.add_argument("--seed", type=str, help="PRNG numeric seed for deterministic draws", default=None)
     parser.add_argument("--significator", type=str, help="Significator card title", default="Knight of Swords")
     parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
+    parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
     return parser.parse_args()
 
@@ -204,7 +205,6 @@ def calculate_elemental_dignities(spread_results):
         elem1 = derive_primary_element(c1["card_data"])
         elem2 = derive_primary_element(c2["card_data"])
 
-        # Dignity Scoring Logic
         if elem1 == "Spirit" or elem2 == "Spirit":
             score = 0
             rel = "Neutral / Spiritual Synthesis"
@@ -242,7 +242,56 @@ def analyze_elemental_balance(spread_results):
         element_counts[elem] += 1
     return element_counts
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix):
+def evaluate_macro_framework(spread_results, forced_framework="auto"):
+    """
+    Evaluates which of the 4 Macro Conceptual Frameworks from Kabbalistic/Tarot synthesis applies:
+    1. Ascent/Descent of Divine Light (Aleph -> Tav)
+    2. Soul Formation Before Incarnation (Sephirotic Descent)
+    3. Life Path & Evolution during Physical Embodiment
+    4. Post-Mortem Ascent & Spiritual Return (Book of the Dead / Path Reversal)
+    """
+    if forced_framework != "auto":
+        framework_names = {
+            "light_descent": "1. Divine Light Flow (Aleph -> Tav Pathway)",
+            "soul_formation": "2. Soul Formation & Pre-Incarnation Shaping",
+            "life_path": "3. Incarnational Life Path & Psychological Evolution",
+            "post_mortem": "4. Post-Mortem Return & Reversal of Paths (Book of the Dead)"
+        }
+        return framework_names.get(forced_framework, "1. Divine Light Flow")
+
+    if not spread_results:
+        return "3. Incarnational Life Path & Psychological Evolution"
+
+    # Analyze Key Scale / Arcana types present in spread
+    has_majors = any(item["card_data"].get("arcana_type") == "Major" for item in spread_results)
+    sephiroth_ranks = []
+    
+    sephiroth_map = {
+        "kether": 1, "chokmah": 2, "binah": 3, "chesed": 4, "geburah": 5,
+        "tiphareth": 6, "netzach": 7, "hod": 8, "yesod": 9, "malkuth": 10
+    }
+
+    for item in spread_results:
+        path = str(item["card_data"].get("path_or_sephira") or "").lower()
+        for seph, rank in sephiroth_map.items():
+            if seph in path:
+                sephiroth_ranks.append(rank)
+
+    # Contextual Traversal Evaluation
+    if sephiroth_ranks:
+        if sephiroth_ranks[0] < sephiroth_ranks[-1]:
+            return "1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)"
+        elif sephiroth_ranks[0] > sephiroth_ranks[-1]:
+            return "4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)"
+        elif any(r <= 3 for r in sephiroth_ranks) and any(r >= 7 for r in sephiroth_ranks):
+            return "2. Soul Formation & Pre-Incarnation Stage (Descent Through Sephiroth)"
+
+    if has_majors:
+        return "3. Incarnational Life Path & Psychological Evolution (Arcana Progression)"
+
+    return "3. Incarnational Life Path & Psychological Evolution"
+
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, macro_framework="3. Incarnational Life Path"):
     total_cards = sum(element_counts.values()) or 1
     
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
@@ -250,6 +299,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
 **PRNG Seed:** {seed_val or 'Manual Entry'}
+**Macro Cabbalistic Framework:** {macro_framework}
 
 ---
 
@@ -279,16 +329,21 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
         prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
 
-    prompt_md += """---
+    prompt_md += f"""---
 
 ## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Aleister Crowley Thoth Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
-1. **Elemental Dignity Analysis:** Utilize the Pairwise Dignity interactions scored above. Focus heavily on where hostile pairs (-2) create friction or where active attraction (+2) accelerates momentum.
-2. **Kabbalistic Tree of Life Pathworking:** Trace the motion from higher Sephiroth to lower physical manifestations across the drawn paths.
-3. **Decan & Planetary Rulers:** Evaluate astrological decan rulers and zodiacal signs to pinpoint precise timing and behavioral archetypes.
-4. **Actionable Resolution:** Conclude with a clear, direct executive summary synthesizing the dominant elemental vector and primary outcome card.
+1. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**:
+   - *If Divine Light Ascent/Descent:* Trace the flow of light from the unmanifested into form.
+   - *If Soul Formation:* Analyze how the Sephiroth build structure into the soul prior to incarnation.
+   - *If Incarnational Life Path:* Focus on psychological evolution, maturity, and life cycles.
+   - *If Post-Mortem Return:* Evaluate the reversal of paths, clearing karmic debts, and spiritual ascension.
+2. **Elemental Dignity Analysis:** Utilize the Pairwise Dignity interactions scored above. Focus heavily on where hostile pairs (-2) create friction or where active attraction (+2) accelerates momentum.
+3. **Kabbalistic Tree of Life Pathworking:** Trace the motion from higher Sephiroth to lower physical manifestations across the drawn paths.
+4. **Decan & Planetary Rulers:** Evaluate astrological decan rulers and zodiacal signs to pinpoint precise timing and behavioral archetypes.
+5. **Actionable Resolution:** Conclude with a clear, direct executive summary synthesizing the dominant elemental vector and primary outcome card.
 """
     return prompt_md
 
@@ -457,9 +512,10 @@ def run_spread_session():
 
         element_counts = analyze_elemental_balance(spread_results)
         dignity_matrix = calculate_elemental_dignities(spread_results)
+        macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
-            selected_spread["name"], query_prompt, significator, args.seed, spread_results, element_counts, dignity_matrix
+            selected_spread["name"], query_prompt, significator, args.seed, spread_results, element_counts, dignity_matrix, macro_framework
         )
 
         print("\n" + analytical_prompt)

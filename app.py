@@ -12,19 +12,17 @@ from dotenv import load_dotenv
 from scripts.spread_engine import (
     DB_CONFIG, SPREADS, fetch_all_cards, fetch_card_correspondences,
     analyze_elemental_balance, calculate_elemental_dignities,
-    build_analytical_prompt, save_spread_session
+    evaluate_macro_framework, build_analytical_prompt, save_spread_session
 )
 
 load_dotenv()
 
 app = FastAPI(title="OOTK Thoth Graphic GUI")
 
-# Setup static files mounting (if local artwork is added under static/images)
 if not os.path.exists("static"):
     os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Setup template directory
 templates = Jinja2Templates(directory="templates")
 
 
@@ -52,6 +50,7 @@ async def generate_report(
     spread_key: str = Form(...),
     topic: str = Form(""),
     significator: str = Form("Knight of Swords"),
+    framework: str = Form("auto"),
     selected_cards: str = Form(...)
 ):
     card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
@@ -71,14 +70,15 @@ async def generate_report(
 
         element_counts = analyze_elemental_balance(spread_results)
         dignity_matrix = calculate_elemental_dignities(spread_results)
+        macro_framework = evaluate_macro_framework(spread_results, forced_framework=framework)
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], topic, significator, "Graphical Selection",
-            spread_results, element_counts, dignity_matrix
+            spread_results, element_counts, dignity_matrix, macro_framework
         )
 
         session_id = save_spread_session(
-            conn, selected_spread["name"], topic, "GUI Selection", significator, spread_results
+            conn, selected_spread["name"], topic, f"GUI Selection | Framework: {macro_framework}", significator, spread_results
         )
 
     return templates.TemplateResponse(
