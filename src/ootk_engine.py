@@ -1,19 +1,23 @@
 import json
 import os
+import sys
+from pathlib import Path
 
-from src.prng_shuffler import LCGPRNG, fisher_yates_shuffle
+# Ensure project root directory is in sys.path for direct script execution
+BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
+from src.prng_shuffler import shuffle_deck
 
 def load_config(config_filename="config.json"):
-    # Resolves the directory path: scripts/.. -> root -> config/config.json
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    root_dir = os.path.abspath(os.path.join(script_dir, ".."))
-    config_path = os.path.join(root_dir, "config", config_filename)
+    """Resolves config path dynamically from project root."""
+    config_path = BASE_DIR / "config" / config_filename
 
-    if not os.path.exists(config_path):
+    if not config_path.exists():
         raise FileNotFoundError(f"Configuration file missing: {config_path}")
     
-    with open(config_path, "r") as f:
+    with open(config_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 def build_thoth_deck():
@@ -49,7 +53,7 @@ def build_thoth_deck():
         ("The Star", "Swords"),        # Air
         ("The Moon", "Cups"),          # Water
         ("The Sun", "Wands"),          # Fire
-        ("Aeon", "Wands"),             # Fire
+        ("The Aeon", "Wands"),             # Fire
         ("The Universe", "Disks")      # Earth
     ]
     for name, suit in majors:
@@ -83,10 +87,9 @@ def run_ootk_pipeline(seed: int):
     print(f"=== {config['system_name']} v{config['version']} ===")
     print(f"Initializing PRNG with Seed: {seed}")
     
-    # 1. Build and Shuffle Deck
+    # 1. Build and Shuffle Deck (single shared shuffler)
     deck = build_thoth_deck()
-    prng = LCGPRNG(seed=seed)
-    shuffled_deck = fisher_yates_shuffle(deck, prng)
+    shuffled_deck = shuffle_deck(deck, seed)
     
     # 2. Deal Top Pair for Vector Analysis
     card_1 = shuffled_deck[0]

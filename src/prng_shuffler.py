@@ -1,54 +1,38 @@
+"""The one shuffler used by every entry point (spread_engine, ootk_engine, demos).
+
+Same seed -> same deck, regardless of whether the seed is given as int or str.
+"""
+import hashlib
 import json
-import time
-
-class LCGPRNG:
-    """Linear Congruential Generator for reproducible, seed-based PRNG."""
-    def __init__(self, seed: int = None):
-        self.state = seed if seed is not None else int(time.time())
-        # Standard numerical parameters (Numerical Recipes LCG)
-        self.a = 1664525
-        self.c = 1013904223
-        self.m = 2**32
-
-    def next_float(self) -> float:
-        """Returns a pseudo-random float in [0.0, 1.0)."""
-        self.state = (self.a * self.state + self.c) % self.m
-        return self.state / self.m
-
-    def randint(self, min_val: int, max_val: int) -> int:
-        """Returns a pseudo-random integer between min_val and max_val inclusive."""
-        return min_val + int(self.next_float() * (max_val - min_val + 1))
+import random
 
 
-def fisher_yates_shuffle(deck: list, prng: LCGPRNG) -> list:
-    """In-place Fisher-Yates (Knuth) shuffle driven by the PRNG."""
-    shuffled = deck.copy()
-    n = len(shuffled)
-    for i in range(n - 1, 0, -1):
-        # Pick a random index from 0 to i
-        j = prng.randint(0, i)
-        # Swap elements at i and j
-        shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+def seed_to_int(seed) -> int:
+    """Normalises any seed (1568 or "1568") to a full-width integer via SHA-256."""
+    if seed is None:
+        raise ValueError("A seed is required for a reproducible shuffle.")
+    return int(hashlib.sha256(str(seed).encode("utf-8")).hexdigest(), 16)
+
+
+def shuffle_deck(deck: list, seed) -> list:
+    """Returns a new, deterministically shuffled copy of `deck`."""
+    rng = random.Random(seed_to_int(seed))
+    shuffled = list(deck)
+    rng.shuffle(shuffled)
     return shuffled
 
 
 def main():
-    # Build standard 78-card Thoth deck baseline
     suits = ["Wands", "Cups", "Swords", "Disks"]
-    ranks = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Knight", "Queen", "Prince", "Princess"]
-    majors = [f"Major {i}" for i in range(22)]
-    
-    deck = majors + [f"{r} of {s}" for s in suits for r in ranks]
-    
-    # Initialize PRNG with deterministic seed
+    ranks = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+             "Knight", "Queen", "Prince", "Princess"]
+    deck = [f"Major {i}" for i in range(22)] + [f"{r} of {s}" for s in suits for r in ranks]
+
     seed = 42
-    prng = LCGPRNG(seed=seed)
-    
-    shuffled_deck = fisher_yates_shuffle(deck, prng)
-    
-    print(f"--- PRNG Fisher-Yates Simulation (Seed: {seed}) ---")
+    print(f"--- Shuffle Simulation (Seed: {seed}) ---")
     print("Top 5 Cards Dealt:")
-    print(json.dumps(shuffled_deck[:5], indent=2))
+    print(json.dumps(shuffle_deck(deck, seed)[:5], indent=2))
+
 
 if __name__ == "__main__":
     main()

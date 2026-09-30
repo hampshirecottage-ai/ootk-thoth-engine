@@ -6,12 +6,13 @@ from psycopg.rows import dict_row
 
 # Ensure project root is in sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.append(str(BASE_DIR))
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from src.spread_engine import DB_CONFIG
 
 def get_thoth_cards():
-    """Fetches all 78 Thoth cards ordered by card_id using DB_CONFIG."""
+    """Fetches all 78 Thoth cards ordered by card_id."""
     query = """
         SELECT card_id, title AS card_name, key_scale 
         FROM thoth_cards 

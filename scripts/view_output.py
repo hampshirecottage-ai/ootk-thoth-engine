@@ -1,21 +1,24 @@
 import os
 import sys
 import glob
+import html
 import argparse
 import re
 from pathlib import Path
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.table import Table
-from rich.progress_bar import ProgressBar
 from rich.tree import Tree
-from rich.text import Text
 
 # Ensure project root is in sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
 
 console = Console()
+
+HEADING_RE = re.compile(r"^## \d+\.\s*(.+)$", re.MULTILINE)
+
 
 def find_latest_html_report():
     output_pattern = str(BASE_DIR / "output" / "ootk_output_*.html")
@@ -24,110 +27,205 @@ def find_latest_html_report():
         return None
     return max(files, key=os.path.getmtime)
 
+
 def parse_html_report(filepath):
-    """Extracts raw Markdown prompt text inside <pre> tags from HTML report."""
+    """Extracts the raw Markdown prompt text inside the <pre> tag of an HTML report."""
     with open(filepath, "r", encoding="utf-8") as f:
         content = f.read()
 
     match = re.search(r"<pre>(.*?)</pre>", content, re.DOTALL)
     if not match:
         return None
-    
-    # Unescape basic HTML entities
-    raw_text = match.group(1).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
-    return raw_text
+    return html.unescape(match.group(1))
+
+
+def split_sections(raw_text):
+    """Splits on horizontal-rule lines only, so '---' inside content can't break parsing."""
+    return [s.strip() for s in re.split(r"^\s*---\s*$", raw_text, flags=re.MULTILINE) if s.strip()]
+
+
+def section_kind(section):
+    """Identifies a section by its heading text, not its number, so renumbering can't break it."""
+    if "HERMETIC ANALYTICAL REPORT" in section.split("\n", 1)[0]:
+        return "header"
+    m = HEADING_RE.search(section)
+    if not m:
+        return None
+    title = m.group(1).upper()
+    for key, kind in (
+        ("ELEMENTAL VECTOR", "elements"),
+        ("HEBREW LETTER SPATIAL", "hebrew"),
+        ("PLATONIC SOLID", "platonic"),
+        ("PAIRWISE ELEMENTAL DIGNITY", "dignity"),
+        ("SPATIAL & GEOMETRIC", "spatial"),
+        ("CARD-BY-CARD", "cards"),
+    ):
+        if key in title:
+            return kind
+    return None
+
+
+def section_title(section):
+    m = HEADING_RE.search(section)
+    return m.group(1).strip().title() if m else "Section"
+
+
+def strip_md(text):
+    return text.replace("**", "").replace("`", "").strip()
+
+
+def score_style(score_str):
+    if score_str.startswith("+"):
+        return f"[bold green]{escape(score_str)}[/bold green]"
+    if score_str.startswith("-"):
+        return f"[bold red]{escape(score_str)}[/bold red]"
+    return f"[dim]{escape(score_str)}[/dim]"
+
+
+def render_header(section):
+    lines = [l.strip() for l in section.split("\n") if l.strip()]
+    title = lines[0].replace("#", "").strip() if lines else "HERMETIC REPORT"
+    meta = Table(show_header=False, box=None)
+    meta.add_column("Key", style="bold magenta")
+    meta.add_column("Value", style="bold white")
+    for line in lines[1:]:
+        if "**" in line:
+            parts = line.replace("**", "").split(":", 1)
+            if len(parts) == 2:
+                meta.add_row(escape(parts[0].strip()), escape(parts[1].strip()))
+    console.print(Panel(meta, title=f"[bold green]{escape(title)}[/bold green]", border_style="green"))
+
+
+def render_elements(section):
+    table = Table(title="Elemental Vector Distribution", border_style="blue", header_style="bold cyan")
+    table.add_column("Element", style="bold yellow", width=12)
+    table.add_column("Count & Percentage", style="bold white", width=20)
+    table.add_column("Visual Bar", style="bold magenta")
+    for line in section.split("\n"):
+        m = re.search(r"\*\*(\w+)\s*\*\*:\s*(█*)\s*(\d+)\s*\(([\d.]+%)\)", line)
+        if m:
+            elem, bar, count, pct = m.groups()
+            table.add_row(elem.capitalize(), f"{count} ({pct})", bar)
+    console.print(table)
+
+
+def render_hebrew(section):
+    counts = Table(title="Hebrew Letter Spatial Dimensions", border_style="magenta", header_style="bold cyan")
+    counts.add_column("Category", style="bold yellow")
+    counts.add_column("Count", justify="center", style="bold white")
+    for line in section.split("\n"):
+        m = re.match(r"\* \*\*(.+?)\*\*:\s*`(\d+)`", line.strip())
+        if m:
+            counts.add_row(escape(m.group(1)), m.group(2))
+    console.print(counts)
+
+    vectors = Table(title="Card Spatial Vectors", border_style="magenta", header_style="bold cyan")
+    vectors.add_column("Card", style="bold white")
+    vectors.add_column("Letter", style="cyan")
+    vectors.add_column("Type / Dimension", style="green")
+    for line in section.split("\n"):
+        m = re.match(r"- Pos (\d+) \((.+?)\): Letter `(.+?)` -> \*\*(.+?)\*\* \[(.+?)\]", line.strip())
+        if m:
+            pos, title, letter, stype, sdim = m.groups()
+            vectors.add_row(escape(f"{pos}. {title}"), escape(letter), escape(f"{stype} [{sdim}]"))
+    if vectors.row_count:
+        console.print(vectors)
+
+
+def render_platonic(section):
+    table = Table(title="Platonic Solid Topology", border_style="cyan", header_style="bold magenta")
+    table.add_column("Solid", style="bold yellow")
+    table.add_column("Count", justify="center", style="bold white")
+    duals = []
+    for line in section.split("\n"):
+        line = line.strip()
+        m = re.match(r"\* \*\*(.+?)\s*\*\*:\s*`(\d+)`", line)
+        if m:
+            table.add_row(escape(m.group(1).strip()), m.group(2))
+        elif line.startswith("* Positions"):
+            duals.append(line[2:].strip())
+    console.print(table)
+    if duals:
+        console.print(Panel("\n".join(escape(d) for d in duals), title="Dual Pairings", border_style="cyan"))
+
+
+def render_dignity(section):
+    table = Table(title="Pairwise Elemental Dignity Interactions", border_style="yellow", header_style="bold magenta")
+    table.add_column("Adjacent Card Pair", style="bold white")
+    table.add_column("Score", justify="center", width=8)
+    table.add_column("Relationship / Dynamic", style="italic green")
+    for line in section.split("\n"):
+        m = re.match(r"\* \*\*(.+?)\*\*: `Score: ([+-]?\d+)` \| (.+)", line.strip())
+        if m:
+            pair, score, rel = m.groups()
+            table.add_row(escape(pair), score_style(score), escape(rel))
+    console.print(table)
+
+
+def render_spatial(section):
+    table = Table(title="Spatial & Geometric Vector Analysis", border_style="green", header_style="bold magenta")
+    table.add_column("Pair", style="bold white")
+    table.add_column("Distance", justify="center", style="cyan")
+    table.add_column("Angle", justify="center", style="cyan")
+    table.add_column("Aspect", style="italic green")
+    table.add_column("Mod", justify="center", width=5)
+
+    pair = dist = angle = None
+    for raw in section.split("\n"):
+        line = raw.strip()
+        m = re.match(r"\* \*\*(.+?)\*\*:$", line)
+        if m:
+            pair = m.group(1)
+            continue
+        m = re.match(r"- Spatial Distance: `(.+?)` units \| Angular Delta: `(.+?)°`", line)
+        if m:
+            dist, angle = m.groups()
+            continue
+        m = re.match(r"- Geometric Aspect: \*\*(.+?)\*\* \((.+?)\) \[Modifier: `([+-]?\d+)`\]", line)
+        if m and pair:
+            aspect, desc, mod = m.groups()
+            table.add_row(escape(pair), dist or "", f"{angle}°" if angle else "",
+                          escape(f"{aspect} - {desc}"), score_style(mod))
+            pair = dist = angle = None
+    if table.row_count:
+        console.print(table)
+    else:
+        console.print(Panel(escape(strip_md(section.split("\n", 1)[-1])), title="Spatial & Geometric Vector Analysis",
+                            border_style="green"))
+
+
+def render_cards(section):
+    tree = Tree("[bold cyan]Card Spread Matrix & Liber 777 Correspondences[/bold cyan]")
+    for c_raw in section.split("### Position ")[1:]:
+        lines = [l.strip() for l in c_raw.split("\n") if l.strip()]
+        pos_node = tree.add(f"[bold yellow]Position {escape(lines[0]) if lines else ''}[/bold yellow]")
+        for line in lines[1:]:
+            if line.startswith("- **"):
+                key_val = line.replace("- **", "", 1).split("**:", 1)
+                if len(key_val) == 2:
+                    pos_node.add(f"[bold white]{escape(key_val[0])}:[/bold white] "
+                                 f"[dim green]{escape(strip_md(key_val[1]))}[/dim green]")
+    console.print(Panel(tree, border_style="cyan"))
+
+
+RENDERERS = {
+    "header": render_header,
+    "elements": render_elements,
+    "hebrew": render_hebrew,
+    "platonic": render_platonic,
+    "dignity": render_dignity,
+    "spatial": render_spatial,
+    "cards": render_cards,
+}
+
 
 def render_rich_report(raw_text, filename):
-    console.print(Panel(f"[bold cyan]OOTK VISUALIZER[/bold cyan] — [yellow]{filename}[/yellow]", expand=False))
+    console.print(Panel(f"[bold cyan]OOTK VISUALIZER[/bold cyan] — [yellow]{escape(str(filename))}[/yellow]", expand=False))
+    for section in split_sections(raw_text):
+        kind = section_kind(section)
+        if kind in RENDERERS:
+            RENDERERS[kind](section)
 
-    # Parse Sections
-    sections = raw_text.split("---")
-
-    for section in sections:
-        section_str = section.strip()
-        if not section_str:
-            continue
-
-        # Header / Title block
-        if "HERMETIC ANALYTICAL REPORT" in section_str:
-            lines = [l.strip() for l in section_str.split("\n") if l.strip()]
-            title = lines[0].replace("#", "").strip() if lines else "HERMETIC REPORT"
-            
-            meta_table = Table(show_header=False, box=None)
-            meta_table.add_column("Key", style="bold magenta")
-            meta_table.add_column("Value", style="bold white")
-
-            for line in lines[1:]:
-                if "**" in line:
-                    parts = line.replace("**", "").split(":", 1)
-                    if len(parts) == 2:
-                        meta_table.add_row(parts[0].strip(), parts[1].strip())
-            
-            console.print(Panel(meta_table, title=f"[bold green]{title}[/bold green]", border_style="green"))
-
-        # Section 1: Elemental Distribution
-        elif "1. ELEMENTAL VECTOR DISTRIBUTION" in section_str:
-            table = Table(title="1. Elemental Vector Distribution", border_style="blue", header_style="bold cyan")
-            table.add_column("Element", style="bold yellow", width=12)
-            table.add_column("Count & Percentage", style="bold white", width=20)
-            table.add_column("Visual Bar", style="bold magenta")
-
-            for line in section_str.split("\n"):
-                if line.startswith("* **"):
-                    # Format: * **Fire  **: █ 2 (50.0%)
-                    match = re.search(r"\*\*(\w+)\s*\*\*:\s*([█\s]+)?\s*(\d+)\s*\(([\d\.]+\%)\)", line)
-                    if match:
-                        elem, bar, count, pct = match.groups()
-                        table.add_row(elem.capitalize(), f"{count} ({pct})", bar or "")
-
-            console.print(table)
-
-        # Section 2: Pairwise Dignity Interactions
-        elif "2. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS" in section_str:
-            table = Table(title="2. Pairwise Elemental Dignity Interactions", border_style="yellow", header_style="bold magenta")
-            table.add_column("Adjacent Card Pair", style="bold white")
-            table.add_column("Score", style="bold cyan", justify="center", width=8)
-            table.add_column("Relationship / Dynamic", style="italic green")
-
-            for line in section_str.split("\n"):
-                if line.startswith("* **"):
-                    # Format: * **Pos 1 (...) <-> Pos 2 (...)**: `Score: +2` | Dynamic
-                    parts = line.split("`Score:")
-                    if len(parts) == 2:
-                        pair_part = parts[0].replace("* **", "").replace("**:", "").strip()
-                        rest = parts[1].split("` | ")
-                        score_str = rest[0].strip()
-                        rel_str = rest[1].strip() if len(rest) > 1 else ""
-                        
-                        # Style score
-                        if "+2" in score_str or "+1" in score_str:
-                            score_styled = f"[bold green]{score_str}[/bold green]"
-                        elif "-2" in score_str:
-                            score_styled = f"[bold red]{score_str}[/bold red]"
-                        else:
-                            score_styled = f"[dim]{score_str}[/dim]"
-
-                        table.add_row(pair_part, score_styled, rel_str)
-
-            console.print(table)
-
-        # Section 3: Card-by-Card Tree / Matrix
-        elif "3. CARD-BY-CARD CORRESPONDENCE MATRIX" in section_str:
-            tree = Tree("[bold cyan]3. Card Spread Matrix & Liber 777 Correspondences[/bold cyan]")
-            
-            cards_raw = section_str.split("### Position ")
-            for c_raw in cards_raw[1:]:
-                lines = [l.strip() for l in c_raw.split("\n") if l.strip()]
-                pos_header = lines[0] if lines else "Position"
-                
-                pos_node = tree.add(f"[bold yellow]Position {pos_header}[/bold yellow]")
-                for line in lines[1:]:
-                    if line.startswith("- **"):
-                        key_val = line.replace("- **", "").split("**:", 1)
-                        if len(key_val) == 2:
-                            pos_node.add(f"[bold white]{key_val[0]}:[/bold white] [dim green]{key_val[1].strip()}[/dim green]")
-
-            console.print(Panel(tree, border_style="cyan"))
 
 def main():
     parser = argparse.ArgumentParser(description="OOTK Rich Terminal Output Visualizer")
@@ -146,6 +244,7 @@ def main():
         sys.exit(1)
 
     render_rich_report(raw_text, filepath)
+
 
 if __name__ == "__main__":
     main()

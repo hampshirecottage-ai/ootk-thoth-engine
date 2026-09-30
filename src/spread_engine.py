@@ -2,6 +2,8 @@ import os
 import sys
 import json
 import math
+import re
+import html
 import argparse
 import psycopg
 from psycopg.rows import dict_row
@@ -11,13 +13,21 @@ from pathlib import Path
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+from src.prng_shuffler import shuffle_deck
 CONFIG_PATH = BASE_DIR / "config" / "config.json"
+
+DB_ENV_VARS = {
+    "dbname": "DB_NAME", "user": "DB_USER", "password": "DB_PASSWORD",
+    "host": "DB_HOST", "port": "DB_PORT",
+}
 
 def load_db_config():
     """Loads database credentials from config/config.json with environment variable overrides."""
     config = {
         "dbname": os.getenv("DB_NAME", "my_tarot_db"),
-        "user": os.getenv("DB_USER", "dbuser"),
+        "user": os.getenv("DB_USER", "postgres"),
         "password": os.getenv("DB_PASSWORD", ""),
         "host": os.getenv("DB_HOST", "localhost"),
         "port": int(os.getenv("DB_PORT", "5432"))
@@ -29,7 +39,8 @@ def load_db_config():
                 json_data = json.load(f)
                 db_json = json_data.get("database", {})
                 for key in config:
-                    if key in db_json and not os.getenv(f"DB_{key.upper()}"):
+                    # config.json only fills a value when the matching env var is unset
+                    if key in db_json and not os.getenv(DB_ENV_VARS[key]):
                         config[key] = db_json[key]
         except Exception as e:
             print(f"[WARN] Failed to read {CONFIG_PATH}: {e}")
@@ -199,38 +210,35 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         cur.execute(query, (system, system, system, title))
         return cur.fetchone()
 
-def prng_shuffle_deck(cards, seed_val):
-    import hashlib
-    seed_int = int(hashlib.sha256(str(seed_val).encode('utf-8')).hexdigest(), 16)
-    deck = list(cards)
-    n = len(deck)
-    m = 2**32
-    a = 1664525
-    c = 1013904223
-    state = seed_int % m
-
-    for i in range(n - 1, 0, -1):
-        state = (a * state + c) % m
-        j = state % (i + 1)
-        deck[i], deck[j] = deck[j], deck[i]
-    
-    return deck
+ELEMENT_WORDS = {"fire": "Fire", "water": "Water", "air": "Air", "earth": "Earth"}
+SUIT_ELEMENTS = {"wands": "Fire", "cups": "Water", "swords": "Air", "disks": "Earth", "pentacles": "Earth"}
+ZODIAC_ELEMENTS = {
+    "aries": "Fire", "leo": "Fire", "sagittarius": "Fire",
+    "taurus": "Earth", "virgo": "Earth", "capricorn": "Earth",
+    "gemini": "Air", "libra": "Air", "aquarius": "Air",
+    "cancer": "Water", "scorpio": "Water", "pisces": "Water",
+}
+# Planet-only Major attributions (same convention as ootk_engine's Major table).
+PLANET_ELEMENTS = {
+    "sun": "Fire", "mars": "Fire", "jupiter": "Fire",
+    "moon": "Water", "venus": "Earth", "mercury": "Air", "saturn": "Earth",
+}
 
 def derive_primary_element(card_data):
+    """Suit wins; otherwise the first element, zodiac sign or planet word found in the
+    attribution, then the title. Whole-word matching, so 'chair' never reads as 'air'."""
     if not card_data:
         return "Spirit"
     suit = str(card_data.get("suit") or "").lower()
-    attr = str(card_data.get("attribution") or "").lower()
-    title = str(card_data.get("title") or "").lower()
+    for word, elem in SUIT_ELEMENTS.items():
+        if word.rstrip("s") in suit:
+            return elem
 
-    if "wand" in suit or "fire" in attr or "aries" in attr or "leo" in attr or "sagittarius" in attr or "fire" in title:
-        return "Fire"
-    elif "cup" in suit or "water" in attr or "cancer" in attr or "scorpio" in attr or "pisces" in attr or "water" in title:
-        return "Water"
-    elif "sword" in suit or "air" in attr or "gemini" in attr or "libra" in attr or "aquarius" in attr or "air" in title:
-        return "Air"
-    elif "disk" in suit or "pentacle" in suit or "earth" in attr or "taurus" in attr or "virgo" in attr or "capricorn" in attr or "earth" in title:
-        return "Earth"
+    lookup = {**ELEMENT_WORDS, **ZODIAC_ELEMENTS, **PLANET_ELEMENTS}
+    for field in ("attribution", "title"):
+        for token in re.findall(r"[a-z]+", str(card_data.get(field) or "").lower()):
+            if token in lookup:
+                return lookup[token]
     return "Spirit"
 
 def calculate_elemental_dignities(spread_results):
@@ -301,30 +309,42 @@ def calculate_spatial_aspect(angle_deg):
         return f"Inconjunct/Minor ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
 
 def analyze_spatial_vectors(spread_results, spread_key):
-    spatial_matrix = []
+    """Pairwise geometry between consecutive positions, measured around the layout's centroid.
+
+    Spreads without a defined layout return [] (no fake geometry). A position sitting on
+    the centroid has no direction, so pairs involving it are reported as a centre/axis node.
+    """
     if len(spread_results) < 2:
-        return spatial_matrix
+        return []
 
     coords = SPREAD_DEFAULT_COORDINATES.get(spread_key)
+    if not coords or len(coords) < len(spread_results):
+        return []
+    coords = coords[:len(spread_results)]
 
+    cx = sum(x for x, _ in coords) / len(coords)
+    cy = sum(y for _, y in coords) / len(coords)
+
+    def polar(point):
+        dx, dy = point[0] - cx, point[1] - cy
+        if math.hypot(dx, dy) < 1e-9:
+            return None
+        return math.degrees(math.atan2(dy, dx)) % 360
+
+    spatial_matrix = []
     for i in range(len(spread_results) - 1):
-        item1 = spread_results[i]
-        item2 = spread_results[i + 1]
+        item1, item2 = spread_results[i], spread_results[i + 1]
+        (x1, y1), (x2, y2) = coords[i], coords[i + 1]
+        dist = math.hypot(x2 - x1, y2 - y1)
 
-        if coords and i + 1 < len(coords):
-            x1, y1 = coords[i]
-            x2, y2 = coords[i + 1]
+        a1, a2 = polar(coords[i]), polar(coords[i + 1])
+        if a1 is None or a2 is None:
+            delta_angle = 0.0
+            aspect_name, aspect_desc, modifier = (
+                "Centre Node", "Axis / Core Point (no angular relation)", 0)
         else:
-            x1, y1 = (float(i), 0.0)
-            x2, y2 = (float(i + 1), 0.0)
-
-        dist = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-
-        angle1 = math.degrees(math.atan2(y1, x1)) % 360
-        angle2 = math.degrees(math.atan2(y2, x2)) % 360
-        delta_angle = abs(angle1 - angle2)
-
-        aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
+            delta_angle = abs(a1 - a2)
+            aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
 
         spatial_matrix.append({
             "pair": f"Pos {item1['position_number']} ({item1['card_data']['title']}) <-> Pos {item2['position_number']} ({item2['card_data']['title']})",
@@ -465,7 +485,11 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
 def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
-    mapping_label = "Golden Dawn / English System (Liber 777)" if mapping_system == "golden_dawn" else "French / Egyptian System (Lévi / Papus / Wirth)"
+    mapping_labels = {
+        "golden_dawn": "Golden Dawn / English System (Liber 777)",
+        "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
+    }
+    mapping_label = mapping_labels.get(mapping_system, mapping_system)
 
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 **Operation/Spread:** {spread_name}
@@ -515,7 +539,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
             prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
             prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
     else:
-        prompt_md += "* Single-card operation or no vector relations evaluated.\n"
+        prompt_md += "* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.\n"
 
     prompt_md += "\n---\n\n## 6. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
@@ -552,7 +576,18 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
 """
     return prompt_md
 
-def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results):
+def card_is_dignified(index, dignity_matrix):
+    """A card is dignified when the pairwise scores touching it (left and right neighbour) sum to >= 0."""
+    if not dignity_matrix:
+        return True
+    touching = []
+    if index - 1 >= 0 and index - 1 < len(dignity_matrix):
+        touching.append(dignity_matrix[index - 1]["score"])
+    if index < len(dignity_matrix):
+        touching.append(dignity_matrix[index]["score"])
+    return sum(touching) >= 0
+
+def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results, dignity_matrix=None):
     insert_session_query = """
     INSERT INTO tarot_sessions (operation_type, significator, notes)
     VALUES (%s, %s, %s)
@@ -579,14 +614,14 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
                 cur.execute(insert_spread_query, (session_id, spread_name, 1))
                 spread_id = cur.fetchone()["spread_id"]
                 
-                for item in spread_results:
+                for idx, item in enumerate(spread_results):
                     card_data = item["card_data"]
                     cur.execute(insert_pull_query, (
                         session_id,
                         spread_id,
                         card_data["card_id"],
                         item["position_number"],
-                        True,
+                        card_is_dignified(idx, dignity_matrix),
                         item["position_name"]
                     ))
                     
@@ -597,15 +632,18 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
         return None
 
 def generate_html_output(session_id, spread_name, query_prompt, analytical_prompt):
-    os.makedirs("output", exist_ok=True)
-    filename = f"output/ootk_output_{session_id or 'latest'}.html"
+    output_dir = BASE_DIR / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    filename = output_dir / f"ootk_output_{session_id or 'latest'}.html"
     
-    html_analysis = analytical_prompt.replace("<", "&lt;").replace(">", "&gt;")
+    html_analysis = html.escape(analytical_prompt, quote=False)
+    safe_spread_name = html.escape(spread_name)
+    safe_query = html.escape(query_prompt) if query_prompt else "N/A"
 
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>Spread Report - {spread_name}</title>
+    <title>Spread Report - {safe_spread_name}</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: #121212; color: #e0e0e0; padding: 30px; line-height: 1.6; }}
         h1, h2, h3 {{ color: #bb86fc; }}
@@ -616,8 +654,8 @@ def generate_html_output(session_id, spread_name, query_prompt, analytical_promp
 <body>
     <h1>OOTK Thoth Engine - Analytical Synthesis Report</h1>
     <div class="meta">
-        <p><strong>Spread Operation:</strong> {spread_name}</p>
-        <p><strong>Query / Topic:</strong> {query_prompt or 'N/A'}</p>
+        <p><strong>Spread Operation:</strong> {safe_spread_name}</p>
+        <p><strong>Query / Topic:</strong> {safe_query}</p>
         <p><strong>Database Session ID:</strong> #{session_id or 'N/A'}</p>
     </div>
     <h2>Generated Operational Prompt & Matrix</h2>
@@ -642,7 +680,7 @@ def run_spread_session():
         card_lookup = {str(idx): card["title"] for idx, card in enumerate(cards, start=1)}
         card_titles_set = {card["title"].lower(): card["title"] for card in cards}
 
-        shuffled_deck = prng_shuffle_deck(cards, args.seed) if args.seed else None
+        shuffled_deck = shuffle_deck(cards, args.seed) if args.seed else None
         auto_draw_index = 0
 
         print("==================================================")
@@ -669,8 +707,10 @@ def run_spread_session():
             print(f" [12] {SPREADS['12']['name']} (75 cards total)")
 
             spread_choice = input("\nEnter spread number (1-12): ").strip()
+            while spread_choice not in SPREADS:
+                spread_choice = input("Invalid spread. Enter a number from 1 to 12: ").strip()
 
-        selected_spread = SPREADS.get(spread_choice, SPREADS["1"])
+        selected_spread = SPREADS[spread_choice]
         print(f"\n---> Selected Spread: {selected_spread['name']}\n")
 
         query_prompt = args.topic if args.topic else (input("Enter Query / Intent Prompt (optional, press ENTER to skip): ").strip() or None)
@@ -681,10 +721,10 @@ def run_spread_session():
 
         target_positions = []
         if "operations" in selected_spread:
-            for op_key in selected_spread["operations"]:
+            for op_num, op_key in enumerate(selected_spread["operations"], start=1):
                 op_spread = SPREADS[op_key]
                 for p in op_spread["positions"]:
-                    target_positions.append(f"[{op_spread['name'][:6]}] {p}")
+                    target_positions.append(f"[Op {op_num}] {p}")
         else:
             target_positions = selected_spread.get("positions", [])
 
@@ -731,7 +771,7 @@ def run_spread_session():
 
         print("\n" + analytical_prompt)
 
-        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator, spread_results)
+        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator, spread_results, dignity_matrix)
 
         if args.html:
             generate_html_output(session_id, selected_spread["name"], query_prompt, analytical_prompt)
