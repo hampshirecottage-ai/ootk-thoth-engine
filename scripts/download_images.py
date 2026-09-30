@@ -1,21 +1,19 @@
 import os
+import sys
 import re
 import urllib.request
+from pathlib import Path
 import psycopg
 from psycopg.rows import dict_row
-from dotenv import load_dotenv
 
-load_dotenv()
+# Ensure project root is in sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
 
-DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "my_tarot_db"),
-    "user": os.getenv("DB_USER", "dbuser"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", 5432))
-}
+from src.spread_engine import DB_CONFIG
 
-os.makedirs("static/images", exist_ok=True)
+IMAGE_DIR = BASE_DIR / "static" / "images"
+IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -59,45 +57,49 @@ def get_clean_slug(title):
     clean_title = re.sub(r'^(?:[IVXLCDM]+\s*-\s*|\d+\s*-\s*)', '', title, flags=re.IGNORECASE)
     return clean_title.strip().lower().replace(" ", "-").replace("'", "")
 
-conn = psycopg.connect(**DB_CONFIG, row_factory=dict_row)
-with conn.cursor() as cur:
-    cur.execute("SELECT card_id, title FROM thoth_cards ORDER BY card_id;")
-    cards = cur.fetchall()
+def download_images():
+    conn = psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+    with conn.cursor() as cur:
+        cur.execute("SELECT card_id, title FROM thoth_cards ORDER BY card_id;")
+        cards = cur.fetchall()
 
-print(f"Downloading Lady Frieda Harris artwork for {len(cards)} cards...")
+    print(f"Downloading Lady Frieda Harris artwork for {len(cards)} cards...")
 
-for card in cards:
-    title = card["title"]
-    local_slug = title.lower().replace(" ", "-").replace("'", "")
-    local_path = f"static/images/{local_slug}.jpg"
+    for card in cards:
+        title = card["title"]
+        local_slug = title.lower().replace(" ", "-").replace("'", "")
+        local_path = IMAGE_DIR / f"{local_slug}.jpg"
 
-    if os.path.exists(local_path) and os.path.getsize(local_path) > 5000:
-        print(f"➜ Skipping (already present): {local_slug}.jpg")
-        continue
+        if os.path.exists(local_path) and os.path.getsize(local_path) > 5000:
+            print(f"➜ Skipping (already present): {local_slug}.jpg")
+            continue
 
-    clean_slug = get_clean_slug(title)
-    candidates = [clean_slug, local_slug]
+        clean_slug = get_clean_slug(title)
+        candidates = [clean_slug, local_slug]
 
-    if local_slug in TITLE_ALIASES:
-        candidates.extend(TITLE_ALIASES[local_slug])
+        if local_slug in TITLE_ALIASES:
+            candidates.extend(TITLE_ALIASES[local_slug])
 
-    downloaded = False
-    for candidate in candidates:
-        if downloaded:
-            break
-        for base_url in CDNS:
-            remote_url = f"{base_url}{candidate}.jpg"
-            try:
-                req = urllib.request.Request(remote_url, headers=HEADERS)
-                with urllib.request.urlopen(req) as response, open(local_path, 'wb') as out_file:
-                    out_file.write(response.read())
-                print(f"✓ Saved Lady Frieda Harris painting: {local_slug}.jpg (from {candidate}.jpg)")
-                downloaded = True
+        downloaded = False
+        for candidate in candidates:
+            if downloaded:
                 break
-            except Exception:
-                continue
+            for base_url in CDNS:
+                remote_url = f"{base_url}{candidate}.jpg"
+                try:
+                    req = urllib.request.Request(remote_url, headers=HEADERS)
+                    with urllib.request.urlopen(req) as response, open(local_path, 'wb') as out_file:
+                        out_file.write(response.read())
+                    print(f"✓ Saved Lady Frieda Harris painting: {local_slug}.jpg (from {candidate}.jpg)")
+                    downloaded = True
+                    break
+                except Exception:
+                    continue
 
-    if not downloaded:
-        print(f"✗ Failed download for: {title}")
+        if not downloaded:
+            print(f"✗ Failed download for: {title}")
 
-print("\nFinished downloading Thoth card images!")
+    print("\nFinished downloading Thoth card images!")
+
+if __name__ == "__main__":
+    download_images()

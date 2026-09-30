@@ -1,28 +1,19 @@
-# Ignore generated analysis outputs
-outputs/*
-# Do not ignore .gitkeep so the directory remains tracked
-!outputs/.gitkeep
-# Environment and local configs
-.env
-*.env
-
-# Python runtime
+# Byte-compiled / Python
 __pycache__/
 *.pyc
+*.pyo
 
-# System files
-.DS_Store
+# Databases
+database/my_tarot_db.sqlite
+*.sqlite
 
-# Exclude the output directory
-output/
-
-# Generated session output reports
+# Generated Output
 output/*.html
-output/*.md
-output/*.svg
+output/*.json
 
-# Environment files & Database configs
+# Environment & IDE
 .env
-__pycache__/
-*.pyc
+venv/
+.venv/
 .DS_Store
+.vscode/

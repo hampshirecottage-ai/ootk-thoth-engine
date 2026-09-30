@@ -1,6 +1,8 @@
 import json
 import os
-from prng_shuffler import LCGPRNG, fisher_yates_shuffle
+
+from src.prng_shuffler import LCGPRNG, fisher_yates_shuffle
+
 
 def load_config(config_filename="config.json"):
     # Resolves the directory path: scripts/.. -> root -> config/config.json

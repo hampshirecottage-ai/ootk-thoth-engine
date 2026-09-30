@@ -1,4 +1,12 @@
 {
+  "database": {
+    "dbname": "my_tarot_db",
+    "user": "dbuser",
+    "password": "",
+    "host": "localhost",
+    "port": 5432
+  },
+  "sqlite_fallback_path": "database/my_tarot_db.sqlite",
   "system_name": "OOTK Deterministic Vector Engine",
   "version": "1.0.0",
   "suits": {

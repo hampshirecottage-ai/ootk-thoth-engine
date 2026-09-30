@@ -6,16 +6,37 @@ import argparse
 import psycopg
 from psycopg.rows import dict_row
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
-DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "my_tarot_db"),
-    "user": os.getenv("DB_USER", "dbuser"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", 5432))
-}
+BASE_DIR = Path(__file__).resolve().parent.parent
+CONFIG_PATH = BASE_DIR / "config" / "config.json"
+
+def load_db_config():
+    """Loads database credentials from config/config.json with environment variable overrides."""
+    config = {
+        "dbname": os.getenv("DB_NAME", "my_tarot_db"),
+        "user": os.getenv("DB_USER", "dbuser"),
+        "password": os.getenv("DB_PASSWORD", ""),
+        "host": os.getenv("DB_HOST", "localhost"),
+        "port": int(os.getenv("DB_PORT", "5432"))
+    }
+    
+    if CONFIG_PATH.exists():
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                json_data = json.load(f)
+                db_json = json_data.get("database", {})
+                for key in config:
+                    if key in db_json and not os.getenv(f"DB_{key.upper()}"):
+                        config[key] = db_json[key]
+        except Exception as e:
+            print(f"[WARN] Failed to read {CONFIG_PATH}: {e}")
+            
+    return config
+
+DB_CONFIG = load_db_config()
 
 SPREADS = {
     "1": {"name": "Single Card / Daily Operations", "positions": ["Core Theme / Focus"]},

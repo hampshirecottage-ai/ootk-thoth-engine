@@ -8,7 +8,8 @@ import os
 import json
 from dotenv import load_dotenv
 
-from scripts.spread_engine import (
+from src import ootk_engine
+from src.spread_engine import (
     DB_CONFIG, SPREADS, fetch_all_cards, fetch_card_correspondences,
     analyze_elemental_balance, calculate_elemental_dignities,
     evaluate_macro_framework, build_analytical_prompt, save_spread_session

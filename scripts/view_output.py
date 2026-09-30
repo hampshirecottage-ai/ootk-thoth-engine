@@ -3,6 +3,7 @@ import sys
 import glob
 import argparse
 import re
+from pathlib import Path
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -10,10 +11,15 @@ from rich.progress_bar import ProgressBar
 from rich.tree import Tree
 from rich.text import Text
 
+# Ensure project root is in sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
+
 console = Console()
 
 def find_latest_html_report():
-    files = glob.glob("output/ootk_output_*.html")
+    output_pattern = str(BASE_DIR / "output" / "ootk_output_*.html")
+    files = glob.glob(output_pattern)
     if not files:
         return None
     return max(files, key=os.path.getmtime)

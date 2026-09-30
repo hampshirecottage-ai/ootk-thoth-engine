@@ -1,21 +1,17 @@
 import os
-from dotenv import load_dotenv
+import sys
+from pathlib import Path
 import psycopg
 from psycopg.rows import dict_row
 
-load_dotenv()
+# Ensure project root is in sys.path
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
 
-DB_NAME = os.getenv("DB_NAME", "my_tarot_db")
-DB_USER = os.getenv("DB_USER", "dbuser")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-
-CONN_STR = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+from src.spread_engine import DB_CONFIG
 
 def get_thoth_cards():
-    """Fetches all 78 Thoth cards ordered by card_id."""
-    # Explicitly alias 'title' to 'card_name' for Python dict key access
+    """Fetches all 78 Thoth cards ordered by card_id using DB_CONFIG."""
     query = """
         SELECT card_id, title AS card_name, key_scale 
         FROM thoth_cards 
@@ -23,7 +19,7 @@ def get_thoth_cards():
     """
     
     try:
-        with psycopg.connect(CONN_STR, row_factory=dict_row) as conn:
+        with psycopg.connect(**DB_CONFIG, row_factory=dict_row) as conn:
             with conn.cursor() as cur:
                 cur.execute(query)
                 return cur.fetchall()
