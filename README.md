@@ -1,3 +1,4 @@
+# A new epoch or evolution in automated esoteric calculation
 # OOTK Thoth Engine
 
 A high-precision Hermetic tarot calculation and analytical engine built around the 78-card Thoth Tarot deck, Liber 777 correspondence mappings, and Tree of Life spatial-platonic geometry.
