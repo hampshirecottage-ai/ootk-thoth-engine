@@ -16,8 +16,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 from src.prng_shuffler import shuffle_deck
-from src.decan_aspects import analyze_spread_decan_aspects
-
 CONFIG_PATH = BASE_DIR / "config" / "config.json"
 
 DB_ENV_VARS = {
@@ -41,6 +39,7 @@ def load_db_config():
                 json_data = json.load(f)
                 db_json = json_data.get("database", {})
                 for key in config:
+                    # config.json only fills a value when the matching env var is unset
                     if key in db_json and not os.getenv(DB_ENV_VARS[key]):
                         config[key] = db_json[key]
         except Exception as e:
@@ -140,6 +139,15 @@ SPREADS = {
     }
 }
 
+def _ring(n, start_deg=0.0, step_deg=None):
+    """n points on the unit circle, counter-clockwise from start_deg."""
+    step = step_deg if step_deg is not None else 360.0 / n
+    return [
+        (round(math.cos(math.radians(start_deg + i * step)), 3),
+         round(math.sin(math.radians(start_deg + i * step)), 3))
+        for i in range(n)
+    ]
+
 SPREAD_DEFAULT_COORDINATES = {
     "1": [(0.0, 0.0)],
     "2": [(-0.5, 0.0), (0.5, 0.0)],
@@ -151,7 +159,47 @@ SPREAD_DEFAULT_COORDINATES = {
         (1.0, 0.0), (0.866, 0.5), (0.5, 0.866), (0.0, 1.0),
         (-0.5, 0.866), (-0.866, 0.5), (-1.0, 0.0), (-0.866, -0.5),
         (-0.5, -0.866), (0.0, -1.0), (0.5, -0.866), (0.866, -0.5)
-    ]
+    ],
+    # OOTK Op 1: schematic heap (x right, y up). Significator at centre, development pair
+    # left, outcome pair right, external-factors pair just above the significator,
+    # psychological and environmental pairs along the base, karma pair at the apex,
+    # counter-balance just below the significator, climax above the apex.
+    # This is a drawing convention, not a canonical layout - edit freely.
+    "8": [
+        (0.0, 0.0),
+        (-2.25, 0.0), (-1.75, 0.0),
+        (1.75, 0.0), (2.25, 0.0),
+        (-0.25, 0.75), (0.25, 0.75),
+        (-1.25, -1.5), (-0.75, -1.5),
+        (0.75, -1.5), (1.25, -1.5),
+        (-0.25, 2.0), (0.25, 2.0),
+        (0.0, -0.75),
+        (0.0, 3.0)
+    ],
+    # OOTK Op 2: chart wheel, house 1 at 9 o'clock (180 deg), houses running counter-clockwise
+    # (house 4 at the bottom, house 7 at 3 o'clock, house 10 at the top).
+    "9": _ring(12, start_deg=180.0, step_deg=30.0),
+    # OOTK Op 4: 36 decans, 10 deg apart, counter-clockwise from 0 deg (Aries 0).
+    "11": _ring(36, start_deg=0.0, step_deg=10.0),
+}
+
+# Ring layouts (houses, zodiac, decans) are paired by aspect, not by neighbour: consecutive
+# positions on a ring always sit the same angle apart, so neighbour geometry carries no
+# information. Each position is instead paired with every position it stands in an exact
+# major aspect to. Trim a layout's tuple to shorten the report (e.g. decans: Trine and
+# Opposition only).
+RING_ASPECTS = (
+    ("Opposition", "Opposition (180°)", 180.0, "Polar Complement / Axis Tension", -1),
+    ("Square",     "Square (90°)",      90.0,  "Dynamic Tension / Quadrature Friction", -2),
+    ("Trine",      "Trine (120°)",      120.0, "Equilateral Flow / Resonance", 2),
+    ("Sextile",    "Sextile (60°)",     60.0,  "Harmonic Alignment / Opportunity", 1),
+)
+RING_ASPECT_ORB = 1.0  # degrees; ring layouts sit on exact multiples of 10 or 30 degrees
+_ALL_RING_ASPECTS = ("Opposition", "Square", "Trine", "Sextile")
+RING_LAYOUT_ASPECTS = {
+    "9": _ALL_RING_ASPECTS,    # 12 houses
+    "10": _ALL_RING_ASPECTS,   # 12 zodiac signs
+    "11": _ALL_RING_ASPECTS,   # 36 decans
 }
 
 def parse_args():
@@ -179,8 +227,16 @@ def fetch_all_cards(conn):
         return cur.fetchall()
 
 def fetch_card_correspondences(conn, title, system="golden_dawn"):
+    """Looks up one card's correspondences.
+
+    GD data (spatial, platonic, colours, GD letter) joins on the card's key_scale.
+    French/Egyptian data joins separately (alias cf) because the French table is indexed
+    by French card number (0-21 for Majors), not by the Golden Dawn path number. Majors use
+    thoth_cards.french_number; Minors share their number with key_scale (1-10); Courts have
+    no French row and fall back to GD values.
+    """
     query = """
-    SELECT 
+    SELECT
         tc.card_id,
         tc.title,
         tc.arcana_type,
@@ -188,11 +244,14 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         tc.number_or_rank,
         tc.description,
         tc.key_scale,
-        CASE WHEN %s = 'french_egyptian' AND c.path_or_sephira_french IS NOT NULL THEN c.path_or_sephira_french ELSE c.name END AS path_or_sephira,
-        CASE WHEN %s = 'french_egyptian' AND c.hebrew_letter_french IS NOT NULL THEN c.hebrew_letter_french ELSE COALESCE(c.hebrew_letter, 'N/A') END AS hebrew_letter,
+        CASE WHEN %(sys)s = 'french_egyptian' AND cf.path_or_sephira_french IS NOT NULL
+             THEN cf.path_or_sephira_french ELSE c.name END AS path_or_sephira,
+        CASE WHEN %(sys)s = 'french_egyptian' AND cf.hebrew_letter_french IS NOT NULL
+             THEN cf.hebrew_letter_french ELSE COALESCE(c.hebrew_letter, 'N/A') END AS hebrew_letter,
         c.hebrew_letter AS gd_hebrew_letter,
-        c.hebrew_letter_french AS french_hebrew_letter,
-        CASE WHEN %s = 'french_egyptian' AND c.attribution_french IS NOT NULL THEN c.attribution_french ELSE c.element_or_planet_or_sign END AS attribution,
+        cf.hebrew_letter_french AS french_hebrew_letter,
+        CASE WHEN %(sys)s = 'french_egyptian' AND cf.attribution_french IS NOT NULL
+             THEN cf.attribution_french ELSE c.element_or_planet_or_sign END AS attribution,
         c.element_or_planet_or_sign AS element,
         c.king_scale_color,
         c.attributions,
@@ -204,11 +263,15 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         c.dual_solid,
         c.topological_role
     FROM thoth_cards tc
-    LEFT JOIN correspondences c ON tc.key_scale = c.key_scale
-    WHERE tc.title = %s;
+    LEFT JOIN correspondences c  ON c.key_scale = tc.key_scale
+    LEFT JOIN correspondences cf ON cf.key_scale = CASE
+            WHEN tc.arcana_type = 'Major' THEN tc.french_number
+            WHEN tc.arcana_type = 'Minor' THEN tc.key_scale
+        END
+    WHERE tc.title = %(title)s;
     """
     with conn.cursor() as cur:
-        cur.execute(query, (system, system, system, title))
+        cur.execute(query, {"sys": system, "title": title})
         return cur.fetchone()
 
 ELEMENT_WORDS = {"fire": "Fire", "water": "Water", "air": "Air", "earth": "Earth"}
@@ -219,18 +282,40 @@ ZODIAC_ELEMENTS = {
     "gemini": "Air", "libra": "Air", "aquarius": "Air",
     "cancer": "Water", "scorpio": "Water", "pisces": "Water",
 }
+# Planet-only attributions, used as a fallback when parsing attribution text.
 PLANET_ELEMENTS = {
     "sun": "Fire", "mars": "Fire", "jupiter": "Fire",
     "moon": "Water", "venus": "Earth", "mercury": "Air", "saturn": "Earth",
 }
 
+# Explicit Thoth elemental assignment for the Majors. Independent of the active mapping
+# system, so French/Egyptian attribution strings (glyph-only, "...", planet lists) can no
+# longer distort element counts or dignity scores.
+MAJOR_ELEMENTS = {
+    "The Fool": "Air", "The Magus": "Air", "The Priestess": "Water",
+    "The Empress": "Earth", "The Emperor": "Fire", "The Hierophant": "Earth",
+    "The Lovers": "Air", "The Chariot": "Water", "Adjustment": "Air",
+    "The Hermit": "Earth", "Fortune": "Fire", "Lust": "Fire",
+    "The Hanged Man": "Water", "Death": "Water", "Art": "Fire",
+    "The Devil": "Earth", "The Tower": "Fire", "The Star": "Air",
+    "The Moon": "Water", "The Sun": "Fire", "The Aeon": "Fire",
+    "The Universe": "Earth",
+}
+
 def derive_primary_element(card_data):
+    """Suit wins; otherwise the first element, zodiac sign or planet word found in the
+    attribution, then the title. Whole-word matching, so 'chair' never reads as 'air'."""
     if not card_data:
         return "Spirit"
     suit = str(card_data.get("suit") or "").lower()
     for word, elem in SUIT_ELEMENTS.items():
         if word.rstrip("s") in suit:
             return elem
+
+    if card_data.get("arcana_type") == "Major":
+        name = str(card_data.get("title") or "").split(" - ", 1)[-1].strip()
+        if name in MAJOR_ELEMENTS:
+            return MAJOR_ELEMENTS[name]
 
     lookup = {**ELEMENT_WORDS, **ZODIAC_ELEMENTS, **PLANET_ELEMENTS}
     for field in ("attribution", "title"):
@@ -239,45 +324,75 @@ def derive_primary_element(card_data):
                 return lookup[token]
     return "Spirit"
 
-def calculate_elemental_dignities(spread_results):
+OP_TAG = re.compile(r"^\[Op (\d+)\]")
+
+def spread_segments(spread_results, spread_key):
+    """Splits a drawn spread into independent segments: (layout_key, start, end, name).
+
+    A master pipeline (spread with an 'operations' list) yields one segment per operation,
+    keyed to that operation's own spread so pairings and geometry never cross operation
+    boundaries. Any other spread is a single segment.
+    """
+    ops = SPREADS.get(spread_key, {}).get("operations")
+    if not ops:
+        return [(spread_key, 0, len(spread_results), None)]
+
+    segments = []
+    for idx, item in enumerate(spread_results):
+        m = OP_TAG.match(item["position_name"])
+        op_num = int(m.group(1)) if m else 0
+        if segments and segments[-1][4] == op_num:
+            segments[-1][2] = idx + 1
+        else:
+            key = ops[op_num - 1] if 1 <= op_num <= len(ops) else None
+            name = f"Operation {op_num}: {SPREADS[key]['name']}" if key else None
+            segments.append([key, idx, idx + 1, name, op_num])
+    return [(k, s_, e_, n_) for k, s_, e_, n_, _ in segments]
+
+def calculate_elemental_dignities(spread_results, spread_key=None):
+    """Pairwise dignity between consecutive cards, never across an operation boundary."""
     dignity_matrix = []
     if len(spread_results) < 2:
         return dignity_matrix
 
-    for i in range(len(spread_results) - 1):
-        c1 = spread_results[i]
-        c2 = spread_results[i+1]
-        
-        elem1 = derive_primary_element(c1["card_data"])
-        elem2 = derive_primary_element(c2["card_data"])
+    for _layout, seg_start, seg_end, seg_name in spread_segments(spread_results, spread_key):
+        for i in range(seg_start, seg_end - 1):
+            c1 = spread_results[i]
+            c2 = spread_results[i + 1]
 
-        if elem1 == "Spirit" or elem2 == "Spirit":
-            score = 0
-            rel = "Neutral / Spiritual Synthesis"
-        elif elem1 == elem2:
-            score = 1
-            rel = f"Direct Reinforcement ({elem1} + {elem2})"
-        elif (elem1 == "Fire" and elem2 == "Air") or (elem1 == "Air" and elem2 == "Fire"):
-            score = 2
-            rel = "Active Attraction / Combustion (Fire + Air)"
-        elif (elem1 == "Water" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Water"):
-            score = 2
-            rel = "Active Nourishment / Receptivity (Water + Earth)"
-        elif (elem1 == "Fire" and elem2 == "Water") or (elem1 == "Water" and elem2 == "Fire"):
-            score = -2
-            rel = "Active Hostility / Extinction (Fire + Water)"
-        elif (elem1 == "Air" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Air"):
-            score = -2
-            rel = "Active Hostility / Resistance (Air + Earth)"
-        else:
-            score = 0
-            rel = f"Passive / Neutral ({elem1} + {elem2})"
+            elem1 = derive_primary_element(c1["card_data"])
+            elem2 = derive_primary_element(c2["card_data"])
 
-        dignity_matrix.append({
-            "pair": f"Pos {c1['position_number']} ({c1['card_data']['title']}) <-> Pos {c2['position_number']} ({c2['card_data']['title']})",
-            "score": score,
-            "relationship": rel
-        })
+            if elem1 == "Spirit" or elem2 == "Spirit":
+                score = 0
+                rel = "Neutral / Spiritual Synthesis"
+            elif elem1 == elem2:
+                score = 1
+                rel = f"Direct Reinforcement ({elem1} + {elem2})"
+            elif (elem1 == "Fire" and elem2 == "Air") or (elem1 == "Air" and elem2 == "Fire"):
+                score = 2
+                rel = "Active Attraction / Combustion (Fire + Air)"
+            elif (elem1 == "Water" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Water"):
+                score = 2
+                rel = "Active Nourishment / Receptivity (Water + Earth)"
+            elif (elem1 == "Fire" and elem2 == "Water") or (elem1 == "Water" and elem2 == "Fire"):
+                score = -2
+                rel = "Active Hostility / Extinction (Fire + Water)"
+            elif (elem1 == "Air" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Air"):
+                score = -2
+                rel = "Active Hostility / Resistance (Air + Earth)"
+            else:
+                score = 0
+                rel = f"Passive / Neutral ({elem1} + {elem2})"
+
+            dignity_matrix.append({
+                "pair": f"Pos {c1['position_number']} ({c1['card_data']['title']}) <-> Pos {c2['position_number']} ({c2['card_data']['title']})",
+                "score": score,
+                "relationship": rel,
+                "from_index": i,
+                "to_index": i + 1,
+                "segment_name": seg_name,
+            })
 
     return dignity_matrix
 
@@ -306,47 +421,105 @@ def calculate_spatial_aspect(angle_deg):
     else:
         return f"Inconjunct/Minor ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
 
+def _ring_aspect(delta_deg, allowed):
+    """Exact-aspect lookup for ring layouts. Returns (short, name, desc, modifier) or None."""
+    norm = abs(delta_deg) % 360
+    if norm > 180:
+        norm = 360 - norm
+    for short, name, angle, desc, modifier in RING_ASPECTS:
+        if short in allowed and abs(norm - angle) <= RING_ASPECT_ORB:
+            return short, name, desc, modifier
+    return None
+
 def analyze_spatial_vectors(spread_results, spread_key):
+    """Spatial relations per layout segment, measured around each layout's centroid.
+
+    Master pipelines are analysed one operation at a time against that operation's own layout,
+    so no pair spans two operations. Ring layouts (see RING_LAYOUT_ASPECTS) are paired by
+    exact aspect between any two positions; all other layouts pair consecutive positions.
+    Segments without a defined layout are skipped (no fake geometry). A position sitting on
+    the centroid has no direction, so consecutive pairs involving it are reported as a
+    centre/axis node.
+    """
     if len(spread_results) < 2:
         return []
 
-    coords = SPREAD_DEFAULT_COORDINATES.get(spread_key)
-    if not coords or len(coords) < len(spread_results):
-        return []
-    coords = coords[:len(spread_results)]
-
-    cx = sum(x for x, _ in coords) / len(coords)
-    cy = sum(y for _, y in coords) / len(coords)
-
-    def polar(point):
-        dx, dy = point[0] - cx, point[1] - cy
-        if math.hypot(dx, dy) < 1e-9:
-            return None
-        return math.degrees(math.atan2(dy, dx)) % 360
-
     spatial_matrix = []
-    for i in range(len(spread_results) - 1):
-        item1, item2 = spread_results[i], spread_results[i + 1]
-        (x1, y1), (x2, y2) = coords[i], coords[i + 1]
-        dist = math.hypot(x2 - x1, y2 - y1)
+    for layout_key, seg_start, seg_end, seg_name in spread_segments(spread_results, spread_key):
+        seg_len = seg_end - seg_start
+        coords = SPREAD_DEFAULT_COORDINATES.get(layout_key)
+        if seg_len < 2 or not coords or len(coords) < seg_len:
+            continue
+        coords = coords[:seg_len]
 
-        a1, a2 = polar(coords[i]), polar(coords[i + 1])
-        if a1 is None or a2 is None:
-            delta_angle = 0.0
-            aspect_name, aspect_desc, modifier = (
-                "Centre Node", "Axis / Core Point (no angular relation)", 0)
-        else:
-            delta_angle = abs(a1 - a2)
-            aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
+        cx = sum(x for x, _ in coords) / len(coords)
+        cy = sum(y for _, y in coords) / len(coords)
 
-        spatial_matrix.append({
-            "pair": f"Pos {item1['position_number']} ({item1['card_data']['title']}) <-> Pos {item2['position_number']} ({item2['card_data']['title']})",
-            "distance": round(dist, 3),
-            "delta_angle": round(delta_angle, 1),
-            "aspect": aspect_name,
-            "description": aspect_desc,
-            "score_modifier": modifier
-        })
+        def polar(point):
+            dx, dy = point[0] - cx, point[1] - cy
+            if math.hypot(dx, dy) < 1e-9:
+                return None
+            return math.degrees(math.atan2(dy, dx)) % 360
+
+        def pair_label(item1, item2):
+            return (f"Pos {item1['position_number']} ({item1['card_data']['title']}) "
+                    f"<-> Pos {item2['position_number']} ({item2['card_data']['title']})")
+
+        allowed = RING_LAYOUT_ASPECTS.get(layout_key)
+        if allowed is not None:
+            found = []
+            for a in range(seg_len):
+                for b in range(a + 1, seg_len):
+                    ang_a, ang_b = polar(coords[a]), polar(coords[b])
+                    if ang_a is None or ang_b is None:
+                        continue
+                    delta = abs(ang_a - ang_b)
+                    hit = _ring_aspect(delta, allowed)
+                    if not hit:
+                        continue
+                    short, name, desc, modifier = hit
+                    (xa, ya), (xb, yb) = coords[a], coords[b]
+                    found.append((
+                        [r[0] for r in RING_ASPECTS].index(short), a, b,
+                        {
+                            "pair": pair_label(spread_results[seg_start + a], spread_results[seg_start + b]),
+                            "distance": round(math.hypot(xb - xa, yb - ya), 3),
+                            "delta_angle": round(min(delta % 360, 360 - delta % 360), 1),
+                            "aspect": name,
+                            "description": desc,
+                            "score_modifier": modifier,
+                            "segment_name": seg_name,
+                            "pair_mode": "aspect",
+                        },
+                    ))
+            found.sort(key=lambda t: (t[0], t[1], t[2]))
+            spatial_matrix.extend(t[3] for t in found)
+            continue
+
+        for j in range(seg_len - 1):
+            item1, item2 = spread_results[seg_start + j], spread_results[seg_start + j + 1]
+            (x1, y1), (x2, y2) = coords[j], coords[j + 1]
+            dist = math.hypot(x2 - x1, y2 - y1)
+
+            a1, a2 = polar(coords[j]), polar(coords[j + 1])
+            if a1 is None or a2 is None:
+                delta_angle = 0.0
+                aspect_name, aspect_desc, modifier = (
+                    "Centre Node", "Axis / Core Point (no angular relation)", 0)
+            else:
+                delta_angle = abs(a1 - a2)
+                aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
+
+            spatial_matrix.append({
+                "pair": pair_label(item1, item2),
+                "distance": round(dist, 3),
+                "delta_angle": round(delta_angle, 1),
+                "aspect": aspect_name,
+                "description": aspect_desc,
+                "score_modifier": modifier,
+                "segment_name": seg_name,
+                "pair_mode": "consecutive",
+            })
 
     return spatial_matrix
 
@@ -476,7 +649,7 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     return "3. Incarnational Life Path & Psychological Evolution"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, decan_aspects=None, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
     total_cards = sum(element_counts.values()) or 1
     mapping_labels = {
         "golden_dawn": "Golden Dawn / English System (Liber 777)",
@@ -520,34 +693,42 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
             prompt_md += f"* {dp}\n"
 
     prompt_md += "\n---\n\n## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    last_segment = None
     for d in dignity_matrix:
+        if d.get("segment_name") and d["segment_name"] != last_segment:
+            prompt_md += f"\n**{d['segment_name']}**\n\n"
+            last_segment = d["segment_name"]
         score_str = f"+{d['score']}" if d['score'] > 0 else str(d['score'])
         prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
 
     prompt_md += "\n---\n\n## 5. SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
     if spatial_matrix:
+        last_segment = None
+        last_aspect = None
+        first_in_segment = False
         for s in spatial_matrix:
+            if s.get("segment_name") and s["segment_name"] != last_segment:
+                prompt_md += f"\n**{s['segment_name']}**\n"
+                last_segment = s["segment_name"]
+                last_aspect = None
+                first_in_segment = True
+            else:
+                first_in_segment = False
             mod_str = f"+{s['score_modifier']}" if s['score_modifier'] > 0 else str(s['score_modifier'])
-            prompt_md += f"* **{s['pair']}**:\n"
-            prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
-            prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
+            if s.get("pair_mode") == "aspect":
+                # Ring layouts: pairs are grouped under their aspect, one line per pair.
+                if s["aspect"] != last_aspect:
+                    prompt_md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
+                    last_aspect = s["aspect"]
+                prompt_md += f"* {s['pair']}\n"
+            else:
+                prompt_md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
+                prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
+                prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
     else:
         prompt_md += "* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.\n"
 
-    prompt_md += "\n---\n\n## 6. DECANIC PLANETARY ASPECTS (Book of Thoth Zodiacal Dynamics)\n"
-    if decan_aspects:
-        for asp in decan_aspects:
-            score_str = f"+{asp['composite_score']}" if asp['composite_score'] > 0 else str(asp['composite_score'])
-            prompt_md += (
-                f"* **{asp['positions']} ({asp['card_a']} <-> {asp['card_b']})**:\n"
-                f"  - Decans: `{asp['decan_a']}` vs `{asp['decan_b']}`\n"
-                f"  - Ecliptic Angle: `{asp['delta_deg']}°` -> **{asp['aspect_name']}** ({asp['nature']})\n"
-                f"  - Composite Score: `{score_str}` (Planetary Synergy: {asp['planetary_synergy']})\n"
-            )
-    else:
-        prompt_md += "* No active major decanic aspects present between adjacent small cards.\n"
-
-    prompt_md += "\n---\n\n## 7. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    prompt_md += "\n---\n\n## 6. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
 
     for item in spread_results:
         data = item["card_data"]
@@ -570,27 +751,29 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 
     prompt_md += f"""---
 
-## 8. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
 1. **Active System Context ({mapping_label}):** Analyze how the cards function under the `{mapping_system}` mapping.
-2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries.
+2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
 3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
-4. **Elemental Dignity, Decanic Aspects & Spatial Geometry Analysis:** Utilize Pairwise Elemental Dignity interactions, Astrological Decan Aspects, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
+4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
 5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
     return prompt_md
 
 def card_is_dignified(index, dignity_matrix):
-    if not dignity_matrix:
-        return True
-    touching = []
-    if index - 1 >= 0 and index - 1 < len(dignity_matrix):
-        touching.append(dignity_matrix[index - 1]["score"])
-    if index < len(dignity_matrix):
-        touching.append(dignity_matrix[index]["score"])
-    return sum(touching) >= 0
+    """A card is dignified when the pairwise scores touching it sum to >= 0.
+
+    Pairs carry explicit card indices, so a card at the edge of an operation is judged only by
+    its in-operation neighbour. A card with no pairs counts as dignified.
+    """
+    touching = [
+        d["score"] for d in (dignity_matrix or [])
+        if index in (d["from_index"], d["to_index"])
+    ]
+    return sum(touching) >= 0 if touching else True
 
 def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results, dignity_matrix=None):
     insert_session_query = """
@@ -677,6 +860,17 @@ def display_card_selection(cards):
     for idx, card in enumerate(cards, start=1):
         print(f"{idx:2d}. {card['title']} (Card ID {card['card_id']})")
 
+def resolve_significator(cards, name):
+    """Finds the significator card by full title or by name after the 'XI - ' style prefix."""
+    wanted = (name or "").strip().lower()
+    if not wanted:
+        return None
+    for c in cards:
+        t = c["title"].lower()
+        if t == wanted or t.split(" - ", 1)[-1] == wanted:
+            return c
+    return None
+
 def run_spread_session():
     args = parse_args()
 
@@ -733,10 +927,31 @@ def run_spread_session():
         else:
             target_positions = selected_spread.get("positions", [])
 
+        sig_card = resolve_significator(cards, significator)
+        if significator and sig_card is None:
+            print(f"[ERROR] Significator '{significator}' not found in thoth_cards.")
+            sys.exit(1)
+
+        # Only pin when the spread actually has a significator position (first position).
+        pin_significator = bool(
+            sig_card and target_positions and "significator" in target_positions[0].lower()
+        )
+        if pin_significator and shuffled_deck:
+            # Remove it from the shuffled deck so it cannot be drawn a second time;
+            # remaining order is unchanged, so a given seed stays deterministic.
+            shuffled_deck = [c for c in shuffled_deck if c["card_id"] != sig_card["card_id"]]
+        significator_label = (
+            sig_card["title"] if pin_significator
+            else "None (spread has no significator position)"
+        )
+
         for pos_idx, position_name in enumerate(target_positions, start=1):
             print(f"\n[Position {pos_idx}: {position_name}]")
             
-            if shuffled_deck:
+            if pin_significator and pos_idx == 1:
+                selected_title = sig_card["title"]
+                print(f"--> Significator (pinned): {selected_title}")
+            elif shuffled_deck:
                 selected_title = shuffled_deck[auto_draw_index % len(shuffled_deck)]["title"]
                 auto_draw_index += 1
                 print(f"--> PRNG Auto-Drawn: {selected_title}")
@@ -761,23 +976,22 @@ def run_spread_session():
             })
 
         element_counts = analyze_elemental_balance(spread_results)
-        dignity_matrix = calculate_elemental_dignities(spread_results)
+        dignity_matrix = calculate_elemental_dignities(spread_results, spread_choice)
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
-        decan_aspects = analyze_spread_decan_aspects(spread_results)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
-            selected_spread["name"], query_prompt, significator, args.seed,
+            selected_spread["name"], query_prompt, significator_label, args.seed,
             spread_results, element_counts, dignity_matrix, spatial_matrix, 
             spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings,
-            decan_aspects=decan_aspects, macro_framework=macro_framework, mapping_system=args.mapping
+            macro_framework, mapping_system=args.mapping
         )
 
         print("\n" + analytical_prompt)
 
-        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator, spread_results, dignity_matrix)
+        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator_label, spread_results, dignity_matrix)
 
         if args.html:
             generate_html_output(session_id, selected_spread["name"], query_prompt, analytical_prompt)

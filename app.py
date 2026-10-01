@@ -1,3 +1,4 @@
+import html
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -15,7 +16,6 @@ from src.spread_engine import (
     analyze_platonic_topology, evaluate_macro_framework,
     build_analytical_prompt, save_spread_session
 )
-from src.decan_aspects import analyze_spread_decan_aspects
 
 load_dotenv()
 
@@ -50,6 +50,7 @@ def resolve_positions(spread: dict) -> list:
 
 @app.get("/", response_class=HTMLResponse)
 def main_gui(request: Request):
+    """Sync endpoint: FastAPI executes in threadpool to prevent blocking the event loop."""
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
     return templates.TemplateResponse(
@@ -69,13 +70,14 @@ def generate_report(
     mapping_system: str = Form("golden_dawn"),
     selected_cards: str = Form(...)
 ):
+    """Builds the spread, executes geometric/vector analysis, and renders the synthesis report."""
     topic = topic.strip()
     significator = significator.strip() or "Knight of Swords"
     spread_key = spread_key.strip()
     framework = framework.strip()
     mapping_system = mapping_system.strip()
 
-    # --- Validation ---
+    # --- Domain Input Validation ---
     if spread_key not in SPREADS:
         raise HTTPException(status_code=400, detail=f"Unknown spread key: {spread_key!r}.")
     if mapping_system not in VALID_MAPPINGS:
@@ -93,14 +95,14 @@ def generate_report(
     if len(card_titles) != len(positions):
         raise HTTPException(
             status_code=400,
-            detail=f"'{selected_spread['name']}' needs {len(positions)} cards; received {len(card_titles)}."
+            detail=f"'{selected_spread['name']}' requires {len(positions)} cards; received {len(card_titles)}."
         )
 
     lowered = [t.lower() for t in card_titles]
     if len(set(lowered)) != len(lowered):
-        raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread.")
+        raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
 
-    # --- Build the spread ---
+    # --- Build Spread & Execute Analytical Calculations ---
     spread_results = []
     with get_db_connection() as conn:
         for idx, title in enumerate(card_titles):
@@ -121,7 +123,6 @@ def generate_report(
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
-        decan_aspects = analyze_spread_decan_aspects(spread_results)
         macro_framework = evaluate_macro_framework(spread_results, forced_framework=framework)
 
         analytical_prompt = build_analytical_prompt(
@@ -138,7 +139,6 @@ def generate_report(
             solid_counts=solid_counts,
             topology_details=topology_details,
             dual_pairings=dual_pairings,
-            decan_aspects=decan_aspects,
             macro_framework=macro_framework,
             mapping_system=mapping_system
         )
@@ -149,8 +149,7 @@ def generate_report(
             topic,
             f"GUI Selection | Mapping: {mapping_system} | Framework: {macro_framework}",
             significator,
-            spread_results,
-            dignity_matrix
+            spread_results
         )
 
     return templates.TemplateResponse(
