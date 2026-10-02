@@ -1,25 +1,19 @@
-import html
-from pathlib import Path
-
+"""FastAPI web GUI: `uvicorn ootk.web:app`."""
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import psycopg
 from psycopg.rows import dict_row
-from dotenv import load_dotenv
 
-from src.spread_engine import (
-    DB_CONFIG, SPREADS, fetch_all_cards, fetch_card_correspondences,
-    analyze_elemental_balance, calculate_elemental_dignities,
-    analyze_spatial_vectors, analyze_hebrew_spatial_distribution,
-    analyze_platonic_topology, evaluate_macro_framework,
-    build_analytical_prompt, save_spread_session
+from ootk import PROJECT_ROOT as BASE_DIR
+from ootk.analysis import (
+    analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
+    analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
-
-load_dotenv()
-
-BASE_DIR = Path(__file__).resolve().parent
+from ootk.db import DB_CONFIG, fetch_all_cards, fetch_card_correspondences, save_spread_session
+from ootk.report import build_analytical_prompt
+from ootk.spreads import SPREADS
 
 VALID_MAPPINGS = {"golden_dawn", "french_egyptian"}
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}

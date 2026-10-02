@@ -13,16 +13,11 @@ Usage (from the project root):
 """
 import argparse
 import sys
-from pathlib import Path
 
 import psycopg
 from psycopg.rows import dict_row
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
-
-from src.spread_engine import DB_CONFIG  # noqa: E402
+from ootk.db import DB_CONFIG
 
 EXPECTED_TABLES = {
     "thoth_cards": ["card_id", "title", "arcana_type", "suit", "number_or_rank", "key_scale", "description",

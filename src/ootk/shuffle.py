@@ -1,4 +1,4 @@
-"""The one shuffler used by every entry point (spread_engine, ootk_engine, demos).
+"""The one shuffler used by every entry point (CLI, web GUI, vector_engine).
 
 Same seed -> same deck, regardless of whether the seed is given as int or str.
 """
