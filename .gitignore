@@ -17,3 +17,5 @@ venv/
 .venv/
 .DS_Store
 .vscode/
+static/images/
+.DS_Store # already there, but covers subfolders
