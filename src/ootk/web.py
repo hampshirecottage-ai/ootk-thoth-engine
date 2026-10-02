@@ -6,7 +6,7 @@ import shlex
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import psycopg
 from psycopg.rows import dict_row
@@ -18,7 +18,8 @@ from ootk.analysis import (
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_withheld, save_spread_session,
+    DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_report_settings, load_withheld,
+    save_spread_session,
 )
 from ootk.report import build_analytical_prompt
 from ootk.shuffle import draw_spread, resolve_significator
@@ -52,14 +53,14 @@ async def form_error_page(request: Request, exc: HTTPException):
     return HTMLResponse(status_code=exc.status_code, content=(
         '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        '<title>Reading not generated</title><style>'
+        '<title>Reading not shown</title><style>'
         'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
         'background:#f5f4f8;color:#1d1b22;margin:0;padding:24px}'
         '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}}'
         'main{max-width:560px;margin:10vh auto}h1{color:#6b3fc4;font-size:1.3em}'
         'a{display:inline-block;background:#6b3fc4;color:#fff;padding:10px 16px;'
         'border-radius:6px;text-decoration:none;font-weight:600}</style></head><body><main>'
-        f'<h1>The reading was not generated</h1><p>{html.escape(str(exc.detail))}</p>'
+        f'<h1>This reading can&rsquo;t be shown</h1><p>{html.escape(str(exc.detail))}</p>'
         '<p><a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
         '&larr; Back to settings</a></p></main></body></html>'))
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
@@ -172,6 +173,7 @@ def generate_report(
     significator_label = significator
 
     with get_db_connection() as conn:
+        deck = None
         if draw_mode == "seed":
             seed = seed or new_seed()
             deck = fetch_all_cards(conn)
@@ -203,103 +205,149 @@ def generate_report(
             if len(set(lowered)) != len(lowered):
                 raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
 
-        # --- Build Spread & Execute Analytical Calculations ---
-        spread_results = []
-        rows = fetch_cards_correspondences(conn, card_titles, system=mapping_system)
-        for idx, title in enumerate(card_titles):
-            card_data = rows.get(title)
-            if not card_data:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Card title {title!r} was not found in the database."
-                )
-            spread_results.append({
-                "position_number": idx + 1,
-                "position_name": positions[idx],
-                "card_data": card_data
-            })
-
-        element_counts = analyze_elemental_balance(spread_results)
-        dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
-        spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
-        spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
-        solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
-        macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
-        withheld = load_withheld(conn, deck if draw_mode == "seed" else fetch_all_cards(conn),
-                                 card_titles, mapping_system)
-
-        analytical_prompt = build_analytical_prompt(
-            spread_name=selected_spread["name"],
-            query_prompt=topic,
-            significator=significator_label,
-            seed_val=seed or "Graphical Selection",
-            spread_results=spread_results,
-            element_counts=element_counts,
-            dignity_matrix=dignity_matrix,
-            spatial_matrix=spatial_matrix,
-            spatial_dist=spatial_dist,
-            spatial_details=spatial_details,
-            solid_counts=solid_counts,
-            topology_details=topology_details,
-            dual_pairings=dual_pairings,
-            macro_framework=macro_framework,
-            mapping_system=mapping_system,
-            framework_basis=framework_basis,
-            withheld=withheld,
-        )
+        settings = {
+            "spread_key": spread_key, "topic": topic, "significator": significator,
+            "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
+            "seed": seed, "output_format": "visual",
+            "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
+        }
+        reading = run_reading(conn, settings, card_titles, significator_label, deck)
 
         source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
         session_id = save_spread_session(
             conn,
             selected_spread["name"],
             topic,
-            f"{source} | Mapping: {mapping_system} | Framework: {macro_framework}",
+            f"{source} | Mapping: {mapping_system} | Framework: {reading['macro_framework']}",
             significator_label,
-            spread_results,
-            dignity_matrix
+            reading["spread_results"],
+            reading["dignity_matrix"],
+            report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label),
         )
+        # An older database saves the reading without its settings; then there is no link.
+        linked = bool(session_id) and load_report_settings(conn, session_id) is not None
 
     if output_format == "markdown":
         return PlainTextResponse(
-            analytical_prompt,
+            reading["analytical_prompt"],
             media_type="text/markdown; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="ootk_report_{session_id or "latest"}.md"'},
         )
+    if linked:
+        # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
+        return RedirectResponse(f"/report/{session_id}", status_code=303)
+    return render_report(request, session_id, settings, reading)
 
-    view = build_report_view(spread_key, spread_results, element_counts, dignity_matrix,
-                             spatial_matrix, macro_framework, framework_basis)
-    settings = {
-        "spread_key": spread_key, "topic": topic, "significator": significator,
-        "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-        "seed": seed, "output_format": "visual",
-        "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
+
+@app.get("/report/{session_id}", response_class=HTMLResponse)
+def show_report(request: Request, session_id: int):
+    """A saved reading's report, rebuilt from the cards and settings stored with the session."""
+    with get_db_connection() as conn:
+        stored = load_report_settings(conn, session_id)
+        if not stored:
+            raise HTTPException(status_code=404, detail=(
+                f"Reading #{session_id} has no saved report. Readings made before reports had "
+                f"their own link are still in the database; repeat them from their seed."))
+        card_titles = stored.pop("card_titles")
+        significator_label = stored.pop("significator_label")
+        reading = run_reading(conn, stored, card_titles, significator_label)
+    return render_report(request, session_id, stored, reading)
+
+
+def run_reading(conn, settings, card_titles, significator_label, deck=None):
+    """Looks up the drawn cards and runs every analysis. Returns the pieces the report needs."""
+    spread_key, mapping_system = settings["spread_key"], settings["mapping_system"]
+    selected_spread = SPREADS[spread_key]
+    positions = spread_positions(spread_key)
+    spread_results = []
+    rows = fetch_cards_correspondences(conn, card_titles, system=mapping_system)
+    for idx, title in enumerate(card_titles):
+        card_data = rows.get(title)
+        if not card_data:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Card title {title!r} was not found in the database."
+            )
+        spread_results.append({
+            "position_number": idx + 1,
+            "position_name": positions[idx],
+            "card_data": card_data
+        })
+
+    element_counts = analyze_elemental_balance(spread_results)
+    dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
+    spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
+    spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
+    solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
+    macro_framework, framework_basis = evaluate_macro_framework(spread_results,
+                                                                forced_framework=settings["framework"])
+    withheld = load_withheld(conn, deck or fetch_all_cards(conn), card_titles, mapping_system)
+
+    analytical_prompt = build_analytical_prompt(
+        spread_name=selected_spread["name"],
+        query_prompt=settings["topic"],
+        significator=significator_label,
+        seed_val=settings["seed"] or "Graphical Selection",
+        spread_results=spread_results,
+        element_counts=element_counts,
+        dignity_matrix=dignity_matrix,
+        spatial_matrix=spatial_matrix,
+        spatial_dist=spatial_dist,
+        spatial_details=spatial_details,
+        solid_counts=solid_counts,
+        topology_details=topology_details,
+        dual_pairings=dual_pairings,
+        macro_framework=macro_framework,
+        mapping_system=mapping_system,
+        framework_basis=framework_basis,
+        withheld=withheld,
+    )
+    return {
+        "spread_name": selected_spread["name"], "significator_label": significator_label,
+        "spread_results": spread_results, "element_counts": element_counts,
+        "dignity_matrix": dignity_matrix, "spatial_matrix": spatial_matrix,
+        "spatial_dist": spatial_dist, "spatial_details": spatial_details,
+        "solid_counts": solid_counts, "topology_details": topology_details,
+        "dual_pairings": dual_pairings, "macro_framework": macro_framework,
+        "framework_basis": framework_basis, "withheld": withheld,
+        "analytical_prompt": analytical_prompt,
     }
+
+
+def render_report(request, session_id, settings, r):
+    """The visual report for a reading from run_reading()."""
+    spread_key, seed = settings["spread_key"], settings["seed"]
+    mapping_system, framework = settings["mapping_system"], settings["framework"]
+    view = build_report_view(spread_key, r["spread_results"], r["element_counts"], r["dignity_matrix"],
+                             r["spatial_matrix"], r["macro_framework"], r["framework_basis"])
     return templates.TemplateResponse(
         request=request,
         name="report.html",
         context={
             "session_id": session_id,
-            "spread_name": selected_spread["name"],
-            "topic": topic,
-            "prompt": analytical_prompt,
-            "spread_results": spread_results,
-            "dignity_matrix": dignity_matrix,
-            "element_counts": element_counts,
+            "spread_name": r["spread_name"],
+            "topic": settings["topic"],
+            "prompt": r["analytical_prompt"],
+            "spread_results": r["spread_results"],
+            "dignity_matrix": r["dignity_matrix"],
+            "element_counts": r["element_counts"],
             "mapping_system": mapping_system,
             "mapping_label": MAPPING_LABELS[mapping_system],
-            "significator": significator_label,
+            "significator": r["significator_label"],
             "seed": seed,
             "settings": settings,
-            "cli_command": cli_command(spread_key, seed, mapping_system, framework, significator, topic) if seed else "",
-            "spatial_details": spatial_details,
-            "spatial_dist": spatial_dist,
-            "solid_counts": solid_counts,
-            "topology_details": topology_details,
-            "dual_pairings": dual_pairings,
-            "withheld": withheld_view(withheld),
+            "cli_command": cli_command(spread_key, seed, mapping_system, framework,
+                                       settings["significator"], settings["topic"]) if seed else "",
+            "spatial_details": r["spatial_details"],
+            "spatial_dist": r["spatial_dist"],
+            "solid_counts": r["solid_counts"],
+            "topology_details": r["topology_details"],
+            "dual_pairings": r["dual_pairings"],
+            "withheld": withheld_view(r["withheld"]),
             "view": view,
-            "reading": reading_export(session_id, selected_spread["name"], settings, significator_label,
-                                      macro_framework, framework_basis, element_counts, spread_results,
-                                      view, dignity_matrix, spatial_matrix, withheld),
+            "reading": reading_export(session_id, r["spread_name"], settings, r["significator_label"],
+                                      r["macro_framework"], r["framework_basis"], r["element_counts"],
+                                      r["spread_results"], view, r["dignity_matrix"],
+                                      r["spatial_matrix"], r["withheld"]),
         }
     )

@@ -211,7 +211,8 @@ CREATE TABLE public.tarot_sessions (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     operation_type character varying(100) NOT NULL,
     significator character varying(100),
-    notes text
+    notes text,
+    report_settings jsonb
 );
 
 

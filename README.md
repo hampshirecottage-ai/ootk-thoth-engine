@@ -167,6 +167,7 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 
 - **Settings panel.** Spread, how the cards are chosen (from a seed, or picked by hand), seed, significator, mapping system, framework and output format sit in one panel. Save the current settings as a named preset, or start from a built-in one (full OOTK in either mapping, daily card). Presets live in your browser.
 - **Seeds.** Leave the seed blank to get a new one. The report always shows the seed and the matching `ootk` command, and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
+- **Report links.** Each saved reading opens at its own address, `/report/<session>`, so you can bookmark it, and reloading it does not save the reading again.
 - **Summary first.** The report opens with a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
 - **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels, and decans as a 36-segment ring, with card images and aspects as coloured lines. Hover a card to light up its aspects. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or toggle individual types; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
@@ -207,6 +208,7 @@ OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -
 ```
 
 Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
+Databases created before reports had their own link need `database/migrations/add_report_settings.sql` (safe to re-run); without it readings still save, but the report is shown without a link.
 Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
 Then run `database/migrations/fix_trump_attributions.sql` (also safe to re-run): it gives each Major its own sign, planet or element as its attribution and names path 32 'Cross'. The engine warns on stderr when it is missing.
 Then run `database/migrations/fix_court_paths.sql` (safe to re-run): it puts the Queen of Wands and the Prince of Swords on the same paths as their Thoth Majors (Tzaddi with the Emperor, Heh with the Star) and corrects four court descriptions.

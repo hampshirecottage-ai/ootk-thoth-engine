@@ -42,12 +42,17 @@ def client(monkeypatch):
 
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
 
-    def fake_save(conn, spread_name, query_prompt, notes, significator, results, dignity_matrix=None):
+    def fake_save(conn, spread_name, query_prompt, notes, significator, results, dignity_matrix=None,
+                  report_settings=None):
         saved.update(spread=spread_name, topic=query_prompt, notes=notes,
-                     significator=significator, n=len(results), dignity=dignity_matrix)
+                     significator=significator, n=len(results), dignity=dignity_matrix,
+                     report_settings=json.loads(json.dumps(report_settings)))
+        saved["count"] = saved.get("count", 0) + 1
         return 99
 
     monkeypatch.setattr(app_module, "save_spread_session", fake_save)
+    monkeypatch.setattr(app_module, "load_report_settings",
+                        lambda conn, sid: dict(saved["report_settings"]) if sid == 99 and saved else None)
     monkeypatch.setattr(app_module, "load_withheld",
                         lambda conn, deck, titles, system="golden_dawn": analysis.withheld_summary(
                             [fake_card(c["title"]) for c in deck], titles))
@@ -57,10 +62,11 @@ def client(monkeypatch):
     return c
 
 
-def post(client, **over):
+def post(client, follow=True, **over):
+    """Posts the form; by default follows the redirect to the report, as a browser does."""
     data = {"spread_key": "3", "selected_cards": "A,B,C", "topic": "t"}
     data.update(over)
-    return client.post("/generate_report", data=data)
+    return client.post("/generate_report", data=data, follow_redirects=follow)
 
 
 # ---------- app: validation ----------
@@ -152,7 +158,7 @@ def test_form_errors_render_a_page_with_a_way_back(client):
 
 def test_spread_12_needs_75_cards(client):
     cards = ",".join(f"Card {i}" for i in range(75))
-    assert post(client, spread_key="12", selected_cards=cards).status_code == 200
+    assert post(client, follow=False, spread_key="12", selected_cards=cards).status_code == 303
     assert len(client.lookups) == 1 and len(client.lookups[0]) == 75   # one batched lookup
     assert post(client, spread_key="12", selected_cards="A,B,C").status_code == 400
 
@@ -474,9 +480,8 @@ def test_seed_mode_draws_like_the_cli(seeded_client):
 
 
 def test_seed_mode_same_seed_same_cards(seeded_client):
-    post(seeded_client, spread_key="8", draw_mode="seed", seed="42")
-    post(seeded_client, spread_key="8", draw_mode="seed", seed="42")
-    post(seeded_client, spread_key="8", draw_mode="seed", seed="43")
+    for seed in ("42", "42", "43"):
+        post(seeded_client, follow=False, spread_key="8", draw_mode="seed", seed=seed)
     a, b, c = seeded_client.lookups[-3:]
     assert a == b and a != c
 
@@ -709,3 +714,16 @@ def test_headline_names_ties_and_absent_elements():
     assert tie[0] == "Fire, Water and Air share the lead (33.3% each); Earth is absent."
     low = _headline(_element_rows({"Fire": 3, "Water": 1, "Air": 1, "Earth": 2}), *none)
     assert low[0] == "Fire leads (42.9%); Water and Air are weakest (14.3% each)."
+
+
+def test_report_has_its_own_link_and_reloading_saves_nothing(client):
+    r = post(client, follow=False)
+    assert r.status_code == 303 and r.headers["location"] == "/report/99"
+    assert client.saved["count"] == 1
+    assert client.saved["report_settings"]["card_titles"] == ["A", "B", "C"]
+    for _ in range(2):                                                   # reload twice
+        page = client.get("/report/99")
+        assert page.status_code == 200 and "Keep this reading" in page.text
+    assert client.saved["count"] == 1
+    missing = client.get("/report/5", headers={"Accept": "text/html"})
+    assert missing.status_code == 404 and "Back to settings" in missing.text
