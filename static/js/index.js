@@ -86,6 +86,7 @@ function updateMode() {
     document.getElementById("manualBoard").style.display = seedMode ? "none" : "";
     document.getElementById("seedNote").style.display = seedMode ? "" : "none";
     document.getElementById("deckPanel").classList.toggle("disabled", seedMode);
+    document.getElementById("catalogHint").style.display = seedMode ? "" : "none";
     updateSeedNote();
 }
 function updateSeedNote() {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
-    <title>OOTK Thoth Graphic GUI</title>
+    <title>OOTK Thoth Engine</title>
     <script>
         // Saved choice first, otherwise follow the system setting.
         (function () {
@@ -58,13 +58,17 @@
         .count { color: var(--muted); font-size: 0.85em; }
         header.top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
         header.top h1 { margin: 0; }
+        .tagline { margin: 4px 0 0; color: var(--muted); max-width: 70ch; line-height: 1.4; }
         @media (max-width: 640px) { body { padding: 16px; } .card-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); } .card-item img, .card-item .noimg { height: 118px; } }
         @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .settings { position: static; } .deck-panel { max-height: none; } }
     </style>
 </head>
 <body>
     <header class="top">
-        <h1>OOTK Thoth Deck</h1>
+        <div>
+            <h1>OOTK Thoth Deck</h1>
+            <p class="tagline">Draw a Thoth tarot spread from a seed you can repeat, and get its elemental dignities, aspects and Liber 777 correspondences, up to the full Opening of the Key.</p>
+        </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light">◐ Theme</button>
     </header>
 
@@ -132,8 +136,8 @@
                 </div>
             </fieldset>
 
-            <label for="topicInput">Query topic</label>
-            <input type="text" name="topic" id="topicInput" placeholder="Operational topic / intent">
+            <label for="topicInput">Question</label>
+            <input type="text" name="topic" id="topicInput" placeholder="Your question (optional)">
 
             <input type="hidden" name="selected_cards" id="selectedCardsInput">
             <button type="submit" class="btn-submit">Generate reading</button>
@@ -155,6 +159,7 @@
         <!-- CARD CATALOG -->
         <section class="panel deck-panel" id="deckPanel" aria-label="Card catalog">
             <h2>Card Catalog</h2>
+            <p class="seed-note" id="catalogHint">The cards come from the seed. Choose <strong>Pick by hand</strong> to place cards yourself.</p>
             <input type="text" id="search" placeholder="Search cards by name...">
             <div class="card-grid" id="cardGrid">
                 {% for card in cards %}

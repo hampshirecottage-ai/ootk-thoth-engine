@@ -128,9 +128,26 @@ def test_report_happy_path_and_raw_storage(client):
     assert r.status_code == 200
     # stored raw, not pre-escaped (no double escaping)
     assert client.saved["topic"] == "Love & War <3"
-    assert client.saved["significator"] == "O'Brien"
+    # hand-picked triad: no significator position, so the typed significator is not claimed
+    assert client.saved["significator"] == "None (spread has no significator position)"
     assert client.saved["n"] == 3
     assert client.saved["dignity"] is not None      # dignity matrix reaches the DB layer
+
+
+def test_manual_significator_is_the_card_in_position_1(client):
+    cards = ",".join(["O'Brien"] + [f"Card {i}" for i in range(14)])
+    assert post(client, spread_key="8", selected_cards=cards, significator="Knight of Swords").status_code == 200
+    assert client.saved["significator"] == "O'Brien"                  # stored raw, not escaped
+
+
+def test_form_errors_render_a_page_with_a_way_back(client):
+    r = post(client, selected_cards="A,B")
+    assert r.status_code == 400 and r.json()["detail"].startswith("'Triad")   # API clients: JSON
+    r = client.post("/generate_report", headers={"Accept": "text/html"},
+                    data={"spread_key": "<b>", "selected_cards": "A,B,C"})
+    assert r.status_code == 400 and "text/html" in r.headers["content-type"]   # browsers: a page
+    assert "Back to settings" in r.text
+    assert "&lt;b&gt;" in r.text and "<b>" not in r.text                        # escaped
 
 
 def test_spread_12_needs_75_cards(client):
@@ -681,3 +698,14 @@ def test_framework_basis_explains_n():
     _name, basis = analysis.evaluate_macro_framework(
         [{"position_number": i, "position_name": "", "card_data": fake_card(f"C{i}")} for i in range(10)])
     assert "n=10 cards with a place on the Tree" in basis
+
+
+def test_headline_names_ties_and_absent_elements():
+    from ootk.visual import _element_rows, _headline
+    none = {"pairs": 0}, {"total": 0}
+    one = _headline(_element_rows({"Fire": 1}), *none)
+    assert one[0] == "Fire leads (100%); Water, Air and Earth are absent."
+    tie = _headline(_element_rows({"Fire": 1, "Water": 1, "Air": 1}), *none)
+    assert tie[0] == "Fire, Water and Air share the lead (33.3% each); Earth is absent."
+    low = _headline(_element_rows({"Fire": 3, "Water": 1, "Air": 1, "Earth": 2}), *none)
+    assert low[0] == "Fire leads (42.9%); Water and Air are weakest (14.3% each)."

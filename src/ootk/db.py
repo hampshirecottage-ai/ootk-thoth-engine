@@ -197,7 +197,7 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
                     for idx, item in enumerate(spread_results)
                 ])
                     
-        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to my_tarot_db.")
+        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to {DB_CONFIG.get('dbname', 'the database')}.")
         return session_id
     except Exception as e:
         print(f"\n[ERROR] Failed to record session to database: {e}")

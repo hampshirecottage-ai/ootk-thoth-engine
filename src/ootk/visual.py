@@ -302,6 +302,11 @@ def _element_rows(counts):
              "color": ELEMENT_COLORS[e]} for e in ELEMENTS]
 
 
+def _and(names):
+    """['Fire', 'Air', 'Water'] -> 'Fire, Air and Water'."""
+    return names[0] if len(names) == 1 else f"{', '.join(names[:-1])} and {names[-1]}"
+
+
 def _headline(element_rows, dignity, aspects):
     """A few plain sentences that lead the report."""
     ranked = sorted((r for r in element_rows if r["element"] != "Spirit"), key=lambda r: -r["count"])
@@ -311,8 +316,17 @@ def _headline(element_rows, dignity, aspects):
         if top["count"] == low["count"]:
             lines.append("The four elements are evenly balanced.")
         else:
-            lines.append(f"{top['element']} leads ({top['pct']:g}%) and {low['element']} is weakest "
-                         f"({low['pct']:g}%).")
+            # Name every element in a tie, so a three-card draw never reads as one leader.
+            leaders = [r["element"] for r in ranked if r["count"] == top["count"]]
+            lows = [r["element"] for r in ranked if r["count"] == low["count"]]
+            lead = (f"{leaders[0]} leads ({top['pct']:g}%)" if len(leaders) == 1
+                    else f"{_and(leaders)} share the lead ({top['pct']:g}% each)")
+            if low["count"] == 0:
+                tail = f"{_and(lows)} {'is' if len(lows) == 1 else 'are'} absent"
+            else:
+                tail = (f"{lows[0]} is weakest ({low['pct']:g}%)" if len(lows) == 1
+                        else f"{_and(lows)} are weakest ({low['pct']:g}% each)")
+            lines.append(f"{lead}; {tail}.")
     if dignity["pairs"]:
         lean = ("favourable" if dignity["net"] > 0 else "unfavourable" if dignity["net"] < 0 else "even")
         lines.append(f"Elemental dignities lean {lean}: net {dignity['net_text']} across "

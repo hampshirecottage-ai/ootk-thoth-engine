@@ -1,9 +1,11 @@
 """FastAPI web GUI: `uvicorn ootk.web:app`."""
+import html
 import json
 import secrets
 import shlex
 
 from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 import psycopg
@@ -40,6 +42,26 @@ app.mount("/static", CachedStaticFiles(directory=str(static_dir)), name="static"
 app.add_middleware(CompressionMiddleware)
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+
+@app.exception_handler(HTTPException)
+async def form_error_page(request: Request, exc: HTTPException):
+    """A browser posting the form gets a readable page with a way back; API clients keep JSON."""
+    if "text/html" not in request.headers.get("accept", ""):
+        return await http_exception_handler(request, exc)
+    return HTMLResponse(status_code=exc.status_code, content=(
+        '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        '<title>Reading not generated</title><style>'
+        'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
+        'background:#f5f4f8;color:#1d1b22;margin:0;padding:24px}'
+        '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}}'
+        'main{max-width:560px;margin:10vh auto}h1{color:#6b3fc4;font-size:1.3em}'
+        'a{display:inline-block;background:#6b3fc4;color:#fff;padding:10px 16px;'
+        'border-radius:6px;text-decoration:none;font-weight:600}</style></head><body><main>'
+        f'<h1>The reading was not generated</h1><p>{html.escape(str(exc.detail))}</p>'
+        '<p><a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
+        '&larr; Back to settings</a></p></main></body></html>'))
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
                              card_srcset=card_srcset)
 
@@ -156,13 +178,18 @@ def generate_report(
             sig_card = resolve_significator(deck, significator)
             if sig_card is None:
                 raise HTTPException(status_code=400,
-                                    detail=f"Significator {significator!r} was not found in the deck.")
+                                    detail=f"Significator {significator!r} was not found in the deck. "
+                                           f"Pick a title from the list, e.g. 'Knight of Swords' "
+                                           f"or 'Princess of Disks'.")
             card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
             significator_label = (sig_card["title"] if pinned
                                   else "None (spread has no significator position)")
         else:
             seed = ""
             card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
+            has_sig_position = bool(positions) and "significator" in positions[0].lower()
+            significator_label = (card_titles[0] if card_titles and has_sig_position
+                                  else "None (spread has no significator position)")
             if not card_titles:
                 raise HTTPException(status_code=400, detail="No card titles were provided.")
 

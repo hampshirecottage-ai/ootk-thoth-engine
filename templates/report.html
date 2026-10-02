@@ -43,6 +43,8 @@
         .btn { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 8px 14px; text-decoration: none; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; font-size: 0.9em; }
         .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); }
         .btn:hover { background: var(--accent-2); color: var(--on-accent); }
+        .next-step .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
+        .next-step h3 { margin: 16px 0 0; font-size: 1em; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
         .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; }
         .meta div span { display: block; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
@@ -151,11 +153,8 @@
             {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
             <button class="btn" type="submit" title="Run the same settings again{{ ' with the same seed' if seed }}">↻ Repeat this reading</button>
         </form>
-        <form action="/generate_report" method="POST" style="display:inline">
-            {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ 'markdown' if k == 'output_format' else v }}">{% endfor %}
-            <button class="btn secondary" type="submit">Markdown</button>
-        </form>
-        <button class="btn secondary" type="button" id="downloadJson">JSON</button>
+        <button class="btn secondary" type="button" data-download-md title="Download the analytical prompt as a .md file">Markdown</button>
+        <button class="btn secondary" type="button" data-download-json>JSON</button>
         <button class="btn secondary" type="button" onclick="window.print()" title="Print, or save as PDF from the print dialog">Print / PDF</button>
         <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light">◐ Theme</button>
     </div>
@@ -422,6 +421,25 @@
             <pre id="promptText">{{ prompt }}</pre>
         </div>
     </details>
+
+    <!-- ===== FINAL STEP ===== -->
+    <section class="panel next-step no-print" id="nextStep">
+        <h2>Keep this reading</h2>
+        <p class="muted">{% if session_id %}It is saved in your database as session #{{ session_id }}. {% endif %}Download a copy to keep or share{% if seed %}, or keep the seed <strong class="seed">{{ seed }}</strong> to draw the same cards again{% endif %}.</p>
+        <div class="actions">
+            <button class="btn" type="button" onclick="window.print()" title="Print, or save as PDF from the print dialog">Save as PDF</button>
+            <button class="btn secondary" type="button" data-download-md>Markdown</button>
+            <button class="btn secondary" type="button" data-download-json>JSON</button>
+        </div>
+        <h3>Next</h3>
+        <div class="actions">
+            <a href="/" class="btn">New reading</a>
+            <form action="/generate_report" method="POST" style="display:inline">
+                {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
+                <button class="btn secondary" type="submit" title="Run the same settings again{{ ' with the same seed' if seed }}">↻ Repeat this reading</button>
+            </form>
+        </div>
+    </section>
 </main>
 
 <aside class="detail" id="detailPanel" aria-label="Card details" aria-hidden="true">

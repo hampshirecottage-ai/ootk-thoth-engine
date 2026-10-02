@@ -1,5 +1,7 @@
 # OOTK Thoth Engine
 
+**OOTK draws a Thoth tarot spread from a seed you can repeat, then works out its elemental dignities, aspects and Liber 777 correspondences, up to the full Opening of the Key.**
+
 A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
 
 It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew letter and path attributions, Platonic solid dual inversions, and decanic zodiacal aspects. Draws are deterministic: the same seed always gives the same deck order.
@@ -141,7 +143,7 @@ ootk \
 | Flag | Description | Default |
 |---|---|---|
 | `--spread` | Spread key, 1-12 | asks interactively |
-| `--seed` | Numeric seed for deterministic draws. Omit it to enter cards by hand | manual entry |
+| `--seed` | Seed for deterministic draws (any number or text). Omit it to enter cards by hand | manual entry |
 | `--significator` | Significator card title (pinned to Position 1) | `Knight of Swords` |
 | `--topic` | Question or intent text | asks interactively |
 | `--mapping` | `golden_dawn` or `french_egyptian` | `golden_dawn` |

@@ -150,8 +150,13 @@ function download(name, type, text) {
 }
 const READING = JSON.parse(document.getElementById("readingData").textContent);
 const fileStem = `ootk_reading_${READING.session_id || "latest"}`;
-document.getElementById("downloadJson").addEventListener("click", () =>
-    download(`${fileStem}.json`, "application/json", JSON.stringify(READING, null, 2)));
+document.querySelectorAll("[data-download-json]").forEach(btn => btn.addEventListener("click", () =>
+    download(`${fileStem}.json`, "application/json", JSON.stringify(READING, null, 2))));
+// The prompt is already on the page, so the download needs no new request (and saves no
+// second copy of the session).
+document.querySelectorAll("[data-download-md]").forEach(btn => btn.addEventListener("click", () =>
+    download(`ootk_report_${READING.session_id || "latest"}.md`, "text/markdown",
+             document.getElementById("promptText").textContent)));
 
 document.querySelectorAll("[data-svg-download]").forEach(btn => btn.addEventListener("click", () => {
     const svg = document.querySelector(`svg[data-seg="${btn.dataset.svgDownload}"]`);
