@@ -5,6 +5,7 @@ Skipped unless OOTK_TEST_DB=1, so the default suite stays database-free. To run:
     OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -v
 """
 import os
+import re
 
 import pytest
 
@@ -40,8 +41,8 @@ def test_french_mapping_leaves_minors_on_their_sephira(conn):
 
 
 @pytest.mark.parametrize("title,letter", [
-    ("0 - The Fool", "Shin"), ("I - The Magus", "Aleph"), ("XI - Lust", "Cheth"),
-    ("VIII - Adjustment", "Kaph"), ("XXI - The Universe", "Tav"),
+    ("0 - The Fool", "Shin"), ("I - The Magus", "Aleph"), ("XI - Lust", "Kaph"),
+    ("VIII - Adjustment", "Cheth"), ("XXI - The Universe", "Tav"),
 ])
 def test_french_mapping_for_majors(conn, title, letter):
     assert letter in fetch(conn, title, "french_egyptian")["hebrew_letter"]
@@ -53,3 +54,56 @@ def test_auto_framework_has_sephirothic_data_on_golden_dawn(conn):
                 "card_data": fetch(conn, t, "golden_dawn")} for i, t in enumerate(titles)]
     _name, basis = analysis.evaluate_macro_framework(results)
     assert "n=62" in basis
+
+
+SY_CLASS = {
+    **{l: "Mother_Axis" for l in ("Aleph", "Mem", "Shin")},
+    **{l: "Double_Direction" for l in ("Beth", "Gimel", "Daleth", "Kaph", "Peh", "Resh", "Tav")},
+    **{l: "Simple_Edge" for l in ("Heh", "Vav", "Zain", "Cheth", "Teth", "Yod", "Lamed", "Nun",
+                                    "Samekh", "Ayin", "Tzaddi", "Qoph")},
+}
+SEPHIRA_NAMES = {v: k for k, v in analysis.SEPHIROTH_RANKS.items()}
+
+
+def majors(conn):
+    return [c["title"] for c in db.fetch_all_cards(conn)][:22]
+
+
+def test_french_geometry_follows_the_french_letter(conn):
+    for title in majors(conn):
+        card = fetch(conn, title, "french_egyptian")
+        letter = card["hebrew_letter"].split(" ")[0]
+        assert card["spatial_type"] == SY_CLASS[letter], (title, letter, card["spatial_type"])
+
+
+def test_french_path_labels_match_the_tree(conn):
+    for title in majors(conn):
+        label = fetch(conn, title, "french_egyptian")["path_or_sephira"]   # 'Path 21 (Chesed-Netzach)'
+        num, a, b = re.match(r"Path (\d+) \((\w+)-(\w+)\)", label).groups()
+        ends = {SEPHIRA_NAMES[n] for n in analysis.GD_PATH_ENDPOINTS[int(num)]}
+        assert {a.lower(), b.lower()} == ends, (title, label)
+
+
+@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+def test_no_placeholder_attributions(conn, system):
+    for c in db.fetch_all_cards(conn):
+        attr = fetch(conn, c["title"], system)["attribution"]
+        assert attr and attr != "...", c["title"]
+
+
+@pytest.mark.parametrize("title,attr", [
+    ("6 of Disks - Success", "Moon in Taurus"), ("5 of Cups - Disappointment", "Mars in Scorpio"),
+    ("3 of Cups - Abundance", "Mercury in Cancer"), ("Ace of Wands", "Root of the Powers of Fire"),
+])
+def test_pip_decans(conn, title, attr):
+    for system in ("golden_dawn", "french_egyptian"):
+        assert fetch(conn, title, system)["attribution"] == attr
+
+
+@pytest.mark.parametrize("title,letter", [
+    ("Knight of Wands", "Samekh"), ("Queen of Wands", "Hé"), ("Prince of Wands", "Teth"),
+    ("Knight of Cups", "Qoph"), ("Queen of Cups", "Cheth"), ("Prince of Cups", "Nun"),
+    ("Princess of Cups", "Mem"), ("Prince of Swords", "Tzaddi"), ("Princess of Swords", "Aleph"),
+])
+def test_court_signs(conn, title, letter):
+    assert letter in fetch(conn, title, "golden_dawn")["hebrew_letter"]

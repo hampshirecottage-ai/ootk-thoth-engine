@@ -146,7 +146,8 @@ def test_dignity_scores():
 
 @pytest.mark.parametrize("angle,aspect", [
     (0, "Conjunction"), (60, "Sextile"), (90, "Square"),
-    (120, "Trine"), (180, "Opposition"), (30, "Inconjunct"),
+    (120, "Trine"), (180, "Opposition"), (150, "Quincunx"), (210.1, "Quincunx"),
+    (30, "Minor"), (163.8, "Minor"),
 ])
 def test_spatial_aspects(angle, aspect):
     assert aspect in analysis.calculate_spatial_aspect(angle)[0]
@@ -328,3 +329,21 @@ def test_auto_framework_sees_golden_dawn_cards():
     name, basis = analysis.evaluate_macro_framework(results_for(*cards))
     assert name.startswith("1. Divine Light Flow")       # ranks 1..10 in order = descent
     assert "n=10" in basis
+
+
+def test_spirit_bearing_cards():
+    cards = [
+        {"title": "0 - The Fool", "arcana_type": "Major", "hebrew_letter": "Shin (ש)", "attribution": "x"},
+        {"title": "XX - The Aeon", "arcana_type": "Major", "hebrew_letter": "Resh (ר)", "attribution": "Fire / Spirit"},
+        {"title": "Princess of Wands", "arcana_type": "Court", "hebrew_letter": "ש (Shin)", "attribution": "x"},
+        {"title": "XIX - The Sun", "arcana_type": "Major", "hebrew_letter": "Qoph (ק)", "attribution": "Sun"},
+    ]
+    results = [{"position_number": i + 1, "card_data": c} for i, c in enumerate(cards)]
+    assert analysis.spirit_bearing_cards(results) == [(1, "0 - The Fool"), (2, "XX - The Aeon")]
+
+
+def test_minor_spatial_letter_is_labelled_as_sephira():
+    card = {"title": "6 of Disks - Success", "arcana_type": "Minor", "suit": "Disks",
+            "hebrew_letter": "תִּפְאֶרֶת (Tiphareth)", "path_or_sephira": "Beauty"}
+    _dist, details = analysis.analyze_hebrew_spatial_distribution([{"position_number": 1, "card_data": card}])
+    assert details[0]["letter"].startswith("none - Sephira")
