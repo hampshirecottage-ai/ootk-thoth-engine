@@ -53,6 +53,7 @@ ootk-thoth-engine/
 ├── static/cards/           # WebP card images served by the web GUI
 ├── static/js/              # Page scripts, loaded with defer
 ├── output/                 # Generated HTML reports (not in git)
+├── examples/               # A sample reading made with a dummy seed
 ├── docs/                   # Thoth_Tarot_Engine_Guide.docx
 └── tests/                  # pytest suite (+ opt-in real-database tests)
 ```
@@ -109,7 +110,7 @@ python scripts/db_inspect.py audit
 
 These commands use your own Postgres role. If your install has a `postgres` superuser, add `-U postgres -h localhost` and set `DB_USER=postgres` in `.env`. On Homebrew installs the role is your macOS username instead, so set `DB_USER` to that.
 
-On a fresh machine `schema.sql` may print errors about `transaction_timeout` (the dump came from a newer Postgres) and about a missing `dbuser` role (table ownership). Both are harmless: the data still loads, and the audit above confirms it.
+On a fresh machine `schema.sql` may print errors about `transaction_timeout` (the dump came from a newer Postgres) and about a missing `ootk_admin` role (grants). Both are harmless: the data still loads, and the audit above confirms it.
 
 ### 4. Card images (optional)
 
@@ -130,7 +131,7 @@ The web GUI never serves these full-size scans. It uses small WebP copies in `st
 ```bash
 ootk \
   --spread 12 \
-  --seed 77 \
+  --seed 12345 \
   --mapping french_egyptian \
   --significator "Knight of Swords" \
   --topic "Is everything working correctly?" \
@@ -175,7 +176,7 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 ### Sanity-check a full run
 
 ```bash
-ootk --spread 12 --seed 77 --mapping french_egyptian \
+ootk --spread 12 --seed 12345 --mapping french_egyptian \
   --significator "Knight of Swords" --topic "Is everything working correctly?" | tee run.txt
 python scripts/check_run.py run.txt
 ```
@@ -206,6 +207,18 @@ OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -
 Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
 Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
 Then run `database/migrations/fix_trump_attributions.sql` (also safe to re-run): it gives each Major its own sign, planet or element as its attribution and names path 32 'Cross'. The engine warns on stderr when it is missing.
+
+---
+
+## Keeping readings private
+
+The repository holds only the engine and reference data. Your own readings stay on your machine:
+
+- **Readings are stored in your local database.** Each run saves its topic, seed and cards to `tarot_sessions` and related tables. Never commit a dump of your database; `database/schema.sql` contains reference data only, and `*.sqlite`, `*.dump` and `*backup*.sql` files are ignored.
+- **Reports and logs are ignored.** `output/`, `outputs/`, `reports/`, `run*.txt` and `*.log` are in `.gitignore`. Check `git status` before committing anyway.
+- **Credentials live in `.env`**, which is ignored. Commit changes to `.env.example` only, with empty values.
+- **Use dummy seeds in anything you share.** A seed reproduces a reading exactly, so avoid seeds built from birthdates or other personal numbers in examples, tests and issues. `examples/` shows the expected format with seed `12345`.
+- **Put anything else personal in `private/`**, which is ignored.
 
 ---
 

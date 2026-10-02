@@ -24,3 +24,19 @@ run.txt
 # Packaging
 *.egg-info/
 build/
+
+# Personal data: never commit readings, dumps, logs or credentials
+.env.*
+!.env.example
+output/
+outputs/
+reports/
+private/
+run*.txt
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*backup*.sql
+*_dump.sql
