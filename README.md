@@ -41,6 +41,7 @@ ootk-thoth-engine/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
 │   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
 │   ├── download_images.py  # Fetch card images into static/images/
+│   ├── optimize_images.py  # Build the WebP copies the web GUI serves
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
 │   ├── schema.sql          # Full dump: schema, all migrations, and reference data
@@ -49,6 +50,8 @@ ootk-thoth-engine/
 ├── prompts/                # System/operation prompts for LLM-assisted readings
 ├── templates/              # Jinja2 templates for the web GUI and reports
 ├── static/images/          # Card images (not in git; see below)
+├── static/cards/           # WebP card images served by the web GUI
+├── static/js/              # Page scripts, loaded with defer
 ├── output/                 # Generated HTML reports (not in git)
 ├── docs/                   # Thoth_Tarot_Engine_Guide.docx
 └── tests/                  # pytest suite (+ opt-in real-database tests)
@@ -115,6 +118,8 @@ The 80 card images (about 180 MB) are not stored in git. Regenerate them with:
 ```bash
 python scripts/download_images.py
 ```
+
+The web GUI never serves these full-size scans. It uses small WebP copies in `static/cards/` (about 4.5 MB for all three sizes), which `download_images.py` builds at the end. To rebuild them after changing a scan, run `pip install -e ".[images]"` once, then `python scripts/optimize_images.py`.
 
 ---
 

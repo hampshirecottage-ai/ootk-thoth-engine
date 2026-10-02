@@ -95,6 +95,9 @@ def download_images():
             print(f"✗ Failed download for: {title}")
 
     print("\nFinished downloading Thoth card images!")
+    # The web GUI serves small WebP copies, not these full-size scans.
+    from optimize_images import optimize_images
+    optimize_images()
 
 if __name__ == "__main__":
     download_images()

@@ -5,7 +5,6 @@ import shlex
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, PlainTextResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import psycopg
 from psycopg.rows import dict_row
@@ -15,13 +14,14 @@ from ootk.analysis import (
     analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
     analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
+from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_withheld, save_spread_session,
 )
 from ootk.report import build_analytical_prompt
 from ootk.shuffle import draw_spread, resolve_significator
 from ootk.spreads import SPREADS, spread_positions
-from ootk.visual import build_report_view, withheld_view
+from ootk.visual import build_report_view, card_image_url, card_srcset, withheld_view
 
 VALID_MAPPINGS = {"golden_dawn", "french_egyptian"}
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -36,9 +36,12 @@ app = FastAPI(title="OOTK Thoth Graphic GUI")
 
 static_dir = BASE_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+app.mount("/static", CachedStaticFiles(directory=str(static_dir)), name="static")
+app.add_middleware(CompressionMiddleware)
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
+                             card_srcset=card_srcset)
 
 
 def get_db_connection():
