@@ -91,6 +91,38 @@ def test_index_renders(client):
     assert client.get("/").status_code == 200
 
 
+# ---------- app: web performance ----------
+
+def test_pages_are_compressed(client):
+    for headers, encoding in [({"Accept-Encoding": "br, gzip"}, "br"),
+                              ({"Accept-Encoding": "gzip"}, "gzip"),
+                              ({"Accept-Encoding": "identity"}, None)]:
+        r = client.get("/", headers=headers)
+        assert r.status_code == 200 and "<!DOCTYPE html>" in r.text      # httpx decodes br/gzip
+        assert r.headers.get("content-encoding") == encoding
+        assert "Accept-Encoding" in r.headers["vary"]
+
+
+def test_catalog_uses_versioned_webp_thumbnails(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
+    html = client.get("/").text
+    assert '/static/cards/thumb/x---fortune.webp?v=' in html
+    assert 'loading="lazy"' in html and ".jpg" not in html
+    assert 'src="/static/js/index.js?v=' in html and "defer" in html
+
+
+def test_static_cache_headers(client):
+    url = app_module.static_url("js/index.js")
+    r = client.get(url, headers={"Accept-Encoding": "gzip"})
+    assert r.status_code == 200
+    assert r.headers["cache-control"] == "public, max-age=31536000, immutable"
+    assert r.headers["content-encoding"] == "gzip"
+    assert client.get("/static/js/index.js").headers["cache-control"] == "public, max-age=3600"
+    image = client.get(app_module.card_image_url("X - Fortune"), headers={"Accept-Encoding": "gzip"})
+    assert image.headers["content-type"] == "image/webp"
+    assert "content-encoding" not in image.headers                         # already compressed
+
+
 def test_report_happy_path_and_raw_storage(client):
     r = post(client, topic="Love & War <3", significator="O'Brien")
     assert r.status_code == 200

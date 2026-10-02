@@ -8,8 +8,8 @@ import math
 import re
 from collections import Counter
 
-from ootk import PROJECT_ROOT
 from ootk.analysis import card_is_dignified, derive_primary_element, spirit_bearing_cards
+from ootk.assets import static_url
 from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME
 from ootk.spreads import RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
@@ -38,8 +38,6 @@ SIGNS = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpi
 # U+FE0E asks for the plain text glyph rather than the emoji.
 SIGN_GLYPHS = {sign: glyph + "\ufe0e" for sign, glyph in zip(SIGNS, "♈♉♊♋♌♍♎♏♐♑♒♓")}
 
-IMAGES_DIR = PROJECT_ROOT / "static" / "images"
-
 # Pixel geometry per drawing kind. Card sizes keep neighbouring cards from overlapping.
 LAYOUT_SCALE = {"8": 140}           # px per layout unit; others use DEFAULT_LAYOUT_SCALE
 DEFAULT_LAYOUT_SCALE = 150
@@ -60,10 +58,16 @@ def card_slug(title):
     return str(title).lower().replace(" ", "-").replace("'", "")
 
 
-def card_image_url(title):
-    """URL of the card's image in static/images, or None when the file is missing."""
-    slug = card_slug(title)
-    return f"/static/images/{slug}.jpg" if (IMAGES_DIR / f"{slug}.jpg").exists() else None
+def card_image_url(title, size="thumb"):
+    """Versioned URL of the card's WebP image ('small' 110, 'thumb' 200 or 'full' 440 px wide),
+    or None when the file is missing. scripts/optimize_images.py builds them from static/images."""
+    return static_url(f"cards/{size}/{card_slug(title)}.webp")
+
+
+def card_srcset(title):
+    """srcset for a card shown about 100 px wide: 'small' on 1x screens, 'thumb' on 2x."""
+    small, thumb = card_image_url(title, "small"), card_image_url(title, "thumb")
+    return f"{small} 1x, {thumb} 2x" if small and thumb else ""
 
 
 def short_card_name(title):
@@ -137,6 +141,7 @@ def _card_view(item, index, dignity_matrix):
         "title": data["title"],
         "short": short_card_name(data["title"]),
         "image": card_image_url(data["title"]),
+        "srcset": card_srcset(data["title"]),
         "element": element,
         "color": ELEMENT_COLORS[element],
         "dignified": card_is_dignified(index, dignity_matrix),
@@ -165,7 +170,8 @@ def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix):
         i = card["gindex"]
         out.append({
             "title": card["title"], "position": card["position_name"], "number": card["number"],
-            "image": card["image"], "element": card["element"], "color": card["color"],
+            "image": card_image_url(card["title"], "full"),
+            "element": card["element"], "color": card["color"],
             "dignified": card["dignified"],
             "fields": [[label, str(data.get(key))] for label, key in DETAIL_FIELDS
                        if data.get(key) not in (None, "", "N/A")],
@@ -331,7 +337,8 @@ def withheld_view(withheld):
     for row in withheld["cards"]:
         element = derive_primary_element(row)
         cards.append({"title": row["title"], "short": short_card_name(row["title"]),
-                      "image": card_image_url(row["title"]), "element": element,
+                      "image": card_image_url(row["title"]), "srcset": card_srcset(row["title"]),
+                      "element": element,
                       "color": ELEMENT_COLORS[element], "attribution": row.get("attribution"),
                       "solid": row.get("platonic_solid")})
     return {"cards": cards, "note": withheld_sentence(withheld),
