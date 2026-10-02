@@ -6,7 +6,7 @@ from ootk.analysis import (
     analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
     analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
-from ootk.db import fetch_all_cards, get_db_connection, load_card_data, save_spread_session
+from ootk.db import fetch_all_cards, get_db_connection, load_cards_data, save_spread_session
 from ootk.report import build_analytical_prompt, generate_html_output
 from ootk.shuffle import shuffle_deck
 from ootk.spreads import SPREADS
@@ -112,6 +112,7 @@ def run_spread_session():
             else "None (spread has no significator position)"
         )
 
+        selected_titles = []
         for pos_idx, position_name in enumerate(target_positions, start=1):
             print(f"\n[Position {pos_idx}: {position_name}]")
             
@@ -135,7 +136,11 @@ def run_spread_session():
                         if user_input.lower() == 'list':
                             display_card_selection(cards)
 
-            card_data = load_card_data(conn, selected_title, args.mapping)
+            selected_titles.append(selected_title)
+
+        # One query for the whole draw instead of one per position.
+        for pos_idx, (position_name, card_data) in enumerate(
+                zip(target_positions, load_cards_data(conn, selected_titles, args.mapping)), start=1):
             spread_results.append({
                 "position_number": pos_idx,
                 "position_name": position_name,

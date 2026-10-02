@@ -1,10 +1,12 @@
 """
-decan_aspects.py
+ootk.decans
 
 Astrological Decan & Planetary Aspect Engine for the Thoth Tarot.
 Evaluates ecliptic longitudes, planetary decan rulers, and angular aspects
 between Minor Arcana cards (2-10) in accordance with Crowley's Book of Thoth.
+Aspect angles, orbs and scores come from ootk.rules.
 """
+from ootk.rules import find_aspect
 
 DECAN_MAP = {
     # FIRE SUIT (Wands)
@@ -52,14 +54,6 @@ DECAN_MAP = {
     "10 of Disks": {"sign": "Virgo",       "decan": 3, "ruler": "Mercury", "center_deg": 175},
 }
 
-MAJOR_ASPECTS = [
-    {"name": "Conjunction", "target_deg": 0,   "orb": 6, "score": 2,  "nature": "Concentrated Focus / Synthesis"},
-    {"name": "Sextile",     "target_deg": 60,  "orb": 5, "score": 1,  "nature": "Harmonic Opportunity / Active Flow"},
-    {"name": "Square",      "target_deg": 90,  "orb": 6, "score": -2, "nature": "Quadrature Friction / Challenge"},
-    {"name": "Trine",       "target_deg": 120, "orb": 6, "score": 2,  "nature": "Elemental Resonance / Unimpeded Power"},
-    {"name": "Opposition",  "target_deg": 180, "orb": 6, "score": -2, "nature": "Polar Tension / Axis Challenge"}
-]
-
 # Friendships / Hostilities among classical Decan Rulers
 PLANETARY_RELATIONS = {
     ("Sun", "Jupiter"): 1,  ("Sun", "Mars"): 1,    ("Sun", "Saturn"): -2,
@@ -88,12 +82,7 @@ def evaluate_decan_aspect(card_a_title: str, card_b_title: str):
 
     delta = calculate_ecliptic_delta(d1["center_deg"], d2["center_deg"])
 
-    matched_aspect = None
-    for aspect in MAJOR_ASPECTS:
-        if abs(delta - aspect["target_deg"]) <= aspect["orb"]:
-            matched_aspect = aspect
-            break
-
+    matched_aspect = find_aspect(delta, "decan")
     if not matched_aspect:
         return None
 
@@ -102,7 +91,7 @@ def evaluate_decan_aspect(card_a_title: str, card_b_title: str):
     p_pair_rev = (d2["ruler"], d1["ruler"])
     p_mod = PLANETARY_RELATIONS.get(p_pair, PLANETARY_RELATIONS.get(p_pair_rev, 0))
 
-    composite_score = matched_aspect["score"] + p_mod
+    composite_score = matched_aspect.score + p_mod
 
     return {
         "card_a": card_a_title,
@@ -110,8 +99,8 @@ def evaluate_decan_aspect(card_a_title: str, card_b_title: str):
         "decan_a": f"{d1['ruler']} in {d1['sign']} (Decan {d1['decan']})",
         "decan_b": f"{d2['ruler']} in {d2['sign']} (Decan {d2['decan']})",
         "delta_deg": round(delta, 1),
-        "aspect_name": matched_aspect["name"],
-        "nature": matched_aspect["nature"],
+        "aspect_name": matched_aspect.name,
+        "nature": matched_aspect.nature,
         "planetary_synergy": p_mod,
         "composite_score": composite_score
     }

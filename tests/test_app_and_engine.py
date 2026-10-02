@@ -34,10 +34,13 @@ def client(monkeypatch):
     saved = {}
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [])
-    monkeypatch.setattr(
-        app_module, "fetch_card_correspondences",
-        lambda conn, title, system="golden_dawn": fake_card(title),
-    )
+    lookups = []
+
+    def fake_fetch(conn, titles, system="golden_dawn"):
+        lookups.append(list(titles))
+        return {t: fake_card(t) for t in titles}
+
+    monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
 
     def fake_save(conn, spread_name, query_prompt, notes, significator, results, dignity_matrix=None):
         saved.update(spread=spread_name, topic=query_prompt, notes=notes,
@@ -47,6 +50,7 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "save_spread_session", fake_save)
     c = TestClient(app_module.app)
     c.saved = saved
+    c.lookups = lookups
     return c
 
 
@@ -71,9 +75,11 @@ def test_bad_input_returns_400(client, over):
 
 
 def test_unknown_card_returns_400(client, monkeypatch):
-    monkeypatch.setattr(app_module, "fetch_card_correspondences",
-                        lambda conn, title, system="golden_dawn": None)
-    assert post(client).status_code == 400
+    monkeypatch.setattr(app_module, "fetch_cards_correspondences",
+                        lambda conn, titles, system="golden_dawn": {"A": fake_card("A")})
+    r = post(client)
+    assert r.status_code == 400
+    assert "'B'" in r.json()["detail"]                    # first missing title, in draw order
 
 
 # ---------- app: happy paths ----------
@@ -95,6 +101,7 @@ def test_report_happy_path_and_raw_storage(client):
 def test_spread_12_needs_75_cards(client):
     cards = ",".join(f"Card {i}" for i in range(75))
     assert post(client, spread_key="12", selected_cards=cards).status_code == 200
+    assert len(client.lookups) == 1 and len(client.lookups[0]) == 75   # one batched lookup
     assert post(client, spread_key="12", selected_cards="A,B,C").status_code == 400
 
 
@@ -136,12 +143,12 @@ def test_dignity_scores():
     water = fake_card("W", "Cups", attribution="Water")
     earth = fake_card("E", "Disks", attribution="Earth")
     score = lambda a, b: analysis.calculate_elemental_dignities(results_for(a, b))[0]["score"]
-    assert score(fire, air) == 2
-    assert score(water, earth) == 2
+    # Book T: same element strong, opposites contrary, every other pair friendly.
+    assert score(fire, fire) == 2
     assert score(fire, water) == -2
     assert score(air, earth) == -2
-    assert score(fire, fire) == 1
-    assert score(fire, earth) == 0
+    for a, b in [(fire, air), (fire, earth), (water, air), (water, earth)]:
+        assert score(a, b) == score(b, a) == 1
 
 
 @pytest.mark.parametrize("angle,aspect", [
@@ -178,10 +185,9 @@ def test_seed_required():
 
 
 def test_all_entry_points_use_the_single_shuffler():
-    """The CLI and vector_engine must use ootk.shuffle.shuffle_deck, not their own."""
-    from ootk import cli, vector_engine
+    """The CLI must use ootk.shuffle.shuffle_deck, not its own."""
+    from ootk import cli
     assert cli.shuffle_deck is shuffle.shuffle_deck
-    assert vector_engine.shuffle_deck is shuffle.shuffle_deck
 
 
 # ---------- engine: fixed bugs (regression tests) ----------
@@ -347,3 +353,29 @@ def test_minor_spatial_letter_is_labelled_as_sephira():
             "hebrew_letter": "תִּפְאֶרֶת (Tiphareth)", "path_or_sephira": "Beauty"}
     _dist, details = analysis.analyze_hebrew_spatial_distribution([{"position_number": 1, "card_data": card}])
     assert details[0]["letter"].startswith("none - Sephira")
+
+
+# ---------- shared scoring rules ----------
+
+def test_every_module_scores_aspects_the_same_way():
+    """Layout, ring and decan aspects all take their score and wording from ootk.rules."""
+    from ootk import decans, rules
+    for aspect in rules.ASPECTS:
+        label, nature, score = analysis.calculate_spatial_aspect(aspect.angle)
+        assert (label, nature, score) == (rules.aspect_label(aspect), aspect.nature, aspect.score)
+    for short, label, angle, nature, score in spreads.RING_ASPECTS:
+        a = rules.ASPECTS_BY_NAME[short]
+        assert (label, angle, nature, score) == (rules.aspect_label(a), a.angle, a.nature, a.score)
+    r = decans.evaluate_decan_aspect("2 of Wands", "2 of Swords")   # 5 deg vs 185 deg
+    assert r["aspect_name"] == "Opposition"
+    assert r["composite_score"] == rules.ASPECTS_BY_NAME["Opposition"].score + r["planetary_synergy"]
+
+
+@pytest.mark.parametrize("angle,expected", [
+    (15, "Conjunction"), (16, None), (50, "Sextile"), (100, "Square"),
+    (145, "Quincunx"), (165, "Opposition"), (195, "Opposition"),
+])
+def test_layout_orbs_unchanged(angle, expected):
+    from ootk import rules
+    hit = rules.find_aspect(angle, "layout")
+    assert (hit.name if hit else None) == expected
