@@ -1,4 +1,4 @@
-"""The one shuffler used by every entry point (CLI, web GUI, vector_engine).
+"""The one shuffler used by every entry point (CLI and web GUI).
 
 Same seed -> same deck, regardless of whether the seed is given as int or str.
 """

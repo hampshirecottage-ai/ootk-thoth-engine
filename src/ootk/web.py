@@ -11,7 +11,7 @@ from ootk.analysis import (
     analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
     analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
-from ootk.db import DB_CONFIG, fetch_all_cards, fetch_card_correspondences, save_spread_session
+from ootk.db import DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, save_spread_session
 from ootk.report import build_analytical_prompt
 from ootk.spreads import SPREADS
 
@@ -99,8 +99,9 @@ def generate_report(
     # --- Build Spread & Execute Analytical Calculations ---
     spread_results = []
     with get_db_connection() as conn:
+        rows = fetch_cards_correspondences(conn, card_titles, system=mapping_system)
         for idx, title in enumerate(card_titles):
-            card_data = fetch_card_correspondences(conn, title, system=mapping_system)
+            card_data = rows.get(title)
             if not card_data:
                 raise HTTPException(
                     status_code=400,

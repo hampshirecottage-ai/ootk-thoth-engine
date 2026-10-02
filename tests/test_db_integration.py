@@ -107,3 +107,14 @@ def test_pip_decans(conn, title, attr):
 ])
 def test_court_signs(conn, title, letter):
     assert letter in fetch(conn, title, "golden_dawn")["hebrew_letter"]
+
+
+def test_batched_lookup_matches_single_lookups(conn):
+    titles = [c["title"] for c in db.fetch_all_cards(conn)]
+    for system in ("golden_dawn", "french_egyptian"):
+        batch = db.fetch_cards_correspondences(conn, titles, system=system)
+        assert len(batch) == 78
+        for t in titles[::7]:
+            assert batch[t] == db.fetch_card_correspondences(conn, t, system=system)
+    ordered = db.load_cards_data(conn, [titles[5], titles[0], titles[5]], "golden_dawn")
+    assert [r["title"] for r in ordered] == [titles[5], titles[0], titles[5]]

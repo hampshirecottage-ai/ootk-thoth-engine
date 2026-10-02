@@ -2,6 +2,8 @@
 import math
 import re
 
+from ootk.rules import ASPECTS_BY_NAME, aspect_label
+
 SPREADS = {
     "1": {"name": "Single Card / Daily Operations", "positions": ["Core Theme / Focus"]},
     "2": {"name": "Dyad (Polarity & Dynamics)", "positions": ["Active Force (Thesis)", "Receptive / Resistance Force (Antithesis)"]},
@@ -141,13 +143,11 @@ SPREAD_DEFAULT_COORDINATES = {
 # information. Each position is instead paired with every position it stands in an exact
 # major aspect to. Trim a layout's tuple to shorten the report (e.g. decans: Trine and
 # Opposition only).
-RING_ASPECTS = (
-    ("Opposition", "Opposition (180°)", 180.0, "Polar Complement / Axis Tension", -1),
-    ("Square",     "Square (90°)",      90.0,  "Dynamic Tension / Quadrature Friction", -2),
-    ("Trine",      "Trine (120°)",      120.0, "Equilateral Flow / Resonance", 2),
-    ("Sextile",    "Sextile (60°)",     60.0,  "Harmonic Alignment / Opportunity", 1),
+# Report order for ring aspects; names, angles, scores and descriptions come from ootk.rules.
+RING_ASPECTS = tuple(
+    (a.name, aspect_label(a), a.angle, a.nature, a.score)
+    for a in (ASPECTS_BY_NAME[n] for n in ("Opposition", "Square", "Trine", "Sextile"))
 )
-RING_ASPECT_ORB = 1.0  # degrees; ring layouts sit on exact multiples of 10 or 30 degrees
 _ALL_RING_ASPECTS = ("Opposition", "Square", "Trine", "Sextile")
 RING_LAYOUT_ASPECTS = {
     "9": _ALL_RING_ASPECTS,    # 12 houses

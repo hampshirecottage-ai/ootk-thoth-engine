@@ -2,8 +2,9 @@
 import math
 import re
 
+from ootk.rules import aspect_label, element_dignity, find_aspect, separation
 from ootk.spreads import (
-    RING_ASPECT_ORB, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments,
+    RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments,
 )
 
 ELEMENT_WORDS = {"fire": "Fire", "water": "Water", "air": "Air", "earth": "Earth"}
@@ -70,27 +71,7 @@ def calculate_elemental_dignities(spread_results, spread_key=None):
             elem1 = derive_primary_element(c1["card_data"])
             elem2 = derive_primary_element(c2["card_data"])
 
-            if elem1 == "Spirit" or elem2 == "Spirit":
-                score = 0
-                rel = "Neutral / Spiritual Synthesis"
-            elif elem1 == elem2:
-                score = 1
-                rel = f"Direct Reinforcement ({elem1} + {elem2})"
-            elif (elem1 == "Fire" and elem2 == "Air") or (elem1 == "Air" and elem2 == "Fire"):
-                score = 2
-                rel = "Active Attraction / Combustion (Fire + Air)"
-            elif (elem1 == "Water" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Water"):
-                score = 2
-                rel = "Active Nourishment / Receptivity (Water + Earth)"
-            elif (elem1 == "Fire" and elem2 == "Water") or (elem1 == "Water" and elem2 == "Fire"):
-                score = -2
-                rel = "Active Hostility / Extinction (Fire + Water)"
-            elif (elem1 == "Air" and elem2 == "Earth") or (elem1 == "Earth" and elem2 == "Air"):
-                score = -2
-                rel = "Active Hostility / Resistance (Air + Earth)"
-            else:
-                score = 0
-                rel = f"Passive / Neutral ({elem1} + {elem2})"
+            score, rel = element_dignity(elem1, elem2)
 
             dignity_matrix.append({
                 "pair": f"Pos {c1['position_number']} ({c1['card_data']['title']}) <-> Pos {c2['position_number']} ({c2['card_data']['title']})",
@@ -125,34 +106,18 @@ def spirit_bearing_cards(spread_results):
     return found
 
 def calculate_spatial_aspect(angle_deg):
-    norm_angle = abs(angle_deg) % 360
-    if norm_angle > 180:
-        norm_angle = 360 - norm_angle
-
-    if norm_angle <= 15:
-        return "Conjunction (0°)", "Direct Focus / Synthesis", 2
-    elif 50 <= norm_angle <= 70:
-        return "Sextile (60°)", "Harmonic Alignment / Opportunity", 1
-    elif 80 <= norm_angle <= 100:
-        return "Square (90°)", "Dynamic Tension / Quadrature Friction", -2
-    elif 110 <= norm_angle <= 130:
-        return "Trine (120°)", "Equilateral Flow / Resonance", 2
-    elif 145 <= norm_angle <= 155:
-        return "Quincunx (150°)", "Inconjunct / Forced Adjustment", -1
-    elif 165 <= norm_angle <= 180:
-        return "Opposition (180°)", "Polar Complement / Axis Tension", -1
-    else:
-        return f"Minor / Unaspected ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
+    """Aspect between two positions of a drawn layout, with the wide 'layout' orbs."""
+    aspect = find_aspect(angle_deg, "layout")
+    if aspect is None:
+        return f"Minor / Unaspected ({separation(angle_deg):.1f}°)", "Asymmetric Vector Transition", 0
+    return aspect_label(aspect), aspect.nature, aspect.score
 
 def _ring_aspect(delta_deg, allowed):
     """Exact-aspect lookup for ring layouts. Returns (short, name, desc, modifier) or None."""
-    norm = abs(delta_deg) % 360
-    if norm > 180:
-        norm = 360 - norm
-    for short, name, angle, desc, modifier in RING_ASPECTS:
-        if short in allowed and abs(norm - angle) <= RING_ASPECT_ORB:
-            return short, name, desc, modifier
-    return None
+    aspect = find_aspect(delta_deg, "ring", allowed)
+    if aspect is None:
+        return None
+    return aspect.name, aspect_label(aspect), aspect.nature, aspect.score
 
 def analyze_spatial_vectors(spread_results, spread_key):
     """Spatial relations per layout segment, measured around each layout's centroid.

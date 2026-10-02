@@ -58,8 +58,10 @@ def fetch_all_cards(conn):
         cur.execute("SELECT card_id, title, arcana_type, key_scale FROM thoth_cards ORDER BY card_id ASC;")
         return cur.fetchall()
 
-def fetch_card_correspondences(conn, title, system="golden_dawn"):
-    """Looks up one card's correspondences.
+def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
+    """Looks up the correspondences of many cards in one query; returns {title: row}.
+
+    Titles with no thoth_cards row are simply absent from the result.
 
     GD data (spatial, platonic, colours, GD letter) joins on the card's key_scale.
     French/Egyptian data joins separately (alias cf) because the French columns are indexed
@@ -105,34 +107,42 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
     LEFT JOIN correspondences c  ON c.key_scale = tc.key_scale
     LEFT JOIN correspondences cf ON tc.arcana_type = 'Major' AND cf.key_scale = tc.french_number
     LEFT JOIN correspondences g  ON %(sys)s = 'french_egyptian' AND g.key_scale = cf.french_path
-    WHERE tc.title = %(title)s;
+    WHERE tc.title = ANY(%(titles)s);
     """
     try:
         with conn.cursor() as cur:
-            cur.execute(query, {"sys": system, "title": title})
-            return cur.fetchone()
+            cur.execute(query, {"sys": system, "titles": list(titles)})
+            return {row["title"]: row for row in cur.fetchall()}
     except psycopg.errors.UndefinedColumn as e:
         print(f"[ERROR] {e.diag.message_primary}. The database predates the correspondence fixes: "
               f"run psql -d <db> -f database/migrations/fix_correspondences.sql", file=sys.stderr)
         sys.exit(1)
 
-def load_card_data(conn, title, system):
-    """fetch_card_correspondences with guards.
+def fetch_card_correspondences(conn, title, system="golden_dawn"):
+    """One card's correspondences (see fetch_cards_correspondences), or None."""
+    return fetch_cards_correspondences(conn, [title], system=system).get(title)
+
+def load_cards_data(conn, titles, system):
+    """fetch_cards_correspondences with guards; returns rows in the order of `titles`.
 
     A title with no thoth_cards row aborts cleanly instead of crashing later on card_data['title'].
     A card whose key_scale has no correspondences row is allowed through (its fields come back
     empty) but is flagged on stderr, so it never reaches the saved report unnoticed.
     Messages go to stderr so they don't land in a piped/saved report.
     """
-    card_data = fetch_card_correspondences(conn, title, system=system)
-    if card_data is None:
-        print(f"[ERROR] No thoth_cards row found for '{title}'. Check the thoth_cards table.",
-              file=sys.stderr)
-        sys.exit(1)
-    if card_data.get("path_or_sephira") is None and card_data.get("king_scale_color") is None:
-        print(f"[WARN] '{title}' (key_scale {card_data.get('key_scale')}) has no correspondences row; "
-              f"its path, attribution and geometry will be empty.", file=sys.stderr)
-    return card_data
+    rows = fetch_cards_correspondences(conn, titles, system=system)
+    loaded = []
+    for title in titles:
+        card_data = rows.get(title)
+        if card_data is None:
+            print(f"[ERROR] No thoth_cards row found for '{title}'. Check the thoth_cards table.",
+                  file=sys.stderr)
+            sys.exit(1)
+        if card_data.get("path_or_sephira") is None and card_data.get("king_scale_color") is None:
+            print(f"[WARN] '{title}' (key_scale {card_data.get('key_scale')}) has no correspondences row; "
+                  f"its path, attribution and geometry will be empty.", file=sys.stderr)
+        loaded.append(card_data)
+    return loaded
 
 def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results, dignity_matrix=None):
     insert_session_query = """
@@ -161,16 +171,17 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
                 cur.execute(insert_spread_query, (session_id, spread_name, 1))
                 spread_id = cur.fetchone()["spread_id"]
                 
-                for idx, item in enumerate(spread_results):
-                    card_data = item["card_data"]
-                    cur.execute(insert_pull_query, (
+                cur.executemany(insert_pull_query, [
+                    (
                         session_id,
                         spread_id,
-                        card_data["card_id"],
+                        item["card_data"]["card_id"],
                         item["position_number"],
                         card_is_dignified(idx, dignity_matrix),
                         item["position_name"]
-                    ))
+                    )
+                    for idx, item in enumerate(spread_results)
+                ])
                     
         print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to my_tarot_db.")
         return session_id

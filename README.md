@@ -34,8 +34,8 @@ ootk-thoth-engine/
 │   ├── report.py           # Analytical report (Markdown prompt) and HTML export
 │   ├── db.py               # DB settings, card lookups, saving sessions
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
-│   ├── decans.py           # Decanic aspect analysis (not yet wired in)
-│   └── vector_engine.py    # Earlier config-weighted pair scorer (not used by CLI/GUI)
+│   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
+│   └── decans.py           # Decanic aspect analysis (not yet wired in)
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
 │   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
@@ -44,7 +44,7 @@ ootk-thoth-engine/
 ├── database/
 │   ├── schema.sql          # Full dump: schema, all migrations, and reference data
 │   └── migrations/         # Only needed for DBs created before the current schema
-├── config/                 # config.json (DB host/port defaults, vector_engine weights)
+├── config/                 # config.json (DB name/host/port defaults)
 ├── prompts/                # System/operation prompts for LLM-assisted readings
 ├── templates/              # Jinja2 templates for the web GUI and reports
 ├── static/images/          # Card images (not in git; see below)
