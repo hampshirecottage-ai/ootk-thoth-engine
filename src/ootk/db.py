@@ -6,6 +6,7 @@ import sys
 import psycopg
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import apply_card_solid, card_is_dignified, WITHHELD_MAX, withheld_summary
@@ -158,12 +159,48 @@ def load_cards_data(conn, titles, system):
         loaded.append(card_data)
     return loaded
 
-def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results, dignity_matrix=None):
-    insert_session_query = """
-    INSERT INTO tarot_sessions (operation_type, significator, notes)
-    VALUES (%s, %s, %s)
-    RETURNING session_id;
-    """
+def load_report_settings(conn, session_id):
+    """The settings and card titles a web reading was saved with, or None (CLI readings,
+    readings saved before the column existed, unknown ids)."""
+    try:
+        # A savepoint, so an older database's missing column never rolls back unsaved work.
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT report_settings FROM tarot_sessions WHERE session_id = %s;", (session_id,))
+            row = cur.fetchone()
+    except psycopg.errors.UndefinedColumn:
+        return None
+    return row["report_settings"] if row else None
+
+def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results,
+                        dignity_matrix=None, report_settings=None):
+    """Saves one reading. `report_settings` (web readings) lets /report/<id> rebuild the report;
+    a database without tarot_sessions.report_settings still saves the reading without it."""
+    if report_settings is not None:
+        try:
+            return _save_spread_session(conn, spread_name, query_prompt, notes, significator,
+                                        spread_results, dignity_matrix, report_settings)
+        except psycopg.errors.UndefinedColumn:
+            print("[WARN] tarot_sessions.report_settings is missing, so this report has no link: "
+                  "run psql -d <db> -f database/migrations/add_report_settings.sql", file=sys.stderr)
+    return _save_spread_session(conn, spread_name, query_prompt, notes, significator,
+                                spread_results, dignity_matrix, None)
+
+def _save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results,
+                         dignity_matrix, report_settings):
+    if report_settings is None:
+        insert_session_query = """
+        INSERT INTO tarot_sessions (operation_type, significator, notes)
+        VALUES (%s, %s, %s)
+        RETURNING session_id;
+        """
+        session_params = ()
+    else:
+        insert_session_query = """
+        INSERT INTO tarot_sessions (operation_type, significator, notes, report_settings)
+        VALUES (%s, %s, %s, %s)
+        RETURNING session_id;
+        """
+        session_params = (Jsonb(report_settings),)
     insert_spread_query = """
     INSERT INTO spread_pulls (session_id, spread_name, pull_order)
     VALUES (%s, %s, %s)
@@ -179,7 +216,7 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
     try:
         with conn.transaction():
             with conn.cursor() as cur:
-                cur.execute(insert_session_query, ('OOTK', significator, full_notes))
+                cur.execute(insert_session_query, ('OOTK', significator, full_notes) + session_params)
                 session_id = cur.fetchone()["session_id"]
                 
                 cur.execute(insert_spread_query, (session_id, spread_name, 1))
@@ -197,8 +234,10 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
                     for idx, item in enumerate(spread_results)
                 ])
                     
-        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to my_tarot_db.")
+        print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to {DB_CONFIG.get('dbname', 'the database')}.")
         return session_id
+    except psycopg.errors.UndefinedColumn:
+        raise                                   # save_spread_session retries without the column
     except Exception as e:
         print(f"\n[ERROR] Failed to record session to database: {e}")
         return None

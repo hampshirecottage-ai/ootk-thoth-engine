@@ -211,7 +211,8 @@ CREATE TABLE public.tarot_sessions (
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     operation_type character varying(100) NOT NULL,
     significator character varying(100),
-    notes text
+    notes text,
+    report_settings jsonb
 );
 
 
@@ -446,17 +447,17 @@ COPY public.thoth_cards (card_id, title, arcana_type, suit, number_or_rank, key_
 60	8 of Disks - Prudence	Minor	Disks	8	8	Hod in Earth. Sun in Virgo.	\N	Sun in Virgo
 61	9 of Disks - Gain	Minor	Disks	9	9	Yesod in Earth. Venus in Virgo.	\N	Venus in Virgo
 62	10 of Disks - Wealth	Minor	Disks	10	10	Malkuth in Earth. Mercury in Virgo.	\N	Mercury in Virgo
-63	Knight of Wands	Court	Wands	Knight	25	Fire of Fire. Aries attribution.	\N	Fire of Fire - 20° Scorpio to 20° Sagittarius
-64	Queen of Wands	Court	Wands	Queen	15	Water of Fire. Cancer/Pisces energy.	\N	Water of Fire - 20° Pisces to 20° Aries
-65	Prince of Wands	Court	Wands	Prince	19	Air of Fire. Leo/Air attribution.	\N	Air of Fire - 20° Cancer to 20° Leo
+63	Knight of Wands	Court	Wands	Knight	25	Fire of Fire. Sagittarius attribution.	\N	Fire of Fire - 20° Scorpio to 20° Sagittarius
+64	Queen of Wands	Court	Wands	Queen	28	Water of Fire. Aries attribution.	\N	Water of Fire - 20° Pisces to 20° Aries
+65	Prince of Wands	Court	Wands	Prince	19	Air of Fire. Leo attribution.	\N	Air of Fire - 20° Cancer to 20° Leo
 66	Princess of Wands	Court	Wands	Princess	31	Earth of Fire. Fuel for the fire.	\N	Earth of Fire - Cancer, Leo, Virgo quadrant
-67	Knight of Cups	Court	Cups	Knight	29	Fire of Water. Scorpio attribution.	\N	Fire of Water - 20° Aquarius to 20° Pisces
+67	Knight of Cups	Court	Cups	Knight	29	Fire of Water. Pisces attribution.	\N	Fire of Water - 20° Aquarius to 20° Pisces
 68	Queen of Cups	Court	Cups	Queen	18	Water of Water. Pure elemental emotion.	\N	Water of Water - 20° Gemini to 20° Cancer
 69	Prince of Cups	Court	Cups	Prince	24	Air of Water. Mentalized sentiment.	\N	Air of Water - 20° Libra to 20° Scorpio
 70	Princess of Cups	Court	Cups	Princess	23	Earth of Water. Crystalized feeling.	\N	Earth of Water - Libra, Scorpio, Sagittarius quadrant
 71	Knight of Swords	Court	Swords	Knight	17	Fire of Air. Active, analytical drive (Gemini).	\N	Fire of Air - 20° Taurus to 20° Gemini
 72	Queen of Swords	Court	Swords	Queen	22	Water of Air. Clear judgment (Libra).	\N	Water of Air - 20° Virgo to 20° Libra
-73	Prince of Swords	Court	Swords	Prince	28	Air of Air. Pure intellectual impulse (Aquarius).	\N	Air of Air - 20° Capricorn to 20° Aquarius
+73	Prince of Swords	Court	Swords	Prince	15	Air of Air. Pure intellectual impulse (Aquarius).	\N	Air of Air - 20° Capricorn to 20° Aquarius
 74	Princess of Swords	Court	Swords	Princess	11	Earth of Air. Practical analysis.	\N	Earth of Air - Capricorn, Aquarius, Pisces quadrant
 75	Knight of Disks	Court	Disks	Knight	20	Fire of Earth. Virgo attribution.	\N	Fire of Earth - 20° Leo to 20° Virgo
 76	Queen of Disks	Court	Disks	Queen	26	Water of Earth. Capricorn attribution.	\N	Water of Earth - 20° Sagittarius to 20° Capricorn

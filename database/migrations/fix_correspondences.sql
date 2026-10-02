@@ -121,12 +121,13 @@ FROM (VALUES
 ) AS v(title, attr)
 WHERE t.title = v.title;
 
--- 5. Court key_scale: the sign holding 20 degrees of the span (letter-native GD rows:
---    15 = Heh/Aries, 28 = Tzaddi/Aquarius); Princesses on their element's letter.
+-- 5. Court key_scale: the sign holding 20 degrees of the span, on the path its Thoth Major
+--    uses (the Thoth swap: Aries on 28 = Tzaddi with the Emperor, Aquarius on 15 = Heh with
+--    the Star); Princesses on their element's letter.
 UPDATE thoth_cards AS t SET key_scale = v.ks
 FROM (VALUES
     ('Knight of Wands', 25),    -- Sagittarius (Samekh)
-    ('Queen of Wands', 15),     -- Aries (Heh)
+    ('Queen of Wands', 28),     -- Aries (Tzaddi, with the Emperor)
     ('Prince of Wands', 19),    -- Leo (Teth)
     ('Princess of Wands', 31),  -- Fire (Shin)
     ('Knight of Cups', 29),     -- Pisces (Qoph)
@@ -135,7 +136,7 @@ FROM (VALUES
     ('Princess of Cups', 23),   -- Water (Mem)
     ('Knight of Swords', 17),   -- Gemini (Zain)
     ('Queen of Swords', 22),    -- Libra (Lamed)
-    ('Prince of Swords', 28),   -- Aquarius (Tzaddi)
+    ('Prince of Swords', 15),   -- Aquarius (Heh, with the Star)
     ('Princess of Swords', 11), -- Air (Aleph)
     ('Knight of Disks', 20),    -- Virgo (Yod)
     ('Queen of Disks', 26),     -- Capricorn (Ayin)

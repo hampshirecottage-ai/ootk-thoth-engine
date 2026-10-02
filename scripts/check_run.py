@@ -2,7 +2,7 @@
 """Sanity-checks a saved OOTK 4-operation (spread 12) run against the fixes made so far.
 
 Usage:
-    ootk --spread 12 --seed 77 --mapping french_egyptian \
+    ootk --spread 12 --seed 12345 --mapping french_egyptian \
         --significator "Knight of Swords" --topic "Is everything working correctly?" | tee run.txt
     python scripts/check_run.py run.txt
 
@@ -127,8 +127,13 @@ def main(path):
     check(len(re.findall(r"^\*\*Operation \d", s4, re.M)) == 4, "section 4 has 4 operation headings")
     pairs = [(int(a), int(b)) for a, b in
              re.findall(r"^\* \*\*Pos (\d+) \(.*\) <-> Pos (\d+) \(.*\)\*\*: `Score", s4, re.M)]
-    check(len(pairs) == 71, "71 dignity pairs (74 minus 3 boundary pairs)", f"found {len(pairs)}")
-    check(all(b == a + 1 for a, b in pairs), "dignity pairs are consecutive")
+    # Neighbours within each operation (14 + 11 + 11 + 35 = 71), plus the pair that closes
+    # each full ring (houses, signs, decans): 27<->16, 39<->28, 75<->40.
+    ring_closures = {(hi, lo) for n, (lo, hi) in OPS.items() if n in EXPECTED_ASPECT_PAIRS}
+    check(len(pairs) == 74, "74 dignity pairs (71 neighbours + 3 ring closures)", f"found {len(pairs)}")
+    check(all(b == a + 1 or (a, b) in ring_closures for a, b in pairs),
+          "dignity pairs are neighbours or ring closures",
+          str([p for p in pairs if p[1] != p[0] + 1 and p not in ring_closures][:5]))
     crossing = [(a, b) for a, b in pairs if op_of(a) != op_of(b)]
     check(not crossing, "no dignity pair crosses an operation boundary", str(crossing[:5]))
 

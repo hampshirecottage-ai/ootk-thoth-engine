@@ -101,9 +101,9 @@ def test_pip_decans(conn, title, attr):
 
 
 @pytest.mark.parametrize("title,letter", [
-    ("Knight of Wands", "Samekh"), ("Queen of Wands", "Hé"), ("Prince of Wands", "Teth"),
+    ("Knight of Wands", "Samekh"), ("Queen of Wands", "Tzaddi"), ("Prince of Wands", "Teth"),
     ("Knight of Cups", "Qoph"), ("Queen of Cups", "Cheth"), ("Prince of Cups", "Nun"),
-    ("Princess of Cups", "Mem"), ("Prince of Swords", "Tzaddi"), ("Princess of Swords", "Aleph"),
+    ("Princess of Cups", "Mem"), ("Prince of Swords", "Hé"), ("Princess of Swords", "Aleph"),
 ])
 def test_court_signs(conn, title, letter):
     assert letter in fetch(conn, title, "golden_dawn")["hebrew_letter"]

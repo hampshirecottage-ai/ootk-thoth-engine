@@ -42,12 +42,17 @@ def client(monkeypatch):
 
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
 
-    def fake_save(conn, spread_name, query_prompt, notes, significator, results, dignity_matrix=None):
+    def fake_save(conn, spread_name, query_prompt, notes, significator, results, dignity_matrix=None,
+                  report_settings=None):
         saved.update(spread=spread_name, topic=query_prompt, notes=notes,
-                     significator=significator, n=len(results), dignity=dignity_matrix)
+                     significator=significator, n=len(results), dignity=dignity_matrix,
+                     report_settings=json.loads(json.dumps(report_settings)))
+        saved["count"] = saved.get("count", 0) + 1
         return 99
 
     monkeypatch.setattr(app_module, "save_spread_session", fake_save)
+    monkeypatch.setattr(app_module, "load_report_settings",
+                        lambda conn, sid: dict(saved["report_settings"]) if sid == 99 and saved else None)
     monkeypatch.setattr(app_module, "load_withheld",
                         lambda conn, deck, titles, system="golden_dawn": analysis.withheld_summary(
                             [fake_card(c["title"]) for c in deck], titles))
@@ -57,10 +62,11 @@ def client(monkeypatch):
     return c
 
 
-def post(client, **over):
+def post(client, follow=True, **over):
+    """Posts the form; by default follows the redirect to the report, as a browser does."""
     data = {"spread_key": "3", "selected_cards": "A,B,C", "topic": "t"}
     data.update(over)
-    return client.post("/generate_report", data=data)
+    return client.post("/generate_report", data=data, follow_redirects=follow)
 
 
 # ---------- app: validation ----------
@@ -128,14 +134,31 @@ def test_report_happy_path_and_raw_storage(client):
     assert r.status_code == 200
     # stored raw, not pre-escaped (no double escaping)
     assert client.saved["topic"] == "Love & War <3"
-    assert client.saved["significator"] == "O'Brien"
+    # hand-picked triad: no significator position, so the typed significator is not claimed
+    assert client.saved["significator"] == "None (spread has no significator position)"
     assert client.saved["n"] == 3
     assert client.saved["dignity"] is not None      # dignity matrix reaches the DB layer
 
 
+def test_manual_significator_is_the_card_in_position_1(client):
+    cards = ",".join(["O'Brien"] + [f"Card {i}" for i in range(14)])
+    assert post(client, spread_key="8", selected_cards=cards, significator="Knight of Swords").status_code == 200
+    assert client.saved["significator"] == "O'Brien"                  # stored raw, not escaped
+
+
+def test_form_errors_render_a_page_with_a_way_back(client):
+    r = post(client, selected_cards="A,B")
+    assert r.status_code == 400 and r.json()["detail"].startswith("'Triad")   # API clients: JSON
+    r = client.post("/generate_report", headers={"Accept": "text/html"},
+                    data={"spread_key": "<b>", "selected_cards": "A,B,C"})
+    assert r.status_code == 400 and "text/html" in r.headers["content-type"]   # browsers: a page
+    assert "Back to settings" in r.text
+    assert "&lt;b&gt;" in r.text and "<b>" not in r.text                        # escaped
+
+
 def test_spread_12_needs_75_cards(client):
     cards = ",".join(f"Card {i}" for i in range(75))
-    assert post(client, spread_key="12", selected_cards=cards).status_code == 200
+    assert post(client, follow=False, spread_key="12", selected_cards=cards).status_code == 303
     assert len(client.lookups) == 1 and len(client.lookups[0]) == 75   # one batched lookup
     assert post(client, spread_key="12", selected_cards="A,B,C").status_code == 400
 
@@ -457,9 +480,8 @@ def test_seed_mode_draws_like_the_cli(seeded_client):
 
 
 def test_seed_mode_same_seed_same_cards(seeded_client):
-    post(seeded_client, spread_key="8", draw_mode="seed", seed="42")
-    post(seeded_client, spread_key="8", draw_mode="seed", seed="42")
-    post(seeded_client, spread_key="8", draw_mode="seed", seed="43")
+    for seed in ("42", "42", "43"):
+        post(seeded_client, follow=False, spread_key="8", draw_mode="seed", seed=seed)
     a, b, c = seeded_client.lookups[-3:]
     assert a == b and a != c
 
@@ -681,3 +703,27 @@ def test_framework_basis_explains_n():
     _name, basis = analysis.evaluate_macro_framework(
         [{"position_number": i, "position_name": "", "card_data": fake_card(f"C{i}")} for i in range(10)])
     assert "n=10 cards with a place on the Tree" in basis
+
+
+def test_headline_names_ties_and_absent_elements():
+    from ootk.visual import _element_rows, _headline
+    none = {"pairs": 0}, {"total": 0}
+    one = _headline(_element_rows({"Fire": 1}), *none)
+    assert one[0] == "Fire leads (100%); Water, Air and Earth are absent."
+    tie = _headline(_element_rows({"Fire": 1, "Water": 1, "Air": 1}), *none)
+    assert tie[0] == "Fire, Water and Air share the lead (33.3% each); Earth is absent."
+    low = _headline(_element_rows({"Fire": 3, "Water": 1, "Air": 1, "Earth": 2}), *none)
+    assert low[0] == "Fire leads (42.9%); Water and Air are weakest (14.3% each)."
+
+
+def test_report_has_its_own_link_and_reloading_saves_nothing(client):
+    r = post(client, follow=False)
+    assert r.status_code == 303 and r.headers["location"] == "/report/99"
+    assert client.saved["count"] == 1
+    assert client.saved["report_settings"]["card_titles"] == ["A", "B", "C"]
+    for _ in range(2):                                                   # reload twice
+        page = client.get("/report/99")
+        assert page.status_code == 200 and "Keep this reading" in page.text
+    assert client.saved["count"] == 1
+    missing = client.get("/report/5", headers={"Accept": "text/html"})
+    assert missing.status_code == 404 and "Back to settings" in missing.text
