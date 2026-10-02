@@ -197,7 +197,7 @@ def test_derive_primary_element(card, expected):
 
 def test_spatial_empty_for_uncoordinated_spreads():
     cards = [fake_card(f"C{i}") for i in range(4)]
-    for key in ("7", "8", "9", "11", "12"):
+    for key in ("7", "9", "11", "12"):
         assert se.analyze_spatial_vectors(results_for(*cards), key) == []
 
 
@@ -216,7 +216,9 @@ def test_spatial_hexagram_uses_real_angles():
 
 
 def test_card_is_dignified():
-    matrix = [{"score": 2}, {"score": -2}, {"score": -2}]
+    matrix = [{"score": 2, "from_index": 0, "to_index": 1},
+              {"score": -2, "from_index": 1, "to_index": 2},
+              {"score": -2, "from_index": 2, "to_index": 3}]
     assert se.card_is_dignified(0, matrix) is True     # +2
     assert se.card_is_dignified(1, matrix) is True     # +2 + -2 = 0
     assert se.card_is_dignified(2, matrix) is False    # -4

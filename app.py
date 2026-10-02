@@ -149,7 +149,8 @@ def generate_report(
             topic,
             f"GUI Selection | Mapping: {mapping_system} | Framework: {macro_framework}",
             significator,
-            spread_results
+            spread_results,
+            dignity_matrix
         )
 
     return templates.TemplateResponse(

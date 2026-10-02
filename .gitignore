@@ -3,10 +3,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Databases
-database/my_tarot_db.sqlite
-*.sqlite
-
 # Generated Output
 output/*.html
 output/*.json
@@ -17,5 +13,10 @@ venv/
 .venv/
 .DS_Store
 .vscode/
+
+# Large / regenerable (python scripts/download_images.py)
 static/images/
-.DS_Store # already there, but covers subfolders
+
+# Saved run captures & caches
+run.txt
+.pytest_cache/

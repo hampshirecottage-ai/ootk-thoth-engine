@@ -36,10 +36,9 @@ ootk-thoth-engine/
 │   ├── view_output.py      # Render an HTML report in the terminal
 │   ├── download_images.py  # Fetch card images into static/images/
 │   ├── fetch_cards.py      # Quick DB card query
-│   └── inspect_*.py, diag_*.py, check_db_consistency.py   # DB debugging helpers
+│   └── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
 ├── database/
-│   ├── schema.sql          # Full schema (includes all migrations below)
-│   ├── seed.sql            # Cards, correspondences, spread geometry
+│   ├── schema.sql          # Full dump: schema, all migrations, and reference data
 │   └── migrations/         # Only needed for DBs created before the current schema
 ├── config/                 # config.json (scoring weights, DB host/port), default_params.json
 ├── prompts/                # System/operation prompts for LLM-assisted readings
@@ -92,15 +91,19 @@ DB_PORT=5432
 
 Environment variables take priority over the `database` block in `config/config.json`, which only supplies `dbname`, `host` and `port` defaults. Keep usernames and passwords in `.env`.
 
-### 3. Create and seed the database
+### 3. Create the database
 
 ```bash
-createdb -U postgres -h localhost my_tarot_db
-psql -U postgres -h localhost -d my_tarot_db -f database/schema.sql
-psql -U postgres -h localhost -d my_tarot_db -f database/seed.sql
+createdb my_tarot_db
+psql -d my_tarot_db -f database/schema.sql
+python scripts/db_inspect.py audit
 ```
 
-The schema already includes everything in `database/migrations/`. Run those files only against an older database.
+`schema.sql` is a full dump: it creates the tables and loads the 78 cards, correspondences and spread geometry, so there is no separate seed step. It already includes everything in `database/migrations/`, which you only need for older databases.
+
+These commands use your own Postgres role. If your install has a `postgres` superuser, add `-U postgres -h localhost` and set `DB_USER=postgres` in `.env`. On Homebrew installs the role is your macOS username instead, so set `DB_USER` to that.
+
+On a fresh machine `schema.sql` may print errors about `transaction_timeout` (the dump came from a newer Postgres) and about a missing `ootk_admin` role (table ownership). Both are harmless: the data still loads, and the audit above confirms it.
 
 ### 4. Card images (optional)
 
@@ -160,6 +163,14 @@ python check_run.py run.txt
 ```
 
 `check_run.py` exits 0 when every check passes. WARN lines are known data gaps, not failures.
+
+### Inspect the database
+
+```bash
+python scripts/db_inspect.py audit              # consistency checks; exit 1 on failure
+python scripts/db_inspect.py schema             # thoth_cards columns, tables, sample row
+python scripts/db_inspect.py joins --card-id 1  # one card with all joined correspondences
+```
 
 ### Tests
 
