@@ -136,7 +136,40 @@ def _card_view(item, index, dignity_matrix):
         "element": element,
         "color": ELEMENT_COLORS[element],
         "dignified": card_is_dignified(index, dignity_matrix),
+        "gindex": index,
+        "search": " ".join(str(v) for v in (
+            item["position_name"], data["title"], element, data.get("hebrew_letter"),
+            data.get("path_or_sephira"), data.get("attribution"), data.get("platonic_solid"),
+        ) if v).lower(),
     }
+
+
+# Card attributes shown in the detail panel: (label, card_data key).
+DETAIL_FIELDS = (
+    ("Attribution", "attribution"), ("Path / Sephira", "path_or_sephira"),
+    ("Hebrew letter", "hebrew_letter"), ("Spatial type", "spatial_type"),
+    ("Platonic solid", "platonic_solid"), ("Dual solid", "dual_solid"),
+    ("Topological role", "topological_role"), ("King Scale colour", "king_scale_color"),
+)
+
+
+def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix):
+    """Per-card data for the click-to-open detail panel, indexed like spread_results."""
+    out = []
+    for item, card in zip(spread_results, cards):
+        data = item["card_data"]
+        i = card["gindex"]
+        out.append({
+            "title": card["title"], "position": card["position_name"], "number": card["number"],
+            "image": card["image"], "element": card["element"], "color": card["color"],
+            "dignified": card["dignified"],
+            "fields": [[label, str(data.get(key))] for label, key in DETAIL_FIELDS
+                       if data.get(key) not in (None, "", "N/A")],
+            "aspects": all_aspects_by_card.get(i, []),
+            "dignities": [f"{_signed(d['score'])} {d['relationship']}: {d['pair']}"
+                          for d in dignity_matrix if i in (d["from_index"], d["to_index"])],
+        })
+    return out
 
 
 def _layout_drawing(layout_key, cards, aspects):
@@ -291,6 +324,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
     """Everything report.html needs beyond the raw prompt: summary first, then segments."""
     cards = [_card_view(item, i, dignity_matrix) for i, item in enumerate(spread_results)]
     all_aspects = []
+    aspects_by_card = {}
     segments = []
     for number, (layout_key, start, end, name) in enumerate(
             spread_segments(spread_results, spread_key), start=1):
@@ -299,6 +333,9 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
                        if start <= s["from_index"] < end]
         seg_dignity = [d for d in dignity_matrix if start <= d["from_index"] < end]
         all_aspects.extend(seg_aspects)
+        for a in seg_aspects:
+            for i in (a["a"] + start, a["b"] + start):
+                aspects_by_card.setdefault(i, []).append(f"{a['label']} ({a['score_text']}): {a['pair']}")
         seg_elements = Counter(c["element"] for c in seg_cards)
         segments.append({
             "id": f"op{number}",
@@ -331,6 +368,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "card_count": len(cards),
         "key_cards": key_cards,
         "segments": segments,
+        "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix),
         "aspect_types": [{"type": t, "color": ASPECT_COLORS[t], "strong": is_strong(
             next((a.score for a in ASPECTS if a.name == t), 0))} for t in ASPECT_TYPES],
     }

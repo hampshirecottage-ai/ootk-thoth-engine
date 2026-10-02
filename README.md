@@ -162,7 +162,10 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 - **Summary first.** The report opens with a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
 - **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels, and decans as a 36-segment ring, with card images and aspects as coloured lines. Hover a card to light up its aspects. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or toggle individual types; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
-- **Output.** "Visual report" renders the page above; "Markdown file" downloads the analytical prompt. The full prompt is also in a collapsed section of every visual report.
+- **Card details.** Click any card, in a drawing or a table, to open a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, and every aspect and dignity it takes part in. Escape closes it.
+- **Search.** The search box in the filter bar matches card titles, positions, letters, elements and attributions. It dims non-matching cards in the drawings, hides non-matching table rows, and opens the operations that have matches.
+- **Output.** "Visual report" renders the page above; "Markdown file" downloads the analytical prompt. The full prompt is also in a collapsed section of every visual report. The report also downloads the whole reading as JSON, each drawing as an SVG (card images link back to the running server), and prints or saves as PDF with every section expanded.
+- **Theme and phones.** A dark/light toggle (it follows the system setting until you choose) is remembered per browser. Both pages collapse to one column on narrow screens.
 
 ### Sanity-check a full run
 
