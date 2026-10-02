@@ -209,6 +209,7 @@ OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -
 Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
 Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
 Then run `database/migrations/fix_trump_attributions.sql` (also safe to re-run): it gives each Major its own sign, planet or element as its attribution and names path 32 'Cross'. The engine warns on stderr when it is missing.
+Then run `database/migrations/fix_court_paths.sql` (safe to re-run): it puts the Queen of Wands and the Prince of Swords on the same paths as their Thoth Majors (Tzaddi with the Emperor, Heh with the Star) and corrects four court descriptions.
 
 ---
 
