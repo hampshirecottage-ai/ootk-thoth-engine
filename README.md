@@ -116,7 +116,7 @@ On a fresh machine `schema.sql` may print errors about `transaction_timeout` (th
 
 ### 4. Card images (optional)
 
-The 80 card images (about 180 MB) are not stored in git. Regenerate them with:
+The full-size card scans (about 180 MB) are not stored in git. Download them with:
 
 ```bash
 python scripts/download_images.py
