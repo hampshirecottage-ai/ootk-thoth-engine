@@ -25,7 +25,8 @@ if str(BASE_DIR) not in sys.path:
 from src.spread_engine import DB_CONFIG  # noqa: E402
 
 EXPECTED_TABLES = {
-    "thoth_cards": ["card_id", "title", "arcana_type", "suit", "number_or_rank", "key_scale", "description"],
+    "thoth_cards": ["card_id", "title", "arcana_type", "suit", "number_or_rank", "key_scale", "description",
+                    "french_number"],
     "correspondences": [
         "key_scale", "name", "hebrew_letter", "element_or_planet_or_sign", "king_scale_color",
         "hebrew_letter_french", "spatial_type", "platonic_solid", "topological_role",

@@ -101,6 +101,24 @@ def test_spread_12_needs_75_cards(client):
     assert post(client, spread_key="12", selected_cards="A,B,C").status_code == 400
 
 
+def test_report_shows_framework_name_not_tuple(client):
+    r = post(client)
+    assert r.status_code == 200
+    assert "Incarnational Life Path" in client.saved["notes"]
+    assert "('" not in client.saved["notes"]                 # not a stringified tuple
+    assert "Framework Basis" in r.text
+
+
+def test_gui_dignities_stay_inside_each_operation(client):
+    cards = ",".join(f"Card {i}" for i in range(75))
+    assert post(client, spread_key="12", selected_cards=cards).status_code == 200
+    pairs = {(d["from_index"], d["to_index"]) for d in client.saved["dignity"]}
+    # Op boundaries for spread 12: 15 | 12 | 12 | 36 cards
+    for last_of_op in (14, 26, 38):
+        assert (last_of_op, last_of_op + 1) not in pairs
+    assert len(pairs) == 75 - 4
+
+
 def test_every_spread_position_count_matches(client):
     for key, spread in se.SPREADS.items():
         n = len(app_module.resolve_positions(spread))
@@ -240,9 +258,10 @@ def build_report(tmp_path, monkeypatch, topic="Love & War <3", pos_prefix="[Op 1
     spatial = se.analyze_spatial_vectors(results, "3")
     sdist, sdet = se.analyze_hebrew_spatial_distribution(results)
     solids, topo, duals = se.analyze_platonic_topology(results)
-    framework = se.evaluate_macro_framework(results)
+    framework, basis = se.evaluate_macro_framework(results)
     prompt = se.build_analytical_prompt("Triad <test>", topic, "Knight of Swords", "1568", results, counts,
-                                        dignity, spatial, sdist, sdet, solids, topo, duals, framework)
+                                        dignity, spatial, sdist, sdet, solids, topo, duals, framework,
+                                        framework_basis=basis)
     se.generate_html_output(7, "Triad <test>", topic, prompt)
     return prompt, tmp_path / "output" / "ootk_output_7.html"
 
@@ -287,3 +306,29 @@ def test_view_output_recognises_sections_by_title_not_number():
     assert vo.section_kind("## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n* x") == "dignity"
     assert vo.section_kind("## 9. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n* x") == "dignity"
     assert vo.section_kind("## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM") is None
+
+
+# ---------- macro framework: Sephirothic ranks ----------
+
+@pytest.mark.parametrize("card,expected", [
+    ({"arcana_type": "Minor", "key_scale": 2, "path_or_sephira": "Wisdom"}, 2.0),      # GD Sephira, English name
+    ({"arcana_type": "Major", "key_scale": 19, "path_or_sephira": "Serpent"}, 4.5),    # GD path 19: Chesed-Geburah
+    ({"arcana_type": "Major", "key_scale": 19,
+      "path_or_sephira": "Path 18 (Chesed-Geburah)"}, 4.5),                            # French text wins
+    ({"arcana_type": "Major", "key_scale": 11,
+      "path_or_sephira": "Path 21 (Geburah-Tiphareth)"}, 5.5),
+    ({"arcana_type": "Court", "key_scale": 11, "path_or_sephira": "Ox"}, None),        # Courts have no place
+    ({}, None),
+])
+def test_card_sephirothic_rank(card, expected):
+    assert se.card_sephirothic_rank(card) == expected
+
+
+def test_auto_framework_sees_golden_dawn_cards():
+    """GD rows only carry English names; the auto framework must still find them."""
+    names = ["Crown", "Wisdom", "Understanding", "Mercy", "Strength",
+             "Beauty", "Victory", "Splendour", "Foundation", "Kingdom"]
+    cards = [dict(fake_card(f"C{i}"), key_scale=i + 1, path_or_sephira=n) for i, n in enumerate(names)]
+    name, basis = se.evaluate_macro_framework(results_for(*cards))
+    assert name.startswith("1. Divine Light Flow")       # ranks 1..10 in order = descent
+    assert "n=10" in basis

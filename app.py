@@ -119,11 +119,11 @@ def generate_report(
             })
 
         element_counts = analyze_elemental_balance(spread_results)
-        dignity_matrix = calculate_elemental_dignities(spread_results)
+        dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
-        macro_framework = evaluate_macro_framework(spread_results, forced_framework=framework)
+        macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
 
         analytical_prompt = build_analytical_prompt(
             spread_name=selected_spread["name"],
@@ -140,7 +140,8 @@ def generate_report(
             topology_details=topology_details,
             dual_pairings=dual_pairings,
             macro_framework=macro_framework,
-            mapping_system=mapping_system
+            mapping_system=mapping_system,
+            framework_basis=framework_basis
         )
 
         session_id = save_spread_session(

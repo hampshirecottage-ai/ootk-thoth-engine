@@ -256,7 +256,8 @@ CREATE TABLE public.thoth_cards (
     suit character varying(20),
     number_or_rank character varying(20),
     key_scale integer,
-    description text
+    description text,
+    french_number integer
 );
 
 
@@ -391,85 +392,85 @@ COPY public.spread_position_geometry (position_id, spread_key, position_index, p
 -- Data for Name: thoth_cards; Type: TABLE DATA; Schema: public; Owner: dbuser
 --
 
-COPY public.thoth_cards (card_id, title, arcana_type, suit, number_or_rank, key_scale, description) FROM stdin;
-1	0 - The Fool	Major	\N	0	11	Air. Pure unconditioned potential, Spirit entering creation.
-2	I - The Magus	Major	\N	I	12	Mercury. Wisdom, communication, action, and illusion.
-3	II - The Priestess	Major	\N	II	13	Moon. Pure intuition, the veil of Isis, raw receptivity.
-4	III - The Empress	Major	\N	III	14	Venus. Creative imagination, love, beauty, and embodiment.
-5	IV - The Emperor	Major	\N	IV	28	Aries. Authority, structure, governance, and order (Tzaddi).
-6	V - The Hierophant	Major	\N	V	16	Taurus. Wisdom, spiritual teaching, and foundational structure.
-7	VI - The Lovers	Major	\N	VI	17	Gemini. Analysis, division, dynamic choice, and intellectual synthesis.
-8	VII - The Chariot	Major	\N	VII	18	Cancer. Triumph, protection, containment, and directed motion.
-9	VIII - Adjustment	Major	\N	VIII	22	Libra. Balance, justice, precision, and equilibrium (Lamed).
-10	IX - The Hermit	Major	\N	IX	20	Virgo. Inner light, solitude, introspective analysis, and initiation.
-11	X - Fortune	Major	\N	X	21	Jupiter. Cyclic movement, destiny, and cosmic rhythm.
-12	XI - Lust	Major	\N	XI	19	Leo. Strength, vitality, passionate engagement, and control (Teth).
-13	XII - The Hanged Man	Major	\N	XII	23	Water. Surrender, sacrifice, elemental transformation, and devotion.
-14	XIII - Death	Major	\N	XIII	24	Scorpio. Putrefaction, essential transformation, and rebirth.
-15	XIV - Art	Major	\N	XIV	25	Sagittarius. Alchemical integration, synthesis, and balanced combination.
-16	XV - The Devil	Major	\N	XV	26	Capricorn. Material bondage, raw creative vigor, and Pan energy.
-17	XVI - The Tower	Major	\N	XVI	27	Mars. Sudden breakdown, shock, illumination, and shattering of forms.
-18	XVII - The Star	Major	\N	XVII	15	Aquarius. Hope, meditation, clear insight, and cosmic influence (Heh).
-19	XVIII - The Moon	Major	\N	XVIII	29	Pisces. Illusion, threshold crossing, the subconscious, and physical mystery.
-20	XIX - The Sun	Major	\N	XIX	30	Sun. Direct light, clarity, vitality, and unified consciousness.
-21	XX - The Aeon	Major	\N	XX	31	Fire/Spirit. Final judgment, shift of eras, and new spiritual awakening.
-22	XXI - The Universe	Major	\N	XXI	32	Saturn/Earth. Completion, cosmic synthesis, and fully realized manifestation.
-23	Ace of Wands	Minor	Wands	1	1	Root of Fire. Creative impulse.
-24	2 of Wands - Dominion	Minor	Wands	2	2	Chokmah in Fire. Mars in Aries.
-25	3 of Wands - Virtue	Minor	Wands	3	3	Binah in Fire. Sun in Aries.
-26	4 of Wands - Completion	Minor	Wands	4	4	Chesed in Fire. Venus in Aries.
-27	5 of Wands - Strife	Minor	Wands	5	5	Geburah in Fire. Saturn in Leo.
-28	6 of Wands - Victory	Minor	Wands	6	6	Tiphareth in Fire. Jupiter in Leo.
-29	7 of Wands - Valour	Minor	Wands	7	7	Netzach in Fire. Mars in Leo.
-30	8 of Wands - Swiftness	Minor	Wands	8	8	Hod in Fire. Mercury in Sagittarius.
-31	9 of Wands - Strength	Minor	Wands	9	9	Yesod in Fire. Moon in Sagittarius.
-32	10 of Wands - Oppression	Minor	Wands	10	10	Malkuth in Fire. Saturn in Sagittarius.
-33	Ace of Cups	Minor	Cups	1	1	Root of Water. Receptive love.
-34	2 of Cups - Love	Minor	Cups	2	2	Chokmah in Water. Venus in Cancer.
-35	3 of Cups - Abundance	Minor	Cups	3	3	Binah in Water. Mercury in Cancer.
-36	4 of Cups - Luxury	Minor	Cups	4	4	Chesed in Water. Moon in Cancer.
-37	5 of Cups - Disappointment	Minor	Cups	5	5	Geburah in Water. Mars in Scorpio.
-38	6 of Cups - Pleasure	Minor	Cups	6	6	Tiphareth in Water. Sun in Scorpio.
-39	7 of Cups - Debauch	Minor	Cups	7	7	Netzach in Water. Venus in Scorpio.
-40	8 of Cups - Indolence	Minor	Cups	8	8	Hod in Water. Saturn in Pisces.
-41	9 of Cups - Happiness	Minor	Cups	9	9	Yesod in Water. Jupiter in Pisces.
-42	10 of Cups - Satiety	Minor	Cups	10	10	Malkuth in Water. Mars in Pisces.
-43	Ace of Swords	Minor	Swords	1	1	Root of Air. Pure intellect.
-44	2 of Swords - Peace	Minor	Swords	2	2	Chokmah in Air. Moon in Libra.
-45	3 of Swords - Sorrow	Minor	Swords	3	3	Binah in Air. Saturn in Libra.
-46	4 of Swords - Truce	Minor	Swords	4	4	Chesed in Air. Jupiter in Libra.
-47	5 of Swords - Defeat	Minor	Swords	5	5	Geburah in Air. Venus in Aquarius.
-48	6 of Swords - Science	Minor	Swords	6	6	Tiphareth in Air. Mercury in Aquarius.
-49	7 of Swords - Futility	Minor	Swords	7	7	Netzach in Air. Moon in Aquarius.
-50	8 of Swords - Interference	Minor	Swords	8	8	Hod in Air. Jupiter in Gemini.
-51	9 of Swords - Cruelty	Minor	Swords	9	9	Yesod in Air. Mars in Gemini.
-52	10 of Swords - Ruin	Minor	Swords	10	10	Malkuth in Air. Sun in Gemini.
-53	Ace of Disks	Minor	Disks	1	1	Root of Earth. Matter and manifestation.
-54	2 of Disks - Change	Minor	Disks	2	2	Chokmah in Earth. Jupiter in Capricorn.
-55	3 of Disks - Works	Minor	Disks	3	3	Binah in Earth. Mars in Capricorn.
-56	4 of Disks - Power	Minor	Disks	4	4	Chesed in Earth. Sun in Capricorn.
-57	5 of Disks - Worry	Minor	Disks	5	5	Geburah in Earth. Mercury in Taurus.
-58	6 of Disks - Success	Minor	Disks	6	6	Tiphareth in Earth. Moon in Taurus.
-59	7 of Disks - Failure	Minor	Disks	7	7	Netzach in Earth. Saturn in Taurus.
-60	8 of Disks - Prudence	Minor	Disks	8	8	Hod in Earth. Sun in Virgo.
-61	9 of Disks - Gain	Minor	Disks	9	9	Yesod in Earth. Venus in Virgo.
-62	10 of Disks - Wealth	Minor	Disks	10	10	Malkuth in Earth. Mercury in Virgo.
-63	Knight of Wands	Court	Wands	Knight	15	Fire of Fire. Aries attribution.
-64	Queen of Wands	Court	Wands	Queen	23	Water of Fire. Cancer/Pisces energy.
-65	Prince of Wands	Court	Wands	Prince	11	Air of Fire. Leo/Air attribution.
-66	Princess of Wands	Court	Wands	Princess	31	Earth of Fire. Fuel for the fire.
-67	Knight of Cups	Court	Cups	Knight	24	Fire of Water. Scorpio attribution.
-68	Queen of Cups	Court	Cups	Queen	23	Water of Water. Pure elemental emotion.
-69	Prince of Cups	Court	Cups	Prince	11	Air of Water. Mentalized sentiment.
-70	Princess of Cups	Court	Cups	Princess	32	Earth of Water. Crystalized feeling.
-71	Knight of Swords	Court	Swords	Knight	17	Fire of Air. Active, analytical drive (Gemini).
-72	Queen of Swords	Court	Swords	Queen	22	Water of Air. Clear judgment (Libra).
-73	Prince of Swords	Court	Swords	Prince	11	Air of Air. Pure intellectual impulse (Aquarius).
-74	Princess of Swords	Court	Swords	Princess	31	Earth of Air. Practical analysis.
-75	Knight of Disks	Court	Disks	Knight	20	Fire of Earth. Virgo attribution.
-76	Queen of Disks	Court	Disks	Queen	26	Water of Earth. Capricorn attribution.
-77	Prince of Disks	Court	Disks	Prince	16	Air of Earth. Taurus attribution.
-78	Princess of Disks	Court	Disks	Princess	32	Earth of Earth. Physical birth/manifestation.
+COPY public.thoth_cards (card_id, title, arcana_type, suit, number_or_rank, key_scale, description, french_number) FROM stdin;
+1	0 - The Fool	Major	\N	0	11	Air. Pure unconditioned potential, Spirit entering creation.	0
+2	I - The Magus	Major	\N	I	12	Mercury. Wisdom, communication, action, and illusion.	1
+3	II - The Priestess	Major	\N	II	13	Moon. Pure intuition, the veil of Isis, raw receptivity.	2
+4	III - The Empress	Major	\N	III	14	Venus. Creative imagination, love, beauty, and embodiment.	3
+5	IV - The Emperor	Major	\N	IV	28	Aries. Authority, structure, governance, and order (Tzaddi).	4
+6	V - The Hierophant	Major	\N	V	16	Taurus. Wisdom, spiritual teaching, and foundational structure.	5
+7	VI - The Lovers	Major	\N	VI	17	Gemini. Analysis, division, dynamic choice, and intellectual synthesis.	6
+8	VII - The Chariot	Major	\N	VII	18	Cancer. Triumph, protection, containment, and directed motion.	7
+9	VIII - Adjustment	Major	\N	VIII	22	Libra. Balance, justice, precision, and equilibrium (Lamed).	11
+10	IX - The Hermit	Major	\N	IX	20	Virgo. Inner light, solitude, introspective analysis, and initiation.	9
+11	X - Fortune	Major	\N	X	21	Jupiter. Cyclic movement, destiny, and cosmic rhythm.	10
+12	XI - Lust	Major	\N	XI	19	Leo. Strength, vitality, passionate engagement, and control (Teth).	8
+13	XII - The Hanged Man	Major	\N	XII	23	Water. Surrender, sacrifice, elemental transformation, and devotion.	12
+14	XIII - Death	Major	\N	XIII	24	Scorpio. Putrefaction, essential transformation, and rebirth.	13
+15	XIV - Art	Major	\N	XIV	25	Sagittarius. Alchemical integration, synthesis, and balanced combination.	14
+16	XV - The Devil	Major	\N	XV	26	Capricorn. Material bondage, raw creative vigor, and Pan energy.	15
+17	XVI - The Tower	Major	\N	XVI	27	Mars. Sudden breakdown, shock, illumination, and shattering of forms.	16
+18	XVII - The Star	Major	\N	XVII	15	Aquarius. Hope, meditation, clear insight, and cosmic influence (Heh).	17
+19	XVIII - The Moon	Major	\N	XVIII	29	Pisces. Illusion, threshold crossing, the subconscious, and physical mystery.	18
+20	XIX - The Sun	Major	\N	XIX	30	Sun. Direct light, clarity, vitality, and unified consciousness.	19
+21	XX - The Aeon	Major	\N	XX	31	Fire/Spirit. Final judgment, shift of eras, and new spiritual awakening.	20
+22	XXI - The Universe	Major	\N	XXI	32	Saturn/Earth. Completion, cosmic synthesis, and fully realized manifestation.	21
+23	Ace of Wands	Minor	Wands	1	1	Root of Fire. Creative impulse.	\N
+24	2 of Wands - Dominion	Minor	Wands	2	2	Chokmah in Fire. Mars in Aries.	\N
+25	3 of Wands - Virtue	Minor	Wands	3	3	Binah in Fire. Sun in Aries.	\N
+26	4 of Wands - Completion	Minor	Wands	4	4	Chesed in Fire. Venus in Aries.	\N
+27	5 of Wands - Strife	Minor	Wands	5	5	Geburah in Fire. Saturn in Leo.	\N
+28	6 of Wands - Victory	Minor	Wands	6	6	Tiphareth in Fire. Jupiter in Leo.	\N
+29	7 of Wands - Valour	Minor	Wands	7	7	Netzach in Fire. Mars in Leo.	\N
+30	8 of Wands - Swiftness	Minor	Wands	8	8	Hod in Fire. Mercury in Sagittarius.	\N
+31	9 of Wands - Strength	Minor	Wands	9	9	Yesod in Fire. Moon in Sagittarius.	\N
+32	10 of Wands - Oppression	Minor	Wands	10	10	Malkuth in Fire. Saturn in Sagittarius.	\N
+33	Ace of Cups	Minor	Cups	1	1	Root of Water. Receptive love.	\N
+34	2 of Cups - Love	Minor	Cups	2	2	Chokmah in Water. Venus in Cancer.	\N
+35	3 of Cups - Abundance	Minor	Cups	3	3	Binah in Water. Mercury in Cancer.	\N
+36	4 of Cups - Luxury	Minor	Cups	4	4	Chesed in Water. Moon in Cancer.	\N
+37	5 of Cups - Disappointment	Minor	Cups	5	5	Geburah in Water. Mars in Scorpio.	\N
+38	6 of Cups - Pleasure	Minor	Cups	6	6	Tiphareth in Water. Sun in Scorpio.	\N
+39	7 of Cups - Debauch	Minor	Cups	7	7	Netzach in Water. Venus in Scorpio.	\N
+40	8 of Cups - Indolence	Minor	Cups	8	8	Hod in Water. Saturn in Pisces.	\N
+41	9 of Cups - Happiness	Minor	Cups	9	9	Yesod in Water. Jupiter in Pisces.	\N
+42	10 of Cups - Satiety	Minor	Cups	10	10	Malkuth in Water. Mars in Pisces.	\N
+43	Ace of Swords	Minor	Swords	1	1	Root of Air. Pure intellect.	\N
+44	2 of Swords - Peace	Minor	Swords	2	2	Chokmah in Air. Moon in Libra.	\N
+45	3 of Swords - Sorrow	Minor	Swords	3	3	Binah in Air. Saturn in Libra.	\N
+46	4 of Swords - Truce	Minor	Swords	4	4	Chesed in Air. Jupiter in Libra.	\N
+47	5 of Swords - Defeat	Minor	Swords	5	5	Geburah in Air. Venus in Aquarius.	\N
+48	6 of Swords - Science	Minor	Swords	6	6	Tiphareth in Air. Mercury in Aquarius.	\N
+49	7 of Swords - Futility	Minor	Swords	7	7	Netzach in Air. Moon in Aquarius.	\N
+50	8 of Swords - Interference	Minor	Swords	8	8	Hod in Air. Jupiter in Gemini.	\N
+51	9 of Swords - Cruelty	Minor	Swords	9	9	Yesod in Air. Mars in Gemini.	\N
+52	10 of Swords - Ruin	Minor	Swords	10	10	Malkuth in Air. Sun in Gemini.	\N
+53	Ace of Disks	Minor	Disks	1	1	Root of Earth. Matter and manifestation.	\N
+54	2 of Disks - Change	Minor	Disks	2	2	Chokmah in Earth. Jupiter in Capricorn.	\N
+55	3 of Disks - Works	Minor	Disks	3	3	Binah in Earth. Mars in Capricorn.	\N
+56	4 of Disks - Power	Minor	Disks	4	4	Chesed in Earth. Sun in Capricorn.	\N
+57	5 of Disks - Worry	Minor	Disks	5	5	Geburah in Earth. Mercury in Taurus.	\N
+58	6 of Disks - Success	Minor	Disks	6	6	Tiphareth in Earth. Moon in Taurus.	\N
+59	7 of Disks - Failure	Minor	Disks	7	7	Netzach in Earth. Saturn in Taurus.	\N
+60	8 of Disks - Prudence	Minor	Disks	8	8	Hod in Earth. Sun in Virgo.	\N
+61	9 of Disks - Gain	Minor	Disks	9	9	Yesod in Earth. Venus in Virgo.	\N
+62	10 of Disks - Wealth	Minor	Disks	10	10	Malkuth in Earth. Mercury in Virgo.	\N
+63	Knight of Wands	Court	Wands	Knight	15	Fire of Fire. Aries attribution.	\N
+64	Queen of Wands	Court	Wands	Queen	23	Water of Fire. Cancer/Pisces energy.	\N
+65	Prince of Wands	Court	Wands	Prince	11	Air of Fire. Leo/Air attribution.	\N
+66	Princess of Wands	Court	Wands	Princess	31	Earth of Fire. Fuel for the fire.	\N
+67	Knight of Cups	Court	Cups	Knight	24	Fire of Water. Scorpio attribution.	\N
+68	Queen of Cups	Court	Cups	Queen	23	Water of Water. Pure elemental emotion.	\N
+69	Prince of Cups	Court	Cups	Prince	11	Air of Water. Mentalized sentiment.	\N
+70	Princess of Cups	Court	Cups	Princess	32	Earth of Water. Crystalized feeling.	\N
+71	Knight of Swords	Court	Swords	Knight	17	Fire of Air. Active, analytical drive (Gemini).	\N
+72	Queen of Swords	Court	Swords	Queen	22	Water of Air. Clear judgment (Libra).	\N
+73	Prince of Swords	Court	Swords	Prince	11	Air of Air. Pure intellectual impulse (Aquarius).	\N
+74	Princess of Swords	Court	Swords	Princess	31	Earth of Air. Practical analysis.	\N
+75	Knight of Disks	Court	Disks	Knight	20	Fire of Earth. Virgo attribution.	\N
+76	Queen of Disks	Court	Disks	Queen	26	Water of Earth. Capricorn attribution.	\N
+77	Prince of Disks	Court	Disks	Prince	16	Air of Earth. Taurus attribution.	\N
+78	Princess of Disks	Court	Disks	Princess	32	Earth of Earth. Physical birth/manifestation.	\N
 \.
 
 
