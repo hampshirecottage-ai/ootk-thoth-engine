@@ -208,7 +208,7 @@ def parse_args():
     parser.add_argument("--seed", type=str, help="PRNG numeric seed for deterministic draws", default=None)
     parser.add_argument("--significator", type=str, help="Significator card title", default="Knight of Swords")
     parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
-    parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework")
+    parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
     parser.add_argument("--mapping", type=str, choices=["golden_dawn", "french_egyptian"], default="golden_dawn", help="Tarot-Kabbalah Mapping Scheme")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
     return parser.parse_args()
@@ -287,6 +287,24 @@ PLANET_ELEMENTS = {
     "sun": "Fire", "mars": "Fire", "jupiter": "Fire",
     "moon": "Water", "venus": "Earth", "mercury": "Air", "saturn": "Earth",
 }
+
+def load_card_data(conn, title, system):
+    """fetch_card_correspondences with guards.
+
+    A title with no thoth_cards row aborts cleanly instead of crashing later on card_data['title'].
+    A card whose key_scale has no correspondences row is allowed through (its fields come back
+    empty) but is flagged on stderr, so it never reaches the saved report unnoticed.
+    Messages go to stderr so they don't land in a piped/saved report.
+    """
+    card_data = fetch_card_correspondences(conn, title, system=system)
+    if card_data is None:
+        print(f"[ERROR] No thoth_cards row found for '{title}'. Check the thoth_cards table.",
+              file=sys.stderr)
+        sys.exit(1)
+    if card_data.get("path_or_sephira") is None and card_data.get("king_scale_color") is None:
+        print(f"[WARN] '{title}' (key_scale {card_data.get('key_scale')}) has no correspondences row; "
+              f"its path, attribution and geometry will be empty.", file=sys.stderr)
+    return card_data
 
 # Explicit Thoth elemental assignment for the Majors. Independent of the active mapping
 # system, so French/Egyptian attribution strings (glyph-only, "...", planet lists) can no
@@ -608,7 +626,40 @@ def analyze_platonic_topology(spread_results):
 
     return solid_counts, topology_details, dual_pairings
 
+# Auto-detection of the macro framework looks at where the whole draw sits on the Tree of Life,
+# not just its first and last card. Tunable thresholds:
+FRAMEWORK_MIN_CARDS = 6        # fewer Sephirothic cards than this -> not enough evidence
+FRAMEWORK_TREND_Z = 1.64       # |r| * sqrt(n) needed to call a trend (~90% two-sided)
+
+SEPHIROTH_RANKS = {
+    "kether": 1, "chokmah": 2, "binah": 3, "chesed": 4, "geburah": 5,
+    "tiphareth": 6, "netzach": 7, "hod": 8, "yesod": 9, "malkuth": 10,
+}
+
+def card_sephirothic_rank(card_data):
+    """Mean Sephirothic rank of a card's path/Sephira text, or None if it names none.
+
+    'Path 19 (Chesed-Tiphareth)' -> 5.0. Uses whole-word matches, so unrelated text can't
+    trigger a match, and averaging makes the result independent of the order the names appear in.
+    """
+    text = str((card_data or {}).get("path_or_sephira") or "").lower()
+    ranks = [SEPHIROTH_RANKS[w] for w in re.findall(r"[a-z]+", text) if w in SEPHIROTH_RANKS]
+    return sum(ranks) / len(ranks) if ranks else None
+
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
+    """Returns (framework_name, basis). 'basis' says why, so the label is never opaque.
+
+    Auto mode takes every card that names a Sephira or path, in position order, and measures
+    the trend: Pearson r between position order and Sephirothic rank. Rank rising toward
+    Malkuth = descent; falling toward Kether = ascent. A trend only counts when
+    |r| * sqrt(n) >= FRAMEWORK_TREND_Z; for a random shuffle that happens about 10% of the
+    time (5% each way). Descent -> 1 Divine Light Flow. Ascent -> 4 Post-Mortem Return.
+    No significant trend -> 3 Incarnational Life Path, the default lens.
+
+    Framework 2 (Soul Formation) is never auto-selected: it has no reliable signature in a
+    draw. A mean-rank test would only measure the deck itself (a 75-card spread contains
+    almost the whole deck), so use --framework soul_formation to choose it.
+    """
     if forced_framework != "auto":
         framework_names = {
             "light_descent": "1. Divine Light Flow (Aleph -> Tav Pathway)",
@@ -616,46 +667,54 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
             "life_path": "3. Incarnational Life Path & Psychological Evolution",
             "post_mortem": "4. Post-Mortem Return & Reversal of Paths (Book of the Dead)"
         }
-        return framework_names.get(forced_framework, "1. Divine Light Flow")
+        return (framework_names.get(forced_framework, "1. Divine Light Flow"),
+                f"forced by --framework {forced_framework}")
 
+    life_path = "3. Incarnational Life Path & Psychological Evolution"
     if not spread_results:
-        return "3. Incarnational Life Path & Psychological Evolution"
+        return life_path, "auto: no cards drawn"
 
-    has_majors = any(item["card_data"].get("arcana_type") == "Major" for item in spread_results if item.get("card_data"))
-    sephiroth_ranks = []
-    sephiroth_map = {
-        "kether": 1, "chokmah": 2, "binah": 3, "chesed": 4, "geburah": 5,
-        "tiphareth": 6, "netzach": 7, "hod": 8, "yesod": 9, "malkuth": 10
-    }
+    has_majors = any(item["card_data"].get("arcana_type") == "Major"
+                     for item in spread_results if item.get("card_data"))
+    default_name = life_path + (" (Arcana Progression)" if has_majors else "")
 
-    for item in spread_results:
-        if not item.get("card_data"):
-            continue
-        path = str(item["card_data"].get("path_or_sephira") or "").lower()
-        for seph, rank in sephiroth_map.items():
-            if seph in path:
-                sephiroth_ranks.append(rank)
+    series = []  # (position order, rank)
+    for idx, item in enumerate(spread_results):
+        rank = card_sephirothic_rank(item.get("card_data"))
+        if rank is not None:
+            series.append((idx, rank))
 
-    if sephiroth_ranks:
-        if sephiroth_ranks[0] < sephiroth_ranks[-1]:
-            return "1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)"
-        elif sephiroth_ranks[0] > sephiroth_ranks[-1]:
-            return "4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)"
-        elif any(r <= 3 for r in sephiroth_ranks) and any(r >= 7 for r in sephiroth_ranks):
-            return "2. Soul Formation & Pre-Incarnation Stage (Descent Through Sephiroth)"
+    n = len(series)
+    if n < FRAMEWORK_MIN_CARDS:
+        return default_name, (f"auto: only {n} card(s) carry Sephirothic data "
+                              f"(minimum {FRAMEWORK_MIN_CARDS}); defaulted to Life Path")
 
-    if has_majors:
-        return "3. Incarnational Life Path & Psychological Evolution (Arcana Progression)"
+    xs = [x for x, _ in series]
+    ys = [y for _, y in series]
+    mx, my = sum(xs) / n, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    syy = sum((y - my) ** 2 for y in ys)
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    r = sxy / math.sqrt(sxx * syy) if sxx > 0 and syy > 0 else 0.0
+    z = r * math.sqrt(n)
+    stats = f"r={r:+.2f}, z={z:+.2f} (needs |z| >= {FRAMEWORK_TREND_Z}), n={n}"
 
-    return "3. Incarnational Life Path & Psychological Evolution"
+    if z >= FRAMEWORK_TREND_Z:
+        return ("1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)",
+                f"auto: rank rises toward Malkuth across the draw - {stats}")
+    if z <= -FRAMEWORK_TREND_Z:
+        return ("4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)",
+                f"auto: rank falls toward Kether across the draw - {stats}")
+    return default_name, f"auto: no significant Sephirothic trend, default lens - {stats}"
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn"):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn", framework_basis=None):
     total_cards = sum(element_counts.values()) or 1
     mapping_labels = {
         "golden_dawn": "Golden Dawn / English System (Liber 777)",
         "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
     }
     mapping_label = mapping_labels.get(mapping_system, mapping_system)
+    framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 **Operation/Spread:** {spread_name}
@@ -663,7 +722,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 **Significator:** {significator}
 **PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
-**Active Mapping System:** {mapping_label}
+{framework_basis_line}**Active Mapping System:** {mapping_label}
 
 ---
 
@@ -968,7 +1027,7 @@ def run_spread_session():
                         if user_input.lower() == 'list':
                             display_card_selection(cards)
 
-            card_data = fetch_card_correspondences(conn, selected_title, system=args.mapping)
+            card_data = load_card_data(conn, selected_title, args.mapping)
             spread_results.append({
                 "position_number": pos_idx,
                 "position_name": position_name,
@@ -980,13 +1039,13 @@ def run_spread_session():
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
-        macro_framework = evaluate_macro_framework(spread_results, forced_framework=args.framework)
+        macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=args.framework)
 
         analytical_prompt = build_analytical_prompt(
             selected_spread["name"], query_prompt, significator_label, args.seed,
             spread_results, element_counts, dignity_matrix, spatial_matrix, 
             spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings,
-            macro_framework, mapping_system=args.mapping
+            macro_framework, mapping_system=args.mapping, framework_basis=framework_basis
         )
 
         print("\n" + analytical_prompt)
