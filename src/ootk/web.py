@@ -1,6 +1,9 @@
 """FastAPI web GUI: `uvicorn ootk.web:app`."""
+import secrets
+import shlex
+
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import psycopg
@@ -13,10 +16,18 @@ from ootk.analysis import (
 )
 from ootk.db import DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, save_spread_session
 from ootk.report import build_analytical_prompt
-from ootk.spreads import SPREADS
+from ootk.shuffle import draw_spread, resolve_significator
+from ootk.spreads import SPREADS, spread_positions
+from ootk.visual import build_report_view
 
 VALID_MAPPINGS = {"golden_dawn", "french_egyptian"}
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
+VALID_DRAW_MODES = {"seed", "manual"}
+VALID_OUTPUT_FORMATS = {"visual", "markdown"}
+MAPPING_LABELS = {
+    "golden_dawn": "Golden Dawn / English System (Liber 777)",
+    "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
+}
 
 app = FastAPI(title="OOTK Thoth Graphic GUI")
 
@@ -31,15 +42,18 @@ def get_db_connection():
     return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
 
 
-def resolve_positions(spread: dict) -> list:
-    """Returns the ordered position labels for a spread, flattening multi-operation spreads."""
-    if "operations" in spread:
-        positions = []
-        for idx_op, op_key in enumerate(spread["operations"], start=1):
-            for p in SPREADS[op_key]["positions"]:
-                positions.append(f"[Op {idx_op}] {p}")
-        return positions
-    return list(spread.get("positions", []))
+def new_seed() -> str:
+    """A fresh six-digit seed, shown on the report so the reading can be repeated."""
+    return str(secrets.randbelow(900000) + 100000)
+
+
+def cli_command(spread_key, seed, mapping_system, framework, significator, topic) -> str:
+    """The `ootk` command that repeats a seeded reading from the terminal."""
+    parts = ["ootk", "--spread", spread_key, "--seed", seed, "--mapping", mapping_system,
+             "--framework", framework, "--significator", significator]
+    if topic:
+        parts += ["--topic", topic]
+    return " ".join(shlex.quote(p) for p in parts)
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -50,7 +64,11 @@ def main_gui(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={"cards": cards, "spreads": SPREADS}
+        context={
+            "cards": cards,
+            "spreads": SPREADS,
+            "positions": {key: spread_positions(key) for key in SPREADS},
+        }
     )
 
 
@@ -62,14 +80,26 @@ def generate_report(
     significator: str = Form("Knight of Swords"),
     framework: str = Form("auto"),
     mapping_system: str = Form("golden_dawn"),
-    selected_cards: str = Form(...)
+    selected_cards: str = Form(""),
+    draw_mode: str = Form("manual"),
+    seed: str = Form(""),
+    output_format: str = Form("visual"),
 ):
-    """Builds the spread, executes geometric/vector analysis, and renders the synthesis report."""
+    """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
+
+    draw_mode 'seed' draws the cards from `seed` exactly as `ootk --seed` does (a blank seed
+    gets a fresh one); 'manual' uses the comma-separated `selected_cards`.
+    output_format 'visual' renders the summary-first report; 'markdown' returns the
+    analytical prompt as a .md download.
+    """
     topic = topic.strip()
     significator = significator.strip() or "Knight of Swords"
     spread_key = spread_key.strip()
     framework = framework.strip()
     mapping_system = mapping_system.strip()
+    draw_mode = draw_mode.strip()
+    seed = seed.strip()
+    output_format = output_format.strip()
 
     # --- Domain Input Validation ---
     if spread_key not in SPREADS:
@@ -78,27 +108,44 @@ def generate_report(
         raise HTTPException(status_code=400, detail=f"Unknown mapping system: {mapping_system!r}.")
     if framework not in VALID_FRAMEWORKS:
         raise HTTPException(status_code=400, detail=f"Unknown framework: {framework!r}.")
-
-    card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
-    if not card_titles:
-        raise HTTPException(status_code=400, detail="No card titles were provided.")
+    if draw_mode not in VALID_DRAW_MODES:
+        raise HTTPException(status_code=400, detail=f"Unknown draw mode: {draw_mode!r}.")
+    if output_format not in VALID_OUTPUT_FORMATS:
+        raise HTTPException(status_code=400, detail=f"Unknown output format: {output_format!r}.")
 
     selected_spread = SPREADS[spread_key]
-    positions = resolve_positions(selected_spread)
+    positions = spread_positions(spread_key)
+    significator_label = significator
 
-    if len(card_titles) != len(positions):
-        raise HTTPException(
-            status_code=400,
-            detail=f"'{selected_spread['name']}' requires {len(positions)} cards; received {len(card_titles)}."
-        )
-
-    lowered = [t.lower() for t in card_titles]
-    if len(set(lowered)) != len(lowered):
-        raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
-
-    # --- Build Spread & Execute Analytical Calculations ---
-    spread_results = []
     with get_db_connection() as conn:
+        if draw_mode == "seed":
+            seed = seed or new_seed()
+            deck = fetch_all_cards(conn)
+            sig_card = resolve_significator(deck, significator)
+            if sig_card is None:
+                raise HTTPException(status_code=400,
+                                    detail=f"Significator {significator!r} was not found in the deck.")
+            card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
+            significator_label = (sig_card["title"] if pinned
+                                  else "None (spread has no significator position)")
+        else:
+            seed = ""
+            card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
+            if not card_titles:
+                raise HTTPException(status_code=400, detail="No card titles were provided.")
+
+            if len(card_titles) != len(positions):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{selected_spread['name']}' requires {len(positions)} cards; received {len(card_titles)}."
+                )
+
+            lowered = [t.lower() for t in card_titles]
+            if len(set(lowered)) != len(lowered):
+                raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
+
+        # --- Build Spread & Execute Analytical Calculations ---
+        spread_results = []
         rows = fetch_cards_correspondences(conn, card_titles, system=mapping_system)
         for idx, title in enumerate(card_titles):
             card_data = rows.get(title)
@@ -123,8 +170,8 @@ def generate_report(
         analytical_prompt = build_analytical_prompt(
             spread_name=selected_spread["name"],
             query_prompt=topic,
-            significator=significator,
-            seed_val="Graphical Selection",
+            significator=significator_label,
+            seed_val=seed or "Graphical Selection",
             spread_results=spread_results,
             element_counts=element_counts,
             dignity_matrix=dignity_matrix,
@@ -139,16 +186,30 @@ def generate_report(
             framework_basis=framework_basis
         )
 
+        source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
         session_id = save_spread_session(
             conn,
             selected_spread["name"],
             topic,
-            f"GUI Selection | Mapping: {mapping_system} | Framework: {macro_framework}",
-            significator,
+            f"{source} | Mapping: {mapping_system} | Framework: {macro_framework}",
+            significator_label,
             spread_results,
             dignity_matrix
         )
 
+    if output_format == "markdown":
+        return PlainTextResponse(
+            analytical_prompt,
+            media_type="text/markdown; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="ootk_report_{session_id or "latest"}.md"'},
+        )
+
+    settings = {
+        "spread_key": spread_key, "topic": topic, "significator": significator,
+        "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
+        "seed": seed, "output_format": "visual",
+        "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
+    }
     return templates.TemplateResponse(
         request=request,
         name="report.html",
@@ -160,6 +221,18 @@ def generate_report(
             "spread_results": spread_results,
             "dignity_matrix": dignity_matrix,
             "element_counts": element_counts,
-            "mapping_system": mapping_system
+            "mapping_system": mapping_system,
+            "mapping_label": MAPPING_LABELS[mapping_system],
+            "significator": significator_label,
+            "seed": seed,
+            "settings": settings,
+            "cli_command": cli_command(spread_key, seed, mapping_system, framework, significator, topic) if seed else "",
+            "spatial_details": spatial_details,
+            "spatial_dist": spatial_dist,
+            "solid_counts": solid_counts,
+            "topology_details": topology_details,
+            "dual_pairings": dual_pairings,
+            "view": build_report_view(spread_key, spread_results, element_counts, dignity_matrix,
+                                      spatial_matrix, macro_framework, framework_basis),
         }
     )

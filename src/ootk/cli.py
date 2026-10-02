@@ -8,8 +8,8 @@ from ootk.analysis import (
 )
 from ootk.db import fetch_all_cards, get_db_connection, load_cards_data, save_spread_session
 from ootk.report import build_analytical_prompt, generate_html_output
-from ootk.shuffle import shuffle_deck
-from ootk.spreads import SPREADS
+from ootk.shuffle import draw_spread, resolve_significator
+from ootk.spreads import SPREADS, spread_positions
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Thoth Tarot & Liber 777 Calculation Engine")
@@ -27,17 +27,6 @@ def display_card_selection(cards):
     for idx, card in enumerate(cards, start=1):
         print(f"{idx:2d}. {card['title']} (Card ID {card['card_id']})")
 
-def resolve_significator(cards, name):
-    """Finds the significator card by full title or by name after the 'XI - ' style prefix."""
-    wanted = (name or "").strip().lower()
-    if not wanted:
-        return None
-    for c in cards:
-        t = c["title"].lower()
-        if t == wanted or t.split(" - ", 1)[-1] == wanted:
-            return c
-    return None
-
 def run_spread_session():
     args = parse_args()
 
@@ -45,9 +34,6 @@ def run_spread_session():
         cards = fetch_all_cards(conn)
         card_lookup = {str(idx): card["title"] for idx, card in enumerate(cards, start=1)}
         card_titles_set = {card["title"].lower(): card["title"] for card in cards}
-
-        shuffled_deck = shuffle_deck(cards, args.seed) if args.seed else None
-        auto_draw_index = 0
 
         print("==================================================")
         print("       THOTH TAROT & LIBER 777 ENGINE           ")
@@ -85,14 +71,7 @@ def run_spread_session():
 
         spread_results = []
 
-        target_positions = []
-        if "operations" in selected_spread:
-            for op_num, op_key in enumerate(selected_spread["operations"], start=1):
-                op_spread = SPREADS[op_key]
-                for p in op_spread["positions"]:
-                    target_positions.append(f"[Op {op_num}] {p}")
-        else:
-            target_positions = selected_spread.get("positions", [])
+        target_positions = spread_positions(spread_choice)
 
         sig_card = resolve_significator(cards, significator)
         if significator and sig_card is None:
@@ -103,10 +82,8 @@ def run_spread_session():
         pin_significator = bool(
             sig_card and target_positions and "significator" in target_positions[0].lower()
         )
-        if pin_significator and shuffled_deck:
-            # Remove it from the shuffled deck so it cannot be drawn a second time;
-            # remaining order is unchanged, so a given seed stays deterministic.
-            shuffled_deck = [c for c in shuffled_deck if c["card_id"] != sig_card["card_id"]]
+        # Same draw as the web GUI for the same seed (see ootk.shuffle.draw_spread).
+        seeded_titles = draw_spread(cards, args.seed, target_positions, sig_card)[0] if args.seed else None
         significator_label = (
             sig_card["title"] if pin_significator
             else "None (spread has no significator position)"
@@ -119,9 +96,8 @@ def run_spread_session():
             if pin_significator and pos_idx == 1:
                 selected_title = sig_card["title"]
                 print(f"--> Significator (pinned): {selected_title}")
-            elif shuffled_deck:
-                selected_title = shuffled_deck[auto_draw_index % len(shuffled_deck)]["title"]
-                auto_draw_index += 1
+            elif seeded_titles:
+                selected_title = seeded_titles[pos_idx - 1]
                 print(f"--> PRNG Auto-Drawn: {selected_title}")
             else:
                 selected_title = None

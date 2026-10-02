@@ -178,6 +178,9 @@ def analyze_spatial_vectors(spread_results, spread_key):
                             "score_modifier": modifier,
                             "segment_name": seg_name,
                             "pair_mode": "aspect",
+                            "aspect_name": short,
+                            "from_index": seg_start + a,
+                            "to_index": seg_start + b,
                         },
                     ))
             found.sort(key=lambda t: (t[0], t[1], t[2]))
@@ -194,9 +197,12 @@ def analyze_spatial_vectors(spread_results, spread_key):
                 delta_angle = 0.0
                 aspect_name, aspect_desc, modifier = (
                     "Centre Node", "Axis / Core Point (no angular relation)", 0)
+                short = None
             else:
                 delta_angle = abs(a1 - a2)
                 aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
+                hit = find_aspect(delta_angle, "layout")
+                short = hit.name if hit else None
 
             spatial_matrix.append({
                 "pair": pair_label(item1, item2),
@@ -207,6 +213,9 @@ def analyze_spatial_vectors(spread_results, spread_key):
                 "score_modifier": modifier,
                 "segment_name": seg_name,
                 "pair_mode": "consecutive",
+                "aspect_name": short,           # None for unaspected and centre-node pairs
+                "from_index": seg_start + j,
+                "to_index": seg_start + j + 1,
             })
 
     return spatial_matrix

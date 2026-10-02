@@ -22,6 +22,39 @@ def shuffle_deck(deck: list, seed) -> list:
     return shuffled
 
 
+def resolve_significator(cards, name):
+    """Finds the significator card by full title or by name after the 'XI - ' style prefix."""
+    wanted = (name or "").strip().lower()
+    if not wanted:
+        return None
+    for c in cards:
+        t = c["title"].lower()
+        if t == wanted or t.split(" - ", 1)[-1] == wanted:
+            return c
+    return None
+
+
+def draw_spread(cards, seed, positions, sig_card=None):
+    """Draws one title per position from the deck shuffled by `seed`.
+
+    `sig_card` is pinned to position 1 only when that position is a significator position;
+    it is then removed from the shuffled deck so it cannot be drawn twice. The rest of the
+    order is unchanged, so a given seed draws the same cards in the CLI and the web GUI.
+    Returns (titles, pinned).
+    """
+    deck = shuffle_deck(cards, seed)
+    pinned = bool(sig_card and positions and "significator" in positions[0].lower())
+    if pinned:
+        deck = [c for c in deck if c["card_id"] != sig_card["card_id"]]
+    titles = []
+    for idx in range(len(positions)):
+        if pinned and idx == 0:
+            titles.append(sig_card["title"])
+        else:
+            titles.append(deck[(len(titles) - pinned) % len(deck)]["title"])
+    return titles, pinned
+
+
 def main():
     suits = ["Wands", "Cups", "Swords", "Disks"]
     ranks = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10",

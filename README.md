@@ -35,7 +35,8 @@ ootk-thoth-engine/
 │   ├── db.py               # DB settings, card lookups, saving sessions
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
 │   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
-│   └── decans.py           # Decanic aspect analysis (not yet wired in)
+│   ├── decans.py           # Decanic aspect analysis (not yet wired in)
+│   └── visual.py           # Web report view: summary figures and drawable layouts
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
 │   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
@@ -155,6 +156,13 @@ uvicorn ootk.web:app --reload --port 8000
 ```
 
 Open http://localhost:8000 for the form and http://localhost:8000/docs for the API docs.
+
+- **Settings panel.** Spread, how the cards are chosen (from a seed, or picked by hand), seed, significator, mapping system, framework and output format sit in one panel. Save the current settings as a named preset, or start from a built-in one (full OOTK in either mapping, daily card). Presets live in your browser.
+- **Seeds.** Leave the seed blank to get a new one. The report always shows the seed and the matching `ootk` command, and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
+- **Summary first.** The report opens with a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
+- **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels, and decans as a 36-segment ring, with card images and aspects as coloured lines. Hover a card to light up its aspects. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
+- **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or toggle individual types; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
+- **Output.** "Visual report" renders the page above; "Markdown file" downloads the analytical prompt. The full prompt is also in a collapsed section of every visual report.
 
 ### Sanity-check a full run
 
