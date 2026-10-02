@@ -1,4 +1,5 @@
 """FastAPI web GUI: `uvicorn ootk.web:app`."""
+import json
 import secrets
 import shlex
 
@@ -54,6 +55,30 @@ def cli_command(spread_key, seed, mapping_system, framework, significator, topic
     if topic:
         parts += ["--topic", topic]
     return " ".join(shlex.quote(p) for p in parts)
+
+
+def reading_export(session_id, spread_name, settings, significator, framework, framework_basis,
+                   element_counts, spread_results, view, dignity_matrix, spatial_matrix):
+    """The whole reading as plain JSON data, for the report's JSON download."""
+    reading = {
+        "session_id": session_id,
+        "spread": spread_name,
+        "settings": {k: v for k, v in settings.items() if k not in ("output_format", "selected_cards")},
+        "significator": significator,
+        "framework": framework,
+        "framework_basis": framework_basis,
+        "element_counts": element_counts,
+        "cards": [
+            dict(item["card_data"], position_number=item["position_number"],
+                 position_name=item["position_name"], primary_element=card["element"],
+                 dignified=card["dignified"])
+            for item, card in zip(spread_results, view["card_details"])
+        ],
+        "dignities": dignity_matrix,
+        "aspects": spatial_matrix,
+    }
+    # Round-trip through json so dates, decimals and the like become plain strings.
+    return json.loads(json.dumps(reading, default=str))
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -204,6 +229,8 @@ def generate_report(
             headers={"Content-Disposition": f'attachment; filename="ootk_report_{session_id or "latest"}.md"'},
         )
 
+    view = build_report_view(spread_key, spread_results, element_counts, dignity_matrix,
+                             spatial_matrix, macro_framework, framework_basis)
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
@@ -232,7 +259,9 @@ def generate_report(
             "solid_counts": solid_counts,
             "topology_details": topology_details,
             "dual_pairings": dual_pairings,
-            "view": build_report_view(spread_key, spread_results, element_counts, dignity_matrix,
-                                      spatial_matrix, macro_framework, framework_basis),
+            "view": view,
+            "reading": reading_export(session_id, selected_spread["name"], settings, significator_label,
+                                      macro_framework, framework_basis, element_counts, spread_results,
+                                      view, dignity_matrix, spatial_matrix),
         }
     )

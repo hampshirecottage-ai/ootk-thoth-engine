@@ -514,3 +514,30 @@ def test_report_view_without_layout_falls_back_to_a_row():
 def test_short_card_name(title, short):
     from ootk import visual
     assert visual.short_card_name(title) == short
+
+
+# ---------- web GUI extras: card details, exports, search ----------
+
+def test_report_embeds_card_details_and_reading_json(client):
+    r = post(client, topic="Love & War <3")
+    assert r.status_code == 200
+    import re as re_mod
+    def embedded(id_):
+        m = re_mod.search(rf'<script type="application/json" id="{id_}">(.*?)</script>', r.text, re_mod.S)
+        return json.loads(m.group(1))
+    cards = embedded("cardDetails")
+    assert [c["title"] for c in cards] == ["A", "B", "C"]
+    assert ["Platonic solid", "Tetrahedron"] in cards[0]["fields"]
+    assert cards[1]["dignities"]                                  # middle card touches two pairs
+    reading = embedded("readingData")
+    assert reading["settings"]["topic"] == "Love & War <3"      # raw text survives the embed
+    assert len(reading["cards"]) == 3 and reading["cards"][0]["primary_element"] == "Fire"
+    assert "<3" not in r.text.split('id="readingData">')[1].split("</script>")[0]   # escaped inside <script>
+
+
+def test_report_cards_are_clickable_and_searchable(client):
+    cards = ",".join(f"Card {i}" for i in range(75))
+    text = post(client, spread_key="12", selected_cards=cards).text
+    assert text.count('class="card-slot"') == 75
+    assert 'data-card="74"' in text and 'data-search="[op 4] decan 36 card 74' in text
+    assert 'id="reportSearch"' in text and 'data-svg-download="op4"' in text
