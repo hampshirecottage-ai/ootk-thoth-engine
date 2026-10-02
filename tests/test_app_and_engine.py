@@ -48,6 +48,9 @@ def client(monkeypatch):
         return 99
 
     monkeypatch.setattr(app_module, "save_spread_session", fake_save)
+    monkeypatch.setattr(app_module, "load_withheld",
+                        lambda conn, deck, titles, system="golden_dawn": analysis.withheld_summary(
+                            [fake_card(c["title"]) for c in deck], titles))
     c = TestClient(app_module.app)
     c.saved = saved
     c.lookups = lookups
@@ -120,7 +123,8 @@ def test_gui_dignities_stay_inside_each_operation(client):
     # Op boundaries for spread 12: 15 | 12 | 12 | 36 cards
     for last_of_op in (14, 26, 38):
         assert (last_of_op, last_of_op + 1) not in pairs
-    assert len(pairs) == 75 - 4
+    # Consecutive pairs inside each op, plus the closing pair of the three wheels.
+    assert len(pairs) == 75 - 4 + 3
 
 
 def test_every_spread_position_count_matches(client):
@@ -539,5 +543,109 @@ def test_report_cards_are_clickable_and_searchable(client):
     cards = ",".join(f"Card {i}" for i in range(75))
     text = post(client, spread_key="12", selected_cards=cards).text
     assert text.count('class="card-slot"') == 75
-    assert 'data-card="74"' in text and 'data-search="[op 4] decan 36 card 74' in text
+    assert 'data-card="74"' in text and 'data-search="[op 4] decan 36: mars in pisces (10 of cups) card 74' in text
     assert 'id="reportSearch"' in text and 'data-svg-download="op4"' in text
+
+
+# ---------- reading accuracy: solids, closed wheels, withheld cards, labels ----------
+
+def major(title, attribution=""):
+    return fake_card(title, suit=None, arcana="Major", attribution=attribution)
+
+
+@pytest.mark.parametrize("card,solid", [
+    (fake_card("2 of Wands - Dominion", suit="Wands"), "Tetrahedron"),
+    (fake_card("9 of Cups - Happiness", suit="Cups"), "Icosahedron"),
+    (fake_card("6 of Swords - Science", suit="Swords"), "Octahedron"),
+    (fake_card("Ace of Disks", suit="Disks"), "Hexahedron (Cube)"),
+    (major("IV - The Emperor"), "Tetrahedron"),      # on Tzaddi, but still Aries
+    (major("XVII - The Star"), "Octahedron"),        # on Heh, but still Aquarius
+    (major("I - The Magus"), "Dodecahedron"),        # planetary
+    (major("XXI - The Universe"), "Hexahedron (Cube)"),
+])
+def test_solid_follows_the_card(card, solid):
+    row = analysis.apply_card_solid(dict(card))
+    assert row["platonic_solid"] == solid
+    assert row["dual_solid"] == analysis.PLATONIC_SOLIDS[solid]["dual_solid"]
+
+
+def test_solid_agrees_with_the_element_count():
+    cards = [major(t) for t in ("IV - The Emperor", "XVII - The Star", "XI - Lust")] + \
+            [fake_card(f"{n} of {s}", suit=s) for s in ("Wands", "Cups", "Swords", "Disks") for n in (2, 5)]
+    for card in cards:
+        solid = analysis.apply_card_solid(dict(card))["platonic_solid"]
+        assert analysis.ELEMENT_SOLIDS[analysis.derive_primary_element(card)] == solid
+
+
+def blank_results(n, positions=None):
+    return [{"position_number": i + 1, "position_name": (positions or [f"P{i}"] * n)[i],
+             "card_data": fake_card(f"C{i}")} for i in range(n)]
+
+
+def test_wheels_close_their_circle_in_the_master_pipeline():
+    positions = spreads.spread_positions("12")
+    pairs = {(d["from_index"], d["to_index"])
+             for d in analysis.calculate_elemental_dignities(blank_results(75, positions), "12")}
+    assert {(26, 15), (38, 27), (74, 39)} <= pairs        # 27<->16, 39<->28, 75<->40
+    assert (14, 0) not in pairs                           # Op 1 is a heap, not a wheel
+    assert len(pairs) == 14 + 12 + 12 + 36
+
+
+@pytest.mark.parametrize("key,n", [("9", 12), ("10", 12), ("11", 36)])
+def test_standalone_wheels_close_their_circle(key, n):
+    pairs = [(d["from_index"], d["to_index"]) for d in analysis.calculate_elemental_dignities(blank_results(n), key)]
+    assert pairs[-1] == (n - 1, 0) and len(pairs) == n
+
+
+def test_closing_pair_counts_towards_dignity():
+    results = blank_results(12)
+    results[0]["card_data"] = fake_card("C0", suit="Cups")
+    results[11]["card_data"] = fake_card("C11", suit="Wands")
+    matrix = analysis.calculate_elemental_dignities(results, "9")
+    assert any(d["from_index"] == 11 and d["to_index"] == 0 and d["score"] == -2 for d in matrix)
+
+
+def test_decan_positions_name_the_decan():
+    labels = spreads.SPREADS["11"]["positions"]
+    assert labels[0] == "Decan 1: Mars in Aries (2 of Wands)"
+    assert labels[3] == "Decan 4: Mercury in Taurus (5 of Disks)"
+    assert labels[35] == "Decan 36: Mars in Pisces (10 of Cups)"
+    assert len(set(labels)) == 36
+
+
+def test_op1_is_not_called_the_classic_first_operation():
+    assert "variant" in spreads.SPREADS["8"]["name"] and "IHVH" in spreads.SPREADS["8"]["name"]
+
+
+def test_ring_aspects_carry_the_cards_dignity():
+    results = blank_results(12)
+    results[6]["card_data"] = fake_card("C6", suit="Cups")
+    spatial = analysis.analyze_spatial_vectors(results, "9")
+    opp = next(s for s in spatial if s["from_index"] == 0 and s["to_index"] == 6)
+    assert opp["aspect_name"] == "Opposition"
+    assert (opp["card_score"], opp["card_relationship"]) == (-2, "Contrary / Ill-Dignified (Fire + Water)")
+
+
+def test_withheld_summary():
+    deck = [fake_card("A", suit="Wands"), fake_card("B", suit="Disks"), fake_card("C", suit="Disks")]
+    w = analysis.withheld_summary(deck, ["A"])
+    assert [r["title"] for r in w["cards"]] == ["B", "C"]
+    assert w["elements"]["Earth"] == 2 and w["deck_elements"]["Fire"] == 1
+    assert analysis.withheld_summary(deck, ["A", "B", "C"]) is None
+    big = [fake_card(f"X{i}") for i in range(40)]
+    assert analysis.withheld_summary(big, ["X0"]) is None          # too many left out to list
+
+
+def test_report_lists_withheld_cards(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="")
+    drawn = set(seeded_client.lookups[-1])
+    left = [c["title"] for c in DECK if c["title"] not in drawn]
+    assert len(left) == 3
+    assert "Withheld" in r.text and all(t in r.text for t in left)
+    assert "### Withheld (3 cards not drawn)" in r.text            # in the Markdown prompt too
+
+
+def test_framework_basis_explains_n():
+    _name, basis = analysis.evaluate_macro_framework(
+        [{"position_number": i, "position_name": "", "card_data": fake_card(f"C{i}")} for i in range(10)])
+    assert "n=10 cards with a place on the Tree" in basis

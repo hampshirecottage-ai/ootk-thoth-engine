@@ -10,6 +10,7 @@ from collections import Counter
 
 from ootk import PROJECT_ROOT
 from ootk.analysis import card_is_dignified, derive_primary_element, spirit_bearing_cards
+from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME
 from ootk.spreads import RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
 
@@ -119,6 +120,9 @@ def _aspect_view(entry, start):
         "color": ASPECT_COLORS.get(name, ASPECT_COLORS[UNASPECTED]),
         "a": entry["from_index"] - start,
         "b": entry["to_index"] - start,
+        # Ring aspects also carry the dignity of the two cards drawn in those positions.
+        "cards_text": (f"{_signed(entry['card_score'])} {entry['card_relationship']}"
+                       if "card_score" in entry else ""),
     }
 
 
@@ -317,6 +321,22 @@ def _headline(element_rows, dignity, aspects):
         lines.append(f"{mood} ({aspects['flowing']} to {aspects['tense']}); "
                      f"{aspects['strong']} of {aspects['total']} aspects are strong.")
     return lines
+
+
+def withheld_view(withheld):
+    """The cards a near-whole-deck draw left out (analysis.withheld_summary), or None."""
+    if not withheld:
+        return None
+    cards = []
+    for row in withheld["cards"]:
+        element = derive_primary_element(row)
+        cards.append({"title": row["title"], "short": short_card_name(row["title"]),
+                      "image": card_image_url(row["title"]), "element": element,
+                      "color": ELEMENT_COLORS[element], "attribution": row.get("attribution"),
+                      "solid": row.get("platonic_solid")})
+    return {"cards": cards, "note": withheld_sentence(withheld),
+            "elements": [{"element": e, "count": c, "color": ELEMENT_COLORS[e]}
+                         for e, c in withheld["elements"].items() if c]}
 
 
 def build_report_view(spread_key, spread_results, element_counts, dignity_matrix, spatial_matrix,

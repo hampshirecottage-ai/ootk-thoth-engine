@@ -4,6 +4,27 @@ import re
 
 from ootk.rules import ASPECTS_BY_NAME, aspect_label
 
+ZODIAC_SIGNS = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio",
+                "Sagittarius", "Capricorn", "Aquarius", "Pisces")
+_SIGN_SUITS = {"Fire": "Wands", "Earth": "Disks", "Air": "Swords", "Water": "Cups"}
+_CHALDEAN = ("Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon")
+
+def _decan_labels():
+    """'Decan 1: Mars in Aries (2 of Wands)' ... 'Decan 36: Mars in Pisces (10 of Cups)'.
+
+    Rulers run in Chaldean order from Mars at 0 deg Aries; each sign's three decans are its
+    suit's 2-4 (cardinal), 5-7 (fixed) or 8-10 (mutable), as in the Book of Thoth.
+    """
+    elements = ("Fire", "Earth", "Air", "Water")
+    labels = []
+    for i in range(36):
+        sign_idx, third = divmod(i, 3)
+        ruler = _CHALDEAN[(2 + i) % 7]
+        pip = 2 + 3 * (sign_idx % 3) + third
+        suit = _SIGN_SUITS[elements[sign_idx % 4]]
+        labels.append(f"Decan {i + 1}: {ruler} in {ZODIAC_SIGNS[sign_idx]} ({pip} of {suit})")
+    return labels
+
 SPREADS = {
     "1": {"name": "Single Card / Daily Operations", "positions": ["Core Theme / Focus"]},
     "2": {"name": "Dyad (Polarity & Dynamics)", "positions": ["Active Force (Thesis)", "Receptive / Resistance Force (Antithesis)"]},
@@ -54,7 +75,9 @@ SPREADS = {
         ]
     },
     "8": {
-        "name": "OOTK - First Operation (15-Card Active Heap)",
+        # Not the classic OOTK First Operation, which splits the whole deck into four IHVH
+        # piles and reads the pile holding the significator.
+        "name": "15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)",
         "positions": [
             "1. Significator / Core Nature of Question",
             "2. Development of Question (Left Pair A)", "3. Development of Question (Left Pair B)",
@@ -86,7 +109,7 @@ SPREADS = {
     },
     "11": {
         "name": "OOTK - Fourth Operation (36 Zodiacal Decans)",
-        "positions": [f"Decan {i}" for i in range(1, 37)]
+        "positions": _decan_labels()
     },
     "12": {
         "name": "Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline",

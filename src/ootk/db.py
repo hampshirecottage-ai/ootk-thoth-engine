@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from psycopg.rows import dict_row
 
 from ootk import PROJECT_ROOT as BASE_DIR
-from ootk.analysis import card_is_dignified
+from ootk.analysis import apply_card_solid, card_is_dignified, WITHHELD_MAX, withheld_summary
 
 load_dotenv()
 
@@ -63,17 +63,22 @@ def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
 
     Titles with no thoth_cards row are simply absent from the result.
 
-    GD data (spatial, platonic, colours, GD letter) joins on the card's key_scale.
+    GD data (spatial type, cube position, colours, GD letter) joins on the card's key_scale.
     French/Egyptian data joins separately (alias cf) because the French columns are indexed
     by French card number (0-21), not by the Golden Dawn path number, and only describe the
     Majors. Majors join on thoth_cards.french_number. Minors and Courts get no French row and
     keep their GD values: rows 1-10 hold French *Major* data, so joining a Minor on its
     key_scale would hand e.g. the 9 of Cups the Hermit's path.
 
-    Under French/Egyptian a Major's geometry (spatial type, Platonic solid, King Scale colour)
-    comes from the path that carries its French letter (alias g, via cf.french_path), so the
-    Sefer Yetzirah classification matches the letter shown. Minors and Courts take their
-    attribution from thoth_cards.attribution (pip decan, court span) in both systems.
+    Under French/Egyptian a Major's letter geometry (spatial type, cube position, King Scale
+    colour) comes from the path that carries its French letter (alias g, via cf.french_path),
+    so the Sefer Yetzirah classification matches the letter shown.
+
+    What belongs to the card rather than the letter comes from the card in both systems:
+    under Golden Dawn the attribution is thoth_cards.attribution (the Major's sign, planet or
+    element, the pip's decan, the court's span), and the Platonic solid follows the card's
+    element (analysis.apply_card_solid). That keeps the Thoth swap whole: the Emperor sits on
+    Tzaddi but stays Aries, Fire and a Tetrahedron.
     """
     query = """
     SELECT
@@ -98,11 +103,7 @@ def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
         c.attributions,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_type ELSE c.spatial_type END AS spatial_type,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE c.spatial_dimension END AS spatial_dimension,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.platonic_solid ELSE c.platonic_solid END AS platonic_solid,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.solid_faces ELSE c.solid_faces END AS solid_faces,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.solid_vertices ELSE c.solid_vertices END AS solid_vertices,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.dual_solid ELSE c.dual_solid END AS dual_solid,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.topological_role ELSE c.topological_role END AS topological_role
+        tc.attribution AS card_attribution
     FROM thoth_cards tc
     LEFT JOIN correspondences c  ON c.key_scale = tc.key_scale
     LEFT JOIN correspondences cf ON tc.arcana_type = 'Major' AND cf.key_scale = tc.french_number
@@ -112,15 +113,28 @@ def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
     try:
         with conn.cursor() as cur:
             cur.execute(query, {"sys": system, "titles": list(titles)})
-            return {row["title"]: row for row in cur.fetchall()}
+            rows = cur.fetchall()
     except psycopg.errors.UndefinedColumn as e:
         print(f"[ERROR] {e.diag.message_primary}. The database predates the correspondence fixes: "
               f"run psql -d <db> -f database/migrations/fix_correspondences.sql", file=sys.stderr)
         sys.exit(1)
+    stale = [r["title"] for r in rows if r["arcana_type"] == "Major" and not r["card_attribution"]]
+    if stale:
+        print(f"[WARN] {len(stale)} Major(s) have no thoth_cards.attribution, so their Attribution "
+              f"shows the letter's triplicity rulers: run psql -d <db> -f "
+              f"database/migrations/fix_trump_attributions.sql", file=sys.stderr)
+    return {row["title"]: apply_card_solid(row) for row in rows}
 
 def fetch_card_correspondences(conn, title, system="golden_dawn"):
     """One card's correspondences (see fetch_cards_correspondences), or None."""
     return fetch_cards_correspondences(conn, [title], system=system).get(title)
+
+def load_withheld(conn, deck, drawn_titles, system="golden_dawn"):
+    """analysis.withheld_summary for a draw from `deck` (fetch_all_cards rows), or None."""
+    if len(deck) - len(set(drawn_titles)) > WITHHELD_MAX:
+        return None                       # skip the whole-deck query when nothing is listed
+    rows = fetch_cards_correspondences(conn, [c["title"] for c in deck], system=system)
+    return withheld_summary([rows[c["title"]] for c in deck if c["title"] in rows], drawn_titles)
 
 def load_cards_data(conn, titles, system):
     """fetch_cards_correspondences with guards; returns rows in the order of `titles`.

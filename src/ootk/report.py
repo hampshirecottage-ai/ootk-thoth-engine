@@ -2,9 +2,9 @@
 import html
 
 from ootk import PROJECT_ROOT as BASE_DIR
-from ootk.analysis import spirit_bearing_cards
+from ootk.analysis import derive_primary_element, spirit_bearing_cards
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn", framework_basis=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn", framework_basis=None, withheld=None):
     total_cards = sum(element_counts.values()) or 1
     mapping_labels = {
         "golden_dawn": "Golden Dawn / English System (Liber 777)",
@@ -36,6 +36,9 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
                 line += f" | secondary on {len(secondary)}: {cards}"
         prompt_md += line + "\n"
 
+    if withheld:
+        prompt_md += withheld_markdown(withheld)
+
     prompt_md += "\n---\n\n## 2. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
     prompt_md += f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
     prompt_md += f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
@@ -64,6 +67,10 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
 
     prompt_md += "\n---\n\n## 5. SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
+    if any(s.get("pair_mode") == "aspect" for s in spatial_matrix or ()):
+        prompt_md += ("\nOn the house, sign and decan wheels the aspect between two positions is "
+                      "fixed by the layout and is the same in every reading; the `cards:` part "
+                      "(the elemental dignity of the two cards drawn there) is this reading's.\n")
     if spatial_matrix:
         last_segment = None
         last_aspect = None
@@ -82,7 +89,8 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
                 if s["aspect"] != last_aspect:
                     prompt_md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
                     last_aspect = s["aspect"]
-                prompt_md += f"* {s['pair']}\n"
+                cards = f"{_signed(s['card_score'])} {s['card_relationship']}" if "card_score" in s else ""
+                prompt_md += f"* {s['pair']}" + (f" | cards: {cards}" if cards else "") + "\n"
             else:
                 prompt_md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
                 prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
@@ -130,6 +138,28 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
 5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
 """
     return prompt_md
+
+def _signed(n):
+    return f"+{n}" if n > 0 else str(n)
+
+def withheld_sentence(withheld):
+    """Why the withheld cards matter, with the deck's own element totals."""
+    deck = withheld["deck_elements"]
+    totals = ", ".join(f"{e} {deck[e]}" for e in ("Fire", "Water", "Air", "Earth") if deck[e])
+    n = len(withheld["cards"])
+    return (f"Only {n} card{'s' if n != 1 else ''} of the deck stayed out of this draw, so the element "
+            f"counts above are the whole deck's ({totals}) minus these. The counts barely move "
+            f"between readings; the withheld cards and where each drawn card fell carry the signal.")
+
+def withheld_markdown(withheld):
+    cards = withheld["cards"]
+    md = f"\n### Withheld ({len(cards)} card{'s' if len(cards) != 1 else ''} not drawn)\n"
+    for row in cards:
+        md += (f"- **{row['title']}**: {derive_primary_element(row)} | {row.get('attribution') or 'N/A'}"
+               f" | {row.get('platonic_solid') or 'N/A'}\n")
+    by_elem = ", ".join(f"{e} {c}" for e, c in withheld["elements"].items() if c)
+    md += f"\nWithheld by element: {by_elem}. {withheld_sentence(withheld)}\n"
+    return md
 
 def generate_html_output(session_id, spread_name, query_prompt, analytical_prompt):
     output_dir = BASE_DIR / "output"

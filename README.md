@@ -9,10 +9,10 @@ It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew
 ## Features
 
 - **Spreads 1-12**, from a single card up to the full 4-operation OOTK master pipeline (key 12):
-  - Operation 1: 15-card active heap (core nature and climax)
+  - Operation 1: a 15-card heap (core nature and climax). This is a variant, not the classic OOTK First Operation, which splits the whole deck into four IHVH piles
   - Operation 2: 12 astrological houses
   - Operation 3: 12 zodiacal signs
-  - Operation 4: 36 decans
+  - Operation 4: 36 decans, each labelled with its ruler, sign and pip (Decan 1: Mars in Aries (2 of Wands))
 - **Two mapping schemes** for tarot-to-Kabbalah attributions: `golden_dawn` and `french_egyptian`.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
@@ -200,6 +200,7 @@ OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -
 
 Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
 Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
+Then run `database/migrations/fix_trump_attributions.sql` (also safe to re-run): it gives each Major its own sign, planet or element as its attribution and names path 32 'Cross'. The engine warns on stderr when it is missing.
 
 ---
 
