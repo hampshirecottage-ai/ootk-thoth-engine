@@ -188,6 +188,7 @@ OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -
 ```
 
 Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
+Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
 
 ---
 

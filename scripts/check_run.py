@@ -18,31 +18,39 @@ EXPECTED_ASPECT_PAIRS = {2: 42, 3: 42, 4: 126}
 EXPECTED_OP1_PAIRS = 14
 RING_ASPECTS = {"Opposition", "Square", "Trine", "Sextile"}
 
-# French/Egyptian rows for the 22 Majors, as returned by the verification query:
+# French/Egyptian rows for the 22 Majors (Levi/Papus letters; paths on the standard tree):
 # name -> (letter, path, attribution)
 FRENCH_MAJORS = {
-    "The Fool": ("Shin", "Path 31 (Yesod-Malkuth)", "Unnumbered / Primeval Spirit"),
+    "The Fool": ("Shin", "Path 31 (Hod-Malkuth)", "Unnumbered / Primeval Spirit"),
     "The Magus": ("Aleph", "Path 11 (Kether-Chokmah)", "Air / Magus Spirit"),
     "The Priestess": ("Beth", "Path 12 (Kether-Binah)", "Mercury"),
-    "The Empress": ("Gimel", "Path 13 (Chokmah-Binah)", "Venus"),
-    "The Emperor": ("Daleth", "Path 14 (Chokmah-Tiphareth)", "Aries"),
-    "The Hierophant": ("Heh", "Path 15 (Chokmah-Chesed)", "Taurus"),
-    "The Lovers": ("Vav", "Path 16 (Binah-Tiphareth)", "Gemini"),
-    "The Chariot": ("Zain", "Path 17 (Binah-Geburah)", "Cancer"),
-    "Lust": ("Cheth", "Path 18 (Chesed-Geburah)", "Strength / Leo"),
-    "The Hermit": ("Teth", "Path 19 (Chesed-Tiphareth)", "Virgo"),
-    "Fortune": ("Yod", "Path 20 (Chesed-Netzach)", "Jupiter"),
-    "Adjustment": ("Kaph", "Path 21 (Geburah-Tiphareth)", "Justice / Libra"),
-    "The Hanged Man": ("Lamed", "Path 22 (Geburah-Hod)", "Water"),
-    "Death": ("Mem", "Path 23 (Tiphareth-Netzach)", "Scorpio"),
-    "Art": ("Nun", "Path 24 (Tiphareth-Hod)", "Sagittarius"),
+    "The Empress": ("Gimel", "Path 13 (Kether-Tiphareth)", "Venus"),
+    "The Emperor": ("Daleth", "Path 14 (Chokmah-Binah)", "Aries"),
+    "The Hierophant": ("Heh", "Path 15 (Chokmah-Tiphareth)", "Taurus"),
+    "The Lovers": ("Vav", "Path 16 (Chokmah-Chesed)", "Gemini"),
+    "The Chariot": ("Zain", "Path 17 (Binah-Tiphareth)", "Cancer"),
+    "Adjustment": ("Cheth", "Path 18 (Binah-Geburah)", "Justice / Libra"),
+    "The Hermit": ("Teth", "Path 19 (Chesed-Geburah)", "Virgo"),
+    "Fortune": ("Yod", "Path 20 (Chesed-Tiphareth)", "Jupiter"),
+    "Lust": ("Kaph", "Path 21 (Chesed-Netzach)", "Strength / Leo"),
+    "The Hanged Man": ("Lamed", "Path 22 (Geburah-Tiphareth)", "Water"),
+    "Death": ("Mem", "Path 23 (Geburah-Hod)", "Scorpio"),
+    "Art": ("Nun", "Path 24 (Tiphareth-Netzach)", "Sagittarius"),
     "The Devil": ("Samekh", "Path 25 (Tiphareth-Yesod)", "Capricorn"),
-    "The Tower": ("Ayin", "Path 26 (Chesed-Hod)", "Mars"),
+    "The Tower": ("Ayin", "Path 26 (Tiphareth-Hod)", "Mars"),
     "The Star": ("Peh", "Path 27 (Netzach-Hod)", "Aquarius"),
     "The Moon": ("Tzaddi", "Path 28 (Netzach-Yesod)", "Pisces"),
     "The Sun": ("Qoph", "Path 29 (Netzach-Malkuth)", "Sun"),
-    "The Aeon": ("Resh", "Path 30 (Hod-Malkuth)", "Fire / Spirit"),
-    "The Universe": ("Tav", "Path 32 (Malkuth-Universe)", "Saturn / Earth"),
+    "The Aeon": ("Resh", "Path 30 (Hod-Yesod)", "Fire / Spirit"),
+    "The Universe": ("Tav", "Path 32 (Yesod-Malkuth)", "Saturn / Earth"),
+}
+
+# Sefer Yetzirah class of each letter (both spellings used in the data).
+LETTER_TYPES = {
+    **{l: "Mother_Axis" for l in ("Aleph", "Mem", "Shin")},
+    **{l: "Double_Direction" for l in ("Beth", "Gimel", "Daleth", "Kaph", "Peh", "Resh", "Tav", "Tau")},
+    **{l: "Simple_Edge" for l in ("Heh", "Vav", "Zain", "Cheth", "Teth", "Yod", "Lamed", "Nun",
+                                    "Samekh", "Ayin", "Tzaddi", "Qoph")},
 }
 
 results = []  # (status, label, detail)
@@ -193,8 +201,18 @@ def main(path):
 
     # ---------- known data gaps (not failures) ----------
     dots = len(re.findall(r"- \*\*Attribution\*\*: \.\.\.$", sections[6], re.M))
-    if dots:
-        warn(f"{dots} card(s) show '...' as attribution", "known data gap: correspondences row 32 etc.")
+    check(dots == 0, "no card shows '...' as attribution", f"{dots} card(s)")
+
+    # ---------- spatial type follows the letter shown ----------
+    mismatched = []
+    for pos, block in sorted(cards.items()):
+        if "Major |" not in block:
+            continue
+        letter = re.search(r"- \*\*Path/Sephira\*\*: .*\((\w+) \(", block)
+        stype = re.search(r"- \*\*Spatial Dimension\*\*: `(\w+)`", block)
+        if letter and stype and LETTER_TYPES.get(letter.group(1)) not in (None, stype.group(1)):
+            mismatched.append(f"Pos {pos} {letter.group(1)}={stype.group(1)}")
+    check(not mismatched, "Majors' spatial type matches their active letter", "; ".join(mismatched[:6]))
 
     # ---------- report ----------
     width = max(len(r[1]) for r in results)

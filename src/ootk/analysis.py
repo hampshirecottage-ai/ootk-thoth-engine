@@ -110,6 +110,20 @@ def analyze_elemental_balance(spread_results):
         element_counts[elem] += 1
     return element_counts
 
+def spirit_bearing_cards(spread_results):
+    """Majors that carry Spirit as a secondary quality: on Shin (Fire + Spirit) under the
+    active mapping, or attributed to Spirit. Their primary element still drives dignities;
+    this only stops the report from reading 'Spirit 0' as 'no Spirit in the draw'."""
+    found = []
+    for item in spread_results:
+        data = item.get("card_data") or {}
+        if data.get("arcana_type") != "Major":
+            continue
+        letter = str(data.get("hebrew_letter") or "")
+        if "Shin" in letter or "ש" in letter or "spirit" in str(data.get("attribution") or "").lower():
+            found.append((item["position_number"], data["title"]))
+    return found
+
 def calculate_spatial_aspect(angle_deg):
     norm_angle = abs(angle_deg) % 360
     if norm_angle > 180:
@@ -123,10 +137,12 @@ def calculate_spatial_aspect(angle_deg):
         return "Square (90°)", "Dynamic Tension / Quadrature Friction", -2
     elif 110 <= norm_angle <= 130:
         return "Trine (120°)", "Equilateral Flow / Resonance", 2
+    elif 145 <= norm_angle <= 155:
+        return "Quincunx (150°)", "Inconjunct / Forced Adjustment", -1
     elif 165 <= norm_angle <= 180:
         return "Opposition (180°)", "Polar Complement / Axis Tension", -1
     else:
-        return f"Inconjunct/Minor ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
+        return f"Minor / Unaspected ({norm_angle:.1f}°)", "Asymmetric Vector Transition", 0
 
 def _ring_aspect(delta_deg, allowed):
     """Exact-aspect lookup for ring layouts. Returns (short, name, desc, modifier) or None."""
@@ -257,10 +273,15 @@ def analyze_hebrew_spatial_distribution(spread_results):
                 stype = "Unmapped"
                 sdim = "General Form"
 
+        letter = data.get("hebrew_letter") or "N/A"
+        if data.get("arcana_type") == "Minor":
+            # Minors sit on a Sephira, not a letter; hebrew_letter holds the Sephira's name.
+            letter = f"none - Sephira {letter}"
+
         spatial_details.append({
             "position": item["position_number"],
             "title": data["title"],
-            "letter": data.get("hebrew_letter") or "N/A",
+            "letter": letter,
             "spatial_type": stype,
             "spatial_dimension": sdim or "Standard Continuum"
         })

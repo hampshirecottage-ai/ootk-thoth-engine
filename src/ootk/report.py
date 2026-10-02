@@ -2,6 +2,7 @@
 import html
 
 from ootk import PROJECT_ROOT as BASE_DIR
+from ootk.analysis import spirit_bearing_cards
 
 def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn", framework_basis=None):
     total_cards = sum(element_counts.values()) or 1
@@ -27,9 +28,15 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     for elem, count in element_counts.items():
         pct = (count / total_cards) * 100
         bar = "█" * int(count * 2)
-        prompt_md += f"* **{elem:6s}**: {bar} {count} ({pct:.1f}%)\n"
+        line = f"* **{elem:6s}**: {bar} {count} ({pct:.1f}%)"
+        if elem == "Spirit":
+            secondary = spirit_bearing_cards(spread_results)
+            if secondary:
+                cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
+                line += f" | secondary on {len(secondary)}: {cards}"
+        prompt_md += line + "\n"
 
-    prompt_md += "\n---\n\n## 2. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Stanislavivsky)\n"
+    prompt_md += "\n---\n\n## 2. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
     prompt_md += f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
     prompt_md += f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
     prompt_md += f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
@@ -98,8 +105,14 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
         prompt_md += f"- **Path/Sephira**: {data['path_or_sephira']}{letter_str}\n"
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
-        prompt_md += f"- **Comparative Hebrew Mapping**: GD: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
-        prompt_md += f"- **Spatial Dimension**: `{data.get('spatial_type', 'N/A')}` ({data.get('spatial_dimension', 'N/A')})\n"
+        if data['arcana_type'] == 'Minor':
+            prompt_md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
+        else:
+            prompt_md += f"- **Comparative Hebrew Mapping**: GD: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
+        stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
+        if not stype and data['arcana_type'] == 'Minor':
+            stype, sdim = 'Sephira_Point', 'Nodal Sphere (Sephira)'
+        prompt_md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
         prompt_md += f"- **Platonic Topology**: `{data.get('platonic_solid', 'N/A')}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
         prompt_md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
         prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"

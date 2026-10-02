@@ -67,6 +67,11 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
     Majors. Majors join on thoth_cards.french_number. Minors and Courts get no French row and
     keep their GD values: rows 1-10 hold French *Major* data, so joining a Minor on its
     key_scale would hand e.g. the 9 of Cups the Hermit's path.
+
+    Under French/Egyptian a Major's geometry (spatial type, Platonic solid, King Scale colour)
+    comes from the path that carries its French letter (alias g, via cf.french_path), so the
+    Sefer Yetzirah classification matches the letter shown. Minors and Courts take their
+    attribution from thoth_cards.attribution (pip decan, court span) in both systems.
     """
     query = """
     SELECT
@@ -84,25 +89,32 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         c.hebrew_letter AS gd_hebrew_letter,
         cf.hebrew_letter_french AS french_hebrew_letter,
         CASE WHEN %(sys)s = 'french_egyptian' AND cf.attribution_french IS NOT NULL
-             THEN cf.attribution_french ELSE c.element_or_planet_or_sign END AS attribution,
+             THEN cf.attribution_french
+             ELSE COALESCE(tc.attribution, c.element_or_planet_or_sign) END AS attribution,
         c.element_or_planet_or_sign AS element,
-        c.king_scale_color,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.king_scale_color ELSE c.king_scale_color END AS king_scale_color,
         c.attributions,
-        c.spatial_type,
-        c.spatial_dimension,
-        c.platonic_solid,
-        c.solid_faces,
-        c.solid_vertices,
-        c.dual_solid,
-        c.topological_role
+        CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_type ELSE c.spatial_type END AS spatial_type,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE c.spatial_dimension END AS spatial_dimension,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.platonic_solid ELSE c.platonic_solid END AS platonic_solid,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.solid_faces ELSE c.solid_faces END AS solid_faces,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.solid_vertices ELSE c.solid_vertices END AS solid_vertices,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.dual_solid ELSE c.dual_solid END AS dual_solid,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.topological_role ELSE c.topological_role END AS topological_role
     FROM thoth_cards tc
     LEFT JOIN correspondences c  ON c.key_scale = tc.key_scale
     LEFT JOIN correspondences cf ON tc.arcana_type = 'Major' AND cf.key_scale = tc.french_number
+    LEFT JOIN correspondences g  ON %(sys)s = 'french_egyptian' AND g.key_scale = cf.french_path
     WHERE tc.title = %(title)s;
     """
-    with conn.cursor() as cur:
-        cur.execute(query, {"sys": system, "title": title})
-        return cur.fetchone()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(query, {"sys": system, "title": title})
+            return cur.fetchone()
+    except psycopg.errors.UndefinedColumn as e:
+        print(f"[ERROR] {e.diag.message_primary}. The database predates the correspondence fixes: "
+              f"run psql -d <db> -f database/migrations/fix_correspondences.sql", file=sys.stderr)
+        sys.exit(1)
 
 def load_card_data(conn, title, system):
     """fetch_card_correspondences with guards.
