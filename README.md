@@ -15,9 +15,9 @@ It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew
   - Operation 4: 36 decans
 - **Two mapping schemes** for tarot-to-Kabbalah attributions: `golden_dawn` and `french_egyptian`.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
-- **Deterministic PRNG shuffler** (`src/prng_shuffler.py`), shared by every entry point.
+- **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
 - **PostgreSQL persistence** of sessions, spreads and card pulls.
-- **Three interfaces**: CLI (`src/spread_engine.py`), FastAPI web GUI (`app.py`), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
+- **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
 
 ---
 
@@ -25,35 +25,39 @@ It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew
 
 ```
 ootk-thoth-engine/
-├── app.py                  # FastAPI web GUI (uvicorn app:app)
-├── check_run.py            # Sanity-checks a saved 4-operation run (run.txt)
-├── src/
-│   ├── spread_engine.py    # Main engine + CLI entry point
-│   ├── ootk_engine.py      # OOTK deck/config helpers
-│   ├── decan_aspects.py    # Decanic aspect analysis
-│   └── prng_shuffler.py    # Seeded shuffler (single source of truth)
+├── pyproject.toml          # Dependencies, dev extras and the `ootk` command
+├── src/ootk/
+│   ├── cli.py              # Command line: `ootk` / `python -m ootk`
+│   ├── web.py              # FastAPI web GUI: `uvicorn ootk.web:app`
+│   ├── spreads.py          # Spread definitions, layout coordinates, operation segments
+│   ├── analysis.py         # Elements, dignities, geometry, topology, macro framework
+│   ├── report.py           # Analytical report (Markdown prompt) and HTML export
+│   ├── db.py               # DB settings, card lookups, saving sessions
+│   ├── shuffle.py          # Seeded shuffler (single source of truth)
+│   ├── decans.py           # Decanic aspect analysis (not yet wired in)
+│   └── vector_engine.py    # Earlier config-weighted pair scorer (not used by CLI/GUI)
 ├── scripts/
-│   ├── view_output.py      # Render an HTML report in the terminal
+│   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
+│   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
 │   ├── download_images.py  # Fetch card images into static/images/
-│   ├── fetch_cards.py      # Quick DB card query
-│   └── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
+│   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
 │   ├── schema.sql          # Full dump: schema, all migrations, and reference data
 │   └── migrations/         # Only needed for DBs created before the current schema
-├── config/                 # config.json (scoring weights, DB host/port), default_params.json
+├── config/                 # config.json (DB host/port defaults, vector_engine weights)
 ├── prompts/                # System/operation prompts for LLM-assisted readings
 ├── templates/              # Jinja2 templates for the web GUI and reports
 ├── static/images/          # Card images (not in git; see below)
 ├── output/                 # Generated HTML reports (not in git)
 ├── docs/                   # Thoth_Tarot_Engine_Guide.docx
-└── tests/                  # pytest suite
+└── tests/                  # pytest suite (+ opt-in real-database tests)
 ```
 
 ---
 
 ## Prerequisites
 
-- Python 3.12+
+- Python 3.11+
 - PostgreSQL 16+
 
 ---
@@ -68,9 +72,7 @@ cd ootk-thoth-engine
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-# for tests:
-pip install -r requirements-dev.txt
+pip install -e ".[dev]"     # the package, its `ootk` command, and test tools
 ```
 
 ### 2. Configure the database
@@ -103,7 +105,7 @@ python scripts/db_inspect.py audit
 
 These commands use your own Postgres role. If your install has a `postgres` superuser, add `-U postgres -h localhost` and set `DB_USER=postgres` in `.env`. On Homebrew installs the role is your macOS username instead, so set `DB_USER` to that.
 
-On a fresh machine `schema.sql` may print errors about `transaction_timeout` (the dump came from a newer Postgres) and about a missing `ootk_admin` role (table ownership). Both are harmless: the data still loads, and the audit above confirms it.
+On a fresh machine `schema.sql` may print errors about `transaction_timeout` (the dump came from a newer Postgres) and about a missing `dbuser` role (table ownership). Both are harmless: the data still loads, and the audit above confirms it.
 
 ### 4. Card images (optional)
 
@@ -120,7 +122,7 @@ python scripts/download_images.py
 ### Command line
 
 ```bash
-python src/spread_engine.py \
+ootk \
   --spread 12 \
   --seed 77 \
   --mapping french_egyptian \
@@ -149,7 +151,7 @@ python scripts/view_output.py --file output/ootk_output_20.html
 ### Web GUI
 
 ```bash
-uvicorn app:app --reload --port 8000
+uvicorn ootk.web:app --reload --port 8000
 ```
 
 Open http://localhost:8000 for the form and http://localhost:8000/docs for the API docs.
@@ -157,9 +159,9 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 ### Sanity-check a full run
 
 ```bash
-python src/spread_engine.py --spread 12 --seed 77 --mapping french_egyptian \
+ootk --spread 12 --seed 77 --mapping french_egyptian \
   --significator "Knight of Swords" --topic "Is everything working correctly?" | tee run.txt
-python check_run.py run.txt
+python scripts/check_run.py run.txt
 ```
 
 `check_run.py` exits 0 when every check passes. WARN lines are known data gaps, not failures.

@@ -20,3 +20,7 @@ static/images/
 # Saved run captures & caches
 run.txt
 .pytest_cache/
+
+# Packaging
+*.egg-info/
+build/

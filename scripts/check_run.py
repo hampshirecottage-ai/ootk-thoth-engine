@@ -2,9 +2,9 @@
 """Sanity-checks a saved OOTK 4-operation (spread 12) run against the fixes made so far.
 
 Usage:
-    python src/spread_engine.py --spread 12 --seed 77 --mapping french_egyptian \
+    ootk --spread 12 --seed 77 --mapping french_egyptian \
         --significator "Knight of Swords" --topic "Is everything working correctly?" | tee run.txt
-    python check_run.py run.txt
+    python scripts/check_run.py run.txt
 
 Exits 0 if every check passes, 1 otherwise. WARN lines are known data gaps, not failures.
 """

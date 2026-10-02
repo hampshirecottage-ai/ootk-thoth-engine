@@ -1,17 +1,14 @@
 """Run from the project root:  python -m pytest -v
-Needs: pip install pytest httpx python-multipart
+Needs: pip install -e ".[dev]"
 """
 import json
-import sys
 from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import app as app_module
-from src import spread_engine as se
+from ootk import analysis, db, report, shuffle, spreads
+from ootk import web as app_module
 from fastapi.testclient import TestClient
 
 
@@ -120,7 +117,7 @@ def test_gui_dignities_stay_inside_each_operation(client):
 
 
 def test_every_spread_position_count_matches(client):
-    for key, spread in se.SPREADS.items():
+    for key, spread in spreads.SPREADS.items():
         n = len(app_module.resolve_positions(spread))
         cards = ",".join(f"Card {i}" for i in range(n))
         assert post(client, spread_key=key, selected_cards=cards).status_code == 200, key
@@ -138,7 +135,7 @@ def test_dignity_scores():
     air = fake_card("A", "Swords", attribution="Air")
     water = fake_card("W", "Cups", attribution="Water")
     earth = fake_card("E", "Disks", attribution="Earth")
-    score = lambda a, b: se.calculate_elemental_dignities(results_for(a, b))[0]["score"]
+    score = lambda a, b: analysis.calculate_elemental_dignities(results_for(a, b))[0]["score"]
     assert score(fire, air) == 2
     assert score(water, earth) == 2
     assert score(fire, water) == -2
@@ -152,11 +149,11 @@ def test_dignity_scores():
     (120, "Trine"), (180, "Opposition"), (30, "Inconjunct"),
 ])
 def test_spatial_aspects(angle, aspect):
-    assert aspect in se.calculate_spatial_aspect(angle)[0]
+    assert aspect in analysis.calculate_spatial_aspect(angle)[0]
 
 
 def test_shuffle_is_deterministic_and_a_permutation():
-    from src.prng_shuffler import shuffle_deck
+    from ootk.shuffle import shuffle_deck
     deck = [{"title": f"C{i}"} for i in range(78)]
     a = shuffle_deck(deck, "1568")
     b = shuffle_deck(deck, "1568")
@@ -168,23 +165,22 @@ def test_shuffle_is_deterministic_and_a_permutation():
 
 
 def test_int_and_str_seed_give_same_deck():
-    from src.prng_shuffler import shuffle_deck
+    from ootk.shuffle import shuffle_deck
     deck = list(range(78))
     assert shuffle_deck(deck, 1568) == shuffle_deck(deck, "1568")
 
 
 def test_seed_required():
-    from src.prng_shuffler import shuffle_deck
+    from ootk.shuffle import shuffle_deck
     with pytest.raises(ValueError):
         shuffle_deck([1, 2, 3], None)
 
 
 def test_all_entry_points_use_the_single_shuffler():
-    """spread_engine and ootk_engine must use src.prng_shuffler.shuffle_deck, not their own."""
-    from src import ootk_engine, prng_shuffler
-    assert se.shuffle_deck is prng_shuffler.shuffle_deck
-    assert ootk_engine.shuffle_deck is prng_shuffler.shuffle_deck
-    assert not hasattr(se, "prng_shuffle_deck")
+    """The CLI and vector_engine must use ootk.shuffle.shuffle_deck, not their own."""
+    from ootk import cli, vector_engine
+    assert cli.shuffle_deck is shuffle.shuffle_deck
+    assert vector_engine.shuffle_deck is shuffle.shuffle_deck
 
 
 # ---------- engine: fixed bugs (regression tests) ----------
@@ -192,10 +188,10 @@ def test_all_entry_points_use_the_single_shuffler():
 def test_env_overrides_config_dbname(tmp_path, monkeypatch):
     cfg = tmp_path / "config.json"
     cfg.write_text(json.dumps({"database": {"dbname": "fromjson", "host": "jsonhost"}}))
-    monkeypatch.setattr(se, "CONFIG_PATH", cfg)
+    monkeypatch.setattr(db, "CONFIG_PATH", cfg)
     monkeypatch.setenv("DB_NAME", "fromenv")
     monkeypatch.delenv("DB_HOST", raising=False)
-    out = se.load_db_config()
+    out = db.load_db_config()
     assert out["dbname"] == "fromenv"      # env wins
     assert out["host"] == "jsonhost"       # json fills what env leaves unset
 
@@ -210,25 +206,25 @@ def test_env_overrides_config_dbname(tmp_path, monkeypatch):
     ({"title": "Chair Card", "suit": None, "attribution": "Chair"}, "Spirit"),   # no substring match
 ])
 def test_derive_primary_element(card, expected):
-    assert se.derive_primary_element(card) == expected
+    assert analysis.derive_primary_element(card) == expected
 
 
 def test_spatial_empty_for_uncoordinated_spreads():
     cards = [fake_card(f"C{i}") for i in range(4)]
     for key in ("7", "9", "11", "12"):
-        assert se.analyze_spatial_vectors(results_for(*cards), key) == []
+        assert analysis.analyze_spatial_vectors(results_for(*cards), key) == []
 
 
 def test_spatial_centre_node_has_no_fake_aspect():
     cards = [fake_card(f"C{i}") for i in range(3)]
-    out = se.analyze_spatial_vectors(results_for(*cards), "3")
+    out = analysis.analyze_spatial_vectors(results_for(*cards), "3")
     assert [o["aspect"] for o in out] == ["Centre Node", "Centre Node"]
     assert all(o["score_modifier"] == 0 for o in out)
 
 
 def test_spatial_hexagram_uses_real_angles():
     cards = [fake_card(f"C{i}") for i in range(7)]
-    out = se.analyze_spatial_vectors(results_for(*cards), "6")
+    out = analysis.analyze_spatial_vectors(results_for(*cards), "6")
     assert out[0]["aspect"].startswith("Sextile")          # apex -> right-top: 60 degrees
     assert out[-1]["aspect"] == "Centre Node"              # last pair touches the centre card
 
@@ -237,32 +233,32 @@ def test_card_is_dignified():
     matrix = [{"score": 2, "from_index": 0, "to_index": 1},
               {"score": -2, "from_index": 1, "to_index": 2},
               {"score": -2, "from_index": 2, "to_index": 3}]
-    assert se.card_is_dignified(0, matrix) is True     # +2
-    assert se.card_is_dignified(1, matrix) is True     # +2 + -2 = 0
-    assert se.card_is_dignified(2, matrix) is False    # -4
-    assert se.card_is_dignified(3, matrix) is False    # -2
-    assert se.card_is_dignified(0, []) is True         # single card
+    assert analysis.card_is_dignified(0, matrix) is True     # +2
+    assert analysis.card_is_dignified(1, matrix) is True     # +2 + -2 = 0
+    assert analysis.card_is_dignified(2, matrix) is False    # -4
+    assert analysis.card_is_dignified(3, matrix) is False    # -2
+    assert analysis.card_is_dignified(0, []) is True         # single card
 
 
 # ---------- report round-trip: engine -> HTML -> view_output ----------
 
 def build_report(tmp_path, monkeypatch, topic="Love & War <3", pos_prefix="[Op 1] "):
-    monkeypatch.setattr(se, "BASE_DIR", tmp_path)
+    monkeypatch.setattr(report, "BASE_DIR", tmp_path)
     cards = [fake_card("A", "Wands", attribution="Fire"),
              fake_card("B", "Swords", attribution="Air"),
              fake_card("C", "Cups", attribution="Water")]
     results = [{"position_number": i + 1, "position_name": f"{pos_prefix}Pos {i+1}", "card_data": c}
                for i, c in enumerate(cards)]
-    counts = se.analyze_elemental_balance(results)
-    dignity = se.calculate_elemental_dignities(results)
-    spatial = se.analyze_spatial_vectors(results, "3")
-    sdist, sdet = se.analyze_hebrew_spatial_distribution(results)
-    solids, topo, duals = se.analyze_platonic_topology(results)
-    framework, basis = se.evaluate_macro_framework(results)
-    prompt = se.build_analytical_prompt("Triad <test>", topic, "Knight of Swords", "1568", results, counts,
+    counts = analysis.analyze_elemental_balance(results)
+    dignity = analysis.calculate_elemental_dignities(results)
+    spatial = analysis.analyze_spatial_vectors(results, "3")
+    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, topo, duals = analysis.analyze_platonic_topology(results)
+    framework, basis = analysis.evaluate_macro_framework(results)
+    prompt = report.build_analytical_prompt("Triad <test>", topic, "Knight of Swords", "1568", results, counts,
                                         dignity, spatial, sdist, sdet, solids, topo, duals, framework,
                                         framework_basis=basis)
-    se.generate_html_output(7, "Triad <test>", topic, prompt)
+    report.generate_html_output(7, "Triad <test>", topic, prompt)
     return prompt, tmp_path / "output" / "ootk_output_7.html"
 
 
@@ -321,7 +317,7 @@ def test_view_output_recognises_sections_by_title_not_number():
     ({}, None),
 ])
 def test_card_sephirothic_rank(card, expected):
-    assert se.card_sephirothic_rank(card) == expected
+    assert analysis.card_sephirothic_rank(card) == expected
 
 
 def test_auto_framework_sees_golden_dawn_cards():
@@ -329,6 +325,6 @@ def test_auto_framework_sees_golden_dawn_cards():
     names = ["Crown", "Wisdom", "Understanding", "Mercy", "Strength",
              "Beauty", "Victory", "Splendour", "Foundation", "Kingdom"]
     cards = [dict(fake_card(f"C{i}"), key_scale=i + 1, path_or_sephira=n) for i, n in enumerate(names)]
-    name, basis = se.evaluate_macro_framework(results_for(*cards))
+    name, basis = analysis.evaluate_macro_framework(results_for(*cards))
     assert name.startswith("1. Divine Light Flow")       # ranks 1..10 in order = descent
     assert "n=10" in basis

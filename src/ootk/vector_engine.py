@@ -1,14 +1,12 @@
+"""Earlier pair-scoring engine driven by config.json's suit weights and elemental matrix.
+
+Not used by the CLI or web GUI; kept until the dignity rules are unified with ootk.analysis.
+Run directly with `python -m ootk.vector_engine`.
+"""
 import json
-import os
-import sys
-from pathlib import Path
 
-# Ensure project root directory is in sys.path for direct script execution
-BASE_DIR = Path(__file__).resolve().parent.parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
-
-from src.prng_shuffler import shuffle_deck
+from ootk import PROJECT_ROOT as BASE_DIR
+from ootk.shuffle import shuffle_deck
 
 def load_config(config_filename="config.json"):
     """Resolves config path dynamically from project root."""

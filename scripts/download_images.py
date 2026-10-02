@@ -1,17 +1,11 @@
 import os
-import sys
 import re
 import urllib.request
-from pathlib import Path
 import psycopg
 from psycopg.rows import dict_row
 
-# Ensure project root is in sys.path
-BASE_DIR = Path(__file__).resolve().parent.parent
-if str(BASE_DIR) not in sys.path:
-    sys.path.insert(0, str(BASE_DIR))
-
-from src.spread_engine import DB_CONFIG
+from ootk import PROJECT_ROOT as BASE_DIR
+from ootk.db import DB_CONFIG
 
 IMAGE_DIR = BASE_DIR / "static" / "images"
 IMAGE_DIR.mkdir(parents=True, exist_ok=True)
