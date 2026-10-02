@@ -15,11 +15,13 @@ from ootk.analysis import (
     analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
     analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
-from ootk.db import DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, save_spread_session
+from ootk.db import (
+    DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_withheld, save_spread_session,
+)
 from ootk.report import build_analytical_prompt
 from ootk.shuffle import draw_spread, resolve_significator
 from ootk.spreads import SPREADS, spread_positions
-from ootk.visual import build_report_view
+from ootk.visual import build_report_view, withheld_view
 
 VALID_MAPPINGS = {"golden_dawn", "french_egyptian"}
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -58,7 +60,8 @@ def cli_command(spread_key, seed, mapping_system, framework, significator, topic
 
 
 def reading_export(session_id, spread_name, settings, significator, framework, framework_basis,
-                   element_counts, spread_results, view, dignity_matrix, spatial_matrix):
+                   element_counts, spread_results, view, dignity_matrix, spatial_matrix,
+                   withheld=None):
     """The whole reading as plain JSON data, for the report's JSON download."""
     reading = {
         "session_id": session_id,
@@ -76,6 +79,7 @@ def reading_export(session_id, spread_name, settings, significator, framework, f
         ],
         "dignities": dignity_matrix,
         "aspects": spatial_matrix,
+        "withheld": [row["title"] for row in withheld["cards"]] if withheld else [],
     }
     # Round-trip through json so dates, decimals and the like become plain strings.
     return json.loads(json.dumps(reading, default=str))
@@ -191,6 +195,8 @@ def generate_report(
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
         solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
         macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
+        withheld = load_withheld(conn, deck if draw_mode == "seed" else fetch_all_cards(conn),
+                                 card_titles, mapping_system)
 
         analytical_prompt = build_analytical_prompt(
             spread_name=selected_spread["name"],
@@ -208,7 +214,8 @@ def generate_report(
             dual_pairings=dual_pairings,
             macro_framework=macro_framework,
             mapping_system=mapping_system,
-            framework_basis=framework_basis
+            framework_basis=framework_basis,
+            withheld=withheld,
         )
 
         source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
@@ -259,9 +266,10 @@ def generate_report(
             "solid_counts": solid_counts,
             "topology_details": topology_details,
             "dual_pairings": dual_pairings,
+            "withheld": withheld_view(withheld),
             "view": view,
             "reading": reading_export(session_id, selected_spread["name"], settings, significator_label,
                                       macro_framework, framework_basis, element_counts, spread_results,
-                                      view, dignity_matrix, spatial_matrix),
+                                      view, dignity_matrix, spatial_matrix, withheld),
         }
     )

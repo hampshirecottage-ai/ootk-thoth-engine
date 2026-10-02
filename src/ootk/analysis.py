@@ -35,6 +35,45 @@ MAJOR_ELEMENTS = {
     "The Universe": "Earth",
 }
 
+# Platonic solids. A card's solid follows the card's own element (the one Section 1 counts
+# and the dignities score), so the two never disagree: pips and courts take their suit's
+# solid, Majors their MAJOR_ELEMENTS element. The six planetary Majors keep the
+# Dodecahedron. Spatial type and cube position stay with the Hebrew letter.
+PLATONIC_SOLIDS = {
+    "Tetrahedron": {"solid_faces": 4, "solid_vertices": 4, "dual_solid": "Tetrahedron (Self-Dual)",
+                    "topological_role": "Primary Ignis Vector (Expansion)"},
+    "Icosahedron": {"solid_faces": 20, "solid_vertices": 12, "dual_solid": "Dodecahedron",
+                    "topological_role": "Receptive Matrix (Fluid Volume)"},
+    "Octahedron": {"solid_faces": 8, "solid_vertices": 6, "dual_solid": "Hexahedron (Cube)",
+                   "topological_role": "Dynamic Axis (Mediating Air)"},
+    "Hexahedron (Cube)": {"solid_faces": 6, "solid_vertices": 8, "dual_solid": "Octahedron",
+                          "topological_role": "Crystallized Vessel (Physical Boundary)"},
+    "Dodecahedron": {"solid_faces": 12, "solid_vertices": 20, "dual_solid": "Icosahedron",
+                     "topological_role": "Planetary Celestial Face"},
+}
+ELEMENT_SOLIDS = {"Fire": "Tetrahedron", "Water": "Icosahedron", "Air": "Octahedron",
+                  "Earth": "Hexahedron (Cube)"}
+PLANETARY_MAJORS = {"The Magus", "The Priestess", "The Empress", "Fortune", "The Tower", "The Sun"}
+
+def card_solid(card_data):
+    """The card's Platonic solid name (see PLATONIC_SOLIDS), or None for an unknown card."""
+    data = card_data or {}
+    if data.get("arcana_type") == "Major" and major_name(data) in PLANETARY_MAJORS:
+        return "Dodecahedron"
+    return ELEMENT_SOLIDS.get(derive_primary_element(data))
+
+def apply_card_solid(card_data):
+    """Sets the platonic fields of a fetched card row from card_solid(). Returns the row."""
+    solid = card_solid(card_data)
+    if solid:
+        card_data["platonic_solid"] = solid
+        card_data.update(PLATONIC_SOLIDS[solid])
+    return card_data
+
+def major_name(card_data):
+    """'XI - Lust' -> 'Lust'."""
+    return str(card_data.get("title") or "").split(" - ", 1)[-1].strip()
+
 def derive_primary_element(card_data):
     """Suit wins; otherwise the first element, zodiac sign or planet word found in the
     attribution, then the title. Whole-word matching, so 'chair' never reads as 'air'."""
@@ -46,7 +85,7 @@ def derive_primary_element(card_data):
             return elem
 
     if card_data.get("arcana_type") == "Major":
-        name = str(card_data.get("title") or "").split(" - ", 1)[-1].strip()
+        name = major_name(card_data)
         if name in MAJOR_ELEMENTS:
             return MAJOR_ELEMENTS[name]
 
@@ -57,16 +96,29 @@ def derive_primary_element(card_data):
                 return lookup[token]
     return "Spirit"
 
+def _closes_ring(layout_key, seg_len):
+    """True when a segment fills a whole ring layout (houses, signs, decans), so its last
+    position sits next to its first."""
+    coords = SPREAD_DEFAULT_COORDINATES.get(layout_key) or ()
+    return layout_key in RING_LAYOUT_ASPECTS and seg_len == len(coords) and seg_len > 2
+
 def calculate_elemental_dignities(spread_results, spread_key=None):
-    """Pairwise dignity between consecutive cards, never across an operation boundary."""
+    """Pairwise dignity between neighbouring cards, never across an operation boundary.
+
+    Neighbours are consecutive positions; on a full ring (houses, signs, decans) the last
+    position also neighbours the first (twelfth house <-> first house), closing the circle.
+    """
     dignity_matrix = []
     if len(spread_results) < 2:
         return dignity_matrix
 
-    for _layout, seg_start, seg_end, seg_name in spread_segments(spread_results, spread_key):
-        for i in range(seg_start, seg_end - 1):
+    for layout, seg_start, seg_end, seg_name in spread_segments(spread_results, spread_key):
+        pairs = [(i, i + 1) for i in range(seg_start, seg_end - 1)]
+        if _closes_ring(layout, seg_end - seg_start):
+            pairs.append((seg_end - 1, seg_start))
+        for i, j in pairs:
             c1 = spread_results[i]
-            c2 = spread_results[i + 1]
+            c2 = spread_results[j]
 
             elem1 = derive_primary_element(c1["card_data"])
             elem2 = derive_primary_element(c2["card_data"])
@@ -78,7 +130,7 @@ def calculate_elemental_dignities(spread_results, spread_key=None):
                 "score": score,
                 "relationship": rel,
                 "from_index": i,
-                "to_index": i + 1,
+                "to_index": j,
                 "segment_name": seg_name,
             })
 
@@ -167,6 +219,12 @@ def analyze_spatial_vectors(spread_results, spread_key):
                         continue
                     short, name, desc, modifier = hit
                     (xa, ya), (xb, yb) = coords[a], coords[b]
+                    # The aspect is fixed by the two positions; the cards in them are what
+                    # changes between readings, so each pair also carries their dignity.
+                    card_a = spread_results[seg_start + a]["card_data"]
+                    card_b = spread_results[seg_start + b]["card_data"]
+                    card_score, card_rel = element_dignity(derive_primary_element(card_a),
+                                                           derive_primary_element(card_b))
                     found.append((
                         [r[0] for r in RING_ASPECTS].index(short), a, b,
                         {
@@ -179,6 +237,8 @@ def analyze_spatial_vectors(spread_results, spread_key):
                             "segment_name": seg_name,
                             "pair_mode": "aspect",
                             "aspect_name": short,
+                            "card_score": card_score,
+                            "card_relationship": card_rel,
                             "from_index": seg_start + a,
                             "to_index": seg_start + b,
                         },
@@ -304,7 +364,7 @@ def analyze_platonic_topology(spread_results):
         if (s1 == "Hexahedron (Cube)" and s2 == "Octahedron") or (s1 == "Octahedron" and s2 == "Hexahedron (Cube)"):
             dual_pairings.append(f"Positions {p1} & {p2}: Earth/Air Inversion Dual (Cube <-> Octahedron)")
         elif (s1 == "Dodecahedron" and s2 == "Icosahedron") or (s1 == "Icosahedron" and s2 == "Dodecahedron"):
-            dual_pairings.append(f"Positions {p1} & {p2}: Spirit/Water Inversion Dual (Dodecahedron <-> Icosahedron)")
+            dual_pairings.append(f"Positions {p1} & {p2}: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)")
         elif s1 == "Tetrahedron" and s2 == "Tetrahedron":
             dual_pairings.append(f"Positions {p1} & {p2}: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)")
 
@@ -403,7 +463,8 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
     r = sxy / math.sqrt(sxx * syy) if sxx > 0 and syy > 0 else 0.0
     z = r * math.sqrt(n)
-    stats = f"r={r:+.2f}, z={z:+.2f} (needs |z| >= {FRAMEWORK_TREND_Z}), n={n}"
+    stats = (f"r={r:+.2f}, z={z:+.2f} (needs |z| >= {FRAMEWORK_TREND_Z}), n={n} cards with a "
+             f"place on the Tree (Majors and pips; courts have none)")
 
     if z >= FRAMEWORK_TREND_Z:
         return ("1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)",
@@ -412,6 +473,29 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
         return ("4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)",
                 f"auto: rank falls toward Kether across the draw - {stats}")
     return default_name, f"auto: no significant Sephirothic trend, default lens - {stats}"
+
+# A draw that leaves out only a few cards is defined as much by those cards as by the ones
+# drawn: dealing 75 of 78 forces the element counts to the deck's totals minus the three left
+# out. The report lists the withheld cards when there are at most this many.
+WITHHELD_MAX = 12
+
+def withheld_summary(deck_rows, drawn_titles):
+    """The deck's cards that were not drawn, or None when more than WITHHELD_MAX were left out.
+
+    `deck_rows` are correspondence rows for the whole deck. Returns {"cards": [rows in deck
+    order], "elements": withheld count per element, "deck_elements": whole-deck count per
+    element}.
+    """
+    drawn = set(drawn_titles)
+    left_out = [row for row in deck_rows if row["title"] not in drawn]
+    if not left_out or len(left_out) > WITHHELD_MAX:
+        return None
+    def tally(rows):
+        counts = {"Fire": 0, "Water": 0, "Air": 0, "Earth": 0, "Spirit": 0}
+        for row in rows:
+            counts[derive_primary_element(row)] += 1
+        return counts
+    return {"cards": left_out, "elements": tally(left_out), "deck_elements": tally(deck_rows)}
 
 def card_is_dignified(index, dignity_matrix):
     """A card is dignified when the pairwise scores touching it sum to >= 0.

@@ -200,6 +200,19 @@
         <p class="muted" style="font-size:0.85em; margin:6px 0 0">Spirit as a secondary quality on {{ S.spirit_secondary | length }}: {% for p, t in S.spirit_secondary %}Pos {{ p }} ({{ t }}){{ ', ' if not loop.last }}{% endfor %}</p>
         {% endif %}
 
+        {% if withheld %}
+        <h3>Withheld <span class="muted" style="font-weight:normal; font-size:0.8em">({{ withheld.cards | length }} not drawn)</span></h3>
+        <div class="keycards">
+            {% for c in withheld.cards %}
+            <div class="keycard">
+                {% if c.image %}<img src="{{ c.image }}" alt="{{ c.title }}">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                <div><strong>{{ c.title }}</strong><div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{% if c.attribution %} · {{ c.attribution }}{% endif %}{% if c.solid %} · {{ c.solid }}{% endif %}</div></div>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="muted" style="font-size:0.85em; margin:6px 0 0">{{ withheld.note }}</p>
+        {% endif %}
+
         <div class="tiles">
             <div class="tile">
                 <div class="label">Elemental dignities</div>
@@ -356,11 +369,13 @@
             {% if seg.aspects %}
             <details class="sub">
                 <summary>Aspects (<span data-count-for="{{ seg.id }}">{{ seg.aspects | length }}</span>)</summary>
+                {% set with_cards = seg.aspects[0].cards_text %}
+                {% if with_cards %}<p class="muted" style="font-size:0.85em">The aspect between two positions is fixed by the wheel and is the same in every reading; the Cards column (the dignity of the two cards drawn there) is this reading's.</p>{% endif %}
                 <div class="table-wrap"><table>
-                    <thead><tr><th>Aspect</th><th>Score</th><th>Pair</th></tr></thead>
+                    <thead><tr><th>Aspect</th><th>Score</th><th>Pair</th>{% if with_cards %}<th>Cards</th>{% endif %}</tr></thead>
                     <tbody>
                     {% for a in seg.aspects %}
-                    <tr class="aspect-row" data-aspect-type="{{ a.type }}" data-strong="{{ 1 if a.strong else 0 }}" data-search="{{ a.pair | lower }}"><td><i class="dot" style="background:{{ a.color }}"></i>{{ a.label }}</td><td>{{ signed(a.score) }}</td><td>{{ a.pair }}</td></tr>
+                    <tr class="aspect-row" data-aspect-type="{{ a.type }}" data-strong="{{ 1 if a.strong else 0 }}" data-search="{{ a.pair | lower }}"><td><i class="dot" style="background:{{ a.color }}"></i>{{ a.label }}</td><td>{{ signed(a.score) }}</td><td>{{ a.pair }}</td>{% if with_cards %}<td>{{ a.cards_text }}</td>{% endif %}</tr>
                     {% endfor %}
                     </tbody>
                 </table></div>

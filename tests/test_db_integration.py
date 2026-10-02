@@ -118,3 +118,60 @@ def test_batched_lookup_matches_single_lookups(conn):
             assert batch[t] == db.fetch_card_correspondences(conn, t, system=system)
     ordered = db.load_cards_data(conn, [titles[5], titles[0], titles[5]], "golden_dawn")
     assert [r["title"] for r in ordered] == [titles[5], titles[0], titles[5]]
+
+
+# ---------- reading accuracy ----------
+
+@pytest.mark.parametrize("title,attribution,element,solid", [
+    ("IV - The Emperor", "Aries", "Fire", "Tetrahedron"),       # Thoth: on Tzaddi, still Aries
+    ("XVII - The Star", "Aquarius", "Air", "Octahedron"),       # Thoth: on Heh, still Aquarius
+    ("XI - Lust", "Leo", "Fire", "Tetrahedron"),
+    ("XIII - Death", "Scorpio", "Water", "Icosahedron"),
+])
+def test_trump_attribution_element_and_solid_come_from_the_card(conn, title, attribution, element, solid):
+    card = fetch(conn, title, "golden_dawn")
+    assert card["attribution"] == attribution
+    assert analysis.derive_primary_element(card) == element
+    assert card["platonic_solid"] == solid
+
+
+def test_emperor_keeps_its_letters_cube_edge(conn):
+    emperor = fetch(conn, "IV - The Emperor", "golden_dawn")
+    assert "Tzaddi" in emperor["hebrew_letter"] and emperor["spatial_dimension"] == "Upper-South Edge"
+
+
+@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+def test_every_solid_agrees_with_the_element_count(conn, system):
+    for title in [c["title"] for c in db.fetch_all_cards(conn)]:
+        card = fetch(conn, title, system)
+        solid = card["platonic_solid"]
+        if card["arcana_type"] == "Major" and analysis.major_name(card) in analysis.PLANETARY_MAJORS:
+            assert solid == "Dodecahedron", title
+        else:
+            assert solid == analysis.ELEMENT_SOLIDS[analysis.derive_primary_element(card)], title
+
+
+def test_every_major_has_a_card_attribution(conn):
+    for title in majors(conn):
+        card = fetch(conn, title, "golden_dawn")
+        assert card["card_attribution"] and " - " not in card["attribution"], title
+
+
+def test_universe_path_is_the_cross(conn):
+    assert fetch(conn, "XXI - The Universe", "golden_dawn")["path_or_sephira"] == "Cross"
+
+
+def test_decan_labels_match_the_pip_attributions(conn):
+    from ootk.spreads import SPREADS
+    for label in SPREADS["11"]["positions"]:
+        decan, pip = re.fullmatch(r"Decan \d+: (.+) \((.+)\)", label).groups()
+        card = next(c for c in db.fetch_all_cards(conn) if c["title"].startswith(pip + " - "))
+        assert fetch(conn, card["title"], "golden_dawn")["attribution"] == decan, label
+
+
+def test_withheld_lists_the_cards_left_out(conn):
+    deck = db.fetch_all_cards(conn)
+    drawn = [c["title"] for c in deck][3:]
+    w = db.load_withheld(conn, deck, drawn)
+    assert [r["title"] for r in w["cards"]] == [c["title"] for c in deck[:3]]
+    assert w["deck_elements"] == {"Fire": 21, "Water": 19, "Air": 19, "Earth": 19, "Spirit": 0}
