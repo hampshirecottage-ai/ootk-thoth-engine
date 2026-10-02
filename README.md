@@ -178,6 +178,15 @@ python scripts/db_inspect.py joins --card-id 1  # one card with all joined corre
 python -m pytest -v
 ```
 
+The default suite mocks the database. To also run the real SQL against a database built from `schema.sql`:
+
+```bash
+createdb ootk_test && psql -d ootk_test -f database/schema.sql
+OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -v
+```
+
+Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
+
 ---
 
 ## Database model

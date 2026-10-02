@@ -230,10 +230,11 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
     """Looks up one card's correspondences.
 
     GD data (spatial, platonic, colours, GD letter) joins on the card's key_scale.
-    French/Egyptian data joins separately (alias cf) because the French table is indexed
-    by French card number (0-21 for Majors), not by the Golden Dawn path number. Majors use
-    thoth_cards.french_number; Minors share their number with key_scale (1-10); Courts have
-    no French row and fall back to GD values.
+    French/Egyptian data joins separately (alias cf) because the French columns are indexed
+    by French card number (0-21), not by the Golden Dawn path number, and only describe the
+    Majors. Majors join on thoth_cards.french_number. Minors and Courts get no French row and
+    keep their GD values: rows 1-10 hold French *Major* data, so joining a Minor on its
+    key_scale would hand e.g. the 9 of Cups the Hermit's path.
     """
     query = """
     SELECT
@@ -264,10 +265,7 @@ def fetch_card_correspondences(conn, title, system="golden_dawn"):
         c.topological_role
     FROM thoth_cards tc
     LEFT JOIN correspondences c  ON c.key_scale = tc.key_scale
-    LEFT JOIN correspondences cf ON cf.key_scale = CASE
-            WHEN tc.arcana_type = 'Major' THEN tc.french_number
-            WHEN tc.arcana_type = 'Minor' THEN tc.key_scale
-        END
+    LEFT JOIN correspondences cf ON tc.arcana_type = 'Major' AND cf.key_scale = tc.french_number
     WHERE tc.title = %(title)s;
     """
     with conn.cursor() as cur:
@@ -636,15 +634,37 @@ SEPHIROTH_RANKS = {
     "tiphareth": 6, "netzach": 7, "hod": 8, "yesod": 9, "malkuth": 10,
 }
 
-def card_sephirothic_rank(card_data):
-    """Mean Sephirothic rank of a card's path/Sephira text, or None if it names none.
+# Golden Dawn Tree of Life: path number (key_scale 11-32) -> the two Sephiroth it joins.
+GD_PATH_ENDPOINTS = {
+    11: (1, 2), 12: (1, 3), 13: (1, 6), 14: (2, 3), 15: (2, 6), 16: (2, 4),
+    17: (3, 6), 18: (3, 5), 19: (4, 5), 20: (4, 6), 21: (4, 7), 22: (5, 6),
+    23: (5, 8), 24: (6, 7), 25: (6, 9), 26: (6, 8), 27: (7, 8), 28: (7, 9),
+    29: (7, 10), 30: (8, 9), 31: (8, 10), 32: (9, 10),
+}
 
-    'Path 19 (Chesed-Tiphareth)' -> 5.0. Uses whole-word matches, so unrelated text can't
-    trigger a match, and averaging makes the result independent of the order the names appear in.
+def card_sephirothic_rank(card_data):
+    """Mean Sephirothic rank of a card, or None if it has no place on the Tree.
+
+    Named Sephiroth in the path/Sephira text win: 'Path 19 (Chesed-Tiphareth)' -> 5.0
+    (whole-word matches, averaged so name order doesn't matter). That covers the French
+    rows. Golden Dawn rows name a Sephira or path only in English ('Wisdom', 'Ox'), so
+    Majors and Minors otherwise fall back to their key_scale: 1-10 is the Sephira itself,
+    11-32 is the mean of the path's two endpoints. Courts have no Sephira or path of
+    their own, so they get None.
     """
-    text = str((card_data or {}).get("path_or_sephira") or "").lower()
+    data = card_data or {}
+    text = str(data.get("path_or_sephira") or "").lower()
     ranks = [SEPHIROTH_RANKS[w] for w in re.findall(r"[a-z]+", text) if w in SEPHIROTH_RANKS]
-    return sum(ranks) / len(ranks) if ranks else None
+    if ranks:
+        return sum(ranks) / len(ranks)
+    if data.get("arcana_type") not in ("Major", "Minor"):
+        return None
+    key = data.get("key_scale")
+    if isinstance(key, int) and 1 <= key <= 10:
+        return float(key)
+    if key in GD_PATH_ENDPOINTS:
+        return sum(GD_PATH_ENDPOINTS[key]) / 2
+    return None
 
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
     """Returns (framework_name, basis). 'basis' says why, so the label is never opaque.
