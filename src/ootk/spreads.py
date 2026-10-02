@@ -94,6 +94,14 @@ SPREADS = {
     }
 }
 
+def spread_positions(spread_key):
+    """Ordered position labels for a spread; a master pipeline's are tagged '[Op n] '."""
+    spread = SPREADS[spread_key]
+    if "operations" in spread:
+        return [f"[Op {n}] {p}" for n, op_key in enumerate(spread["operations"], start=1)
+                for p in SPREADS[op_key]["positions"]]
+    return list(spread.get("positions", []))
+
 def _ring(n, start_deg=0.0, step_deg=None):
     """n points on the unit circle, counter-clockwise from start_deg."""
     step = step_deg if step_deg is not None else 360.0 / n

@@ -2,138 +2,326 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OOTK Thoth Graphic GUI</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
-        h1, h2 { color: #bb86fc; margin-top: 0; }
-        .container { display: flex; gap: 20px; }
-        .deck-panel { flex: 1.2; max-height: 88vh; overflow-y: auto; background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; }
-        .spread-panel { flex: 0.8; background: #1e1e1e; padding: 15px; border-radius: 8px; border: 1px solid #333; }
-        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-top: 15px; }
-        .card-item { background: #2a2a2a; border: 1px solid #444; border-radius: 6px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
-        .card-item:hover { background: #382b47; border-color: #bb86fc; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(187, 134, 252, 0.2); }
-        .card-item img { width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 6px; background: #121212; }
-        .card-title { font-size: 0.8em; font-weight: 600; color: #e0e0e0; line-height: 1.2; }
-        .slot { background: #252525; border: 2px dashed #03dac6; border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .slot span.pos-name { font-weight: bold; color: #03dac6; font-size: 0.9em; }
-        .slot span.card-selected { color: #fff; font-weight: bold; background: #333; padding: 4px 10px; border-radius: 4px; border: 1px solid #555; font-size: 0.85em; }
-        button.btn-submit { background: #bb86fc; color: #000; font-size: 1.05em; font-weight: bold; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 15px; }
-        button.btn-submit:hover { background: #03dac6; }
-        input, select { width: 100%; padding: 8px 12px; margin-bottom: 12px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        :root { --bg: #121212; --panel: #1e1e1e; --panel-2: #2a2a2a; --line: #333; --text: #e0e0e0; --muted: #9a9a9a; --accent: #bb86fc; --accent-2: #03dac6; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        h1, h2 { color: var(--accent); margin-top: 0; }
+        h2 { font-size: 1.15em; }
+        .container { display: grid; grid-template-columns: minmax(280px, 340px) minmax(260px, 1fr) minmax(300px, 1.3fr); gap: 20px; align-items: start; }
+        .panel { background: var(--panel); padding: 16px; border-radius: 8px; border: 1px solid var(--line); }
+        .settings { position: sticky; top: 20px; }
+        .deck-panel { max-height: 88vh; overflow-y: auto; }
+        .deck-panel.disabled .card-grid { opacity: 0.35; pointer-events: none; }
+        label { display: block; font-size: 0.8em; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+        input, select { width: 100%; padding: 8px 10px; margin-bottom: 12px; background: var(--panel-2); border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.95em; }
+        .row { display: flex; gap: 6px; }
+        .row > input, .row > select { flex: 1; }
+        .row button { margin-bottom: 12px; }
+        .seg { display: flex; border: 1px solid #444; border-radius: 6px; overflow: hidden; margin-bottom: 12px; }
+        .seg label { flex: 1; margin: 0; text-align: center; padding: 8px 4px; cursor: pointer; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 0.9em; background: var(--panel-2); }
+        .seg input { display: none; }
+        .seg input:checked + span { color: #000; }
+        .seg label:has(input:checked) { background: var(--accent); color: #000; font-weight: 600; }
+        .hint { font-size: 0.78em; color: var(--muted); margin: -8px 0 12px; }
+        button { font: inherit; }
+        .btn-small { background: var(--panel-2); color: var(--text); border: 1px solid #444; padding: 6px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+        .btn-small:hover { border-color: var(--accent); }
+        button.btn-submit { background: var(--accent); color: #000; font-size: 1.05em; font-weight: bold; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 4px; }
+        button.btn-submit:hover { background: var(--accent-2); }
+        fieldset { border: none; border-top: 1px solid var(--line); margin: 6px 0 0; padding: 12px 0 0; }
+        legend { color: var(--accent-2); font-weight: 600; font-size: 0.85em; padding-right: 6px; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 12px; }
+        .card-item { background: var(--panel-2); border: 1px solid #444; border-radius: 6px; padding: 6px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+        .card-item:hover { background: #382b47; border-color: var(--accent); transform: translateY(-3px); }
+        .card-item.used { opacity: 0.3; }
+        .card-item img { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 6px; background: #121212; }
+        .card-title { font-size: 0.75em; font-weight: 600; line-height: 1.2; }
+        .slots { max-height: 60vh; overflow-y: auto; }
+        .slot { background: #252525; border: 2px dashed var(--accent-2); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.85em; }
+        .slot .pos-name { font-weight: bold; color: var(--accent-2); }
+        .slot .card-selected { color: #fff; background: #333; padding: 3px 8px; border-radius: 4px; border: 1px solid #555; white-space: nowrap; }
+        .seed-note { background: #252525; border-left: 3px solid var(--accent-2); padding: 12px 14px; border-radius: 4px; font-size: 0.92em; line-height: 1.5; }
+        .count { color: var(--muted); font-size: 0.85em; }
+        @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .settings { position: static; } .deck-panel { max-height: none; } }
     </style>
 </head>
 <body>
+    <h1>OOTK Thoth Deck</h1>
 
-    <h1>OOTK Thoth Deck — Visual Card Selector</h1>
+    <form action="/generate_report" method="POST" id="readingForm" class="container">
+        <!-- SETTINGS: everything that shapes a reading, in one place -->
+        <section class="panel settings" aria-label="Settings">
+            <h2>Settings</h2>
 
-    <div class="container">
-        <!-- LEFT: Deck Selector -->
-        <div class="deck-panel">
-            <h2>Card Catalog</h2>
-            <input type="text" id="search" placeholder="Search cards by name or element..." onkeyup="filterCards()">
-            
-            <div class="card-grid" id="cardGrid">
-                {% for card in cards %}
-                {% set slug = card.title.lower().replace(' ', '-').replace("'", '') %}
-                <div class="card-item" onclick="selectCard('{{ card.title }}')">
-                    <img src="/static/images/{{ slug }}.jpg" 
-                            alt="{{ card.title }}" 
-                            onerror="this.onerror=null; this.src='https://placehold.co/200x320/1e1e1e/bb86fc?text={{ card.title | replace(' ', '+') }}';">
-                    <div class="card-title">{{ card.title }}</div>
-                </div>
-                {% endfor %}
+            <label for="presetSelect">Preset</label>
+            <div class="row">
+                <select id="presetSelect"></select>
+                <button type="button" class="btn-small" id="savePreset" title="Save the current settings as a preset">Save</button>
+                <button type="button" class="btn-small" id="deletePreset" title="Delete the selected preset">Delete</button>
             </div>
-        </div>
 
-        <!-- RIGHT: Active Spread Board -->
-        <div class="spread-panel">
-            <h2>Spread Board</h2>
-            <form action="/generate_report" method="POST">
-                <label>Operation / Spread:</label>
-                <select name="spread_key" id="spreadSelect" onchange="updateSlots()">
-                    {% for key, spread in spreads.items() %}
-                    <option value="{{ key }}">{{ spread.name }}</option>
-                    {% endfor %}
+            <label for="spreadSelect">Operation / Spread</label>
+            <select name="spread_key" id="spreadSelect">
+                {% for key, spread in spreads.items() %}
+                <option value="{{ key }}">{{ key }}. {{ spread.name }} ({{ positions[key] | length }})</option>
+                {% endfor %}
+            </select>
+
+            <label>Cards</label>
+            <div class="seg" role="radiogroup">
+                <label><input type="radio" name="draw_mode" value="seed" checked><span>Draw from seed</span></label>
+                <label><input type="radio" name="draw_mode" value="manual"><span>Pick by hand</span></label>
+            </div>
+
+            <div id="seedRow">
+                <label for="seedInput">Seed</label>
+                <div class="row">
+                    <input type="text" name="seed" id="seedInput" placeholder="blank = new seed" autocomplete="off">
+                    <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
+                </div>
+                <p class="hint">The seed is shown on the report. The same seed and settings always draw the same cards, here or with <code>ootk --seed</code>.</p>
+            </div>
+
+            <label for="significatorInput">Significator</label>
+            <input type="text" name="significator" id="significatorInput" value="Knight of Swords" list="cardTitles">
+            <datalist id="cardTitles">{% for card in cards %}<option value="{{ card.title }}">{% endfor %}</datalist>
+
+            <fieldset>
+                <legend>Interpretation</legend>
+                <label for="mappingSelect">Mapping system</label>
+                <select name="mapping_system" id="mappingSelect">
+                    <option value="golden_dawn">Golden Dawn / English (Liber 777)</option>
+                    <option value="french_egyptian">French / Egyptian (Lévi / Papus / Wirth)</option>
                 </select>
 
-                <label>Tarot-Kabbalah Mapping Scheme:</label>
-                <select name="mapping_system">
-                    <option value="golden_dawn">Golden Dawn / English System (Liber 777)</option>
-                    <option value="french_egyptian">French / Egyptian System (Lévi / Papus / Wirth)</option>
-                </select>
-
-                <label>Macro Conceptual Framework:</label>
-                <select name="framework">
-                    <option value="auto">Auto-Detect Framework from Draw</option>
+                <label for="frameworkSelect">Framework</label>
+                <select name="framework" id="frameworkSelect">
+                    <option value="auto">Auto-detect from the draw</option>
                     <option value="light_descent">1. Divine Light Flow (Aleph -> Tav)</option>
                     <option value="soul_formation">2. Pre-Incarnation Soul Formation</option>
                     <option value="life_path">3. Incarnational Life Path & Evolution</option>
                     <option value="post_mortem">4. Post-Mortem Return (Book of the Dead)</option>
                 </select>
+            </fieldset>
 
-                <label>Query Topic:</label>
-                <input type="text" name="topic" placeholder="Operational Topic / Intent">
+            <fieldset>
+                <legend>Output</legend>
+                <div class="seg" role="radiogroup">
+                    <label><input type="radio" name="output_format" value="visual" checked><span>Visual report</span></label>
+                    <label><input type="radio" name="output_format" value="markdown"><span>Markdown file</span></label>
+                </div>
+            </fieldset>
 
-                <label>Significator:</label>
-                <input type="text" name="significator" value="Knight of Swords">
+            <label for="topicInput">Query topic</label>
+            <input type="text" name="topic" id="topicInput" placeholder="Operational topic / intent">
 
-                <div id="spreadSlots"></div>
+            <input type="hidden" name="selected_cards" id="selectedCardsInput">
+            <button type="submit" class="btn-submit">Generate reading</button>
+        </section>
 
-                <input type="hidden" name="selected_cards" id="selectedCardsInput">
-                <button type="submit" class="btn-submit">Generate Hermetic Synthesis Report</button>
-            </form>
-        </div>
-    </div>
+        <!-- SPREAD BOARD -->
+        <section class="panel" aria-label="Spread board">
+            <h2>Spread Board <span class="count" id="slotCount"></span></h2>
+            <div id="seedNote" class="seed-note"></div>
+            <div id="manualBoard">
+                <div class="row">
+                    <button type="button" class="btn-small" id="undoCard">Undo last</button>
+                    <button type="button" class="btn-small" id="clearCards">Clear</button>
+                </div>
+                <div class="slots" id="spreadSlots"></div>
+            </div>
+        </section>
+
+        <!-- CARD CATALOG -->
+        <section class="panel deck-panel" id="deckPanel" aria-label="Card catalog">
+            <h2>Card Catalog</h2>
+            <input type="text" id="search" placeholder="Search cards by name...">
+            <div class="card-grid" id="cardGrid">
+                {% for card in cards %}
+                {% set slug = card.title.lower().replace(' ', '-').replace("'", '') %}
+                <div class="card-item" data-title="{{ card.title }}">
+                    <img src="/static/images/{{ slug }}.jpg" alt="{{ card.title }}" loading="lazy"
+                         onerror="this.onerror=null; this.src='https://placehold.co/200x320/1e1e1e/bb86fc?text={{ card.title | replace(' ', '+') }}';">
+                    <div class="card-title">{{ card.title }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </form>
 
     <script>
         const spreadsData = {{ spreads | tojson }};
+        const positionsData = {{ positions | tojson }};
+        const form = document.getElementById("readingForm");
         let activeCardList = [];
 
+        // ---------- presets & remembered settings (per browser) ----------
+        const SETTING_FIELDS = ["spread_key", "draw_mode", "seed", "significator", "mapping_system", "framework", "output_format"];
+        const BUILTIN_PRESETS = {
+            "Full OOTK · Golden Dawn": { spread_key: "12", draw_mode: "seed", seed: "", mapping_system: "golden_dawn", framework: "auto", output_format: "visual" },
+            "Full OOTK · French/Egyptian": { spread_key: "12", draw_mode: "seed", seed: "", mapping_system: "french_egyptian", framework: "auto", output_format: "visual" },
+            "Daily card": { spread_key: "1", draw_mode: "seed", seed: "", mapping_system: "golden_dawn", framework: "auto", output_format: "visual" },
+        };
+        const PRESET_KEY = "ootk.presets.v1", LAST_KEY = "ootk.lastSettings.v1";
+
+        function readStore(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch (e) { return fallback; }
+        }
+        function writeStore(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (e) { return false; }
+        }
+
+        function getSettings() {
+            const fd = new FormData(form), out = {};
+            SETTING_FIELDS.forEach(f => out[f] = fd.get(f) || "");
+            return out;
+        }
+        function applySettings(s) {
+            SETTING_FIELDS.forEach(f => {
+                if (!(f in s)) return;
+                const els = form.elements[f];
+                if (els instanceof RadioNodeList) {
+                    els.forEach(r => r.checked = r.value === s[f]);
+                } else if (els) {
+                    els.value = s[f];
+                }
+            });
+            updateMode();
+            updateSlots();
+        }
+
+        function renderPresets(selected) {
+            const sel = document.getElementById("presetSelect");
+            const user = readStore(PRESET_KEY, {});
+            sel.innerHTML = '<option value="">Choose a preset…</option>';
+            const add = (group, names, prefix) => {
+                if (!names.length) return;
+                const og = document.createElement("optgroup"); og.label = group;
+                names.forEach(n => { const o = document.createElement("option"); o.value = prefix + n; o.textContent = n; og.appendChild(o); });
+                sel.appendChild(og);
+            };
+            add("Built in", Object.keys(BUILTIN_PRESETS), "b:");
+            add("Saved", Object.keys(user).sort(), "u:");
+            sel.value = selected || "";
+            document.getElementById("deletePreset").disabled = !sel.value.startsWith("u:");
+        }
+
+        document.getElementById("presetSelect").addEventListener("change", e => {
+            const v = e.target.value;
+            if (!v) return;
+            const preset = v.startsWith("b:") ? BUILTIN_PRESETS[v.slice(2)] : readStore(PRESET_KEY, {})[v.slice(2)];
+            if (preset) applySettings(preset);
+            document.getElementById("deletePreset").disabled = !v.startsWith("u:");
+        });
+        document.getElementById("savePreset").addEventListener("click", () => {
+            const name = (prompt("Name this preset (a blank seed draws a new one each time):") || "").trim();
+            if (!name) return;
+            const user = readStore(PRESET_KEY, {});
+            user[name] = getSettings();
+            if (!writeStore(PRESET_KEY, user)) { alert("This browser is not letting the page save presets."); return; }
+            renderPresets("u:" + name);
+        });
+        document.getElementById("deletePreset").addEventListener("click", () => {
+            const v = document.getElementById("presetSelect").value;
+            if (!v.startsWith("u:")) return;
+            const user = readStore(PRESET_KEY, {});
+            delete user[v.slice(2)];
+            writeStore(PRESET_KEY, user);
+            renderPresets("");
+        });
+
+        // ---------- draw mode ----------
+        function drawMode() { return form.elements["draw_mode"].value; }
+
+        function updateMode() {
+            const seedMode = drawMode() === "seed";
+            document.getElementById("seedRow").style.display = seedMode ? "" : "none";
+            document.getElementById("manualBoard").style.display = seedMode ? "none" : "";
+            document.getElementById("seedNote").style.display = seedMode ? "" : "none";
+            document.getElementById("deckPanel").classList.toggle("disabled", seedMode);
+            updateSeedNote();
+        }
+        function updateSeedNote() {
+            const key = document.getElementById("spreadSelect").value;
+            const seed = document.getElementById("seedInput").value.trim();
+            const n = positionsData[key].length;
+            document.getElementById("seedNote").innerHTML = seed
+                ? `${n} card${n === 1 ? "" : "s"} will be drawn from seed <strong>${seed.replace(/</g, "&lt;")}</strong>. The same seed and settings always give the same reading.`
+                : `${n} card${n === 1 ? "" : "s"} will be drawn from a new seed. The report shows the seed so you can repeat the reading.`;
+        }
+
+        form.querySelectorAll('input[name="draw_mode"]').forEach(r => r.addEventListener("change", updateMode));
+        document.getElementById("seedInput").addEventListener("input", updateSeedNote);
+        document.getElementById("randomSeed").addEventListener("click", () => {
+            document.getElementById("seedInput").value = String(100000 + Math.floor(Math.random() * 900000));
+            updateSeedNote();
+        });
+
+        // ---------- manual board ----------
         function updateSlots() {
             const key = document.getElementById("spreadSelect").value;
-            const spread = spreadsData[key];
+            const positions = positionsData[key];
             const slotsContainer = document.getElementById("spreadSlots");
             slotsContainer.innerHTML = "";
-            activeCardList = [];
-
-            const positions = spread.positions || ["Core Focus"];
+            activeCardList = activeCardList.slice(0, positions.length);
             positions.forEach((pos, idx) => {
                 const div = document.createElement("div");
                 div.className = "slot";
-                div.innerHTML = `<span class="pos-name">${pos}</span><span class="card-selected" id="slot-${idx}">[ Empty ]</span>`;
+                const name = document.createElement("span"); name.className = "pos-name"; name.textContent = pos;
+                const card = document.createElement("span"); card.className = "card-selected"; card.id = `slot-${idx}`;
+                card.textContent = activeCardList[idx] || "[ Empty ]";
+                div.append(name, card);
                 slotsContainer.appendChild(div);
             });
             syncHiddenInput();
+            updateSeedNote();
         }
 
         function selectCard(cardTitle) {
-            const key = document.getElementById("spreadSelect").value;
-            const spread = spreadsData[key];
-            const positions = spread.positions || ["Core Focus"];
-
-            if (activeCardList.length < positions.length) {
-                const targetIdx = activeCardList.length;
-                activeCardList.push(cardTitle);
-                document.getElementById(`slot-${targetIdx}`).innerText = cardTitle;
-                syncHiddenInput();
-            } else {
-                alert("All spread slots are currently filled!");
-            }
+            if (drawMode() !== "manual") return;
+            const positions = positionsData[document.getElementById("spreadSelect").value];
+            if (activeCardList.includes(cardTitle)) return;
+            if (activeCardList.length >= positions.length) { alert("All spread slots are filled."); return; }
+            activeCardList.push(cardTitle);
+            updateSlots();
         }
 
         function syncHiddenInput() {
+            const positions = positionsData[document.getElementById("spreadSelect").value];
             document.getElementById("selectedCardsInput").value = activeCardList.join(",");
+            document.getElementById("slotCount").textContent = drawMode() === "manual"
+                ? `${activeCardList.length} / ${positions.length}` : `${positions.length} card${positions.length === 1 ? "" : "s"}`;
+            document.querySelectorAll(".card-item").forEach(el => el.classList.toggle("used", activeCardList.includes(el.dataset.title)));
         }
 
-        function filterCards() {
+        document.getElementById("cardGrid").addEventListener("click", e => {
+            const item = e.target.closest(".card-item");
+            if (item) selectCard(item.dataset.title);
+        });
+        document.getElementById("undoCard").addEventListener("click", () => { activeCardList.pop(); updateSlots(); });
+        document.getElementById("clearCards").addEventListener("click", () => { activeCardList = []; updateSlots(); });
+        document.getElementById("spreadSelect").addEventListener("change", updateSlots);
+        document.getElementById("search").addEventListener("input", () => {
             const query = document.getElementById("search").value.toLowerCase();
-            const items = document.querySelectorAll(".card-item");
-            items.forEach(item => {
-                item.style.display = item.innerText.toLowerCase().includes(query) ? "flex" : "none";
+            document.querySelectorAll(".card-item").forEach(item => {
+                item.style.display = item.dataset.title.toLowerCase().includes(query) ? "flex" : "none";
             });
-        }
+        });
 
-        updateSlots();
+        form.addEventListener("submit", e => {
+            if (drawMode() === "manual") {
+                const n = positionsData[document.getElementById("spreadSelect").value].length;
+                if (activeCardList.length !== n) { e.preventDefault(); alert(`Pick ${n} cards first (${activeCardList.length} chosen).`); return; }
+            }
+            // Remember settings for next time, but not the seed: a new visit draws fresh cards.
+            writeStore(LAST_KEY, Object.assign(getSettings(), { seed: "" }));
+        });
+
+        renderPresets("");
+        applySettings(readStore(LAST_KEY, {}));
     </script>
 </body>
 </html>

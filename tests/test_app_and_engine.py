@@ -125,7 +125,7 @@ def test_gui_dignities_stay_inside_each_operation(client):
 
 def test_every_spread_position_count_matches(client):
     for key, spread in spreads.SPREADS.items():
-        n = len(app_module.resolve_positions(spread))
+        n = len(spreads.spread_positions(key))
         cards = ",".join(f"Card {i}" for i in range(n))
         assert post(client, spread_key=key, selected_cards=cards).status_code == 200, key
 
@@ -185,9 +185,25 @@ def test_seed_required():
 
 
 def test_all_entry_points_use_the_single_shuffler():
-    """The CLI must use ootk.shuffle.shuffle_deck, not its own."""
+    """The CLI and the web GUI must draw with ootk.shuffle.draw_spread, not their own."""
     from ootk import cli
-    assert cli.shuffle_deck is shuffle.shuffle_deck
+    assert cli.draw_spread is shuffle.draw_spread
+    assert app_module.draw_spread is shuffle.draw_spread
+
+
+def test_draw_spread_pins_significator_and_keeps_seed_order():
+    deck = [{"card_id": i, "title": f"C{i}"} for i in range(78)]
+    sig = deck[10]
+    positions = spreads.spread_positions("12")
+    titles, pinned = shuffle.draw_spread(deck, "1568", positions, sig)
+    assert pinned and titles[0] == "C10"
+    assert len(titles) == 75 and len(set(titles)) == 75          # no card drawn twice
+    rest = [c["title"] for c in shuffle.shuffle_deck(deck, "1568") if c["card_id"] != 10]
+    assert titles[1:] == rest[:74]                                # same order the CLI always drew
+    # No significator position: nothing is pinned and the shuffled deck is dealt from the top.
+    titles, pinned = shuffle.draw_spread(deck, "1568", spreads.spread_positions("3"), sig)
+    assert not pinned
+    assert titles == [c["title"] for c in shuffle.shuffle_deck(deck, "1568")][:3]
 
 
 # ---------- engine: fixed bugs (regression tests) ----------
@@ -379,3 +395,122 @@ def test_layout_orbs_unchanged(angle, expected):
     from ootk import rules
     hit = rules.find_aspect(angle, "layout")
     assert (hit.name if hit else None) == expected
+
+
+# ---------- web GUI: seeded draws, output formats, report view ----------
+
+DECK = [{"card_id": i, "title": f"Card {i}", "arcana_type": "Minor", "key_scale": 1} for i in range(77)] + \
+       [{"card_id": 77, "title": "Knight of Swords", "arcana_type": "Court", "key_scale": 1}]
+
+
+@pytest.fixture
+def seeded_client(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: DECK)
+    return client
+
+
+def test_seed_mode_draws_like_the_cli(seeded_client):
+    positions = spreads.spread_positions("12")
+    expected, _ = shuffle.draw_spread(DECK, "1568", positions, DECK[77])
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="")
+    assert r.status_code == 200
+    assert seeded_client.lookups[-1] == expected
+    assert "1568" in r.text and "ootk --spread 12 --seed 1568" in r.text
+    assert "PRNG Seed: 1568" in seeded_client.saved["notes"]
+    assert seeded_client.saved["significator"] == "Knight of Swords"
+
+
+def test_seed_mode_same_seed_same_cards(seeded_client):
+    post(seeded_client, spread_key="8", draw_mode="seed", seed="42")
+    post(seeded_client, spread_key="8", draw_mode="seed", seed="42")
+    post(seeded_client, spread_key="8", draw_mode="seed", seed="43")
+    a, b, c = seeded_client.lookups[-3:]
+    assert a == b and a != c
+
+
+def test_blank_seed_gets_a_new_seed_shown_on_the_report(seeded_client):
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="")
+    assert r.status_code == 200
+    seed = seeded_client.saved["notes"].split("PRNG Seed: ")[1].split(" |")[0]
+    assert seed.isdigit() and f'id="seedValue">{seed}<' in r.text
+
+
+def test_seed_mode_unknown_significator_is_400(seeded_client):
+    assert post(seeded_client, draw_mode="seed", seed="1", significator="Nobody").status_code == 400
+
+
+@pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"output_format": "pdf"}])
+def test_bad_settings_return_400(client, over):
+    assert post(client, **over).status_code == 400
+
+
+def test_markdown_output_is_a_download(client):
+    r = post(client, output_format="markdown")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/markdown")
+    assert "attachment" in r.headers["content-disposition"]
+    assert r.text.startswith("# HERMETIC ANALYTICAL REPORT")
+
+
+def test_report_leads_with_summary_and_collapses_operations(client):
+    cards = ",".join(f"Card {i}" for i in range(75))
+    r = post(client, spread_key="12", selected_cards=cards)
+    text = r.text
+    assert text.index('id="summary"') < text.index('id="op1"')
+    for op in ("op1", "op2", "op3", "op4"):
+        assert f'<details class="section" id="{op}" >' in text      # closed until clicked
+    assert text.count('class="aspect-line') > 0
+    assert 'id="filters"' in text
+
+
+def test_index_lists_master_pipeline_positions(client):
+    r = client.get("/")
+    assert r.status_code == 200
+    assert '"12": ["[Op 1] 1. Significator' in r.text                # 75 slots, not 1
+
+
+def test_spatial_pairs_carry_card_indices_inside_their_operation():
+    cards = [fake_card(f"C{i}") for i in range(75)]
+    results = [{"position_number": i + 1, "position_name": p, "card_data": c}
+               for i, (p, c) in enumerate(zip(spreads.spread_positions("12"), cards))]
+    bounds = [(0, 15), (15, 27), (27, 39), (39, 75)]
+    for s in analysis.analyze_spatial_vectors(results, "12"):
+        assert any(lo <= s["from_index"] < s["to_index"] < hi for lo, hi in bounds)
+        assert s["aspect_name"] in (None, "Conjunction", "Sextile", "Square", "Trine", "Quincunx", "Opposition")
+
+
+def test_report_view_draws_every_operation():
+    from ootk import visual
+    cards = [fake_card(f"C{i}") for i in range(75)]
+    results = [{"position_number": i + 1, "position_name": p, "card_data": c}
+               for i, (p, c) in enumerate(zip(spreads.spread_positions("12"), cards))]
+    dignity = analysis.calculate_elemental_dignities(results, "12")
+    spatial = analysis.analyze_spatial_vectors(results, "12")
+    view = visual.build_report_view("12", results, analysis.analyze_elemental_balance(results),
+                                    dignity, spatial, "3. Life Path", "auto")
+    segs = view["segments"]
+    assert [s["drawing"]["kind"] for s in segs] == ["layout", "wheel", "wheel", "wheel"]
+    assert [len(s["drawing"]["slots"]) for s in segs] == [15, 12, 12, 36]
+    assert sum(len(s["drawing"]["lines"]) for s in segs) == len(spatial) == view["aspects"]["total"]
+    # Ring aspects: each of 36 decans has 1 opposition, 2 squares, 2 trines, 2 sextiles.
+    assert len(segs[3]["aspects"]) == 36 * 7 // 2
+    strong = {a["type"] for s in segs for a in s["aspects"] if a["strong"]}
+    assert strong <= {"Conjunction", "Square", "Trine"}
+    assert view["headline"]
+
+
+def test_report_view_without_layout_falls_back_to_a_row():
+    from ootk import visual
+    cards = [fake_card(f"C{i}") for i in range(10)]
+    results = results_for(*cards)
+    view = visual.build_report_view("7", results, analysis.analyze_elemental_balance(results),
+                                    analysis.calculate_elemental_dignities(results, "7"), [], "x", "y")
+    assert view["segments"][0]["drawing"]["kind"] == "row"
+
+
+@pytest.mark.parametrize("title,short", [
+    ("XIX - The Sun", "The Sun"), ("2 of Wands - Dominion", "2 of Wands"), ("Knight of Swords", "Knight of Swords"),
+])
+def test_short_card_name(title, short):
+    from ootk import visual
+    assert visual.short_card_name(title) == short
