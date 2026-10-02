@@ -68,7 +68,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: correspondences; Type: TABLE; Schema: public; Owner: dbuser
+-- Name: correspondences; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.correspondences (
@@ -92,10 +92,9 @@ CREATE TABLE public.correspondences (
 );
 
 
-ALTER TABLE public.correspondences OWNER TO dbuser;
 
 --
--- Name: session_card_pulls; Type: TABLE; Schema: public; Owner: dbuser
+-- Name: session_card_pulls; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.session_card_pulls (
@@ -109,10 +108,9 @@ CREATE TABLE public.session_card_pulls (
 );
 
 
-ALTER TABLE public.session_card_pulls OWNER TO dbuser;
 
 --
--- Name: session_card_pulls_pull_id_seq; Type: SEQUENCE; Schema: public; Owner: dbuser
+-- Name: session_card_pulls_pull_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.session_card_pulls_pull_id_seq
@@ -124,17 +122,16 @@ CREATE SEQUENCE public.session_card_pulls_pull_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.session_card_pulls_pull_id_seq OWNER TO dbuser;
 
 --
--- Name: session_card_pulls_pull_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbuser
+-- Name: session_card_pulls_pull_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.session_card_pulls_pull_id_seq OWNED BY public.session_card_pulls.pull_id;
 
 
 --
--- Name: spread_position_geometry; Type: TABLE; Schema: public; Owner: dbuser
+-- Name: spread_position_geometry; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.spread_position_geometry (
@@ -149,10 +146,9 @@ CREATE TABLE public.spread_position_geometry (
 );
 
 
-ALTER TABLE public.spread_position_geometry OWNER TO dbuser;
 
 --
--- Name: spread_position_geometry_position_id_seq; Type: SEQUENCE; Schema: public; Owner: dbuser
+-- Name: spread_position_geometry_position_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.spread_position_geometry_position_id_seq
@@ -164,17 +160,16 @@ CREATE SEQUENCE public.spread_position_geometry_position_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.spread_position_geometry_position_id_seq OWNER TO dbuser;
 
 --
--- Name: spread_position_geometry_position_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbuser
+-- Name: spread_position_geometry_position_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.spread_position_geometry_position_id_seq OWNED BY public.spread_position_geometry.position_id;
 
 
 --
--- Name: spread_pulls; Type: TABLE; Schema: public; Owner: dbuser
+-- Name: spread_pulls; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.spread_pulls (
@@ -185,10 +180,9 @@ CREATE TABLE public.spread_pulls (
 );
 
 
-ALTER TABLE public.spread_pulls OWNER TO dbuser;
 
 --
--- Name: spread_pulls_spread_id_seq; Type: SEQUENCE; Schema: public; Owner: dbuser
+-- Name: spread_pulls_spread_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.spread_pulls_spread_id_seq
@@ -200,17 +194,16 @@ CREATE SEQUENCE public.spread_pulls_spread_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.spread_pulls_spread_id_seq OWNER TO dbuser;
 
 --
--- Name: spread_pulls_spread_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbuser
+-- Name: spread_pulls_spread_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.spread_pulls_spread_id_seq OWNED BY public.spread_pulls.spread_id;
 
 
 --
--- Name: tarot_sessions; Type: TABLE; Schema: public; Owner: dbuser
+-- Name: tarot_sessions; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.tarot_sessions (
@@ -222,10 +215,9 @@ CREATE TABLE public.tarot_sessions (
 );
 
 
-ALTER TABLE public.tarot_sessions OWNER TO dbuser;
 
 --
--- Name: tarot_sessions_session_id_seq; Type: SEQUENCE; Schema: public; Owner: dbuser
+-- Name: tarot_sessions_session_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.tarot_sessions_session_id_seq
@@ -237,17 +229,16 @@ CREATE SEQUENCE public.tarot_sessions_session_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.tarot_sessions_session_id_seq OWNER TO dbuser;
 
 --
--- Name: tarot_sessions_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbuser
+-- Name: tarot_sessions_session_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.tarot_sessions_session_id_seq OWNED BY public.tarot_sessions.session_id;
 
 
 --
--- Name: thoth_cards; Type: TABLE; Schema: public; Owner: dbuser
+-- Name: thoth_cards; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.thoth_cards (
@@ -263,10 +254,9 @@ CREATE TABLE public.thoth_cards (
 );
 
 
-ALTER TABLE public.thoth_cards OWNER TO dbuser;
 
 --
--- Name: thoth_cards_card_id_seq; Type: SEQUENCE; Schema: public; Owner: dbuser
+-- Name: thoth_cards_card_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
 CREATE SEQUENCE public.thoth_cards_card_id_seq
@@ -278,52 +268,51 @@ CREATE SEQUENCE public.thoth_cards_card_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.thoth_cards_card_id_seq OWNER TO dbuser;
 
 --
--- Name: thoth_cards_card_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: dbuser
+-- Name: thoth_cards_card_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
 ALTER SEQUENCE public.thoth_cards_card_id_seq OWNED BY public.thoth_cards.card_id;
 
 
 --
--- Name: session_card_pulls pull_id; Type: DEFAULT; Schema: public; Owner: dbuser
+-- Name: session_card_pulls pull_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.session_card_pulls ALTER COLUMN pull_id SET DEFAULT nextval('public.session_card_pulls_pull_id_seq'::regclass);
 
 
 --
--- Name: spread_position_geometry position_id; Type: DEFAULT; Schema: public; Owner: dbuser
+-- Name: spread_position_geometry position_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spread_position_geometry ALTER COLUMN position_id SET DEFAULT nextval('public.spread_position_geometry_position_id_seq'::regclass);
 
 
 --
--- Name: spread_pulls spread_id; Type: DEFAULT; Schema: public; Owner: dbuser
+-- Name: spread_pulls spread_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spread_pulls ALTER COLUMN spread_id SET DEFAULT nextval('public.spread_pulls_spread_id_seq'::regclass);
 
 
 --
--- Name: tarot_sessions session_id; Type: DEFAULT; Schema: public; Owner: dbuser
+-- Name: tarot_sessions session_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tarot_sessions ALTER COLUMN session_id SET DEFAULT nextval('public.tarot_sessions_session_id_seq'::regclass);
 
 
 --
--- Name: thoth_cards card_id; Type: DEFAULT; Schema: public; Owner: dbuser
+-- Name: thoth_cards card_id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.thoth_cards ALTER COLUMN card_id SET DEFAULT nextval('public.thoth_cards_card_id_seq'::regclass);
 
 
 --
--- Data for Name: correspondences; Type: TABLE DATA; Schema: public; Owner: dbuser
+-- Data for Name: correspondences; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.correspondences (key_scale, name, hebrew_letter, element_or_planet_or_sign, king_scale_color, attributions, hebrew_letter_french, path_or_sephira_french, attribution_french, spatial_type, spatial_dimension, platonic_solid, solid_faces, solid_vertices, dual_solid, topological_role, french_path) FROM stdin;
@@ -364,7 +353,7 @@ COPY public.correspondences (key_scale, name, hebrew_letter, element_or_planet_o
 
 
 --
--- Data for Name: spread_position_geometry; Type: TABLE DATA; Schema: public; Owner: dbuser
+-- Data for Name: spread_position_geometry; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.spread_position_geometry (position_id, spread_key, position_index, position_name, pos_x, pos_y, pos_z, polar_angle_deg) FROM stdin;
@@ -391,7 +380,7 @@ COPY public.spread_position_geometry (position_id, spread_key, position_index, p
 
 
 --
--- Data for Name: thoth_cards; Type: TABLE DATA; Schema: public; Owner: dbuser
+-- Data for Name: thoth_cards; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 COPY public.thoth_cards (card_id, title, arcana_type, suit, number_or_rank, key_scale, description, french_number, attribution) FROM stdin;
@@ -477,42 +466,42 @@ COPY public.thoth_cards (card_id, title, arcana_type, suit, number_or_rank, key_
 
 
 --
--- Name: session_card_pulls_pull_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dbuser
+-- Name: session_card_pulls_pull_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.session_card_pulls_pull_id_seq', 4, true);
 
 
 --
--- Name: spread_position_geometry_position_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dbuser
+-- Name: spread_position_geometry_position_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.spread_position_geometry_position_id_seq', 19, true);
 
 
 --
--- Name: spread_pulls_spread_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dbuser
+-- Name: spread_pulls_spread_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.spread_pulls_spread_id_seq', 1, true);
 
 
 --
--- Name: tarot_sessions_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dbuser
+-- Name: tarot_sessions_session_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.tarot_sessions_session_id_seq', 1, true);
 
 
 --
--- Name: thoth_cards_card_id_seq; Type: SEQUENCE SET; Schema: public; Owner: dbuser
+-- Name: thoth_cards_card_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
 SELECT pg_catalog.setval('public.thoth_cards_card_id_seq', 78, true);
 
 
 --
--- Name: correspondences correspondences_pkey; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: correspondences correspondences_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.correspondences
@@ -520,7 +509,7 @@ ALTER TABLE ONLY public.correspondences
 
 
 --
--- Name: session_card_pulls session_card_pulls_pkey; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: session_card_pulls session_card_pulls_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.session_card_pulls
@@ -528,7 +517,7 @@ ALTER TABLE ONLY public.session_card_pulls
 
 
 --
--- Name: spread_position_geometry spread_position_geometry_pkey; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: spread_position_geometry spread_position_geometry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spread_position_geometry
@@ -536,7 +525,7 @@ ALTER TABLE ONLY public.spread_position_geometry
 
 
 --
--- Name: spread_pulls spread_pulls_pkey; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: spread_pulls spread_pulls_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spread_pulls
@@ -544,7 +533,7 @@ ALTER TABLE ONLY public.spread_pulls
 
 
 --
--- Name: tarot_sessions tarot_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: tarot_sessions tarot_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.tarot_sessions
@@ -552,7 +541,7 @@ ALTER TABLE ONLY public.tarot_sessions
 
 
 --
--- Name: thoth_cards thoth_cards_pkey1; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: thoth_cards thoth_cards_pkey1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.thoth_cards
@@ -560,7 +549,7 @@ ALTER TABLE ONLY public.thoth_cards
 
 
 --
--- Name: thoth_cards unique_card_title; Type: CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: thoth_cards unique_card_title; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.thoth_cards
@@ -568,21 +557,21 @@ ALTER TABLE ONLY public.thoth_cards
 
 
 --
--- Name: idx_cards_fts; Type: INDEX; Schema: public; Owner: dbuser
+-- Name: idx_cards_fts; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_cards_fts ON public.thoth_cards USING gin (to_tsvector('english'::regconfig, (((title)::text || ' '::text) || COALESCE(description, ''::text))));
 
 
 --
--- Name: idx_cards_key_scale; Type: INDEX; Schema: public; Owner: dbuser
+-- Name: idx_cards_key_scale; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_cards_key_scale ON public.thoth_cards USING btree (key_scale);
 
 
 --
--- Name: session_card_pulls session_card_pulls_card_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: session_card_pulls session_card_pulls_card_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.session_card_pulls
@@ -590,7 +579,7 @@ ALTER TABLE ONLY public.session_card_pulls
 
 
 --
--- Name: session_card_pulls session_card_pulls_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: session_card_pulls session_card_pulls_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.session_card_pulls
@@ -598,7 +587,7 @@ ALTER TABLE ONLY public.session_card_pulls
 
 
 --
--- Name: session_card_pulls session_card_pulls_spread_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: session_card_pulls session_card_pulls_spread_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.session_card_pulls
@@ -606,7 +595,7 @@ ALTER TABLE ONLY public.session_card_pulls
 
 
 --
--- Name: spread_pulls spread_pulls_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: dbuser
+-- Name: spread_pulls spread_pulls_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spread_pulls
@@ -614,94 +603,92 @@ ALTER TABLE ONLY public.spread_pulls
 
 
 --
--- Name: TABLE correspondences; Type: ACL; Schema: public; Owner: dbuser
+-- Name: TABLE correspondences; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON TABLE public.correspondences TO ootk_admin;
 
 
 --
--- Name: TABLE session_card_pulls; Type: ACL; Schema: public; Owner: dbuser
+-- Name: TABLE session_card_pulls; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON TABLE public.session_card_pulls TO ootk_admin;
 
 
 --
--- Name: SEQUENCE session_card_pulls_pull_id_seq; Type: ACL; Schema: public; Owner: dbuser
+-- Name: SEQUENCE session_card_pulls_pull_id_seq; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON SEQUENCE public.session_card_pulls_pull_id_seq TO ootk_admin;
 
 
 --
--- Name: TABLE spread_position_geometry; Type: ACL; Schema: public; Owner: dbuser
+-- Name: TABLE spread_position_geometry; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON TABLE public.spread_position_geometry TO ootk_admin;
 
 
 --
--- Name: SEQUENCE spread_position_geometry_position_id_seq; Type: ACL; Schema: public; Owner: dbuser
+-- Name: SEQUENCE spread_position_geometry_position_id_seq; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON SEQUENCE public.spread_position_geometry_position_id_seq TO ootk_admin;
 
 
 --
--- Name: TABLE spread_pulls; Type: ACL; Schema: public; Owner: dbuser
+-- Name: TABLE spread_pulls; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON TABLE public.spread_pulls TO ootk_admin;
 
 
 --
--- Name: SEQUENCE spread_pulls_spread_id_seq; Type: ACL; Schema: public; Owner: dbuser
+-- Name: SEQUENCE spread_pulls_spread_id_seq; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON SEQUENCE public.spread_pulls_spread_id_seq TO ootk_admin;
 
 
 --
--- Name: TABLE tarot_sessions; Type: ACL; Schema: public; Owner: dbuser
+-- Name: TABLE tarot_sessions; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON TABLE public.tarot_sessions TO ootk_admin;
 
 
 --
--- Name: SEQUENCE tarot_sessions_session_id_seq; Type: ACL; Schema: public; Owner: dbuser
+-- Name: SEQUENCE tarot_sessions_session_id_seq; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON SEQUENCE public.tarot_sessions_session_id_seq TO ootk_admin;
 
 
 --
--- Name: TABLE thoth_cards; Type: ACL; Schema: public; Owner: dbuser
+-- Name: TABLE thoth_cards; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON TABLE public.thoth_cards TO ootk_admin;
 
 
 --
--- Name: SEQUENCE thoth_cards_card_id_seq; Type: ACL; Schema: public; Owner: dbuser
+-- Name: SEQUENCE thoth_cards_card_id_seq; Type: ACL; Schema: public; Owner: -
 --
 
 GRANT ALL ON SEQUENCE public.thoth_cards_card_id_seq TO ootk_admin;
 
 
 --
--- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: dbuser
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE dbuser IN SCHEMA public GRANT ALL ON SEQUENCES TO ootk_admin;
 
 
 --
--- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: dbuser
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: -
 --
 
-ALTER DEFAULT PRIVILEGES FOR ROLE dbuser IN SCHEMA public GRANT ALL ON TABLES TO ootk_admin;
 
 
 --
