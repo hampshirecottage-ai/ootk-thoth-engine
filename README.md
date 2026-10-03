@@ -17,7 +17,7 @@ It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew
   - Operation 2: 12 astrological houses
   - Operation 3: 12 zodiacal signs
   - Operation 4: 36 decans, each labelled with its ruler, sign and pip (Decan 1: Mars in Aries (2 of Wands))
-- **Two mapping schemes** for tarot-to-Kabbalah attributions: `golden_dawn` and `french_egyptian`.
+- **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Cube of Space positions and King Scale colours follow the letter, so the swap moves the Emperor and the Star between the Aries and Aquarius edges.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
 - **PostgreSQL persistence** of sessions, spreads and card pulls.
@@ -147,7 +147,7 @@ ootk \
 | `--seed` | Seed for deterministic draws (any number or text). Omit it to enter cards by hand | manual entry |
 | `--significator` | Significator card title, pinned to position 1 of OOTK Op 1 (spreads 8 and 12) | asks with the Book T questions when the spread needs one |
 | `--topic` | Question or intent text | asks interactively |
-| `--mapping` | `golden_dawn` or `french_egyptian` | `golden_dawn` |
+| `--mapping` | `thoth`, `golden_dawn` or `french_egyptian` | `thoth` |
 | `--framework` | `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem` | `auto` |
 | `--html` | Write an HTML report to `output/` | off |
 

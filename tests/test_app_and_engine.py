@@ -34,10 +34,11 @@ def client(monkeypatch):
     saved = {}
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [])
-    lookups = []
+    lookups, systems = [], []
 
-    def fake_fetch(conn, titles, system="golden_dawn"):
+    def fake_fetch(conn, titles, system="thoth"):
         lookups.append(list(titles))
+        systems.append(system)
         return {t: fake_card(t) for t in titles}
 
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
@@ -57,11 +58,12 @@ def client(monkeypatch):
                         lambda conn, link: (99, dict(saved["report_settings"]))
                         if saved and saved["report_settings"].get("link") == link else None)
     monkeypatch.setattr(app_module, "load_withheld",
-                        lambda conn, deck, titles, system="golden_dawn": analysis.withheld_summary(
+                        lambda conn, deck, titles, system="thoth": analysis.withheld_summary(
                             [fake_card(c["title"]) for c in deck], titles))
     c = TestClient(app_module.app)
     c.saved = saved
     c.lookups = lookups
+    c.systems = systems
     return c
 
 
@@ -88,7 +90,7 @@ def test_bad_input_returns_400(client, over):
 
 def test_unknown_card_returns_400(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_cards_correspondences",
-                        lambda conn, titles, system="golden_dawn": {"A": fake_card("A")})
+                        lambda conn, titles, system="thoth": {"A": fake_card("A")})
     r = post(client)
     assert r.status_code == 400
     assert "'B'" in r.json()["detail"]                    # first missing title, in draw order
@@ -836,3 +838,27 @@ def test_birth_spans_cover_the_twelve_dated_courts_once():
     cards = [c for _, c in significator.BIRTH_SPANS]
     assert len(set(cards)) == 12 and not any(c.startswith("Princess") for c in cards)
     assert [s for s, _ in significator.BIRTH_SPANS] == sorted(s for s, _ in significator.BIRTH_SPANS)
+
+
+# ---------- mapping systems: the Tzaddi/Heh swap ----------
+
+def test_default_mapping_is_thoth_and_says_so(client):
+    r = post(client)
+    assert client.systems[-1] == "thoth"
+    assert "Emperor on Tzaddi, Star on Heh" in r.text
+
+
+def test_golden_dawn_is_labelled_unswapped(client):
+    r = post(client, mapping_system="golden_dawn")
+    assert client.systems[-1] == "golden_dawn"
+    assert "Emperor on Heh, Star on Tzaddi" in r.text
+    assert client.saved["report_settings"]["mapping_version"] == app_module.MAPPING_VERSION
+
+
+def test_old_golden_dawn_links_keep_the_thoth_swap(client):
+    """Before 'thoth' existed, 'golden_dawn' readings were built with the swap applied."""
+    post(client, mapping_system="golden_dawn")
+    del client.saved["report_settings"]["mapping_version"]
+    r = client.get(f"/report/{client.saved['report_settings']['link']}")
+    assert client.systems[-1] == "thoth"
+    assert "Emperor on Tzaddi, Star on Heh" in r.text

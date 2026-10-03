@@ -7,7 +7,7 @@ from ootk.analysis import (
     analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
 from ootk.db import (
-    fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
+    DEFAULT_MAPPING, MAPPING_SYSTEMS, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
 from ootk.report import build_analytical_prompt, generate_html_output
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
@@ -22,7 +22,7 @@ def parse_args():
                         help="Significator card title, pinned to position 1 of OOTK Op 1 (e.g. 'Queen of Cups')")
     parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
-    parser.add_argument("--mapping", type=str, choices=["golden_dawn", "french_egyptian"], default="golden_dawn", help="Tarot-Kabbalah Mapping Scheme")
+    parser.add_argument("--mapping", type=str, choices=MAPPING_SYSTEMS, default=DEFAULT_MAPPING, help="Tarot-Kabbalah mapping scheme: thoth keeps Crowley's swap (Emperor on Tzaddi, Star on Heh), golden_dawn undoes it")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
     return parser.parse_args()
 

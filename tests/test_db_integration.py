@@ -25,7 +25,7 @@ def fetch(conn, title, system):
     return db.fetch_card_correspondences(conn, title, system=system)
 
 
-@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])
 def test_every_card_resolves(conn, system):
     titles = [c["title"] for c in db.fetch_all_cards(conn)]
     assert len(titles) == 78
@@ -84,7 +84,7 @@ def test_french_path_labels_match_the_tree(conn):
         assert {a.lower(), b.lower()} == ends, (title, label)
 
 
-@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])
 def test_no_placeholder_attributions(conn, system):
     for c in db.fetch_all_cards(conn):
         attr = fetch(conn, c["title"], system)["attribution"]
@@ -106,7 +106,7 @@ def test_pip_decans(conn, title, attr):
     ("Princess of Cups", "Mem"), ("Prince of Swords", "Hé"), ("Princess of Swords", "Aleph"),
 ])
 def test_court_signs(conn, title, letter):
-    assert letter in fetch(conn, title, "golden_dawn")["hebrew_letter"]
+    assert letter in fetch(conn, title, "thoth")["hebrew_letter"]
 
 
 def test_batched_lookup_matches_single_lookups(conn):
@@ -136,11 +136,36 @@ def test_trump_attribution_element_and_solid_come_from_the_card(conn, title, att
 
 
 def test_emperor_keeps_its_letters_cube_edge(conn):
-    emperor = fetch(conn, "IV - The Emperor", "golden_dawn")
+    emperor = fetch(conn, "IV - The Emperor", "thoth")
     assert "Tzaddi" in emperor["hebrew_letter"] and emperor["spatial_dimension"] == "Upper-South Edge"
 
 
-@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+@pytest.mark.parametrize("title,thoth_letter,gd_letter,gd_edge,gd_key_scale", [
+    ("IV - The Emperor", "Tzaddi", "Hé", "North-East Edge", 15),
+    ("XVII - The Star", "Hé", "Tzaddi", "Upper-South Edge", 28),
+    ("Queen of Wands", "Tzaddi", "Hé", "North-East Edge", 15),     # follows the Emperor
+    ("Prince of Swords", "Hé", "Tzaddi", "Upper-South Edge", 28),  # follows the Star
+])
+def test_golden_dawn_undoes_the_thoth_swap(conn, title, thoth_letter, gd_letter, gd_edge, gd_key_scale):
+    thoth, gd = fetch(conn, title, "thoth"), fetch(conn, title, "golden_dawn")
+    assert thoth_letter in thoth["hebrew_letter"] and gd_letter in gd["hebrew_letter"]
+    assert gd["spatial_dimension"] == gd_edge and gd["key_scale"] == gd_key_scale
+    # The card keeps its own sign and solid; only the letter and its geometry move.
+    assert gd["attribution"] == thoth["attribution"]
+    assert gd["platonic_solid"] == thoth["platonic_solid"]
+    for card in (thoth, gd):        # the comparison line names both letters in either system
+        assert thoth_letter in card["thoth_hebrew_letter"] and gd_letter in card["gd_hebrew_letter"]
+
+
+def test_only_the_swapped_cards_differ_between_thoth_and_golden_dawn(conn):
+    titles = [c["title"] for c in db.fetch_all_cards(conn)]
+    thoth = db.fetch_cards_correspondences(conn, titles, system="thoth")
+    gd = db.fetch_cards_correspondences(conn, titles, system="golden_dawn")
+    differ = {t for t in titles if thoth[t]["hebrew_letter"] != gd[t]["hebrew_letter"]}
+    assert differ == {"IV - The Emperor", "XVII - The Star", "Queen of Wands", "Prince of Swords"}
+
+
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])
 def test_every_solid_agrees_with_the_element_count(conn, system):
     for title in [c["title"] for c in db.fetch_all_cards(conn)]:
         card = fetch(conn, title, system)
