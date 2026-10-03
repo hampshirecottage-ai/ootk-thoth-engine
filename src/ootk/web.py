@@ -73,7 +73,7 @@ CONTACT_URL = f"{REPO_URL}/discussions"
 SITE_DESCRIPTION = ("Draw a Thoth tarot spread and get its Golden Dawn dignities, decans and "
                     "Liber 777 correspondences calculated, as a prompt for your LLM to interpret.")
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
-PUBLIC_PAGES = ["/", "/pick"]
+PUBLIC_PAGES = ["/", "/pick", "/start", "/examples", "/library", "/method"]
 
 
 def site_url(request: Request) -> str:
@@ -296,6 +296,96 @@ def main_gui(request: Request):
 def pick_gui(request: Request):
     """Pick by hand: the same settings plus the spread board and card catalog."""
     return settings_page(request, "pick.html", "manual")
+
+
+# ---------- guide pages: start here, examples, library, method ----------
+
+# The examples page: throwaway seeds, smallest spread first. "shows" says what to look at in
+# the report, never what the cards mean; interpreting them is the LLM's job.
+EXAMPLES = [
+    {"spread_key": "1", "seed": "2026-01-01", "title": "One card",
+     "shows": "The smallest reading: one card with its attribution, Hebrew letter and King "
+              "Scale colour. The seed is a date, which is how the card of the day works."},
+    {"spread_key": "2", "seed": "777", "title": "Two cards",
+     "shows": "Two forces side by side, and the one elemental dignity between them."},
+    {"spread_key": "3", "seed": "12345", "title": "Three cards",
+     "shows": "The start page's sample. Each neighbouring pair is scored by Book T's friendly "
+              "and contrary elements."},
+    {"spread_key": "5", "seed": "1909", "title": "Four cards",
+     "shows": "One card for each letter of IHVH and its world, from Atziluth (Fire) down to "
+              "Assiah (Earth)."},
+    {"spread_key": "7", "seed": "10", "title": "Ten cards",
+     "shows": "One card on each Sephira. The report draws the cards on the Tree of Life."},
+    {"spread_key": "9", "seed": "918851", "title": "Twelve cards",
+     "shows": "The Second Operation of the Opening of the Key: the twelve houses drawn as a "
+              "wheel. This is the reading in the README screenshot."},
+]
+_examples_cache = {}
+
+
+def example_readings(deck):
+    """EXAMPLES with their links and, when the full deck is loaded, the cards each seed draws.
+    Drawn once per process, like the start page's sample."""
+    if "examples" in _examples_cache:
+        return _examples_cache["examples"]
+    full_deck = len(deck) == 78
+    examples = []
+    for ex in EXAMPLES:
+        settings = {"spread_key": ex["spread_key"], "seed": ex["seed"], "framework": "auto",
+                    "significator": "", "mapping_system": DEFAULT_MAPPING}
+        positions = spread_positions(ex["spread_key"])
+        titles = draw_spread(deck, ex["seed"], positions)[0] if full_deck else []
+        examples.append(dict(ex, spread_name=SPREADS[ex["spread_key"]]["name"],
+                             count=len(positions), url=share_path(settings),
+                             cards=[{"title": t, "name": short_card_name(t)} for t in titles]))
+    if full_deck:
+        _examples_cache["examples"] = examples
+    return examples
+
+
+LIBRARY_FILE = BASE_DIR / "src" / "ootk" / "library.json"
+
+
+def load_library():
+    """The resource library: a glossary and further reading, kept in library.json so a new
+    entry is one edit. Read on each request, so an edit shows without a restart."""
+    with open(LIBRARY_FILE, encoding="utf-8") as f:
+        library = json.load(f)
+    library["terms"].sort(key=lambda t: t["term"].lower())
+    return library
+
+
+def guide_page(request: Request, name: str, **context):
+    return templates.TemplateResponse(request=request, name=name,
+                                      context=dict(context, spreads=SPREADS))
+
+
+@app.get("/start", response_class=HTMLResponse)
+def start_here(request: Request):
+    """Start here: a path for newcomers, then the spreads grouped into learning stages."""
+    return guide_page(request, "start.html",
+                      sizes={key: len(spread_positions(key)) for key in SPREADS})
+
+
+@app.get("/examples", response_class=HTMLResponse)
+def examples_page(request: Request):
+    """Sample readings at fixed seeds, each opening its full report."""
+    with get_db_connection() as conn:
+        deck = fetch_all_cards(conn)
+    return guide_page(request, "examples.html", examples=example_readings(deck))
+
+
+@app.get("/library", response_class=HTMLResponse)
+def library_page(request: Request):
+    """Glossary, every spread and further reading."""
+    return guide_page(request, "library.html", library=load_library(),
+                      positions={key: spread_positions(key) for key in SPREADS})
+
+
+@app.get("/method", response_class=HTMLResponse)
+def method_page(request: Request):
+    """How a reading is made, its limits, what is stored and what it is for."""
+    return guide_page(request, "method.html")
 
 
 @app.post("/generate_report", response_class=HTMLResponse)

@@ -1,0 +1,33 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Examples" %}
+{% set page_description = "Sample tarot readings from one card to the twelve houses, each with its full report and the prompt it gives your AI." %}
+{% set tagline = "Sample readings, from one card to twelve. Each opens its full report and prompt." %}
+{% set active = "/examples" %}
+{% block head %}
+    <style>
+        .ex h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+        .ex h2 small { color: var(--muted); font-weight: normal; font-size: 0.75em; }
+        .ex-cards { list-style: none; padding: 0; margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+        .ex-cards li { font-size: 0.78em; line-height: 1.25; text-align: center; }
+        .ex-cards img { width: 100%; height: auto; border-radius: 5px; border: 1px solid var(--line); display: block; margin-bottom: 4px; }
+        .ex .shows { margin: 6px 0 0; }
+    </style>
+{% endblock %}
+{% block content %}
+        {% for ex in examples %}
+        <section class="panel ex" aria-labelledby="ex{{ loop.index }}">
+            <h2 id="ex{{ loop.index }}">{{ ex.title }} <small>{{ ex.spread_name }} · seed {{ ex.seed }}</small></h2>
+            {% if ex.cards %}
+            <ol class="ex-cards">
+                {% for c in ex.cards %}
+                {% set img = card_image_url(c.title, "thumb") %}
+                <li>{% if img %}<img src="{{ img }}" alt="" width="200" height="290" loading="lazy" decoding="async">{% endif %}{{ c.name }}</li>
+                {% endfor %}
+            </ol>
+            {% endif %}
+            <p class="shows"><strong>What to look at:</strong> {{ ex.shows }}</p>
+            <div class="actions"><a class="btn secondary" href="{{ ex.url }}">Open the report</a></div>
+        </section>
+        {% endfor %}
+        <p class="note" style="text-align:center">The seeds are throwaway numbers, so these readings hold no personal data. The same seed always draws the same cards.<br>Card art: Pamela Colman Smith (1909), public domain.</p>
+{% endblock %}

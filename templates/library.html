@@ -1,0 +1,56 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Library" %}
+{% set page_description = "Plain-English meanings of the terms in a Thoth tarot report: elemental dignities, decans, Liber 777, the Opening of the Key and more, with every spread and further reading." %}
+{% set tagline = "What the words in a report mean, every spread, and where to read more." %}
+{% set active = "/library" %}
+{% block head %}
+    <style>
+        .toc { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0; padding: 0; list-style: none; font-size: 0.9em; }
+        .toc a { display: inline-block; padding: 3px 8px; border: 1px solid var(--line); border-radius: 999px; text-decoration: none; background: var(--panel-3); }
+        dl.terms { margin: 0; }
+        dl.terms dt { font-weight: 700; margin-top: 14px; scroll-margin-top: 16px; }
+        dl.terms dt:first-child { margin-top: 0; }
+        dl.terms dd { margin: 2px 0 0; }
+        details.spread { border-top: 1px solid var(--line); padding: 8px 0; }
+        details.spread summary { cursor: pointer; }
+        details.spread ol { margin: 6px 0 4px; padding-left: 24px; font-size: 0.9em; columns: 2 260px; }
+        ul.reading { padding-left: 20px; margin: 0; }
+        ul.reading li { margin: 6px 0; }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel" aria-labelledby="termsTitle">
+            <h2 id="termsTitle">Terms</h2>
+            <ul class="toc" aria-label="Jump to a term">
+                {% for t in library.terms %}<li><a href="#{{ t.term | lower | replace(' ', '-') }}">{{ t.term }}</a></li>{% endfor %}
+            </ul>
+            <dl class="terms" style="margin-top:16px">
+                {% for t in library.terms %}
+                <dt id="{{ t.term | lower | replace(' ', '-') }}">{{ t.term }}</dt>
+                <dd>{{ t.text }}</dd>
+                {% endfor %}
+            </dl>
+        </section>
+
+        <section class="panel" aria-labelledby="spreadsTitle">
+            <h2 id="spreadsTitle">Every spread</h2>
+            <p class="muted">All {{ spreads | length }} spreads and their positions. <a href="/start#stagesTitle">Start here</a> groups them into learning stages.</p>
+            {% for key, spread in spreads.items() %}
+            <details class="spread" id="spread-{{ key }}">
+                <summary><strong>{{ key }}.</strong> {{ spread.name }} <span class="muted">({{ positions[key] | length }} card{{ 's' if positions[key] | length != 1 }})</span></summary>
+                <ol>{% for p in positions[key] %}<li>{{ p }}</li>{% endfor %}</ol>
+                <a href="/?spread={{ key }}#readingForm">Draw this spread</a>
+            </details>
+            {% endfor %}
+        </section>
+
+        <section class="panel" aria-labelledby="readingTitle">
+            <h2 id="readingTitle">Further reading</h2>
+            <ul class="reading">
+                {% for r in library.reading %}
+                <li><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% if r.by %} <span class="muted">({{ r.by }})</span>{% endif %}. {{ r.note }}</li>
+                {% endfor %}
+            </ul>
+            <p class="note">Missing a term or a good source? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a> and the library grows.</p>
+        </section>
+{% endblock %}
