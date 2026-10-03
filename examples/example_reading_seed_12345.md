@@ -130,4 +130,4 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
 2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
 3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
 4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
-5. **Actionable Executive Resolution:** Conclude with a direct summary of the key forces and final dynamic outcome.
+5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
