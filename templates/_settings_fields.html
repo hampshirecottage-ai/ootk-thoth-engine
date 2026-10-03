@@ -21,9 +21,52 @@
             <p class="mode-link">You place each card yourself. <a href="/" id="modeSwitch">Draw from a seed instead</a></p>
             {% endif %}
             <input type="hidden" name="draw_mode" value="{{ mode }}">
-            <label for="significatorInput">Significator</label>
-            <input type="text" name="significator" id="significatorInput" value="Knight of Swords" list="cardTitles">
-            <datalist id="cardTitles">{% for card in cards %}<option value="{{ card.title }}">{% endfor %}</datalist>
+            {% if mode == "seed" %}
+            <fieldset id="sigBox">
+                <legend>Significator</legend>
+                <p class="hint sig-none" id="sigNone">This spread has no significator position.</p>
+                <div id="sigPicker">
+                    <div class="seg" role="radiogroup" aria-label="How to choose the significator">
+                        <label><input type="radio" name="sig_method" value="describe" checked><span>Describe</span></label>
+                        <label><input type="radio" name="sig_method" value="birthday"><span>Birth date</span></label>
+                        <label><input type="radio" name="sig_method" value="any"><span>Any card</span></label>
+                    </div>
+
+                    <div data-sig="describe">
+                        <label for="sigRank">Who is the reading for?</label>
+                        <select id="sigRank" name="sig_rank">
+                            <option value="">Choose…</option>
+                            {% for rank, who in sig_ranks.items() %}<option value="{{ rank }}">{{ who }}</option>{% endfor %}
+                        </select>
+                        <label for="sigSuit">Colouring or temperament</label>
+                        <select id="sigSuit" name="sig_suit">
+                            <option value="">Choose…</option>
+                            {% for suit, look in sig_suits.items() %}<option value="{{ suit }}">{{ look }}</option>{% endfor %}
+                        </select>
+                        <p class="hint">Book T's way: the court card that matches the person the reading is about.</p>
+                    </div>
+
+                    <div data-sig="birthday" hidden>
+                        <label for="sigBirthday">Birth date</label>
+                        {# No name: the date never leaves the browser, only the card it gives is sent. #}
+                        <input type="date" id="sigBirthday" autocomplete="off">
+                        <p class="hint">Gives the Knight, Queen or Prince ruling that part of the zodiac. The date stays in your browser and is not saved; only the card is sent.</p>
+                    </div>
+
+                    <div data-sig="any" hidden>
+                        <label for="sigAny">Card</label>
+                        <input type="text" id="sigAny" name="sig_any" list="cardTitles" placeholder="e.g. Queen of Cups or The Star" autocomplete="off">
+                        <datalist id="cardTitles">{% for card in cards %}<option value="{{ card.title }}">{% endfor %}</datalist>
+                    </div>
+
+                    <input type="hidden" name="significator" id="significatorInput">
+                    <p class="sig-result" id="sigResult" aria-live="polite"></p>
+                </div>
+            </fieldset>
+            <script type="application/json" id="birthSpans">{{ birth_spans | tojson }}</script>
+            {% else %}
+            <p class="hint sig-none" id="sigNone">The first card you place is the significator.</p>
+            {% endif %}
 
             <fieldset>
                 <legend>Interpretation</legend>

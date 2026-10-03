@@ -145,7 +145,7 @@ ootk \
 |---|---|---|
 | `--spread` | Spread key, 1-12 | asks interactively |
 | `--seed` | Seed for deterministic draws (any number or text). Omit it to enter cards by hand | manual entry |
-| `--significator` | Significator card title (pinned to Position 1) | `Knight of Swords` |
+| `--significator` | Significator card title, pinned to position 1 of OOTK Op 1 (spreads 8 and 12) | asks with the Book T questions when the spread needs one |
 | `--topic` | Question or intent text | asks interactively |
 | `--mapping` | `golden_dawn` or `french_egyptian` | `golden_dawn` |
 | `--framework` | `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem` | `auto` |
@@ -167,6 +167,7 @@ uvicorn ootk.web:app --reload --port 8000
 Open http://localhost:8000 for the form and http://localhost:8000/docs for the API docs.
 
 - **Settings panel.** The start page is one panel: spread, seed, significator, mapping system, framework and output format. It remembers your last settings in your browser.
+- **Significator.** Spreads 8 and 12 start with a significator. Choose it one of three ways: **Describe** (Book T: rank from age and gender, suit from colouring or temperament, giving one of the 16 court cards), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
 - **Pick by hand.** To place the cards yourself, follow "Pick them by hand instead" to `/pick`, which adds the spread board and the card catalog. Your settings carry over between the two pages.
 - **Seeds.** Leave the seed blank to get a new one. The report always shows the seed and the matching `ootk` command, and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
 - **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address.
