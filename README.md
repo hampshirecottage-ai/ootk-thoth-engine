@@ -166,7 +166,8 @@ uvicorn ootk.web:app --reload --port 8000
 
 Open http://localhost:8000 for the form and http://localhost:8000/docs for the API docs.
 
-- **Settings panel.** Spread, how the cards are chosen (from a seed, or picked by hand), seed, significator, mapping system, framework and output format sit in one panel. The page remembers your last settings in your browser.
+- **Settings panel.** The start page is one panel: spread, seed, significator, mapping system, framework and output format. It remembers your last settings in your browser.
+- **Pick by hand.** To place the cards yourself, follow "Pick them by hand instead" to `/pick`, which adds the spread board and the card catalog. Your settings carry over between the two pages.
 - **Seeds.** Leave the seed blank to get a new one. The report always shows the seed and the matching `ootk` command, and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
 - **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address.
 - **Summary first.** The report opens with a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
