@@ -182,13 +182,18 @@ document.querySelectorAll("[data-svg-download]").forEach(btn => btn.addEventList
     // Standalone file: absolute image links and the current theme's colours baked in.
     clone.querySelectorAll("image").forEach(img => img.setAttribute("href", new URL(img.getAttribute("href"), location.href).href));
     clone.querySelectorAll(".is-hidden").forEach(el => el.remove());
-    const cs = getComputedStyle(document.documentElement);
+    const cs = getComputedStyle(svg);
     const v = name => cs.getPropertyValue(name).trim();
     const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
     style.textContent = `text{fill:${v("--text")};font-family:sans-serif}.card-border{fill:none;stroke-width:2.5}
 .aspect-line{stroke-linecap:round}.aspect-line.unaspected{stroke-dasharray:5 5}.card-base{fill:${v("--card-base")}}
 .w-face{fill:${v("--svg-face")};stroke:${v("--svg-rule")}}.w-hole{fill:${v("--svg-hole")};stroke:${v("--svg-rule")}}
 .w-rule{fill:none;stroke:${v("--svg-rule")}}.w-sector{stroke:${v("--svg-sector")}}.badge{fill:${v("--badge")}}`;
+    // Paint the panel colour behind the drawing so the light labels stay readable in any viewer.
+    const [vx, vy, vw, vh] = svg.getAttribute("viewBox").split(/[\s,]+/);
+    const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    Object.entries({x: vx, y: vy, width: vw, height: vh, fill: v("--drawing-bg")}).forEach(([k, val]) => bg.setAttribute(k, val));
+    clone.insertBefore(bg, clone.firstChild);
     clone.insertBefore(style, clone.firstChild);
     clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     download(`${fileStem}_${btn.dataset.svgDownload}.svg`, "image/svg+xml",
