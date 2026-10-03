@@ -38,15 +38,25 @@
         .prompt-box.open::after { display: none; }
         .prompt-box pre { margin: 0; padding: 12px; font-size: 0.78em; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
         .sample-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .today-link { margin: 8px 0 0; font-size: 0.92em; }
-        .today-link a { color: var(--accent); text-decoration: none; display: inline-block; padding: 4px 0; }
-        .today-link a:hover { text-decoration: underline; }
+        /* The five first-screen answers: what (h1), who (tagline), how (steps), why trust (trust), next step (hero-actions). */
+        .steps { list-style: none; padding: 0; margin: 12px 0 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 18px; font-size: 0.95em; }
+        .steps li { display: flex; align-items: center; gap: 6px; }
+        .steps span { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--panel); color: var(--text); font-weight: 700; font-size: 0.85em; }
+        :root[data-theme="light"] .steps li { color: #ffe0a0; }
+        .trust { margin: 10px 0 0; color: var(--muted); font-size: 0.85em; }
+        .trust a { color: inherit; }
+        .hero-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; }
+        a.btn-cta { background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 6px; }
+        a.btn-cta:hover { background: var(--accent-2); }
+        .today-link { color: var(--accent); text-decoration: none; font-size: 0.92em; padding: 4px 0; }
+        .today-link:hover { text-decoration: underline; }
         a.btn-small { text-decoration: none; display: inline-block; }
         .own-link { display: none; margin-left: auto; align-self: center; color: var(--accent); font-size: 0.92em; }
         .link-btn { background: none; border: none; padding: 6px 0; color: var(--accent); cursor: pointer; text-decoration: underline; font-size: 0.9em; }
         @media (max-width: 1000px) { .front { grid-template-columns: minmax(0, 720px); } .own-link { display: inline; } }
         @media (max-width: 640px) {
             header.top h1 { font-size: 1.35em; }
+            .steps { font-size: 0.85em; gap: 6px 10px; }
             .sample-cards { gap: 8px; }
             .sample-cards li { font-size: 0.78em; }
         }
@@ -56,9 +66,18 @@
     <header class="top">
         <div>
             <p class="eyebrow">LLM Tarot Reading</p>
-            <h1>Get an AI tarot reading built on the real Thoth correspondences</h1>
-            <p class="tagline">OOTK looks up your spread&rsquo;s correspondences so your LLM doesn&rsquo;t have to guess them. Paste the prompt into ChatGPT, Claude or any LLM; OOTK never interprets the cards itself.</p>
-            {% if todays_card %}<p class="today-link"><a href="/today">Today&rsquo;s card: <strong>{{ todays_card }}</strong> &rarr;</a></p>{% endif %}
+            <h1>Turn a Thoth tarot spread into a prompt for your&nbsp;AI</h1>
+            <p class="tagline">For tarot readers who use ChatGPT, Claude or another AI. OOTK draws the cards and looks up their correspondences; your AI interprets them.</p>
+            <ol class="steps" aria-label="How it works">
+                <li><span>1</span> Draw a spread</li>
+                <li><span>2</span> Copy the prompt</li>
+                <li><span>3</span> Paste into your AI</li>
+            </ol>
+            <p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a> · Same seed, same cards · Book T and Liber 777 tables</p>
+            <p class="hero-actions">
+                <a class="btn-cta" href="#readingForm">Get your reading</a>
+                {% if todays_card %}<a href="/today" class="today-link">Today&rsquo;s card: <strong>{{ todays_card }}</strong> &rarr;</a>{% endif %}
+            </p>
         </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </header>

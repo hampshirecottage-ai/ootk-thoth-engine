@@ -669,10 +669,17 @@ def test_start_page_links_the_card_of_the_day_and_the_sample_report(client, monk
     monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
     page = client.get("/").text
     top = shuffle.shuffle_deck(deck, "2026-10-03")[0]["title"]
-    assert f'<a href="/today">Today&rsquo;s card: <strong>{top}</strong>' in page
+    assert f'<a href="/today" class="today-link">Today&rsquo;s card: <strong>{top}</strong>' in page
     assert 'href="/reading?seed=12345&amp;spread=3&amp;system=thoth"' in page
     assert client.get("/reading?seed=12345&spread=3&system=thoth").status_code == 200
     assert 'href="/today">Today' not in client.get("/pick").text
+
+
+def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
+    page = client.get("/").text
+    assert "For tarot readers who use ChatGPT" in page
+    assert 'class="btn-cta" href="#readingForm"' in page
+    assert f'href="{app_module.REPO_URL}"' in page
 
 
 def test_start_page_without_a_full_deck_skips_the_sample(client):

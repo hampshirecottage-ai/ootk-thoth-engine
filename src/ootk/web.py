@@ -109,7 +109,7 @@ async def form_error_page(request: Request, exc: HTTPException):
         'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
-                             contact_url=CONTACT_URL, site_url=site_url,
+                             contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION)
 
 
