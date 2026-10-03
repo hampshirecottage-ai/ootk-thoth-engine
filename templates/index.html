@@ -108,13 +108,6 @@
         <section class="panel settings" aria-label="Settings">
             <h2>Settings</h2>
 
-            <label for="presetSelect">Preset</label>
-            <div class="row">
-                <select id="presetSelect"></select>
-                <button type="button" class="btn-small" id="savePreset" title="Save the current settings as a preset">Save</button>
-                <button type="button" class="btn-small" id="deletePreset" title="Delete the selected preset">Delete</button>
-            </div>
-
             <label for="spreadSelect">Operation / Spread</label>
             <select name="spread_key" id="spreadSelect">
                 {% for key, spread in spreads.items() %}

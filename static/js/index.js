@@ -2,14 +2,9 @@ const positionsData = JSON.parse(document.getElementById("positionsData").textCo
 const form = document.getElementById("readingForm");
 let activeCardList = [];
 
-// ---------- presets & remembered settings (per browser) ----------
+// ---------- remembered settings (per browser) ----------
 const SETTING_FIELDS = ["spread_key", "draw_mode", "seed", "significator", "mapping_system", "framework", "output_format"];
-const BUILTIN_PRESETS = {
-    "Full OOTK · Golden Dawn": { spread_key: "12", draw_mode: "seed", seed: "", mapping_system: "golden_dawn", framework: "auto", output_format: "visual" },
-    "Full OOTK · French/Egyptian": { spread_key: "12", draw_mode: "seed", seed: "", mapping_system: "french_egyptian", framework: "auto", output_format: "visual" },
-    "Daily card": { spread_key: "1", draw_mode: "seed", seed: "", mapping_system: "golden_dawn", framework: "auto", output_format: "visual" },
-};
-const PRESET_KEY = "ootk.presets.v1", LAST_KEY = "ootk.lastSettings.v1";
+const LAST_KEY = "ootk.lastSettings.v1";
 
 function readStore(key, fallback) {
     try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch (e) { return fallback; }
@@ -36,46 +31,6 @@ function applySettings(s) {
     updateMode();
     updateSlots();
 }
-
-function renderPresets(selected) {
-    const sel = document.getElementById("presetSelect");
-    const user = readStore(PRESET_KEY, {});
-    sel.innerHTML = '<option value="">Choose a preset…</option>';
-    const add = (group, names, prefix) => {
-        if (!names.length) return;
-        const og = document.createElement("optgroup"); og.label = group;
-        names.forEach(n => { const o = document.createElement("option"); o.value = prefix + n; o.textContent = n; og.appendChild(o); });
-        sel.appendChild(og);
-    };
-    add("Built in", Object.keys(BUILTIN_PRESETS), "b:");
-    add("Saved", Object.keys(user).sort(), "u:");
-    sel.value = selected || "";
-    document.getElementById("deletePreset").disabled = !sel.value.startsWith("u:");
-}
-
-document.getElementById("presetSelect").addEventListener("change", e => {
-    const v = e.target.value;
-    if (!v) return;
-    const preset = v.startsWith("b:") ? BUILTIN_PRESETS[v.slice(2)] : readStore(PRESET_KEY, {})[v.slice(2)];
-    if (preset) applySettings(preset);
-    document.getElementById("deletePreset").disabled = !v.startsWith("u:");
-});
-document.getElementById("savePreset").addEventListener("click", () => {
-    const name = (prompt("Name this preset (a blank seed draws a new one each time):") || "").trim();
-    if (!name) return;
-    const user = readStore(PRESET_KEY, {});
-    user[name] = getSettings();
-    if (!writeStore(PRESET_KEY, user)) { alert("This browser is not letting the page save presets."); return; }
-    renderPresets("u:" + name);
-});
-document.getElementById("deletePreset").addEventListener("click", () => {
-    const v = document.getElementById("presetSelect").value;
-    if (!v.startsWith("u:")) return;
-    const user = readStore(PRESET_KEY, {});
-    delete user[v.slice(2)];
-    writeStore(PRESET_KEY, user);
-    renderPresets("");
-});
 
 // ---------- draw mode ----------
 function drawMode() { return form.elements["draw_mode"].value; }
@@ -175,5 +130,4 @@ document.getElementById("themeToggle").addEventListener("click", () => {
     try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
 });
 
-renderPresets("");
 applySettings(readStore(LAST_KEY, {}));
