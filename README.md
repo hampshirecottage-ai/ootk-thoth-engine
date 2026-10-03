@@ -176,9 +176,9 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 - **Output.** "Visual report" renders the page above; "Markdown file" downloads the analytical prompt. The full prompt is also in a collapsed section of every visual report. The report also downloads the whole reading as JSON, each drawing as an SVG (card images link back to the running server), and prints or saves as PDF with every section expanded.
 - **Theme and phones.** A dark/light toggle (it follows the system setting until you choose) is remembered per browser. Both pages collapse to one column on narrow screens.
 
-### Docker and Hugging Face Spaces
+### Docker, Render and Hugging Face Spaces
 
-The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860, as a non-root user (uid 1000, which Hugging Face requires). On start it loads `database/schema.sql` into an empty database. Card scans are not copied into the image, so cards show as text panels.
+The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000, which Hugging Face requires). On start it loads `database/schema.sql` into an empty database. Card scans are not copied into the image, so cards show as text panels.
 
 ```bash
 docker build -t ootk .
@@ -187,7 +187,11 @@ docker run --rm -p 7860:7860 ootk
 
 The local database lives inside the container and starts empty on every run. To keep readings, pass `DB_HOST`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` for an external PostgreSQL; the local one is then not started, and the card tables are loaded on first start if missing.
 
-For a Hugging Face Docker Space, `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private: anyone who can open it can read every saved reading at `/report/<session>`.
+Set `APP_PASSWORD` to make every page ask for that password (any user name works). Use it on any public address: without it, anyone who finds the site can read every saved reading at `/report/<session>`.
+
+On Render's free plan, `render.yaml` is a Blueprint for the same image: create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and `APP_PASSWORD` when asked. Free services sleep after 15 idle minutes, so the first page afterwards takes about a minute.
+
+For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private: anyone who can open it can read every saved reading at `/report/<session>`.
 
 ### Sanity-check a full run
 

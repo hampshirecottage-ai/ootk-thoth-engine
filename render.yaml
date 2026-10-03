@@ -1,0 +1,21 @@
+# Render Blueprint: the web GUI on Render's free plan, using the same Dockerfile.
+# Readings live in an external PostgreSQL (e.g. Neon); fill in the secrets when Render asks.
+services:
+  - type: web
+    name: ootk
+    runtime: docker
+    plan: free
+    region: virginia
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: DB_HOST
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
