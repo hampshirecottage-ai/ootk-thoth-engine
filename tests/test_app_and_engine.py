@@ -876,7 +876,7 @@ def test_report_has_its_own_link_and_reloading_saves_nothing(client):
     assert client.saved["report_settings"]["card_titles"] == ["A", "B", "C"]
     for _ in range(2):                                                   # reload twice
         page = client.get(f"/report/{link}")
-        assert page.status_code == 200 and "Keep this reading" in page.text
+        assert page.status_code == 200 and 'id="nextStep"' in page.text
     assert client.saved["count"] == 1
     missing = client.get("/report/5", headers={"Accept": "text/html"})
     assert missing.status_code == 404 and "Back to settings" in missing.text

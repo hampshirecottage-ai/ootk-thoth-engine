@@ -27,16 +27,17 @@
     <form action="/generate_report" method="POST" id="readingForm" class="container">
         <!-- SETTINGS: everything that shapes a reading, in one place -->
         <section class="panel settings" aria-label="Settings">
-            <h2>Settings</h2>
+            <h2>Your reading</h2>
 
 {% include "_settings_fields.html" %}
             <input type="hidden" name="selected_cards" id="selectedCardsInput">
             <button type="submit" class="btn-submit">Generate reading</button>
+            <p class="mode-link">Rather not choose? <a href="/" id="modeSwitch">Draw from a seed</a></p>
         </section>
 
         <!-- SPREAD BOARD -->
         <section class="panel" aria-label="Spread board">
-            <h2>Spread Board <span class="count" id="slotCount"></span></h2>
+            <h2>Spread <span class="count" id="slotCount"></span></h2>
             <div id="manualBoard">
                 <div class="row">
                     <button type="button" class="btn-small" id="undoCard">Undo last</button>
@@ -48,8 +49,8 @@
 
         <!-- CARD CATALOG -->
         <section class="panel deck-panel" id="deckPanel" aria-label="Card catalog">
-            <h2>Card Catalog</h2>
-            <input type="text" id="search" placeholder="Search cards by name...">
+            <h2>Cards</h2>
+            <input type="text" id="search" placeholder="Search cards">
             <div class="card-grid" id="cardGrid">
                 {% for card in cards %}
                 {% set img = card_image_url(card.title) %}
@@ -60,7 +61,7 @@
                 </div>
                 {% endfor %}
             </div>
-            <p class="credit">Card art: Pamela Colman Smith, Rider-Waite-Smith deck (1909), public domain, shown under the Thoth titles.</p>
+            <p class="credit">Card art: Pamela Colman Smith (1909), public domain.</p>
         </section>
         <!-- Phone, Pick by hand: progress and Generate stay in reach while scrolling the catalog -->
         <div class="pick-bar" id="pickBar" aria-live="polite">

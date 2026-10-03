@@ -66,8 +66,8 @@
                     {% if card.king_scale_color %}<dt>King Scale</dt><dd>{{ card.king_scale_color }}</dd>{% endif %}
                 </dl>
                 <div class="actions">
-                    <button class="btn" type="button" id="copyPrompt">Copy prompt for your LLM</button>
-                    <a class="btn secondary" href="{{ reading_url }}">Full single-card report</a>
+                    <button class="btn" type="button" id="copyPrompt">Copy prompt</button>
+                    <a class="btn secondary" href="{{ reading_url }}">Full report</a>
                 </div>
             </div>
         </section>
@@ -79,10 +79,10 @@
 
         <section class="panel">
             <details class="prompt">
-                <summary>The prompt OOTK writes for this card</summary>
+                <summary>The prompt for your LLM</summary>
                 <pre id="promptText">{{ prompt }}</pre>
             </details>
-            <p class="why">Everyone sees the same card on the same day: the deck is shuffled with the date as its seed, so <code>ootk --seed {{ day.isoformat() }} --spread 1</code> draws it too. OOTK works out the card's correspondences; your LLM does the interpreting.</p>
+            <p class="why">Everyone gets the same card each day: the date is the seed (<code>ootk --seed {{ day.isoformat() }} --spread 1</code>).</p>
             <div class="actions"><a class="btn secondary" href="/">Draw your own reading</a></div>
         </section>
     </main>

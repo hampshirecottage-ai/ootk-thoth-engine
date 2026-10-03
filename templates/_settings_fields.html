@@ -1,30 +1,15 @@
 {# Settings shared by both pages; `mode` is "seed" or "manual". #}
-            <label for="spreadSelect">Operation / Spread</label>
+            <label for="spreadSelect">Spread</label>
             <select name="spread_key" id="spreadSelect">
                 {% for key, spread in spreads.items() %}
                 <option value="{{ key }}">{{ key }}. {{ spread.name }} ({{ positions[key] | length }})</option>
                 {% endfor %}
             </select>
 
-            {% if mode == "seed" %}
-            <p class="mode-link">Cards are drawn from a seed. <a href="/pick" id="modeSwitch">Pick them by hand instead</a></p>
-            <div id="seedRow">
-                <label for="seedInput">Seed</label>
-                <div class="row">
-                    <input type="text" name="seed" id="seedInput" placeholder="blank = new seed" autocomplete="off">
-                    <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
-                </div>
-                <p class="hint">The seed is shown on the report. The same seed and settings always draw the same cards, here or with <code>ootk --seed</code>.</p>
-            </div>
-
-            {% else %}
-            <p class="mode-link">You place each card yourself. <a href="/" id="modeSwitch">Draw from a seed instead</a></p>
-            {% endif %}
             <input type="hidden" name="draw_mode" value="{{ mode }}">
             {% if mode == "seed" %}
-            <fieldset id="sigBox">
+            <fieldset id="sigBox" hidden>
                 <legend>Significator</legend>
-                <p class="hint sig-none" id="sigNone">This spread has no significator position.</p>
                 <div id="sigPicker">
                     <div class="seg" role="radiogroup" aria-label="How to choose the significator">
                         <label><input type="radio" name="sig_method" value="describe" checked><span>Describe</span></label>
@@ -38,19 +23,18 @@
                             <option value="">Choose…</option>
                             {% for rank, who in sig_ranks.items() %}<option value="{{ rank }}">{{ who }}</option>{% endfor %}
                         </select>
-                        <label for="sigSuit">Colouring or temperament</label>
+                        <label for="sigSuit">Colouring</label>
                         <select id="sigSuit" name="sig_suit">
                             <option value="">Choose…</option>
                             {% for suit, look in sig_suits.items() %}<option value="{{ suit }}">{{ look }}</option>{% endfor %}
                         </select>
-                        <p class="hint">Book T's way: the court card that matches the person the reading is about.</p>
                     </div>
 
                     <div data-sig="birthday" hidden>
                         <label for="sigBirthday">Birth date</label>
                         {# No name: the date never leaves the browser, only the card it gives is sent. #}
                         <input type="date" id="sigBirthday" autocomplete="off">
-                        <p class="hint">Gives the Knight, Queen or Prince ruling that part of the zodiac. The date stays in your browser and is not saved; only the card is sent.</p>
+                        <p class="hint">Stays in your browser; only the card it gives is sent.</p>
                     </div>
 
                     <div data-sig="any" hidden>
@@ -68,8 +52,19 @@
             <p class="hint sig-none" id="sigNone">The first card you place is the significator.</p>
             {% endif %}
 
-            <fieldset>
-                <legend>Interpretation</legend>
+            <label for="topicInput">Question <span class="optional">(optional)</span></label>
+            <input type="text" name="topic" id="topicInput" placeholder="What would you like to look at?">
+
+            <details class="more" id="moreOptions">
+                <summary>More options <span class="more-sum" id="moreSummary"></span></summary>
+                {% if mode == "seed" %}
+                <label for="seedInput">Seed</label>
+                <div class="row">
+                    <input type="text" name="seed" id="seedInput" placeholder="blank = new seed" autocomplete="off">
+                    <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
+                </div>
+                <p class="hint">The same seed and settings always draw the same cards.</p>
+                {% endif %}
                 <label for="mappingSelect">Mapping system</label>
                 <select name="mapping_system" id="mappingSelect">
                     <option value="thoth">Thoth / Crowley (Emperor on Tzaddi, Star on Heh)</option>
@@ -85,16 +80,4 @@
                     <option value="life_path">3. Incarnational Life Path & Evolution</option>
                     <option value="post_mortem">4. Post-Mortem Return (Book of the Dead)</option>
                 </select>
-            </fieldset>
-
-            <fieldset>
-                <legend>Output</legend>
-                <div class="seg" role="radiogroup">
-                    <label><input type="radio" name="output_format" value="visual" checked><span>Visual report</span></label>
-                    <label><input type="radio" name="output_format" value="markdown"><span>Markdown file</span></label>
-                </div>
-            </fieldset>
-
-            <label for="topicInput">Question</label>
-            <input type="text" name="topic" id="topicInput" placeholder="Your question (optional)">
-
+            </details>

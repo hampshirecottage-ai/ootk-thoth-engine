@@ -18,7 +18,6 @@
         /* Start page: the sample reading first, then the settings (side by side when wide). */
         .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 0.85em; text-transform: uppercase; letter-spacing: 0.08em; }
         header.top h1 { font-size: 1.7em; line-height: 1.25; }
-        .why { margin: 10px auto 0; max-width: 70ch; line-height: 1.4; font-size: 0.95em; }
         .front { display: grid; grid-template-columns: minmax(0, 720px) minmax(280px, 420px); gap: 20px; justify-content: center; align-items: start; }
         .front.no-sample { grid-template-columns: minmax(280px, 560px); }
         .sample h3 { font-size: 0.95em; color: var(--accent-2); margin: 16px 0 8px; }
@@ -39,13 +38,13 @@
         .prompt-box.open::after { display: none; }
         .prompt-box pre { margin: 0; padding: 12px; font-size: 0.78em; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
         .sample-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .today-link { margin: 12px 0 0; }
-        .today-link a { display: inline-block; color: var(--accent); text-decoration: none; border: 1px solid var(--control); background: var(--panel); border-radius: 999px; padding: 6px 14px; }
-        .today-link a:hover { border-color: var(--accent); }
+        .today-link { margin: 8px 0 0; font-size: 0.92em; }
+        .today-link a { color: var(--accent); text-decoration: none; display: inline-block; padding: 4px 0; }
+        .today-link a:hover { text-decoration: underline; }
         a.btn-small { text-decoration: none; display: inline-block; }
-        .own-link { margin-left: auto; align-self: center; color: var(--accent); font-size: 0.92em; }
-        .btn-small.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
-        @media (max-width: 1000px) { .front { grid-template-columns: minmax(0, 720px); } }
+        .own-link { display: none; margin-left: auto; align-self: center; color: var(--accent); font-size: 0.92em; }
+        .link-btn { background: none; border: none; padding: 6px 0; color: var(--accent); cursor: pointer; text-decoration: underline; font-size: 0.9em; }
+        @media (max-width: 1000px) { .front { grid-template-columns: minmax(0, 720px); } .own-link { display: inline; } }
         @media (max-width: 640px) {
             header.top h1 { font-size: 1.35em; }
             .sample-cards { gap: 8px; }
@@ -58,8 +57,7 @@
         <div>
             <p class="eyebrow">LLM Tarot Reading</p>
             <h1>Get an AI tarot reading built on the real Thoth correspondences</h1>
-            <p class="tagline">OOTK draws your spread and calculates its elemental dignities, decans and Liber 777 correspondences. Paste the result into ChatGPT, Claude or any other LLM and it interprets them; OOTK never interprets the cards itself.</p>
-            <p class="why"><strong>Why not just ask ChatGPT to read your cards?</strong> Left alone, an LLM often makes the correspondences up. Here they are looked up and calculated, so it interprets correct ones.</p>
+            <p class="tagline">OOTK looks up your spread&rsquo;s correspondences so your LLM doesn&rsquo;t have to guess them. Paste the prompt into ChatGPT, Claude or any LLM; OOTK never interprets the cards itself.</p>
             {% if todays_card %}<p class="today-link"><a href="/today">Today&rsquo;s card: <strong>{{ todays_card }}</strong> &rarr;</a></p>{% endif %}
         </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
@@ -70,7 +68,7 @@
         <!-- SAMPLE: what a reading looks like, before any settings are asked for -->
         <section class="panel sample" id="sample" aria-labelledby="sampleTitle">
             <h2 id="sampleTitle">A sample reading</h2>
-            <p class="sample-meta">{{ sample.spread_name }} · seed {{ sample.seed }} · {{ sample.mapping_label }}</p>
+            <p class="sample-meta">{{ sample.spread_name }} · seed {{ sample.seed }}</p>
             <ol class="sample-cards">
                 {% for c in sample.cards %}
                 {% set img = card_image_url(c.title, "thumb") %}
@@ -79,7 +77,6 @@
                     <span class="pos">{{ c.position }}</span>
                     <strong>{{ c.title }}</strong>
                     <span class="corr">{{ c.attribution }}</span>
-                    <span class="corr">{% if c.arcana_type == "Minor" %}Sephira{% else %}Letter{% endif %}: {{ c.hebrew_letter }}</span>
                 </li>
                 {% endfor %}
             </ol>
@@ -92,13 +89,13 @@
             <div class="prompt-box" id="samplePromptBox">
                 <pre id="samplePrompt">{{ sample.prompt }}</pre>
             </div>
+            <button type="button" class="link-btn" id="expandSample" aria-controls="samplePromptBox" aria-expanded="false">Show the whole prompt</button>
             <div class="sample-actions">
-                <button type="button" class="btn-small primary" id="copySample">Copy prompt</button>
-                <button type="button" class="btn-small" id="expandSample" aria-controls="samplePromptBox" aria-expanded="false">Show the whole prompt</button>
-                <a class="btn-small" href="{{ sample.url }}">Open the full report</a>
+                <button type="button" class="btn-small" id="copySample">Copy prompt</button>
+                <a class="btn-small" href="{{ sample.url }}">Full report</a>
                 <a class="own-link" href="#readingForm">Get your own reading &darr;</a>
             </div>
-            <p class="credit">Card art: Pamela Colman Smith, Rider-Waite-Smith deck (1909), public domain, shown under the Thoth titles.</p>
+            <p class="credit">Card art: Pamela Colman Smith (1909), public domain.</p>
         </section>
         {% endif %}
 
@@ -108,8 +105,8 @@
                 <h2>Your own reading</h2>
 
 {% include "_settings_fields.html" %}
-                <div id="seedNote" class="seed-note"></div>
                 <button type="submit" class="btn-submit">Generate reading</button>
+                <p class="mode-link">Want to choose the cards? <a href="/pick" id="modeSwitch">Pick them by hand</a></p>
             </section>
         </form>
     </div>
