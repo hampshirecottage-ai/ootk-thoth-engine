@@ -5,6 +5,7 @@ import json
 import os
 import re
 import secrets
+from collections import Counter
 import shlex
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlencode
@@ -19,7 +20,8 @@ from psycopg.rows import dict_row
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
     analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
-    analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
+    analyze_spatial_vectors, calculate_elemental_dignities, derive_primary_element,
+    evaluate_macro_framework,
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
@@ -29,8 +31,8 @@ from ootk.db import (
 from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk import significator as significator_methods
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
-from ootk.spreads import SPREADS, spread_positions
-from ootk.visual import ELEMENT_COLORS, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
+from ootk.spreads import SPREADS, spread_positions, spread_segments
+from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -89,7 +91,7 @@ SPREAD_STAGES = [
      "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the "
      "houses, the signs and the 36 decans, and finally all four together."),
 ]
-# The spread a first visit starts on: three cards, like the sample and Start here step 3.
+# The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = ["/", "/pick", "/start", "/examples", "/library", "/method"]
@@ -179,13 +181,143 @@ def reading_export(session_id, spread_name, settings, significator, framework, f
     return json.loads(json.dumps(reading, default=str))
 
 
-# The start page shows this reading before asking for any settings. The seed is a throwaway
-# number, so the sample holds no personal data, and the same seed always draws the same cards.
+# The start page shows this reading before asking for any settings: the full Opening of the
+# Key, so a visitor sees every operation at once. The seed is a throwaway number and the
+# significator a fixed card, so the sample holds no personal data, and the same seed always
+# draws the same cards.
 SAMPLE_SETTINGS = {
-    "spread_key": "3", "seed": "12345", "topic": "", "significator": "", "framework": "auto",
-    "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "output_format": "visual",
+    "spread_key": "12", "seed": "12345", "topic": "", "significator": "Queen of Cups",
+    "framework": "auto", "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed",
+    "output_format": "visual",
 }
 _sample_cache = {}
+
+NUMBER_WORDS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+OP_SHORT_NAMES = {"8": "The heap", "9": "Twelve houses", "10": "Twelve signs", "11": "Thirty-six decans"}
+OP_UNITS = {"8": "in the heap", "9": "houses", "10": "signs", "11": "decans"}
+DIGNITY_KINDS = ((2, "same", ("shares an element", "share an element")),
+                 (1, "friendly", ("is friendly", "are friendly")),
+                 (-2, "contrary", ("is contrary", "are contrary")),
+                 (0, "neutral", ("is neutral", "are neutral")))
+
+
+def _and_list(items):
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _count(n):
+    return NUMBER_WORDS[n] if n < len(NUMBER_WORDS) else str(n)
+
+
+def _the(data):
+    """'the Queen of Cups', 'The Hierophant', 'Art': how a card reads mid-sentence."""
+    name = short_card_name(data["title"])
+    return name if name.startswith("The ") or data.get("arcana_type") == "Major" else f"the {name}"
+
+
+def _position_name(item):
+    """'[Op 1] 2. Development of Question (Left Pair A)' -> 'Development of Question (Left Pair A)'."""
+    return re.sub(r"^(\[Op \d+\]\s*)?\d+\.\s*", "", item["position_name"])
+
+
+def _dignity_totals(pairs):
+    totals = {key: sum(1 for d in pairs if d["score"] == score) for score, key, _ in DIGNITY_KINDS}
+    totals["net"] = sum(d["score"] for d in pairs)
+    totals["pairs"] = len(pairs)
+    return totals
+
+
+def _aspect_totals(pairs):
+    counts = Counter(p.get("aspect_name") or "Unaspected" for p in pairs)
+    return {"strong": sum(1 for p in pairs if abs(p.get("score_modifier") or 0) >= 2),
+            "by_type": [(a, counts[a]) for a in ASPECT_TYPES if counts[a]]}
+
+
+def _sample_card(item, start):
+    d = item["card_data"]
+    idx = item["position_number"] - 1
+    return {
+        "n": idx - start + 1, "position": _position_name(item), "title": d["title"],
+        "short": short_card_name(d["title"]), "element": derive_primary_element(d),
+        "attribution": d.get("attribution") or "", "letter": d.get("hebrew_letter") or "",
+        "place": d.get("spatial_dimension") or "", "place_type": d.get("spatial_type") or "",
+        "img": card_image_url(d["title"], "small"),
+        "dignities": [],   # filled in by sample_view, which has the whole operation
+    }
+
+
+def sample_summary(r, settings):
+    """Two plain-language paragraphs on what the sample drew and what was calculated.
+    Facts only: the site gives the AI the instructions and never interprets the cards."""
+    items = r["spread_results"]
+    segments = spread_segments(items, settings["spread_key"])
+    heap = items[segments[0][1]:segments[0][2]]
+    sizes = _and_list(f"{e - s} {OP_UNITS.get(k, 'cards')}"
+                      for k, s, e, _ in segments) if len(segments) > 1 else None
+    first = f"Seed {settings['seed']}"
+    if settings["significator"]:
+        first += f", with {_the(heap[0]['card_data'])} as significator,"
+    first += f" dealt {len(items)} cards"
+    first += f" over {_count(len(segments))} operations: {sizes}." if sizes else "."
+    if len(heap) > 2:
+        last = heap[-1]
+        first += (f" The heap opens on {_the(heap[0]['card_data'])} ({_position_name(heap[0]).lower()})"
+                  f" and closes on {_the(last['card_data'])} ({_position_name(last).lower()}).")
+
+    counts = [(e, c) for e, c in r["element_counts"].items() if c]
+    second = [f"Across all {len(items)} cards the elements are "
+              f"{_and_list(f'{c} {e}' for e, c in counts)}."]
+    dig = _dignity_totals(r["dignity_matrix"])
+    if dig["pairs"]:
+        parts = [f"{dig[key]} {phrases[dig[key] != 1]}" for _, key, phrases in DIGNITY_KINDS if dig[key]]
+        second.append(f"Of the {dig['pairs']} scored pairs, {_and_list(parts)}, a net score of {dig['net']:+d}.")
+    on_cube = [i for i in heap if i["card_data"].get("spatial_dimension")]
+    if on_cube:
+        verb = "sits" if len(on_cube) == 1 else "sit"
+        second.append(f"{_count(len(on_cube)).capitalize()} of the heap's cards {verb} on the Cube of Space.")
+    second.append("What it means is left to your AI.")
+    return [first, " ".join(second)]
+
+
+def sample_view(r, settings):
+    """Everything the start page shows of the sample: the summary, the heap and wheel for the
+    diagram, the element breakdown, the cube positions and one summary per operation."""
+    items = r["spread_results"]
+    segments = spread_segments(items, settings["spread_key"])
+    ops = []
+    for key, start, end, name in segments:
+        dignities = [d for d in r["dignity_matrix"] if start <= d["from_index"] < end]
+        cards = []
+        for item in items[start:end]:
+            idx = item["position_number"] - 1
+            card = _sample_card(item, start)
+            card["dignities"] = [
+                {"with": short_card_name(items[d["to_index"] if d["from_index"] == idx else d["from_index"]]
+                                         ["card_data"]["title"]), "score": d["score"]}
+                for d in dignities if idx in (d["from_index"], d["to_index"])]
+            cards.append(card)
+        ops.append({
+            "key": key, "name": OP_SHORT_NAMES.get(key, SPREADS[key]["name"]),
+            "full_name": name or SPREADS[key]["name"], "cards": cards,
+            "dignity": _dignity_totals(dignities),
+            "aspects": _aspect_totals([p for p in r["spatial_matrix"] if start <= p["from_index"] < end]),
+        })
+    total = len(items)
+    top = max(r["element_counts"].values()) or 1      # bars are scaled to the largest count
+    elements = [{"name": e, "count": n, "pct": round(100 * n / top)}
+                for e, n in r["element_counts"].items() if e != "Spirit" or n]
+    by_key = {op["key"]: op for op in ops}
+    heap = by_key.get("8", ops[0])["cards"]
+    wheel = by_key["10"]["cards"] if "10" in by_key else []
+    return {
+        "seed": settings["seed"], "significator": settings["significator"],
+        "spread_name": r["spread_name"], "card_count": total,
+        "summary": sample_summary(r, settings), "elements": elements, "ops": ops,
+        "heap": heap, "wheel": wheel,
+        "cube": [c for c in heap if c["place"]],
+        "prompt": r["analytical_prompt"], "url": share_path(settings),
+    }
 
 
 def sample_reading(conn, deck):
@@ -196,76 +328,15 @@ def sample_reading(conn, deck):
     if len(deck) != 78:            # another deck size would draw other cards for this seed
         return None
     try:
-        positions = spread_positions(SAMPLE_SETTINGS["spread_key"])
-        card_titles, _ = draw_spread(deck, SAMPLE_SETTINGS["seed"], positions, None)
-        r = run_reading(conn, SAMPLE_SETTINGS, card_titles,
-                        "None (spread has no significator position)", deck)
+        card_titles, significator_label = seeded_draw(deck, SAMPLE_SETTINGS["seed"],
+                                                      SAMPLE_SETTINGS["spread_key"],
+                                                      SAMPLE_SETTINGS["significator"])
+        r = run_reading(conn, SAMPLE_SETTINGS, card_titles, significator_label, deck)
     except (HTTPException, LookupError, ValueError):
         return None
-    sample = {
-        "seed": SAMPLE_SETTINGS["seed"],
-        "spread_name": r["spread_name"],
-        "mapping_label": MAPPING_LABELS[SAMPLE_SETTINGS["mapping_system"]],
-        "cards": [{"position": item["position_name"], **item["card_data"]}
-                  for item in r["spread_results"]],
-        "dignities": r["dignity_matrix"],
-        "summary": sample_summary(r),
-        "elements": [(e, n) for e, n in r["element_counts"].items() if e != "Spirit" or n],
-        "cube": [{"title": short_card_name(item["card_data"]["title"]),
-                  "place": item["card_data"]["spatial_dimension"]}
-                 for item in r["spread_results"] if item["card_data"].get("spatial_dimension")],
-        "prompt": r["analytical_prompt"],
-        "url": share_path(SAMPLE_SETTINGS),
-    }
+    sample = sample_view(r, SAMPLE_SETTINGS)
     _sample_cache["sample"] = sample
     return sample
-
-
-NUMBER_WORDS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
-DIGNITY_PHRASES = {2: "share an element", 1: "are friendly elements",
-                   0: "are neutral to each other", -2: "are contrary elements"}
-
-
-def _and_list(items):
-    items = list(items)
-    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
-
-
-def _the(name):
-    return name if name.startswith("The ") else f"the {name}"
-
-
-def _count(n):
-    return NUMBER_WORDS[n] if n < len(NUMBER_WORDS) else str(n)
-
-
-def sample_summary(r):
-    """Two plain-language paragraphs on what the sample drew and what was calculated.
-    Facts only: the site gives the AI the instructions and never interprets the cards."""
-    items = r["spread_results"]
-    names = [short_card_name(i["card_data"]["title"]) for i in items]
-    drawn = _and_list(f"{_the(n)} in the {i['position_name']} position" for n, i in zip(names, items))
-    stands = _and_list(re.sub(r" - (.+)", r" (\1)", str(i["card_data"].get("attribution") or "no attribution"))
-                       for i in items)
-    first = (f"The seed drew {_count(len(items))} cards: {drawn}. "
-             f"In the Thoth tables they stand for {stands}.")
-
-    counts = [(e, c) for e, c in r["element_counts"].items() if c]
-    second = [f"By element the draw is {_and_list(f'{_count(c)} {e}' for e, c in counts)}."]
-    for d in r["dignity_matrix"]:
-        a, b = names[d["from_index"]], names[d["to_index"]]
-        elems = re.search(r"\((\w+) \+ (\w+)\)", d["relationship"])
-        why = f" ({elems[1]} and {elems[2]})" if elems else ""
-        phrase = DIGNITY_PHRASES.get(d["score"], "are paired")
-        second.append(f"{_the(a)[0].upper()}{_the(a)[1:]} and {_the(b)} {phrase}{why}, "
-                      f"scored {d['score']:+d}.")
-    on_cube = [(n, i["card_data"]["spatial_dimension"]) for n, i in zip(names, items)
-               if i["card_data"].get("spatial_dimension")]
-    if on_cube:
-        second.append("On the Cube of Space " + _and_list(
-            f"{_the(n)} sits on the {place.lower()}" for n, place in on_cube) + ".")
-    second.append("What it means is left to your AI.")
-    return [first, " ".join(second)]
 
 
 def seeded_draw(deck, seed, spread_key, significator):
@@ -381,8 +452,7 @@ EXAMPLES = [
     {"spread_key": "2", "seed": "777", "title": "Two cards",
      "shows": "Two forces side by side, and the one elemental dignity between them."},
     {"spread_key": "3", "seed": "12345", "title": "Three cards",
-     "shows": "The start page's sample. Each neighbouring pair is scored by Book T's friendly "
-              "and contrary elements."},
+     "shows": "Each neighbouring pair is scored by Book T's friendly and contrary elements."},
     {"spread_key": "5", "seed": "1909", "title": "Four cards",
      "shows": "One card for each letter of IHVH and its world, from Atziluth (Fire) down to "
               "Assiah (Earth)."},

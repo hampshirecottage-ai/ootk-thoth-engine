@@ -702,12 +702,20 @@ def test_start_page_has_the_picker_and_no_default_card(client):
     assert 'name="significator"' not in pick and "first card you place is the significator" in pick
 
 
+def sample_deck():
+    """78 fake cards, one of them the sample's significator."""
+    deck = [dict(fake_card(f"Card {i}"), card_id=i) for i in range(77)]
+    return deck + [dict(fake_card("Queen of Cups", suit="Cups", arcana="Court"), card_id=77)]
+
+
 def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeypatch):
-    deck = [dict(fake_card(f"Card {i}"), card_id=i) for i in range(78)]
+    deck = sample_deck()
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
     page = client.get("/").text
-    expected, _ = shuffle.draw_spread(deck, app_module.SAMPLE_SETTINGS["seed"], spreads.spread_positions("3"))
-    assert all(title in page for title in expected)
+    s = app_module.SAMPLE_SETTINGS
+    expected, _ = app_module.seeded_draw(deck, s["seed"], s["spread_key"], s["significator"])
+    assert len(expected) == 75 and all(title in page for title in expected)
+    assert page.count('<details class="op">') == 4
     assert page.index('id="sample"') < page.index('id="readingForm"')
     assert 'id="copySample"' in page and "HERMETIC ANALYTICAL REPORT" in page
     assert client.saved == {}                                   # the sample is never saved
@@ -716,14 +724,15 @@ def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeyp
 
 def test_start_page_links_the_card_of_the_day_and_the_sample_report(client, monkeypatch):
     from datetime import date
-    deck = [dict(fake_card(f"Card {i}"), card_id=i) for i in range(78)]
+    deck = sample_deck()
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
     monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
     page = client.get("/").text
     top = shuffle.shuffle_deck(deck, "2026-10-03")[0]["title"]
     assert f'<a href="/today" class="today-link">Today&rsquo;s card: <strong>{top}</strong>' in page
-    assert 'href="/reading?seed=12345&amp;spread=3&amp;system=thoth"' in page
-    assert client.get("/reading?seed=12345&spread=3&system=thoth").status_code == 200
+    link = "/reading?seed=12345&spread=12&system=thoth&significator=Queen+of+Cups"
+    assert f'href="{link.replace("&", "&amp;")}"' in page
+    assert client.get(link).status_code == 200
     assert 'href="/today">Today' not in client.get("/pick").text
 
 
@@ -1048,21 +1057,28 @@ def test_old_golden_dawn_links_keep_the_thoth_swap(client):
 
 
 def test_sample_summary_states_facts_not_meanings():
+    def item(n, pos, title, arcana="Minor", place=None):
+        return {"position_number": n, "position_name": pos,
+                "card_data": {"title": title, "arcana_type": arcana, "spatial_dimension": place}}
     r = {
-        "spread_results": [
-            {"position_name": "Past", "card_data": {"title": "Queen of Cups",
-             "attribution": "Water of Water - 20° Gemini to 20° Cancer", "spatial_dimension": "Lower-East Edge"}},
-            {"position_name": "Present", "card_data": {"title": "V - The Hierophant",
-             "attribution": "Taurus", "spatial_dimension": None}},
-        ],
-        "element_counts": {"Fire": 0, "Water": 1, "Air": 0, "Earth": 1, "Spirit": 0},
-        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": 1,
-                            "relationship": "Friendly (Water + Earth)"}],
+        "spread_results": [item(1, "1. Significator / Core Nature of Question", "Queen of Cups",
+                                "Court", "Lower-East Edge"),
+                           item(2, "2. Development", "V - The Hierophant", "Major"),
+                           item(3, "3. Ultimate Climax / Resolution", "XIV - Art", "Major")],
+        "element_counts": {"Fire": 1, "Water": 1, "Air": 0, "Earth": 1, "Spirit": 0},
+        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": 1},
+                           {"from_index": 1, "to_index": 2, "score": -2}],
     }
-    first, second = app_module.sample_summary(r)
-    assert "the Queen of Cups in the Past position and The Hierophant in the Present position" in first
-    assert "Water of Water (20° Gemini to 20° Cancer) and Taurus" in first
-    assert "one Water and one Earth" in second
-    assert "friendly elements (Water and Earth), scored +1" in second
-    assert "the Queen of Cups sits on the lower-east edge" in second
+    settings = {"seed": "12345", "significator": "Queen of Cups", "spread_key": "3"}
+    first, second = app_module.sample_summary(r, settings)
+    assert first.startswith("Seed 12345, with the Queen of Cups as significator, dealt 3 cards.")
+    assert "closes on Art (ultimate climax / resolution)" in first
+    assert "1 Fire, 1 Water and 1 Earth" in second
+    assert "Of the 2 scored pairs, 1 is friendly and 1 is contrary, a net score of -1." in second
+    assert "One of the heap's cards sits on the Cube of Space." in second
     assert second.endswith("What it means is left to your AI.")
+
+
+def test_start_page_sample_is_the_full_opening_of_the_key():
+    assert app_module.SAMPLE_SETTINGS["spread_key"] == "12"
+    assert app_module.SAMPLE_SETTINGS["significator"]

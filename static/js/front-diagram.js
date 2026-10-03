@@ -1,7 +1,8 @@
-// Start page diagram: the 15-card heap of Op 1, the 12-part wheel of the later operations,
-// and the Cube of Space. The same fifteen markers move between the three layouts: twelve
-// become the signs (wheel segments, then cube edges) and three the mother letters (cube axes).
-// A schematic of the layouts, not a reading: it shows where things go, not what they mean.
+// Start page diagram of the sample Opening of the Key: the 15-card heap of Op 1, the twelve
+// signs of Op 3, and the Cube of Space. The same fifteen markers move between the three
+// layouts: twelve become the signs (wheel segments, then cube edges) and three the mother
+// letters (cube axes). Each marker shows the sample card at that place, coloured by element;
+// tapping one opens it in the inspector. It shows where cards fall, never what they mean.
 (function () {
     const svg = document.getElementById("journeySvg");
     if (!svg) return;
@@ -60,15 +61,33 @@
         ["♄", "Saturn", "Centre", [0, 0, 0]],
     ].map(([g, p, f, pt]) => [g + "︎", p, f, pt]);
 
-    // Cards from the sample reading that sit on the cube: their edge or face is marked.
-    let samplePlaces = [];
-    try { samplePlaces = JSON.parse(document.getElementById("sampleCube").textContent); } catch (e) {}
-    const sampleAt = place => samplePlaces.filter(c => c.place === place).map(c => c.title);
+    // ---------- the sample reading (cards per place) ----------
+    let data = { heap: [], wheel: [], colors: {} };
+    try { data = Object.assign(data, JSON.parse(document.getElementById("sampleData").textContent)); } catch (e) {}
+    const onCube = data.heap.filter(c => c.place);
+    const cardsAt = place => onCube.filter(c => c.place === place);
+    const cardsOnAxis = axis => onCube.filter(c => c.place.startsWith(axis.split(" ")[0]));
 
-    let heapNames = [];
-    try { heapNames = JSON.parse(document.getElementById("positionsData").textContent)["8"] || []; } catch (e) {}
     const detail = document.getElementById("journeyDetail");
-    const inspect = text => { detail.textContent = text; detail.hidden = false; };
+    const caption = document.getElementById("journeyCaption");
+    const esc = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+    const signed = n => (n > 0 ? "+" : "") + n;
+
+    // The inspector: one block per card, or a plain line for an empty place.
+    function inspect(place, cards) {
+        const blocks = cards.map(c => {
+            const scores = (c.dignities || []).map(d =>
+                `<span class="score ${d.score > 0 ? "pos" : d.score < 0 ? "neg" : "zero"}">${signed(d.score)}</span> with ${esc(d.with)}`).join(" · ");
+            return `<div>${c.img ? `<img src="${esc(c.img)}" alt="">` : ""}</div><div>
+                <div class="ins-pos">${esc(place)}</div>
+                <div class="ins-title">${esc(c.title)}</div>
+                <div><span class="dot" style="background:${esc(data.colors[c.element] || "transparent")}"></span>${esc(c.element)} · ${esc(c.attribution)}${c.letter ? " · " + esc(c.letter) : ""}</div>
+                ${c.place ? `<div class="ins-pos">Cube of Space: ${esc(c.place)}</div>` : ""}
+                ${scores ? `<div class="ins-scores">${scores}</div>` : ""}</div>`;
+        });
+        detail.innerHTML = blocks.length ? blocks.join("") : `<div><div class="ins-title">${esc(place)}</div><div class="ins-pos">No card from the sample's heap sits here.</div></div>`;
+        detail.hidden = false;
+    }
 
     // ---------- static guides, one group per stage ----------
     const guides = {};
@@ -96,79 +115,106 @@
         const [x1, y1] = iso([x * -AXIS_END, y * -AXIS_END, z * -AXIS_END]), [x2, y2] = iso([x * AXIS_END, y * AXIS_END, z * AXIS_END]);
         el("line", { x1, y1, x2, y2, class: "frame axis" }, guides.cube);
     });
-    DOUBLES.forEach(([glyph, planet, face, pt]) => {
+    const doubles = DOUBLES.map(([glyph, planet, face, pt]) => {
         const [x, y] = iso(pt);
-        const marked = sampleAt(face).length > 0;
-        const g = el("g", { class: "double" + (marked ? " marked" : ""), transform: `translate(${x},${y})`, tabindex: "0" }, guides.cube);
+        const place = face === "Centre" ? "Center Core (Holy Temple)" : face === "Up" ? "Up (Zenith)" : face === "Down" ? "Down (Nadir)" : face;
+        const cards = cardsAt(place);
+        const g = el("g", { class: "double" + (cards.length ? " marked" : ""), transform: `translate(${x},${y})`, tabindex: "0" }, guides.cube);
         el("circle", { r: 13 }, g);
-        const t = el("text", { "text-anchor": "middle", dy: "0.35em" }, g);
-        t.textContent = glyph;
-        const tip = `${face === "Centre" ? "Centre" : face + " face"}: ${planet}` + (marked ? ` (sample: ${sampleAt(face).join(", ")})` : "");
-        el("title", {}, g).textContent = tip;
-        g.addEventListener("click", () => { stopPlaying(); inspect(tip); });
+        el("text", { "text-anchor": "middle", dy: "0.35em" }, g).textContent = glyph;
+        const label = `${face === "Centre" ? "Centre" : face + " face"} · ${planet}`;
+        el("title", {}, g).textContent = label;
+        const pick = () => { stopPlaying(); inspect(label, cards); };
+        g.addEventListener("click", pick);
+        g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+        return { g, cards };
     });
 
     // ---------- the fifteen moving markers ----------
-    // Markers 0-11 become the signs, 12-14 the mother letters.
+    // Markers 0-11 become the signs, 12-14 the mother letters. Each stage gives a marker its
+    // place, its label and the sample cards it stands for.
+    let active = null;
     const nodes = HEAP.map((pos, i) => {
-        const g = el("g", { class: "node", tabindex: "0" }, svg);
-        el("rect", { x: -12, y: -18, width: 24, height: 36, rx: 3 }, g);
-        const t = el("text", { "text-anchor": "middle", dy: "0.35em" }, g);
+        const g = el("g", { class: "node", tabindex: "0", role: "button" }, svg);
+        el("rect", { x: -13, y: -19, width: 26, height: 38, rx: 3, class: "body" }, g);
+        const band = el("rect", { x: -11.5, y: -17.5, width: 23, height: 7, rx: 2, class: "band" }, g);
+        const t = el("text", { "text-anchor": "middle", dy: "0.55em" }, g);
         const tip = el("title", {}, g);
         let stages;
         if (i < 12) {
-            const sign = SIGNS[i], [edge, pt] = EDGES[sign], marked = sampleAt(edge);
+            const sign = SIGNS[i], [edge, pt] = EDGES[sign], w = data.wheel[i];
             stages = {
-                wheel: { xy: wheelXY(i), label: GLYPHS[i], tip: sign },
-                cube: { xy: iso(pt), label: GLYPHS[i], marked: marked.length > 0,
-                        tip: `${edge}: ${sign}` + (marked.length ? ` (sample: ${marked.join(", ")})` : "") },
+                wheel: { xy: wheelXY(i), label: GLYPHS[i], place: `Op 3, ${sign}`, cards: w ? [w] : [] },
+                cube: { xy: iso(pt), label: GLYPHS[i], place: `${edge} · ${sign}`, cards: cardsAt(edge) },
             };
         } else {
             const [letter, name, axis, pt] = MOTHERS[i - 12];
             stages = {
-                wheel: { xy: [(i - 13) * 30, 0], label: letter, faint: true, tip: `${name}: outside the wheel` },
-                cube: { xy: iso(pt), label: letter, tip: `${axis}: ${name}` },
+                wheel: { xy: [(i - 13) * 30, 0], label: letter, faint: true, place: `${name}: not on the wheel`, cards: [] },
+                cube: { xy: iso(pt), label: letter, place: `${axis} · ${name}`, cards: cardsOnAxis(axis) },
             };
         }
+        const h = data.heap[i];
         stages.heap = { xy: heapXY(pos), label: String(i + 1),
-                        tip: heapNames[i] ? `Op 1, position ${heapNames[i].replace(/^(\d+)\.\s*/, "$1: ")}` : `Op 1, position ${i + 1}` };
-        const pick = () => { stopPlaying(); inspect(stages[current].tip); };
+                        place: h ? `Op 1, position ${i + 1}: ${h.position}` : `Op 1, position ${i + 1}`,
+                        cards: h ? [h] : [] };
+        const node = { g, t, band, tip, stages };
+        const pick = () => {
+            stopPlaying();
+            if (active) active.g.classList.remove("active");
+            active = node; g.classList.add("active");
+            inspect(stages[current].place, stages[current].cards);
+        };
         g.addEventListener("click", pick);
         g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
         g.style.transitionDelay = reduceMotion ? "0s" : `${i * 30}ms`;
-        return { g, t, tip, stages };
+        return node;
     });
+
+    // ---------- element filter (the bars beside the drawing) ----------
+    let element = null;
+    const elementButtons = Array.from(document.querySelectorAll("[data-element]"));
+    function applyFilter() {
+        nodes.forEach(n => {
+            const cards = n.stages[current].cards;
+            n.g.classList.toggle("dim", !!element && !cards.some(c => c.element === element));
+        });
+        doubles.forEach(d => d.g.classList.toggle("dim", !!element && !d.cards.some(c => c.element === element)));
+        elementButtons.forEach(b => b.setAttribute("aria-pressed", b.dataset.element === element));
+    }
+    elementButtons.forEach(b => b.addEventListener("click", () => {
+        stopPlaying();
+        element = element === b.dataset.element ? null : b.dataset.element;
+        applyFilter();
+    }));
 
     // ---------- stages ----------
     const CAPTIONS = {
-        heap: "Op 1 lays fifteen cards in a heap around your significator. Each pair of cards is scored by its elements.",
-        wheel: "The next operations deal cards around a wheel: twelve houses, twelve signs, then thirty-six decans. Cards are related by the aspects between their places.",
-        cube: "Each sign is also an edge of the Cube of Space, the seven planets are its faces and centre, and the three mother letters are its axes. The report places every card that has a Hebrew letter here.",
+        heap: "Op 1 lays fifteen cards in a heap around the significator. Each pair of neighbouring cards is scored by its elements.",
+        wheel: "The next operations deal cards around a wheel: twelve houses, twelve signs, then thirty-six decans. This is Op 3, the signs.",
+        cube: "Each sign is also an edge of the Cube of Space, the seven planets are its faces and centre, and the three mother letters are its axes. Outlined: where the heap's cards sit.",
     };
     const buttons = Array.from(document.querySelectorAll("[data-journey]"));
-    const caption = document.getElementById("journeyCaption");
     let current = null;
 
     function show(stage) {
         current = stage;
-        svg.dataset.stage = stage;
         nodes.forEach(n => {
             const s = n.stages[stage];
             n.g.style.transform = `translate(${s.xy[0]}px, ${s.xy[1]}px)`;
             n.g.classList.toggle("faint", !!s.faint);
-            n.g.classList.toggle("marked", !!s.marked);
+            n.g.classList.toggle("marked", stage === "cube" && s.cards.length > 0);
+            const colour = stage !== "cube" && s.cards.length ? data.colors[s.cards[0].element] : null;
+            n.band.style.fill = colour || "transparent";
             n.t.textContent = s.label;
-            n.tip.textContent = s.tip;
+            n.tip.textContent = s.place + (s.cards.length ? ": " + s.cards.map(c => c.short).join(", ") : "");
         });
         Object.entries(guides).forEach(([s, g]) => g.classList.toggle("on", s === stage));
         buttons.forEach(b => b.setAttribute("aria-pressed", b.dataset.journey === stage));
-        let text = CAPTIONS[stage];
-        if (stage === "cube" && samplePlaces.length) {
-            text += " Marked: " + samplePlaces.map(c => `${c.title} (${c.place.toLowerCase()})`).join(" and ")
-                  + ", from the sample reading below.";
-        }
-        caption.textContent = text;
+        caption.textContent = CAPTIONS[stage];
+        if (active) { active.g.classList.remove("active"); active = null; }
         detail.hidden = true;
+        applyFilter();
     }
 
     // Plays through once when the diagram first comes into view; any click takes over.
@@ -183,7 +229,7 @@
             timer = setTimeout(() => {
                 show("wheel");
                 timer = setTimeout(() => { if (timer) show("cube"); }, 3200);
-            }, 2200);
+            }, 2600);
         }, { threshold: 0.5 });
         io.observe(svg);
     }
