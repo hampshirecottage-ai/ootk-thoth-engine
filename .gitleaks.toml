@@ -1,0 +1,32 @@
+# gitleaks config: the default rules plus the credentials this project actually uses.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "neon-password"
+description = "Neon Postgres password"
+regex = '''\bnpg_[A-Za-z0-9]{10,}\b'''
+keywords = ["npg_"]
+
+[[rules]]
+id = "postgres-url-with-password"
+description = "Postgres connection string with an inline password"
+regex = '''postgres(?:ql)?://[^:@/\s]+:([^@{}\s]+)@[^\s'"]+'''
+secretGroup = 1
+keywords = ["postgres://", "postgresql://"]
+
+[[rules]]
+id = "neon-host"
+description = "Neon database hostname (keep it in Render/.env, not the repo)"
+regex = '''\bep-[a-z]+-[a-z]+-[a-z0-9]{6,}(?:-pooler)?\.[a-z0-9-]+\.aws\.neon\.tech\b'''
+keywords = ["neon.tech"]
+
+[[rules]]
+id = "password-assignment"
+description = "DB or app password set to a literal value"
+regex = '''(?i)\b(?:DB_PASSWORD|APP_PASSWORD|PGPASSWORD)[ \t]*[:=][ \t]*["']?([^\s"'$(]{6,})'''
+secretGroup = 1
+keywords = ["password"]
+[rules.allowlist]
+regexTarget = "match"
+regexes = ['''your_password_here''', '''\$\{?DB_PASSWORD''', '''os\.(getenv|environ)''']
