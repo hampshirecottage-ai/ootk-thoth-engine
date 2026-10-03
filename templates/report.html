@@ -99,7 +99,14 @@
         details.section > .body { padding: 0 18px 18px; }
         details.sub { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
         details.sub > summary { cursor: pointer; color: var(--accent-2); font-weight: 600; }
-        .drawing { position: relative; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; overflow-x: auto; text-align: center; }
+        .drawing { position: relative; background: var(--drawing-bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; overflow-x: auto; text-align: center; color: var(--text); }
+        /* Deep emerald panel in both themes, so the drawing gets its own light-on-dark palette. */
+        .drawing {
+            --drawing-bg: #0f4c45; --text: #eef6f2; --muted: #a8d3c9; --control: #4f9a8f;
+            --svg-face: #135a52; --svg-hole: #0c4039; --svg-rule: #4f9a8f; --svg-sector: #2c7369; --card-base: #0a352f; --badge: #082c27;
+        }
+        .drawing .chip { background: rgba(255, 255, 255, 0.1); color: var(--text); }
+        .drawing .chip:hover { background: rgba(255, 255, 255, 0.2); }
         .drawing svg { max-width: 100%; height: auto; }
         svg .card-slot { cursor: pointer; transition: opacity 0.15s; }
         svg .card-slot:focus { outline: none; }
@@ -180,6 +187,7 @@
         @media (hover: none) { .touch-only { display: inline; } .hover-only { display: none; } }
         @media print {
             :root, :root[data-theme="light"] { --bg: #fff; --panel: #fff; --panel-2: #fff; --text: #000; --muted: #555; --line: #ccc; --code-bg: #fff; --pre-text: #000; --svg-face: #fff; --svg-hole: #fff; --card-base: #eee; --badge: #fff; }
+            .drawing { --drawing-bg: #fff; --text: #000; --muted: #555; --svg-face: #fff; --svg-hole: #fff; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #eee; --badge: #fff; }
             body { padding: 0; }
             .topbar, .filters, .svg-actions, .detail, .no-print { display: none !important; }
             details.section, .panel { break-inside: avoid-page; border-color: #ccc; }
