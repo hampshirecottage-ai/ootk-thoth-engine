@@ -9,7 +9,7 @@ let activeCardList = [];
 // The draw mode is the page itself, so it is not part of the remembered settings.
 // The significator itself is worked out from the sig_* choices; the birth date is never kept.
 const SETTING_FIELDS = ["spread_key", "seed", "sig_method", "sig_rank", "sig_suit", "sig_any",
-                        "mapping_system", "framework", "output_format"];
+                        "mapping_system", "framework"];
 const LAST_KEY = "ootk.lastSettings.v1";
 
 function readStore(key, fallback) {
@@ -42,7 +42,17 @@ function rememberSettings() { writeStore(LAST_KEY, Object.assign(readStore(LAST_
 
 function spreadPositions() { return positionsData[$("spreadSelect").value]; }
 function hasSigPosition() { const p = spreadPositions(); return p.length > 0 && /significator/i.test(p[0]); }
-function updateSpread() { manual ? updateSlots() : updateSeedNote(); updateSignificator(); }
+function updateSpread() { if (manual) updateSlots(); updateSignificator(); updateMoreSummary(); }
+
+// ---------- More options: a one-line summary of what is folded away ----------
+function updateMoreSummary() {
+    const short = el => el.options[el.selectedIndex].text.split(" (")[0].replace(/^\d+\.\s*/, "");
+    const parts = [short($("mappingSelect")), $("frameworkSelect").value === "auto" ? "" : short($("frameworkSelect"))];
+    if (!manual && $("seedInput").value.trim()) parts.unshift(`seed ${$("seedInput").value.trim()}`);
+    $("moreSummary").textContent = "· " + parts.filter(Boolean).join(" · ");
+}
+$("moreOptions").addEventListener("input", updateMoreSummary);
+$("moreOptions").addEventListener("change", updateMoreSummary);
 
 // ---------- significator ----------
 // Seed mode: Book T description (rank by age and gender, suit by colouring), birth date,
@@ -69,8 +79,7 @@ function chosenSignificator() {
 function updateSignificator() {
     const needs = hasSigPosition();
     if (manual) { $("sigNone").hidden = !needs; return; }
-    $("sigNone").hidden = needs;
-    $("sigPicker").hidden = !needs;
+    $("sigBox").hidden = !needs;
     const method = form.elements["sig_method"].value;
     document.querySelectorAll("[data-sig]").forEach(el => el.hidden = el.dataset.sig !== method);
     const card = needs ? chosenSignificator() : "";
@@ -90,19 +99,10 @@ if (!manual) {
 }
 
 // ---------- start page: draw from a seed ----------
-function updateSeedNote() {
-    const seed = $("seedInput").value.trim();
-    const n = spreadPositions().length;
-    $("seedNote").innerHTML = seed
-        ? `${n} card${n === 1 ? "" : "s"} will be drawn from seed <strong>${seed.replace(/</g, "&lt;")}</strong>. The same seed and settings always give the same reading.`
-        : `${n} card${n === 1 ? "" : "s"} will be drawn from a new seed. The report shows the seed so you can repeat the reading.`;
-}
-
 if (!manual) {
-    $("seedInput").addEventListener("input", updateSeedNote);
     $("randomSeed").addEventListener("click", () => {
         $("seedInput").value = String(100000 + Math.floor(Math.random() * 900000));
-        updateSeedNote();
+        updateMoreSummary();
     });
 }
 

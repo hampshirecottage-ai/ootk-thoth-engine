@@ -198,3 +198,10 @@ window.addEventListener("beforeprint", () => {
     reopened.forEach(d => d.open = true);
 });
 window.addEventListener("afterprint", () => { reopened.forEach(d => d.open = false); reopened = []; });
+
+// Save menu: close it after a choice or a click elsewhere.
+document.addEventListener("click", e => {
+    document.querySelectorAll("details.menu[open]").forEach(m => {
+        if (!m.contains(e.target) || e.target.closest(".menu-list button")) m.open = false;
+    });
+});

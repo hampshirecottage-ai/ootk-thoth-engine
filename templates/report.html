@@ -41,9 +41,22 @@
         a { color: var(--accent-2); }
         .muted { color: var(--muted); }
         .topbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
-        .btn { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 8px 14px; text-decoration: none; font-weight: 600; border-radius: 6px; border: none; cursor: pointer; font-size: 0.9em; }
+        .btn { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 8px 14px; text-decoration: none; font-weight: 600; border-radius: 6px; border: 1px solid var(--accent); cursor: pointer; font-size: 0.9em; line-height: 1.5; }
         .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); }
         .btn:hover { background: var(--accent-2); color: var(--on-accent); }
+        .btn.secondary:hover, details.menu[open] > summary.btn.secondary { background: var(--panel-2); color: var(--text); border-color: var(--accent); }
+        details.menu { position: relative; }
+        details.menu > summary { list-style: none; }
+        details.menu > summary::-webkit-details-marker { display: none; }
+        .menu-list { position: absolute; z-index: 30; top: calc(100% + 4px); right: 0; min-width: 150px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.2); padding: 4px; display: flex; flex-direction: column; }
+        .menu-list button { background: none; border: none; color: var(--text); text-align: left; padding: 9px 12px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 0.9em; }
+        .menu-list button:hover { background: var(--panel-2); }
+        details.types > summary { list-style: none; display: inline-block; }
+        details.types > summary::-webkit-details-marker { display: none; }
+        details.types[open] { flex-basis: 100%; }
+        details.types[open] > summary { margin-bottom: 6px; }
+        .cli-box { border-top: none; padding-top: 0; }
+        .cli-box > summary { font-weight: normal; font-size: 0.88em; }
         .next-step .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
         .next-step h3 { margin: 16px 0 0; font-size: 1em; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
@@ -136,11 +149,9 @@
             details.section > summary { flex-wrap: nowrap; display: grid; grid-template-columns: 1em 1fr; gap: 2px 8px; }
             details.section > summary h2 { font-size: 1.05em; }
             details.section > summary > .muted { grid-column: 2; font-size: 0.9em; }
-            /* Toolbar: one swipeable row instead of three stacked rows of buttons. */
-            .topbar { flex-wrap: nowrap; overflow-x: auto; gap: 8px; margin: -4px -12px 12px; padding: 4px 12px; scrollbar-width: none; }
-            .topbar::-webkit-scrollbar { display: none; }
-            .topbar > * { flex: none; }
-            .topbar .btn { white-space: nowrap; }
+            /* Toolbar: four controls fit one row; no sideways scroll, so the Save menu is not clipped. */
+            .topbar { gap: 6px; }
+            .topbar .btn { white-space: nowrap; padding: 8px 10px; }
             .wide-only { display: none; }
             .filters { position: static; }
             /* 16px stops iOS Safari zooming the page when the search box is focused. */
@@ -189,14 +200,17 @@
     {% macro signed(n) %}<span class="{{ 'pos' if n > 0 else 'neg' if n < 0 else '' }}">{{ '+' if n > 0 }}{{ n }}</span>{% endmacro %}
 
     <div class="topbar">
-        <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary">&larr; Back<span class="wide-only"> to settings</span></a>
-        <form action="/generate_report" method="POST" style="display:inline">
-            {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
-            <button class="btn" type="submit" title="Run the same settings again{{ ' with the same seed' if seed }}">↻ Repeat this reading</button>
-        </form>
-        <button class="btn secondary" type="button" data-download-md title="Download the analytical prompt as a .md file">Markdown</button>
-        <button class="btn secondary" type="button" data-download-json>JSON</button>
-        <button class="btn secondary" type="button" onclick="window.print()" title="Print, or save as PDF from the print dialog">Print / PDF</button>
+        <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
+        {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
+        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this)" title="Copy the prompt, then paste it into your LLM">Copy prompt</button>
+        <details class="menu">
+            <summary class="btn secondary">Save &#9662;</summary>
+            <div class="menu-list">
+                <button type="button" onclick="window.print()">PDF (print)</button>
+                <button type="button" data-download-md>Markdown</button>
+                <button type="button" data-download-json>JSON</button>
+            </div>
+        </details>
         <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </div>
 
@@ -205,7 +219,7 @@
     <section class="panel">
         <div class="meta">
             <div><span>Topic</span>{{ topic or 'General Operation' }}</div>
-            <div><span>Significator</span>{{ significator }}</div>
+            {% if not significator.startswith('None') %}<div><span>Significator</span>{{ significator }}</div>{% endif %}
             <div><span>Mapping</span>{{ mapping_label }}</div>
             <div><span>Framework</span>{{ S.framework }}</div>
             <div>
@@ -216,13 +230,9 @@
                 {% else %}<em class="muted">Cards picked by hand (no seed)</em>{% endif %}
             </div>
         </div>
-        {% if cli_command %}
-        <p class="muted" style="margin:12px 0 0">The same seed and settings always draw the same cards, here or in the terminal:</p>
-        <code class="cli" id="cliCommand">{{ cli_command }}</code>
-        {% endif %}
         {% if share_path %}
         <div class="share no-print">
-            <p class="muted" style="margin:12px 0 0">Share link: anyone who opens it sees these cards and this analysis{% if topic %}. Your topic is left out{% endif %}.</p>
+            <p class="muted" style="margin:12px 0 0">Share link{% if topic %} (your question is left out){% endif %}:</p>
             <div class="share-row">
                 <code class="cli" id="shareLink" data-path="{{ share_path }}">{{ share_path }}</code>
                 <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this)">Copy link</button>
@@ -234,6 +244,12 @@
                 el.textContent = location.origin + el.dataset.path;
             })();
         </script>
+        {% endif %}
+        {% if cli_command %}
+        <details class="sub cli-box">
+            <summary>Run it in the terminal</summary>
+            <code class="cli" id="cliCommand">{{ cli_command }}</code>
+        </details>
         {% endif %}
     </section>
 
@@ -329,12 +345,15 @@
             <button type="button" class="chip mode" data-strength="all" aria-pressed="true">All</button>
             <button type="button" class="chip mode" data-strength="strong" aria-pressed="false" title="Conjunction, Trine and Square (score ±2)">Strong only</button>
         </div>
-        <div class="group">
+        <details class="types">
+            <summary class="chip">Types &#9662;</summary>
+            <div class="group">
             {% for t in S.aspect_types %}
             <button type="button" class="chip" data-type="{{ t.type }}" aria-pressed="true"><i class="dot" style="background:{{ t.color }}"></i>{{ t.type }}</button>
             {% endfor %}
             <button type="button" class="chip" id="filterReset" title="Show every type">Reset</button>
-        </div>
+            </div>
+        </details>
         <span class="muted" id="filterCount"></span>
         {% endif %}
     </div>
@@ -471,26 +490,19 @@
     </details>
 
     <details class="section">
-        <summary><h2>Full analytical prompt</h2> <span class="muted">Markdown, for pasting into an LLM</span></summary>
+        <summary><h2>The prompt for your LLM</h2></summary>
         <div class="body">
             <button class="btn secondary" type="button" onclick="copyText(document.getElementById('promptText').textContent, this)">Copy prompt</button>
-            {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
             <pre id="promptText">{{ prompt }}</pre>
         </div>
     </details>
 
     <!-- ===== FINAL STEP ===== -->
     <section class="panel next-step no-print" id="nextStep">
-        <h2>Keep this reading</h2>
-        <p class="muted">{% if session_id %}It is saved in your database as session #{{ session_id }}. {% endif %}Download a copy to keep or share{% if seed %}, or keep the seed <strong class="seed">{{ seed }}</strong> to draw the same cards again{% endif %}.</p>
+        <h2>Next</h2>
+        <p class="muted">Paste the prompt into your LLM to get the interpretation.{% if session_id %} This reading is saved as session #{{ session_id }}.{% endif %}</p>
         <div class="actions">
-            <button class="btn" type="button" onclick="window.print()" title="Print, or save as PDF from the print dialog">Save as PDF</button>
-            <button class="btn secondary" type="button" data-download-md>Markdown</button>
-            <button class="btn secondary" type="button" data-download-json>JSON</button>
-        </div>
-        <h3>Next</h3>
-        <div class="actions">
-            <a href="/" class="btn">New reading</a>
+            <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn">New reading</a>
             <form action="/generate_report" method="POST" style="display:inline">
                 {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
                 <button class="btn secondary" type="submit" title="Run the same settings again{{ ' with the same seed' if seed }}">↻ Repeat this reading</button>
