@@ -29,7 +29,9 @@ function applyFilters() {
     document.querySelectorAll("[data-count-for]").forEach(el => { el.textContent = perSeg[el.dataset.countFor] || 0; });
     const fc = document.getElementById("filterCount");
     if (fc) fc.textContent = `Showing ${shown} of ${total}`;
-    try { localStorage.setItem("ootk.aspectFilter", JSON.stringify({ strongOnly: filterState.strongOnly, types: [...filterState.types] })); } catch (e) {}
+    // A report with no aspects has no filter chips; saving there would store an empty
+    // filter and hide every line in the next report.
+    if (allTypes.size) try { localStorage.setItem("ootk.aspectFilter", JSON.stringify({ strongOnly: filterState.strongOnly, types: [...filterState.types] })); } catch (e) {}
 }
 
 function syncChips() {
@@ -60,7 +62,9 @@ if (reset) reset.addEventListener("click", () => { filterState.types = new Set(a
 
 try {
     const saved = JSON.parse(localStorage.getItem("ootk.aspectFilter") || "null");
-    if (saved) { filterState.strongOnly = !!saved.strongOnly; filterState.types = new Set(saved.types.filter(t => allTypes.has(t))); }
+    const types = saved ? saved.types.filter(t => allTypes.has(t)) : [];
+    // An empty saved filter (left by older versions after a report with no aspects) means show all.
+    if (types.length) { filterState.strongOnly = !!saved.strongOnly; filterState.types = new Set(types); }
 } catch (e) {}
 if (document.getElementById("filters")) { syncChips(); applyFilters(); }
 
