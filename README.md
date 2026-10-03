@@ -1,6 +1,6 @@
 # OOTK Thoth Engine
 
-**OOTK draws a Thoth tarot spread from a seed you can repeat, then works out its elemental dignities, aspects and Liber 777 correspondences, up to the full Opening of the Key.**
+**OOTK is a neutral instruction set for an LLM to interpret a tarot reading.** It draws a Thoth spread from a seed you can repeat, works out its elemental dignities, aspects and Liber 777 correspondences (up to the full Opening of the Key), and writes them up as a prompt you paste into an LLM. It does not interpret the cards itself.
 
 **Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
