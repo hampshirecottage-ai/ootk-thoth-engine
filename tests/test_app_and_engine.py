@@ -542,6 +542,67 @@ def test_seed_mode_needs_a_significator_only_where_the_spread_has_one(seeded_cli
     assert seeded_client.saved["significator"] == "None (spread has no significator position)"
 
 
+# ---------- shareable links and card of the day ----------
+
+def test_report_share_link_redraws_the_same_cards_without_the_topic(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+             significator="Knight of Swords", mapping_system="golden_dawn", topic="private question")
+    drawn = seeded_client.lookups[-1]
+    path = "/reading?seed=918851&spread=12&system=golden_dawn&significator=Knight+of+Swords"
+    assert f'data-path="{path.replace("&", "&amp;")}"' in r.text
+    saves = seeded_client.saved["count"]
+    shared = seeded_client.get(path)
+    assert shared.status_code == 200
+    assert seeded_client.lookups[-1] == drawn and seeded_client.systems[-1] == "golden_dawn"
+    assert "private question" not in shared.text and "Shared reading" in shared.text
+    assert seeded_client.saved["count"] == saves                 # opening a link saves nothing
+
+
+def test_share_link_accepts_short_system_names_and_the_start_page_forwards(seeded_client):
+    assert seeded_client.get("/reading?seed=1&spread=3&system=gd").status_code == 200
+    assert seeded_client.systems[-1] == "golden_dawn"
+    r = seeded_client.get("/?seed=1&spread=3&system=gd", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/reading?seed=1&spread=3&system=gd"
+
+
+@pytest.mark.parametrize("query", ["spread=3", "seed=1&spread=99", "seed=1&spread=3&system=nope",
+                                   "seed=1&spread=3&framework=nope", "seed=" + "9" * 65 + "&spread=3",
+                                   "seed=1&spread=8"])
+def test_bad_share_links_are_400(seeded_client, query):
+    assert seeded_client.get(f"/reading?{query}").status_code == 400
+
+
+def test_hand_picked_report_has_no_share_link(client):
+    r = post(client, draw_mode="manual")
+    assert r.status_code == 200 and "shareLink" not in r.text
+
+
+def test_reports_are_not_indexed(seeded_client):
+    assert '<meta name="robots" content="noindex">' in seeded_client.get("/reading?seed=1&spread=3").text
+
+
+def test_card_of_the_day_is_the_top_card_of_the_date_seeded_deck(seeded_client, monkeypatch):
+    from datetime import date
+    monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
+    r = seeded_client.get("/today", follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"] == "/day/2026-10-03"
+    r = seeded_client.get("/day/2026-10-03")
+    assert r.status_code == 200
+    top = shuffle.shuffle_deck(DECK, "2026-10-03")[0]["title"]
+    assert seeded_client.lookups[-1] == [top] and f"<h2>{top}</h2>" in r.text
+    assert 'href="/day/2026-10-02"' in r.text and "Next day" not in r.text
+    assert "/reading?seed=2026-10-03&amp;spread=1&amp;system=thoth" in r.text
+    assert seeded_client.get("/day/2026-09-30").status_code == 200
+    assert "Next day" in seeded_client.get("/day/2026-09-30").text
+
+
+@pytest.mark.parametrize("day", ["2026-10-05", "2026-1-3", "yesterday", "2026-02-30"])
+def test_card_of_the_day_rejects_bad_or_future_dates(seeded_client, monkeypatch, day):
+    from datetime import date
+    monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
+    assert seeded_client.get(f"/day/{day}").status_code == 404
+
+
 def test_cli_command_leaves_out_a_blank_significator():
     assert "--significator" not in app_module.cli_command("3", "1", "golden_dawn", "auto", "", "")
     assert "--significator 'Queen of Cups'" in app_module.cli_command("8", "1", "golden_dawn", "auto",
