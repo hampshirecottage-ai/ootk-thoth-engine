@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 import psycopg
 from psycopg.rows import dict_row
@@ -70,6 +70,19 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 REPO_URL = "https://github.com/hampshirecottage-ai/ootk-thoth-engine"
 BUG_REPORT_URL = f"{REPO_URL}/issues/new?template=bug_report.yml"
 CONTACT_URL = f"{REPO_URL}/discussions"
+SITE_DESCRIPTION = ("Draw a Thoth tarot spread and get its Golden Dawn dignities, decans and "
+                    "Liber 777 correspondences calculated, as a prompt for your LLM to interpret.")
+# Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
+PUBLIC_PAGES = ["/", "/pick"]
+
+
+def site_url(request: Request) -> str:
+    """The public address, for links that must be absolute (link previews, sitemap).
+
+    SITE_URL wins, then the address Render gives the service, then the address the request
+    came in on (fine locally; behind a proxy it may say http instead of https)."""
+    url = os.getenv("SITE_URL") or os.getenv("RENDER_EXTERNAL_URL") or str(request.base_url)
+    return url.rstrip("/")
 
 
 @app.exception_handler(HTTPException)
@@ -96,7 +109,8 @@ async def form_error_page(request: Request, exc: HTTPException):
         'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
-                             contact_url=CONTACT_URL)
+                             contact_url=CONTACT_URL, site_url=site_url,
+                             site_description=SITE_DESCRIPTION)
 
 
 def get_db_connection():
@@ -237,6 +251,37 @@ def settings_page(request: Request, name: str, mode: str):
             "birth_spans": significator_methods.BIRTH_SPANS,
         }
     )
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots_txt(request: Request):
+    """Search engines may list the start, pick and card-of-the-day pages, never saved or
+    shared readings or the API."""
+    return ("User-agent: *\n"
+            "Disallow: /report/\n"
+            "Disallow: /generate_report\n"
+            "Disallow: /reading\n"
+            "Disallow: /docs\n"
+            "Disallow: /redoc\n"
+            "Disallow: /openapi.json\n"
+            f"\nSitemap: {site_url(request)}/sitemap.xml\n")
+
+
+@app.get("/sitemap.xml")
+def sitemap_xml(request: Request):
+    base = site_url(request)
+    pages = PUBLIC_PAGES + [f"/day/{utc_today().isoformat()}"]
+    urls = "".join(f"<url><loc>{html.escape(base + path)}</loc></url>" for path in pages)
+    return Response('<?xml version="1.0" encoding="UTF-8"?>'
+                    f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
+                    media_type="application/xml")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Browsers and crawlers ask for /favicon.ico whatever the page links to."""
+    return FileResponse(static_dir / "site" / "favicon.ico", media_type="image/x-icon",
+                        headers={"Cache-Control": "public, max-age=86400"})
 
 
 @app.get("/", response_class=HTMLResponse)

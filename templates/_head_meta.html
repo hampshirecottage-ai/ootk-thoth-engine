@@ -1,0 +1,26 @@
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="icon" href="{{ static_url('site/favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ static_url('site/apple-touch-icon.png') }}">
+    <meta name="theme-color" content="#3a1d5c">
+    <meta name="description" content="{{ page_description | default(site_description) }}">
+{%- if noindex %}
+    <meta name="robots" content="noindex">
+{%- else %}
+    <link rel="canonical" href="{{ site_url(request) }}{{ request.url.path }}">
+{%- endif %}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="LLM Tarot Reading">
+    <meta property="og:title" content="{{ page_title | default('LLM Tarot Reading') }}">
+    <meta property="og:description" content="{{ page_description | default(site_description) }}">
+    <meta property="og:url" content="{{ site_url(request) }}{{ request.url.path }}">
+    <meta property="og:image" content="{{ site_url(request) }}/static/site/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="LLM Tarot Reading: three tarot cards beside the site's name">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ page_title | default('LLM Tarot Reading') }}">
+    <meta name="twitter:description" content="{{ page_description | default(site_description) }}">
+    <meta name="twitter:image" content="{{ site_url(request) }}/static/site/og-image.jpg">
+{#- Shared <head> tags: icons, the search description and link previews (Open Graph and Twitter).
+   Reports pass noindex=true: they get the same generic preview but stay out of search engines.
+   A page may pass page_title and page_description to replace the site-wide ones. #}

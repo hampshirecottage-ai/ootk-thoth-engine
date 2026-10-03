@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="robots" content="noindex">
-    <link rel="icon" href="data:,">
+{% with noindex=true %}{% include "_head_meta.html" %}{% endwith %}
     <title>Report - {{ spread_name }}</title>
     <script>
         // Saved choice first, otherwise the light (beige) theme.
