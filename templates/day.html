@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Card of the day, {{ day.strftime('%-d %B %Y') }}: {{ name }} · LLM Tarot Reading</title>
+    <meta name="description" content="The tarot card of the day for {{ day.strftime('%-d %B %Y') }} is {{ name }} ({{ card.attribution }}), with its Liber 777 correspondences and a ready-made prompt for your LLM.">
+    <link rel="canonical" href="/day/{{ day.isoformat() }}">
+    <script>
+        // Saved choice first, otherwise the light (beige) theme.
+        (function () {
+            let t = null;
+            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
+            document.documentElement.dataset.theme = t || "light";
+        })();
+    </script>
+{% include "_reading_styles.html" %}
+    <style>
+        .day { max-width: 760px; margin: 0 auto; }
+        .day-card { display: grid; grid-template-columns: minmax(160px, 260px) 1fr; gap: 20px; align-items: start; }
+        .day-card img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+        .day-card .noimg { aspect-ratio: 11 / 19; border-radius: 8px; border: 1px dashed var(--control); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+        .date { color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.8em; margin: 0; }
+        .day-card h2 { font-size: 1.6em; margin: 4px 0 2px; }
+        .full-title { color: var(--muted); margin: 0 0 14px; }
+        dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; margin: 0 0 16px; }
+        dl.facts dt { color: var(--muted); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; padding-top: 2px; }
+        dl.facts dd { margin: 0; }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        a.btn, button.btn { display: inline-block; background: var(--accent); color: var(--on-accent); border: none; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; cursor: pointer; }
+        a.btn.secondary, button.btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); font-weight: normal; }
+        .daynav { display: flex; justify-content: space-between; gap: 8px; margin: 16px 0; }
+        .daynav a { color: var(--accent); text-decoration: none; padding: 6px 0; }
+        details.prompt summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+        details.prompt pre { white-space: pre-wrap; background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 12px; font-size: 0.82em; max-height: 50vh; overflow: auto; }
+        .why { color: var(--muted); font-size: 0.9em; line-height: 1.5; margin: 16px 0 0; }
+        @media (max-width: 560px) {
+            .day-card { grid-template-columns: 1fr; }
+            .day-card .art { max-width: 240px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top">
+        <div>
+            <h1><a class="home" href="/">LLM Tarot Reading</a></h1>
+            <p class="tagline">Card of the day</p>
+        </div>
+        <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
+    </header>
+
+    <main class="day">
+        <section class="panel day-card">
+            <div class="art">
+                {% if image %}<img src="{{ image }}" alt="{{ card.title }}" width="440" height="760">
+                {% else %}<div class="noimg">{{ name }}</div>{% endif %}
+            </div>
+            <div>
+                <p class="date">{% if is_today %}Today · {% endif %}{{ day.strftime('%A %-d %B %Y') }}</p>
+                <h2>{{ name }}</h2>
+                {% if card.title != name %}<p class="full-title">{{ card.title }}</p>{% endif %}
+                <dl class="facts">
+                    <dt>Attribution</dt><dd>{{ card.attribution }}</dd>
+                    <dt>{{ 'Sephira' if card.arcana_type == 'Minor' else 'Hebrew letter' }}</dt><dd>{{ card.hebrew_letter }}, {{ card.path_or_sephira }}</dd>
+                    {% if card.king_scale_color %}<dt>King Scale</dt><dd>{{ card.king_scale_color }}</dd>{% endif %}
+                </dl>
+                <div class="actions">
+                    <button class="btn" type="button" id="copyPrompt">Copy prompt for your LLM</button>
+                    <a class="btn secondary" href="{{ reading_url }}">Full single-card report</a>
+                </div>
+            </div>
+        </section>
+
+        <nav class="daynav" aria-label="Other days">
+            <a href="/day/{{ previous }}">&larr; Previous day</a>
+            {% if next %}<a href="/day/{{ next }}">Next day &rarr;</a>{% elif not is_today %}<a href="/day/{{ today }}">Today &rarr;</a>{% endif %}
+        </nav>
+
+        <section class="panel">
+            <details class="prompt">
+                <summary>The prompt OOTK writes for this card</summary>
+                <pre id="promptText">{{ prompt }}</pre>
+            </details>
+            <p class="why">Everyone sees the same card on the same day: the deck is shuffled with the date as its seed, so <code>ootk --seed {{ day.isoformat() }} --spread 1</code> draws it too. OOTK works out the card's correspondences; your LLM does the interpreting.</p>
+            <div class="actions"><a class="btn secondary" href="/">Draw your own reading</a></div>
+        </section>
+    </main>
+
+    <script>
+        document.getElementById("themeToggle").addEventListener("click", () => {
+            const root = document.documentElement;
+            root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+            try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
+        });
+        document.getElementById("copyPrompt").addEventListener("click", (e) => {
+            const btn = e.currentTarget, text = document.getElementById("promptText").textContent;
+            const done = () => { const t = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = t, 1200); };
+            if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
+        });
+    </script>
+{% include "_site_footer.html" %}
+</body>
+</html>

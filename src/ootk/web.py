@@ -5,6 +5,8 @@ import json
 import os
 import secrets
 import shlex
+from datetime import date, datetime, timedelta, timezone
+from urllib.parse import urlencode
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
@@ -27,7 +29,7 @@ from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk import significator as significator_methods
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions
-from ootk.visual import build_report_view, card_image_url, card_srcset, withheld_view
+from ootk.visual import build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -179,6 +181,36 @@ def sample_reading(conn, deck):
     return sample
 
 
+def seeded_draw(deck, seed, spread_key, significator):
+    """The cards `seed` draws for the spread, exactly as `ootk --seed` does.
+    Returns (card_titles, significator_label)."""
+    positions = spread_positions(spread_key)
+    sig_card = resolve_significator(deck, significator)
+    if significator and sig_card is None:
+        raise HTTPException(status_code=400,
+                            detail=f"Significator {significator!r} was not found in the deck. "
+                                   f"Pick a title from the list, e.g. 'Queen of Cups' "
+                                   f"or 'Princess of Disks'.")
+    if sig_card is None and has_significator_position(positions):
+        raise HTTPException(status_code=400,
+                            detail=f"{SPREADS[spread_key]['name']} needs a significator. "
+                                   f"Choose one under Significator on the start page.")
+    card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
+    return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
+
+
+def share_path(settings) -> str:
+    """The /reading address that redraws a seeded reading. It carries the seed and settings
+    but never the topic, so a shared link doesn't reveal what the question was."""
+    params = {"seed": settings["seed"], "spread": settings["spread_key"],
+              "system": settings["mapping_system"]}
+    if settings["framework"] != "auto":
+        params["framework"] = settings["framework"]
+    if settings["significator"]:
+        params["significator"] = settings["significator"]
+    return "/reading?" + urlencode(params)
+
+
 def settings_page(request: Request, name: str, mode: str):
     """Sync endpoint body: FastAPI executes in threadpool to prevent blocking the event loop."""
     with get_db_connection() as conn:
@@ -202,7 +234,9 @@ def settings_page(request: Request, name: str, mode: str):
 
 @app.get("/", response_class=HTMLResponse)
 def main_gui(request: Request):
-    """Start page: settings only, cards drawn from a seed."""
+    """Start page: settings only, cards drawn from a seed. '/?seed=...' opens that shared reading."""
+    if request.query_params.get("seed"):
+        return RedirectResponse(f"/reading?{request.url.query}", status_code=307)
     return settings_page(request, "index.html", "seed")
 
 
@@ -262,19 +296,7 @@ def generate_report(
         if draw_mode == "seed":
             seed = seed or new_seed()
             deck = fetch_all_cards(conn)
-            sig_card = resolve_significator(deck, significator)
-            if significator and sig_card is None:
-                raise HTTPException(status_code=400,
-                                    detail=f"Significator {significator!r} was not found in the deck. "
-                                           f"Pick a title from the list, e.g. 'Queen of Cups' "
-                                           f"or 'Princess of Disks'.")
-            if sig_card is None and has_significator_position(positions):
-                raise HTTPException(status_code=400,
-                                    detail=f"{selected_spread['name']} needs a significator. "
-                                           f"Choose one under Significator on the start page.")
-            card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
-            significator_label = (sig_card["title"] if pinned
-                                  else "None (spread has no significator position)")
+            card_titles, significator_label = seeded_draw(deck, seed, spread_key, significator)
         else:
             seed = ""
             card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
@@ -328,6 +350,97 @@ def generate_report(
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
         return RedirectResponse(f"/report/{link}", status_code=303)
     return render_report(request, session_id, settings, reading)
+
+
+# Short names accepted in shared links, e.g. ?system=gd.
+SYSTEM_ALIASES = {"gd": "golden_dawn", "fe": "french_egyptian"}
+SHARED_SEED_MAX = 64
+
+
+@app.get("/reading", response_class=HTMLResponse)
+def shared_reading(request: Request, seed: str = "", spread: str = "",
+                   system: str = DEFAULT_MAPPING, framework: str = "auto", significator: str = ""):
+    """A seeded reading rebuilt from its link, e.g. /reading?seed=918851&spread=12&system=thoth.
+
+    The same seed and settings always draw the same cards, so the link alone is the reading.
+    Nothing is saved, and no saved reading can be reached this way: those keep their random
+    /report/<link> addresses.
+    """
+    seed, spread, framework, significator = seed.strip(), spread.strip(), framework.strip(), significator.strip()
+    system = SYSTEM_ALIASES.get(system.strip().lower(), system.strip().lower())
+    if not seed:
+        raise HTTPException(status_code=400, detail="This link has no seed, so there are no cards to draw.")
+    if len(seed) > SHARED_SEED_MAX:
+        raise HTTPException(status_code=400, detail=f"A seed can be at most {SHARED_SEED_MAX} characters.")
+    if spread not in SPREADS:
+        raise HTTPException(status_code=400, detail=f"Unknown spread: {spread!r}. Use a number from 1 to {len(SPREADS)}.")
+    if system not in VALID_MAPPINGS:
+        raise HTTPException(status_code=400, detail=f"Unknown system: {system!r}. Use thoth, gd or french_egyptian.")
+    if framework not in VALID_FRAMEWORKS:
+        raise HTTPException(status_code=400, detail=f"Unknown framework: {framework!r}.")
+    settings = {
+        "spread_key": spread, "topic": "", "significator": significator, "framework": framework,
+        "mapping_system": system, "draw_mode": "seed", "seed": seed, "output_format": "visual",
+        "selected_cards": "",
+    }
+    with get_db_connection() as conn:
+        deck = fetch_all_cards(conn)
+        card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
+        reading = run_reading(conn, settings, card_titles, significator_label, deck)
+    return render_report(request, None, settings, reading, shared=True)
+
+
+def utc_today() -> date:
+    return datetime.now(timezone.utc).date()
+
+
+@app.get("/today")
+def card_of_the_day_today():
+    """Today's card (UTC). Redirects so each day keeps its own address."""
+    return RedirectResponse(f"/day/{utc_today().isoformat()}", status_code=307)
+
+
+@app.get("/day/{day}", response_class=HTMLResponse)
+def card_of_the_day(request: Request, day: str):
+    """The card of the day: the top card of the deck shuffled with the ISO date as the seed,
+    the same card `ootk --seed 2026-10-03 --spread 1` draws."""
+    try:
+        when = date.fromisoformat(day)
+    except ValueError:
+        raise HTTPException(status_code=404, detail=f"{day!r} is not a date. Use the form 2026-10-03.")
+    if when.isoformat() != day:
+        raise HTTPException(status_code=404, detail=f"{day!r} is not a date. Use the form 2026-10-03.")
+    today = utc_today()
+    # A day ahead of UTC is allowed, so it is "today" everywhere on Earth.
+    if when > today + timedelta(days=1):
+        raise HTTPException(status_code=404, detail="That day's card hasn't been drawn yet.")
+    settings = {
+        "spread_key": "1", "topic": "", "significator": "", "framework": "auto",
+        "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "seed": day,
+        "output_format": "visual", "selected_cards": "",
+    }
+    with get_db_connection() as conn:
+        deck = fetch_all_cards(conn)
+        card_titles, significator_label = seeded_draw(deck, day, "1", "")
+        reading = run_reading(conn, settings, card_titles, significator_label, deck)
+    card = reading["spread_results"][0]["card_data"]
+    title = card["title"]
+    return templates.TemplateResponse(
+        request=request,
+        name="day.html",
+        context={
+            "day": when,
+            "is_today": when == today,
+            "card": card,
+            "name": short_card_name(title),
+            "image": card_image_url(title, "full"),
+            "prompt": reading["analytical_prompt"],
+            "reading_url": share_path(settings),
+            "previous": (when - timedelta(days=1)).isoformat(),
+            "next": (when + timedelta(days=1)).isoformat() if when < today else None,
+            "today": today.isoformat(),
+        },
+    )
 
 
 @app.get("/report/{link}", response_class=HTMLResponse)
@@ -410,7 +523,7 @@ def run_reading(conn, settings, card_titles, significator_label, deck=None):
     }
 
 
-def render_report(request, session_id, settings, r):
+def render_report(request, session_id, settings, r, shared=False):
     """The visual report for a reading from run_reading()."""
     spread_key, seed = settings["spread_key"], settings["seed"]
     mapping_system, framework = settings["mapping_system"], settings["framework"]
@@ -432,6 +545,8 @@ def render_report(request, session_id, settings, r):
             "significator": r["significator_label"],
             "seed": seed,
             "settings": settings,
+            "shared": shared,
+            "share_path": share_path(settings) if seed else "",
             "cli_command": cli_command(spread_key, seed, mapping_system, framework,
                                        settings["significator"], settings["topic"]) if seed else "",
             "spatial_details": r["spatial_details"],
