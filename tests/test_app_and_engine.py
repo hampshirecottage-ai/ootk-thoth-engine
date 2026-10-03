@@ -97,6 +97,21 @@ def test_index_renders(client):
     assert client.get("/").status_code == 200
 
 
+def test_password_off_by_default(client, monkeypatch):
+    monkeypatch.delenv("APP_PASSWORD", raising=False)
+    assert client.get("/").status_code == 200
+
+
+def test_password_required_when_set(client, monkeypatch):
+    monkeypatch.setenv("APP_PASSWORD", "s3cret")
+    r = client.get("/")
+    assert r.status_code == 401
+    assert r.headers["www-authenticate"].startswith("Basic")
+    assert client.get("/", auth=("anyone", "wrong")).status_code == 401
+    assert client.get("/static/js/index.js").status_code == 401
+    assert client.get("/", auth=("anyone", "s3cret")).status_code == 200
+
+
 # ---------- app: web performance ----------
 
 def test_pages_are_compressed(client):

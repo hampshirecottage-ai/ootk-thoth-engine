@@ -1,6 +1,8 @@
 """FastAPI web GUI: `uvicorn ootk.web:app`."""
+import base64
 import html
 import json
+import os
 import secrets
 import shlex
 
@@ -41,6 +43,25 @@ static_dir = BASE_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", CachedStaticFiles(directory=str(static_dir)), name="static")
 app.add_middleware(CompressionMiddleware)
+
+
+@app.middleware("http")
+async def require_password(request: Request, call_next):
+    """When APP_PASSWORD is set (e.g. on a public host), every page asks for it via HTTP
+    Basic auth; any user name is accepted. Unset, the app is open as before."""
+    password = os.getenv("APP_PASSWORD")
+    if not password:
+        return await call_next(request)
+    scheme, _, encoded = request.headers.get("authorization", "").partition(" ")
+    if scheme.lower() == "basic":
+        try:
+            given = base64.b64decode(encoded).decode("utf-8").partition(":")[2]
+        except (ValueError, UnicodeDecodeError):
+            given = ""
+        if secrets.compare_digest(given.encode(), password.encode()):
+            return await call_next(request)
+    return PlainTextResponse("Password required.", status_code=401,
+                             headers={"WWW-Authenticate": 'Basic realm="ootk"'})
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
