@@ -31,6 +31,8 @@
             color-scheme: light;
         }
         ::placeholder { color: var(--muted); opacity: 0.75; }
+        :root[data-theme="light"] h1, :root[data-theme="light"] .filters { color: #f4a11a; --muted: #f4a11a; }
+        :root[data-theme="light"] .filters .search { --muted: #0f2e1b; }
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; line-height: 1.5; }
         main { max-width: 1200px; margin: 0 auto; }
@@ -102,10 +104,10 @@
         .drawing { position: relative; background: var(--drawing-bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; overflow-x: auto; text-align: center; color: var(--text); }
         /* Green panel in both themes, with its own black-text palette. */
         .drawing {
-            --drawing-bg: #2e8a56; --text: #000; --muted: #0d2a19; --control: #1c5535;
-            --svg-face: #3a9a63; --svg-hole: #4caa74; --svg-rule: #1c5535; --svg-sector: #24734a; --card-base: #24734a; --badge: #d4ecdc;
+            --drawing-bg: #2e8a56; --text: #f4a11a; --muted: #f4a11a; --control: #1c5535;
+            --svg-face: #3a9a63; --svg-hole: #4caa74; --svg-rule: #1c5535; --svg-sector: #24734a; --card-base: #24734a; --badge: #0d2617;
         }
-        .drawing .chip { background: rgba(255, 255, 255, 0.3); color: var(--text); }
+        .drawing .chip { background: rgba(255, 255, 255, 0.3); color: #000; }
         .drawing .chip:hover { background: rgba(255, 255, 255, 0.5); }
         .drawing svg { max-width: 100%; height: auto; }
         svg .card-slot { cursor: pointer; transition: opacity 0.15s; }
@@ -188,6 +190,7 @@
         @media print {
             :root, :root[data-theme="light"] { --bg: #fff; --panel: #fff; --panel-2: #fff; --text: #000; --muted: #555; --line: #ccc; --code-bg: #fff; --pre-text: #000; --svg-face: #fff; --svg-hole: #fff; --card-base: #eee; --badge: #fff; }
             .drawing { --drawing-bg: #fff; --text: #000; --muted: #555; --svg-face: #fff; --svg-hole: #fff; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #eee; --badge: #fff; }
+            :root h1, :root[data-theme="light"] h1 { color: #000; }
             body { padding: 0; }
             .topbar, .filters, .svg-actions, .detail, .no-print { display: none !important; }
             details.section, .panel { break-inside: avoid-page; border-color: #ccc; }
