@@ -24,7 +24,8 @@ from ootk.db import (
     save_spread_session,
 )
 from ootk.report import build_analytical_prompt
-from ootk.shuffle import draw_spread, resolve_significator
+from ootk import significator as significator_methods
+from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions
 from ootk.visual import build_report_view, card_image_url, card_srcset, withheld_view
 
@@ -109,7 +110,9 @@ def new_seed() -> str:
 def cli_command(spread_key, seed, mapping_system, framework, significator, topic) -> str:
     """The `ootk` command that repeats a seeded reading from the terminal."""
     parts = ["ootk", "--spread", spread_key, "--seed", seed, "--mapping", mapping_system,
-             "--framework", framework, "--significator", significator]
+             "--framework", framework]
+    if significator:
+        parts += ["--significator", significator]
     if topic:
         parts += ["--topic", topic]
     return " ".join(shlex.quote(p) for p in parts)
@@ -153,6 +156,9 @@ def settings_page(request: Request, name: str, mode: str):
             "mode": mode,
             "spreads": SPREADS,
             "positions": {key: spread_positions(key) for key in SPREADS},
+            "sig_ranks": significator_methods.RANKS,
+            "sig_suits": significator_methods.SUITS,
+            "birth_spans": significator_methods.BIRTH_SPANS,
         }
     )
 
@@ -174,7 +180,7 @@ def generate_report(
     request: Request,
     spread_key: str = Form(...),
     topic: str = Form(""),
-    significator: str = Form("Knight of Swords"),
+    significator: str = Form(""),
     framework: str = Form("auto"),
     mapping_system: str = Form("golden_dawn"),
     selected_cards: str = Form(""),
@@ -190,7 +196,7 @@ def generate_report(
     analytical prompt as a .md download.
     """
     topic = topic.strip()
-    significator = significator.strip() or "Knight of Swords"
+    significator = significator.strip()
     spread_key = spread_key.strip()
     framework = framework.strip()
     mapping_system = mapping_system.strip()
@@ -220,19 +226,22 @@ def generate_report(
             seed = seed or new_seed()
             deck = fetch_all_cards(conn)
             sig_card = resolve_significator(deck, significator)
-            if sig_card is None:
+            if significator and sig_card is None:
                 raise HTTPException(status_code=400,
                                     detail=f"Significator {significator!r} was not found in the deck. "
-                                           f"Pick a title from the list, e.g. 'Knight of Swords' "
+                                           f"Pick a title from the list, e.g. 'Queen of Cups' "
                                            f"or 'Princess of Disks'.")
+            if sig_card is None and has_significator_position(positions):
+                raise HTTPException(status_code=400,
+                                    detail=f"{selected_spread['name']} needs a significator. "
+                                           f"Choose one under Significator on the start page.")
             card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
             significator_label = (sig_card["title"] if pinned
                                   else "None (spread has no significator position)")
         else:
             seed = ""
             card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
-            has_sig_position = bool(positions) and "significator" in positions[0].lower()
-            significator_label = (card_titles[0] if card_titles and has_sig_position
+            significator_label = (card_titles[0] if card_titles and has_significator_position(positions)
                                   else "None (spread has no significator position)")
             if not card_titles:
                 raise HTTPException(status_code=400, detail="No card titles were provided.")

@@ -10,19 +10,43 @@ from ootk.db import (
     fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
 from ootk.report import build_analytical_prompt, generate_html_output
-from ootk.shuffle import draw_spread, resolve_significator
+from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
+from ootk.significator import RANKS, SUITS, book_t_card
 from ootk.spreads import SPREADS, spread_positions
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Thoth Tarot & Liber 777 Calculation Engine")
     parser.add_argument("--topic", type=str, help="Query or topic intent string", default=None)
     parser.add_argument("--seed", type=str, help="PRNG numeric seed for deterministic draws", default=None)
-    parser.add_argument("--significator", type=str, help="Significator card title", default="Knight of Swords")
+    parser.add_argument("--significator", type=str, default=None,
+                        help="Significator card title, pinned to position 1 of OOTK Op 1 (e.g. 'Queen of Cups')")
     parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
     parser.add_argument("--mapping", type=str, choices=["golden_dawn", "french_egyptian"], default="golden_dawn", help="Tarot-Kabbalah Mapping Scheme")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
     return parser.parse_args()
+
+def ask_significator():
+    """Book T: the court card matching the querent's age, gender and colouring, or any title typed."""
+    print("\nThis spread needs a significator. Press ENTER at the first question to type a card instead.")
+    ranks, suits = list(RANKS), list(SUITS)
+    for idx, rank in enumerate(ranks, start=1):
+        print(f" [{idx}] {RANKS[rank]} ({rank})")
+    choice = input("Who is the reading for? ").strip()
+    if not choice:
+        title = ""
+        while not title:
+            title = input("Significator card title: ").strip()
+        return title
+    while choice not in {"1", "2", "3", "4"}:
+        choice = input("Enter 1-4: ").strip()
+    rank = ranks[int(choice) - 1]
+    for idx, suit in enumerate(suits, start=1):
+        print(f" [{idx}] {SUITS[suit]} ({suit})")
+    choice = input("Colouring or temperament: ").strip()
+    while choice not in {"1", "2", "3", "4"}:
+        choice = input("Enter 1-4: ").strip()
+    return book_t_card(rank, suits[int(choice) - 1])
 
 def display_card_selection(cards):
     print("\n--- AVAILABLE THOTH CARDS ---")
@@ -75,15 +99,15 @@ def run_spread_session():
 
         target_positions = spread_positions(spread_choice)
 
+        if not significator and has_significator_position(target_positions):
+            significator = ask_significator()
         sig_card = resolve_significator(cards, significator)
         if significator and sig_card is None:
             print(f"[ERROR] Significator '{significator}' not found in thoth_cards.")
             sys.exit(1)
 
         # Only pin when the spread actually has a significator position (first position).
-        pin_significator = bool(
-            sig_card and target_positions and "significator" in target_positions[0].lower()
-        )
+        pin_significator = bool(sig_card) and has_significator_position(target_positions)
         # Same draw as the web GUI for the same seed (see ootk.shuffle.draw_spread).
         seeded_titles = draw_spread(cards, args.seed, target_positions, sig_card)[0] if args.seed else None
         significator_label = (

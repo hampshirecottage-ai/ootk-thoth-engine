@@ -504,7 +504,8 @@ def seeded_client(client, monkeypatch):
 def test_seed_mode_draws_like_the_cli(seeded_client):
     positions = spreads.spread_positions("12")
     expected, _ = shuffle.draw_spread(DECK, "1568", positions, DECK[77])
-    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="")
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="",
+             significator="Knight of Swords")
     assert r.status_code == 200
     assert seeded_client.lookups[-1] == expected
     assert "1568" in r.text and "ootk --spread 12 --seed 1568" in r.text
@@ -514,7 +515,8 @@ def test_seed_mode_draws_like_the_cli(seeded_client):
 
 def test_seed_mode_same_seed_same_cards(seeded_client):
     for seed in ("42", "42", "43"):
-        post(seeded_client, follow=False, spread_key="8", draw_mode="seed", seed=seed)
+        post(seeded_client, follow=False, spread_key="8", draw_mode="seed", seed=seed,
+             significator="Knight of Swords")
     a, b, c = seeded_client.lookups[-3:]
     assert a == b and a != c
 
@@ -528,6 +530,28 @@ def test_blank_seed_gets_a_new_seed_shown_on_the_report(seeded_client):
 
 def test_seed_mode_unknown_significator_is_400(seeded_client):
     assert post(seeded_client, draw_mode="seed", seed="1", significator="Nobody").status_code == 400
+
+
+def test_seed_mode_needs_a_significator_only_where_the_spread_has_one(seeded_client):
+    r = post(seeded_client, follow=False, spread_key="8", draw_mode="seed", seed="1")
+    assert r.status_code == 400 and "needs a significator" in r.json()["detail"]
+    assert post(seeded_client, spread_key="3", draw_mode="seed", seed="1").status_code == 200
+    assert seeded_client.saved["significator"] == "None (spread has no significator position)"
+
+
+def test_cli_command_leaves_out_a_blank_significator():
+    assert "--significator" not in app_module.cli_command("3", "1", "golden_dawn", "auto", "", "")
+    assert "--significator 'Queen of Cups'" in app_module.cli_command("8", "1", "golden_dawn", "auto",
+                                                                      "Queen of Cups", "")
+
+
+def test_start_page_has_the_picker_and_no_default_card(client):
+    page = client.get("/").text
+    assert 'id="sigRank"' in page and 'id="birthSpans"' in page
+    assert 'value="Knight of Swords"' not in page               # no preset significator
+    assert 'name="sig_birthday"' not in page and 'id="sigBirthday"' in page   # date is never sent
+    pick = client.get("/pick").text
+    assert 'name="significator"' not in pick and "first card you place is the significator" in pick
 
 
 @pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"output_format": "pdf"}])
@@ -724,7 +748,8 @@ def test_withheld_summary():
 
 
 def test_report_lists_withheld_cards(seeded_client):
-    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="")
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="",
+             significator="Knight of Swords")
     drawn = set(seeded_client.lookups[-1])
     left = [c["title"] for c in DECK if c["title"] not in drawn]
     assert len(left) == 3
@@ -784,3 +809,30 @@ def test_schema_sql_never_drops_an_existing_database():
     assert stop < restrict                      # \restrict blocks backslash commands after it
     guard = sql.index("RAISE EXCEPTION")
     assert guard < sql.index("CREATE TABLE") and guard < sql.index("setval")
+
+
+# ---------- significator methods ----------
+
+def test_book_t_card():
+    from ootk import significator
+    assert significator.book_t_card("Queen", "Cups") == "Queen of Cups"
+    with pytest.raises(ValueError):
+        significator.book_t_card("King", "Cups")              # Thoth titles only
+
+
+@pytest.mark.parametrize("month, day, card", [
+    (1, 1, "Queen of Disks"), (1, 9, "Queen of Disks"), (1, 10, "Prince of Swords"),
+    (3, 10, "Knight of Cups"), (3, 11, "Queen of Wands"), (5, 20, "Knight of Swords"),
+    (7, 12, "Prince of Wands"), (8, 11, "Prince of Wands"), (11, 13, "Knight of Wands"),
+    (12, 12, "Knight of Wands"), (12, 13, "Queen of Disks"), (12, 31, "Queen of Disks"),
+])
+def test_card_for_birthday(month, day, card):
+    from ootk import significator
+    assert significator.card_for_birthday(month, day) == card
+
+
+def test_birth_spans_cover_the_twelve_dated_courts_once():
+    from ootk import significator
+    cards = [c for _, c in significator.BIRTH_SPANS]
+    assert len(set(cards)) == 12 and not any(c.startswith("Princess") for c in cards)
+    assert [s for s, _ in significator.BIRTH_SPANS] == sorted(s for s, _ in significator.BIRTH_SPANS)

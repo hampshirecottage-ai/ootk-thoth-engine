@@ -34,6 +34,11 @@ def resolve_significator(cards, name):
     return None
 
 
+def has_significator_position(positions):
+    """True when the spread's first position is the significator's (OOTK Op 1)."""
+    return bool(positions) and "significator" in positions[0].lower()
+
+
 def draw_spread(cards, seed, positions, sig_card=None):
     """Draws one title per position from the deck shuffled by `seed`.
 
@@ -43,7 +48,7 @@ def draw_spread(cards, seed, positions, sig_card=None):
     Returns (titles, pinned).
     """
     deck = shuffle_deck(cards, seed)
-    pinned = bool(sig_card and positions and "significator" in positions[0].lower())
+    pinned = bool(sig_card) and has_significator_position(positions)
     if pinned:
         deck = [c for c in deck if c["card_id"] != sig_card["card_id"]]
     titles = []
