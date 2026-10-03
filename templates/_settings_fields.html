@@ -1,0 +1,56 @@
+{# Settings shared by both pages; `mode` is "seed" or "manual". #}
+            <label for="spreadSelect">Operation / Spread</label>
+            <select name="spread_key" id="spreadSelect">
+                {% for key, spread in spreads.items() %}
+                <option value="{{ key }}">{{ key }}. {{ spread.name }} ({{ positions[key] | length }})</option>
+                {% endfor %}
+            </select>
+
+            {% if mode == "seed" %}
+            <p class="mode-link">Cards are drawn from a seed. <a href="/pick" id="modeSwitch">Pick them by hand instead</a></p>
+            <div id="seedRow">
+                <label for="seedInput">Seed</label>
+                <div class="row">
+                    <input type="text" name="seed" id="seedInput" placeholder="blank = new seed" autocomplete="off">
+                    <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
+                </div>
+                <p class="hint">The seed is shown on the report. The same seed and settings always draw the same cards, here or with <code>ootk --seed</code>.</p>
+            </div>
+
+            {% else %}
+            <p class="mode-link">You place each card yourself. <a href="/" id="modeSwitch">Draw from a seed instead</a></p>
+            {% endif %}
+            <input type="hidden" name="draw_mode" value="{{ mode }}">
+            <label for="significatorInput">Significator</label>
+            <input type="text" name="significator" id="significatorInput" value="Knight of Swords" list="cardTitles">
+            <datalist id="cardTitles">{% for card in cards %}<option value="{{ card.title }}">{% endfor %}</datalist>
+
+            <fieldset>
+                <legend>Interpretation</legend>
+                <label for="mappingSelect">Mapping system</label>
+                <select name="mapping_system" id="mappingSelect">
+                    <option value="golden_dawn">Golden Dawn / English (Liber 777)</option>
+                    <option value="french_egyptian">French / Egyptian (Lévi / Papus / Wirth)</option>
+                </select>
+
+                <label for="frameworkSelect">Framework</label>
+                <select name="framework" id="frameworkSelect">
+                    <option value="auto">Auto-detect from the draw</option>
+                    <option value="light_descent">1. Divine Light Flow (Aleph -> Tav)</option>
+                    <option value="soul_formation">2. Pre-Incarnation Soul Formation</option>
+                    <option value="life_path">3. Incarnational Life Path & Evolution</option>
+                    <option value="post_mortem">4. Post-Mortem Return (Book of the Dead)</option>
+                </select>
+            </fieldset>
+
+            <fieldset>
+                <legend>Output</legend>
+                <div class="seg" role="radiogroup">
+                    <label><input type="radio" name="output_format" value="visual" checked><span>Visual report</span></label>
+                    <label><input type="radio" name="output_format" value="markdown"><span>Markdown file</span></label>
+                </div>
+            </fieldset>
+
+            <label for="topicInput">Question</label>
+            <input type="text" name="topic" id="topicInput" placeholder="Your question (optional)">
+

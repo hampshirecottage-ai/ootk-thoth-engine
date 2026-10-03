@@ -141,20 +141,32 @@ def reading_export(session_id, spread_name, settings, significator, framework, f
     return json.loads(json.dumps(reading, default=str))
 
 
-@app.get("/", response_class=HTMLResponse)
-def main_gui(request: Request):
-    """Sync endpoint: FastAPI executes in threadpool to prevent blocking the event loop."""
+def settings_page(request: Request, name: str, mode: str):
+    """Sync endpoint body: FastAPI executes in threadpool to prevent blocking the event loop."""
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
     return templates.TemplateResponse(
         request=request,
-        name="index.html",
+        name=name,
         context={
             "cards": cards,
+            "mode": mode,
             "spreads": SPREADS,
             "positions": {key: spread_positions(key) for key in SPREADS},
         }
     )
+
+
+@app.get("/", response_class=HTMLResponse)
+def main_gui(request: Request):
+    """Start page: settings only, cards drawn from a seed."""
+    return settings_page(request, "index.html", "seed")
+
+
+@app.get("/pick", response_class=HTMLResponse)
+def pick_gui(request: Request):
+    """Pick by hand: the same settings plus the spread board and card catalog."""
+    return settings_page(request, "pick.html", "manual")
 
 
 @app.post("/generate_report", response_class=HTMLResponse)

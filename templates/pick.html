@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:,">
+    <title>Pick by hand · OOTK Thoth Engine</title>
+    <script>
+        // Saved choice first, otherwise follow the system setting.
+        (function () {
+            let t = null;
+            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
+            document.documentElement.dataset.theme = t || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        })();
+    </script>
+{% include "_reading_styles.html" %}
+</head>
+<body class="manual">
+    <header class="top">
+        <div>
+            <h1><a href="/" class="home">OOTK Thoth Deck</a></h1>
+            <p class="tagline">Choose a spread, then tap cards in the order you want them placed.</p>
+        </div>
+        <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
+    </header>
+
+    <form action="/generate_report" method="POST" id="readingForm" class="container">
+        <!-- SETTINGS: everything that shapes a reading, in one place -->
+        <section class="panel settings" aria-label="Settings">
+            <h2>Settings</h2>
+
+{% include "_settings_fields.html" %}
+            <input type="hidden" name="selected_cards" id="selectedCardsInput">
+            <button type="submit" class="btn-submit">Generate reading</button>
+        </section>
+
+        <!-- SPREAD BOARD -->
+        <section class="panel" aria-label="Spread board">
+            <h2>Spread Board <span class="count" id="slotCount"></span></h2>
+            <div id="manualBoard">
+                <div class="row">
+                    <button type="button" class="btn-small" id="undoCard">Undo last</button>
+                    <button type="button" class="btn-small" id="clearCards">Clear</button>
+                </div>
+                <div class="slots" id="spreadSlots"></div>
+            </div>
+        </section>
+
+        <!-- CARD CATALOG -->
+        <section class="panel deck-panel" id="deckPanel" aria-label="Card catalog">
+            <h2>Card Catalog</h2>
+            <input type="text" id="search" placeholder="Search cards by name...">
+            <div class="card-grid" id="cardGrid">
+                {% for card in cards %}
+                {% set img = card_image_url(card.title) %}
+                <div class="card-item" data-title="{{ card.title }}">
+                    {% if img %}<img src="{{ img }}" srcset="{{ card_srcset(card.title) }}" alt="{{ card.title }}" width="200" height="290" loading="lazy" decoding="async">
+                    {% else %}<div class="noimg">{{ card.title }}</div>{% endif %}
+                    <div class="card-title">{{ card.title }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="credit">Card art: Pamela Colman Smith, Rider-Waite-Smith deck (1909), public domain, shown under the Thoth titles.</p>
+        </section>
+        <!-- Phone, Pick by hand: progress and Generate stay in reach while scrolling the catalog -->
+        <div class="pick-bar" id="pickBar" aria-live="polite">
+            <div class="status"><strong id="pickCount"></strong> placed<span class="last" id="pickLast"></span></div>
+            <button type="button" class="btn-small" id="pickUndo">Undo</button>
+            <button type="submit" class="btn-submit">Generate</button>
+        </div>
+    </form>
+
+    <script type="application/json" id="positionsData">{{ positions | tojson }}</script>
+    <script src="{{ static_url('js/index.js') }}" defer></script>
+{% include "_site_footer.html" %}
+</body>
+</html>

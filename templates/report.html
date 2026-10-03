@@ -179,7 +179,7 @@
     {% macro signed(n) %}<span class="{{ 'pos' if n > 0 else 'neg' if n < 0 else '' }}">{{ '+' if n > 0 }}{{ n }}</span>{% endmacro %}
 
     <div class="topbar">
-        <a href="/" class="btn secondary">&larr; Back<span class="wide-only"> to settings</span></a>
+        <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary">&larr; Back<span class="wide-only"> to settings</span></a>
         <form action="/generate_report" method="POST" style="display:inline">
             {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
             <button class="btn" type="submit" title="Run the same settings again{{ ' with the same seed' if seed }}">↻ Repeat this reading</button>

@@ -100,6 +100,17 @@ def test_index_renders(client):
     assert client.get("/").status_code == 200
 
 
+def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
+    start = client.get("/").text
+    assert 'name="draw_mode" value="seed"' in start and 'href="/pick"' in start
+    assert 'id="cardGrid"' not in start and 'id="presetSelect"' not in start
+    pick = client.get("/pick")
+    assert pick.status_code == 200
+    assert 'name="draw_mode" value="manual"' in pick.text and 'id="cardGrid"' in pick.text
+    assert 'id="pickBar"' in pick.text and 'name="seed"' not in pick.text
+
+
 def test_password_off_by_default(client, monkeypatch):
     monkeypatch.delenv("APP_PASSWORD", raising=False)
     assert client.get("/").status_code == 200
@@ -129,7 +140,7 @@ def test_pages_are_compressed(client):
 
 def test_catalog_uses_versioned_webp_thumbnails(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
-    html = client.get("/").text
+    html = client.get("/pick").text
     assert '/static/cards/thumb/x---fortune.webp?v=' in html
     assert 'loading="lazy"' in html and ".jpg" not in html
     assert 'src="/static/js/index.js?v=' in html and "defer" in html
