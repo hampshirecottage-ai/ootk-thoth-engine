@@ -1,0 +1,43 @@
+name: Bug report
+description: Something on the site or in the engine doesn't work as expected.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Issues here are **public**, so please
+        don't paste personal questions, querent details, full readings or passwords.
+        Security problems go through [private vulnerability reporting](https://github.com/hampshirecottage-ai/ootk-thoth-engine/security/advisories/new) instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected to see instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The spread and options you chose, and what you clicked. A seed helps if you're happy to share it.
+      placeholder: |
+        1. Choose the 12-house spread
+        2. Click Generate
+        3. ...
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page or command
+      description: Where it happened, for example the settings page, a report page, or `ootk --spread 12`.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Safari on iPhone, Chrome on Mac, ...
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Error messages or screenshots (crop out anything personal).

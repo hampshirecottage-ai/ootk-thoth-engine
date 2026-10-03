@@ -172,6 +172,13 @@ def test_form_errors_render_a_page_with_a_way_back(client):
     assert r.status_code == 400 and "text/html" in r.headers["content-type"]   # browsers: a page
     assert "Back to settings" in r.text
     assert "&lt;b&gt;" in r.text and "<b>" not in r.text                        # escaped
+    assert "issues/new?template=bug_report.yml" in r.text                      # and a way to report it
+
+
+def test_pages_link_to_bug_report_and_contact(client):
+    for html in (client.get("/").text, post(client).text):              # settings and report pages
+        assert 'class="site-footer"' in html
+        assert "/issues/new?template=bug_report.yml" in html and "/discussions" in html
 
 
 def test_spread_12_needs_75_cards(client):
