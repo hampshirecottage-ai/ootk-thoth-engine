@@ -167,7 +167,7 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 
 - **Settings panel.** Spread, how the cards are chosen (from a seed, or picked by hand), seed, significator, mapping system, framework and output format sit in one panel. Save the current settings as a named preset, or start from a built-in one (full OOTK in either mapping, daily card). Presets live in your browser.
 - **Seeds.** Leave the seed blank to get a new one. The report always shows the seed and the matching `ootk` command, and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
-- **Report links.** Each saved reading opens at its own address, `/report/<session>`, so you can bookmark it, and reloading it does not save the reading again.
+- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address.
 - **Summary first.** The report opens with a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
 - **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels, and decans as a 36-segment ring, with card images and aspects as coloured lines. Hover a card to light up its aspects. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or toggle individual types; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
@@ -187,11 +187,11 @@ docker run --rm -p 7860:7860 ootk
 
 The local database lives inside the container and starts empty on every run. To keep readings, pass `DB_HOST`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` for an external PostgreSQL; the local one is then not started, and the card tables are loaded on first start if missing.
 
-Set `APP_PASSWORD` to make every page ask for that password (any user name works). Use it on any public address: without it, anyone who finds the site can read every saved reading at `/report/<session>`.
+Set `APP_PASSWORD` to make every page ask for that password (any user name works). Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link.
 
 On Render's free plan, `render.yaml` is a Blueprint for the same image: create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and `APP_PASSWORD` when asked. Free services sleep after 15 idle minutes, so the first page afterwards takes about a minute.
 
-For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private: anyone who can open it can read every saved reading at `/report/<session>`.
+For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private, or set `APP_PASSWORD`, if you don't want strangers adding readings to your database.
 
 ### Sanity-check a full run
 

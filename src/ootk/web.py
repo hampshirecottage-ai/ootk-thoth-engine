@@ -20,7 +20,7 @@ from ootk.analysis import (
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_report_settings, load_withheld,
+    DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings, load_withheld,
     save_spread_session,
 )
 from ootk.report import build_analytical_prompt
@@ -235,6 +235,8 @@ def generate_report(
         reading = run_reading(conn, settings, card_titles, significator_label, deck)
 
         source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
+        # The report's address: random, so readings can't be found by counting session numbers.
+        link = secrets.token_urlsafe(16)
         session_id = save_spread_session(
             conn,
             selected_spread["name"],
@@ -243,10 +245,11 @@ def generate_report(
             significator_label,
             reading["spread_results"],
             reading["dignity_matrix"],
-            report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label),
+            report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label,
+                                 link=link),
         )
         # An older database saves the reading without its settings; then there is no link.
-        linked = bool(session_id) and load_report_settings(conn, session_id) is not None
+        linked = bool(session_id) and (load_report_settings(conn, session_id) or {}).get("link") == link
 
     if output_format == "markdown":
         return PlainTextResponse(
@@ -256,19 +259,22 @@ def generate_report(
         )
     if linked:
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
-        return RedirectResponse(f"/report/{session_id}", status_code=303)
+        return RedirectResponse(f"/report/{link}", status_code=303)
     return render_report(request, session_id, settings, reading)
 
 
-@app.get("/report/{session_id}", response_class=HTMLResponse)
-def show_report(request: Request, session_id: int):
+@app.get("/report/{link}", response_class=HTMLResponse)
+def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
     with get_db_connection() as conn:
-        stored = load_report_settings(conn, session_id)
-        if not stored:
+        found = load_report_by_link(conn, link)
+        if not found:
             raise HTTPException(status_code=404, detail=(
-                f"Reading #{session_id} has no saved report. Readings made before reports had "
-                f"their own link are still in the database; repeat them from their seed."))
+                "No reading has this link. Check that the whole address was copied; readings "
+                "saved before links were random get theirs from "
+                "database/migrations/add_report_links.sql."))
+        session_id, stored = found
+        stored.pop("link", None)
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
         reading = run_reading(conn, stored, card_titles, significator_label)
