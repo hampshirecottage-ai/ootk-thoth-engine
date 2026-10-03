@@ -2,6 +2,9 @@
 -- PostgreSQL database dump
 --
 
+-- Stop at the first error (see the safety guard below).
+\set ON_ERROR_STOP on
+
 \restrict TlcpppKLPezyITSwjwz9FNdJjzIqpmcAjeKjG6oYwPiHoUfzo7TEzYsYAcoSn51
 
 -- Dumped from database version 17.11 (Homebrew)
@@ -10,7 +13,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -19,49 +21,18 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.spread_pulls DROP CONSTRAINT IF EXISTS spread_pulls_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_spread_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_card_id_fkey;
-DROP INDEX IF EXISTS public.idx_cards_key_scale;
-DROP INDEX IF EXISTS public.idx_cards_fts;
-ALTER TABLE IF EXISTS ONLY public.thoth_cards DROP CONSTRAINT IF EXISTS unique_card_title;
-ALTER TABLE IF EXISTS ONLY public.thoth_cards DROP CONSTRAINT IF EXISTS thoth_cards_pkey1;
-ALTER TABLE IF EXISTS ONLY public.tarot_sessions DROP CONSTRAINT IF EXISTS tarot_sessions_pkey;
-ALTER TABLE IF EXISTS ONLY public.spread_pulls DROP CONSTRAINT IF EXISTS spread_pulls_pkey;
-ALTER TABLE IF EXISTS ONLY public.spread_position_geometry DROP CONSTRAINT IF EXISTS spread_position_geometry_pkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_pkey;
-ALTER TABLE IF EXISTS ONLY public.correspondences DROP CONSTRAINT IF EXISTS correspondences_pkey;
-ALTER TABLE IF EXISTS public.thoth_cards ALTER COLUMN card_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.tarot_sessions ALTER COLUMN session_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.spread_pulls ALTER COLUMN spread_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.spread_position_geometry ALTER COLUMN position_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.session_card_pulls ALTER COLUMN pull_id DROP DEFAULT;
-DROP SEQUENCE IF EXISTS public.thoth_cards_card_id_seq;
-DROP TABLE IF EXISTS public.thoth_cards;
-DROP SEQUENCE IF EXISTS public.tarot_sessions_session_id_seq;
-DROP TABLE IF EXISTS public.tarot_sessions;
-DROP SEQUENCE IF EXISTS public.spread_pulls_spread_id_seq;
-DROP TABLE IF EXISTS public.spread_pulls;
-DROP SEQUENCE IF EXISTS public.spread_position_geometry_position_id_seq;
-DROP TABLE IF EXISTS public.spread_position_geometry;
-DROP SEQUENCE IF EXISTS public.session_card_pulls_pull_id_seq;
-DROP TABLE IF EXISTS public.session_card_pulls;
-DROP TABLE IF EXISTS public.correspondences;
-DROP EXTENSION IF EXISTS dblink;
---
--- Name: dblink; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS dblink WITH SCHEMA public;
-
-
---
--- Name: EXTENSION dblink; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION dblink IS 'connect to other PostgreSQL databases from within a database';
-
+-- Safety guard (not part of the original dump): this file builds a NEW database. It used to
+-- start by dropping every table, so running it on a database in use deleted all saved readings.
+-- It now stops before changing anything if the ootk tables already exist (ON_ERROR_STOP is set
+-- at the top of the file, before \restrict, which blocks later backslash commands).
+DO $guard$
+BEGIN
+    IF to_regclass('public.thoth_cards') IS NOT NULL
+       OR to_regclass('public.tarot_sessions') IS NOT NULL THEN
+        RAISE EXCEPTION 'This database already has ootk tables, so schema.sql stopped without changing anything. Load it into a new, empty database (createdb), or run the files in database/migrations/ to update this one.';
+    END IF;
+END
+$guard$;
 
 SET default_tablespace = '';
 
@@ -601,83 +572,6 @@ ALTER TABLE ONLY public.session_card_pulls
 
 ALTER TABLE ONLY public.spread_pulls
     ADD CONSTRAINT spread_pulls_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.tarot_sessions(session_id) ON DELETE CASCADE;
-
-
---
--- Name: TABLE correspondences; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.correspondences TO ootk_admin;
-
-
---
--- Name: TABLE session_card_pulls; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.session_card_pulls TO ootk_admin;
-
-
---
--- Name: SEQUENCE session_card_pulls_pull_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.session_card_pulls_pull_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE spread_position_geometry; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.spread_position_geometry TO ootk_admin;
-
-
---
--- Name: SEQUENCE spread_position_geometry_position_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.spread_position_geometry_position_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE spread_pulls; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.spread_pulls TO ootk_admin;
-
-
---
--- Name: SEQUENCE spread_pulls_spread_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.spread_pulls_spread_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE tarot_sessions; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.tarot_sessions TO ootk_admin;
-
-
---
--- Name: SEQUENCE tarot_sessions_session_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.tarot_sessions_session_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE thoth_cards; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.thoth_cards TO ootk_admin;
-
-
---
--- Name: SEQUENCE thoth_cards_card_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.thoth_cards_card_id_seq TO ootk_admin;
 
 
 --

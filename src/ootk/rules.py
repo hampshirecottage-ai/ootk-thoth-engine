@@ -1,6 +1,6 @@
 """Scoring rules shared by every analysis: elemental dignities and aspects.
 
-This is the one place these values live; analysis, spreads and decans all read from it.
+This is the one place these values live; analysis and spreads both read from it.
 """
 from collections import namedtuple
 

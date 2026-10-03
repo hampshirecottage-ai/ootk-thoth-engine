@@ -63,11 +63,6 @@ def section_kind(section):
     return None
 
 
-def section_title(section):
-    m = HEADING_RE.search(section)
-    return m.group(1).strip().title() if m else "Section"
-
-
 def strip_md(text):
     return text.replace("**", "").replace("`", "").strip()
 

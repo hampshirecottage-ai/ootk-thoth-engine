@@ -19,7 +19,6 @@ export PGHOST="$DB_HOST" PGPORT="${DB_PORT:-5432}" PGUSER="${DB_USER:-postgres}"
 
 if [ "$(psql -tAc "SELECT to_regclass('public.thoth_cards') IS NOT NULL")" != "t" ]; then
     echo "Loading database/schema.sql"
-    # The dump's ootk_admin grants fail on a fresh server; that is harmless.
     psql -q -f database/schema.sql >/dev/null 2>"$HOME/schema-load.log" || true
     echo "Cards loaded: $(psql -tAc 'SELECT count(*) FROM thoth_cards')"
 fi
