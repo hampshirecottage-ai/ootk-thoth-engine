@@ -182,3 +182,20 @@ $("themeToggle").addEventListener("click", () => {
 });
 
 applySettings(readStore(LAST_KEY, {}));
+
+// ---------- sample reading (start page only) ----------
+if ($("samplePrompt")) {
+    $("copySample").addEventListener("click", e => {
+        const btn = e.currentTarget, label = btn.textContent;
+        if (!navigator.clipboard) return;
+        navigator.clipboard.writeText($("samplePrompt").textContent).then(() => {
+            btn.textContent = "Copied";
+            setTimeout(() => btn.textContent = label, 1200);
+        }, () => {});
+    });
+    $("expandSample").addEventListener("click", e => {
+        const open = $("samplePromptBox").classList.toggle("open");
+        e.currentTarget.setAttribute("aria-expanded", open);
+        e.currentTarget.textContent = open ? "Show less" : "Show the whole prompt";
+    });
+}
