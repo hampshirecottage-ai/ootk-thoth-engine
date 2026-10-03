@@ -630,6 +630,19 @@ def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeyp
     assert 'id="sample"' not in client.get("/pick").text
 
 
+def test_start_page_links_the_card_of_the_day_and_the_sample_report(client, monkeypatch):
+    from datetime import date
+    deck = [dict(fake_card(f"Card {i}"), card_id=i) for i in range(78)]
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
+    monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
+    page = client.get("/").text
+    top = shuffle.shuffle_deck(deck, "2026-10-03")[0]["title"]
+    assert f'<a href="/today">Today&rsquo;s card: <strong>{top}</strong>' in page
+    assert 'href="/reading?seed=12345&amp;spread=3&amp;system=thoth"' in page
+    assert client.get("/reading?seed=12345&spread=3&system=thoth").status_code == 200
+    assert 'href="/today">Today' not in client.get("/pick").text
+
+
 def test_start_page_without_a_full_deck_skips_the_sample(client):
     page = client.get("/").text
     assert page.count('id="sample"') == 0 and 'id="readingForm"' in page

@@ -176,6 +176,7 @@ def sample_reading(conn, deck):
                   for item in r["spread_results"]],
         "dignities": r["dignity_matrix"],
         "prompt": r["analytical_prompt"],
+        "url": share_path(SAMPLE_SETTINGS),
     }
     _sample_cache["sample"] = sample
     return sample
@@ -216,6 +217,11 @@ def settings_page(request: Request, name: str, mode: str):
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
         sample = sample_reading(conn, cards) if mode == "seed" else None
+    todays_card = None
+    if mode == "seed" and cards:
+        # Same draw as /day/<today>, so the link names the card it opens.
+        titles, _ = draw_spread(cards, utc_today().isoformat(), spread_positions("1"))
+        todays_card = short_card_name(titles[0])
     return templates.TemplateResponse(
         request=request,
         name=name,
@@ -223,6 +229,7 @@ def settings_page(request: Request, name: str, mode: str):
             "cards": cards,
             "mode": mode,
             "sample": sample,
+            "todays_card": todays_card,
             "spreads": SPREADS,
             "positions": {key: spread_positions(key) for key in SPREADS},
             "sig_ranks": significator_methods.RANKS,
@@ -234,7 +241,7 @@ def settings_page(request: Request, name: str, mode: str):
 
 @app.get("/", response_class=HTMLResponse)
 def main_gui(request: Request):
-    """Start page: settings only, cards drawn from a seed. '/?seed=...' opens that shared reading."""
+    """Start page: a sample reading and the settings. '/?seed=...' opens that shared reading."""
     if request.query_params.get("seed"):
         return RedirectResponse(f"/reading?{request.url.query}", status_code=307)
     return settings_page(request, "index.html", "seed")
