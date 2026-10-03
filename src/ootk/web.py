@@ -3,6 +3,7 @@ import base64
 import html
 import json
 import os
+import re
 import secrets
 import shlex
 from datetime import date, datetime, timedelta, timezone
@@ -29,7 +30,7 @@ from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk import significator as significator_methods
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions
-from ootk.visual import build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
+from ootk.visual import ELEMENT_COLORS, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -125,7 +126,7 @@ async def form_error_page(request: Request, exc: HTTPException):
         '&larr; Back to settings</a></p>'
         f'<p class="more">Think this is a mistake? <a class="plain" href="{BUG_REPORT_URL}" '
         'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
-templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
+templates.env.globals.update(static_url=static_url, card_image_url=card_image_url, element_colors=ELEMENT_COLORS,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
@@ -208,11 +209,63 @@ def sample_reading(conn, deck):
         "cards": [{"position": item["position_name"], **item["card_data"]}
                   for item in r["spread_results"]],
         "dignities": r["dignity_matrix"],
+        "summary": sample_summary(r),
+        "elements": [(e, n) for e, n in r["element_counts"].items() if e != "Spirit" or n],
+        "cube": [{"title": short_card_name(item["card_data"]["title"]),
+                  "place": item["card_data"]["spatial_dimension"]}
+                 for item in r["spread_results"] if item["card_data"].get("spatial_dimension")],
         "prompt": r["analytical_prompt"],
         "url": share_path(SAMPLE_SETTINGS),
     }
     _sample_cache["sample"] = sample
     return sample
+
+
+NUMBER_WORDS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
+DIGNITY_PHRASES = {2: "share an element", 1: "are friendly elements",
+                   0: "are neutral to each other", -2: "are contrary elements"}
+
+
+def _and_list(items):
+    items = list(items)
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _the(name):
+    return name if name.startswith("The ") else f"the {name}"
+
+
+def _count(n):
+    return NUMBER_WORDS[n] if n < len(NUMBER_WORDS) else str(n)
+
+
+def sample_summary(r):
+    """Two plain-language paragraphs on what the sample drew and what was calculated.
+    Facts only: the site gives the AI the instructions and never interprets the cards."""
+    items = r["spread_results"]
+    names = [short_card_name(i["card_data"]["title"]) for i in items]
+    drawn = _and_list(f"{_the(n)} in the {i['position_name']} position" for n, i in zip(names, items))
+    stands = _and_list(re.sub(r" - (.+)", r" (\1)", str(i["card_data"].get("attribution") or "no attribution"))
+                       for i in items)
+    first = (f"The seed drew {_count(len(items))} cards: {drawn}. "
+             f"In the Thoth tables they stand for {stands}.")
+
+    counts = [(e, c) for e, c in r["element_counts"].items() if c]
+    second = [f"By element the draw is {_and_list(f'{_count(c)} {e}' for e, c in counts)}."]
+    for d in r["dignity_matrix"]:
+        a, b = names[d["from_index"]], names[d["to_index"]]
+        elems = re.search(r"\((\w+) \+ (\w+)\)", d["relationship"])
+        why = f" ({elems[1]} and {elems[2]})" if elems else ""
+        phrase = DIGNITY_PHRASES.get(d["score"], "are paired")
+        second.append(f"{_the(a)[0].upper()}{_the(a)[1:]} and {_the(b)} {phrase}{why}, "
+                      f"scored {d['score']:+d}.")
+    on_cube = [(n, i["card_data"]["spatial_dimension"]) for n, i in zip(names, items)
+               if i["card_data"].get("spatial_dimension")]
+    if on_cube:
+        second.append("On the Cube of Space " + _and_list(
+            f"{_the(n)} sits on the {place.lower()}" for n, place in on_cube) + ".")
+    second.append("What it means is left to your AI.")
+    return [first, " ".join(second)]
 
 
 def seeded_draw(deck, seed, spread_key, significator):

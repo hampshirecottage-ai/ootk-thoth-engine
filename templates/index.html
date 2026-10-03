@@ -26,7 +26,6 @@
         .sample-cards li { display: flex; flex-direction: column; gap: 3px; font-size: 0.85em; line-height: 1.3; }
         .sample-cards img { width: 100%; height: auto; max-width: 150px; border-radius: 6px; border: 1px solid var(--line); margin-bottom: 4px; }
         .sample-cards .pos { color: var(--accent-2); font-weight: 600; font-size: 0.92em; }
-        .sample-cards .corr { color: var(--muted); }
         .sample-dignities { list-style: none; padding: 0; margin: 14px 0 0; font-size: 0.88em; line-height: 1.6; }
         .score { display: inline-block; min-width: 2.2em; text-align: center; border-radius: 4px; font-weight: 700; font-size: 0.9em; padding: 0 4px; }
         .score.pos { background: #57a77333; color: var(--text); }
@@ -53,7 +52,45 @@
         a.btn-small { text-decoration: none; display: inline-block; }
         .own-link { display: none; margin-left: auto; align-self: center; color: var(--accent); font-size: 0.92em; }
         .link-btn { background: none; border: none; padding: 6px 0; color: var(--accent); cursor: pointer; text-decoration: underline; font-size: 0.9em; }
+        /* Diagram: the same fifteen markers move between the heap, the wheel and the cube. */
+        .journey { max-width: 1160px; margin: 0 auto 20px; display: grid; grid-template-columns: minmax(0, 520px) minmax(220px, 340px); grid-template-areas: "title title" "svg tabs" "svg caption"; justify-content: center; gap: 4px 32px; align-items: start; }
+        .journey h2 { grid-area: title; margin-bottom: 4px; }
+        .journey svg { grid-area: svg; width: 100%; height: auto; max-height: 440px; overflow: visible; }
+        .journey-tabs { grid-area: tabs; display: flex; border: 1px solid var(--control); border-radius: 6px; overflow: hidden; align-self: end; margin-top: 12px; }
+        .journey-tabs button { flex: 1; background: var(--panel-2); color: var(--text); border: none; padding: 9px 4px; cursor: pointer; font-size: 0.92em; }
+        .journey-tabs button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+        .journey-text { grid-area: caption; }
+        .journey-caption { margin: 8px 0 0; font-size: 0.92em; line-height: 1.5; }
+        .journey-detail { margin: 10px 0 0; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--panel-3); font-size: 0.9em; font-weight: 600; }
+        .journey-hint { margin: 10px 0 0; color: var(--muted); font-size: 0.8em; }
+        .journey .guide { opacity: 0; transition: opacity 0.6s; }
+        .journey .guide.on { opacity: 1; }
+        .journey .frame { fill: none; stroke: var(--line); stroke-width: 1.5; }
+        .journey .frame.axis { stroke-dasharray: 5 5; }
+        .journey .double circle { fill: var(--panel-3); stroke: var(--line); }
+        .journey .double text, .journey .node text { fill: var(--text); font-size: 15px; font-weight: 600; pointer-events: none; }
+        .journey .double.marked circle { stroke: var(--accent); stroke-width: 3; }
+        .journey .node, .journey .double { cursor: pointer; }
+        .journey .node { transition: transform 1s cubic-bezier(0.6, 0, 0.3, 1), opacity 0.6s; }
+        .journey .guide:not(.on) { pointer-events: none; }
+        .journey .node rect { fill: var(--panel-2); stroke: var(--accent-2); stroke-width: 1.5; }
+        .journey .node.faint { opacity: 0.35; }
+        .journey .node.marked rect { fill: var(--accent); }
+        .journey .node.marked text { fill: var(--on-accent); }
+        .journey .node:focus-visible rect { stroke-width: 3; }
+        @media (prefers-reduced-motion: reduce) { .journey .node, .journey .guide { transition: none; } }
+        .elements { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 14px; margin-top: 14px; font-size: 0.85em; }
+        .el { display: flex; align-items: center; gap: 6px; }
+        .el-name { width: 3.6em; }
+        .el-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--panel-2); overflow: hidden; }
+        .el-bar span { display: block; height: 100%; }
+        .el-n { font-weight: 700; min-width: 1em; text-align: right; }
+        .summary p { margin: 14px 0 0; line-height: 1.55; }
+        .mech-toggle { margin-top: 14px; }
+        .mech-list { list-style: none; padding: 0; margin: 0; font-size: 0.88em; line-height: 1.6; }
+        .form-lede { margin: -6px 0 14px; color: var(--muted); font-size: 0.9em; }
         @media (max-width: 1000px) { .front { grid-template-columns: minmax(0, 720px); } .own-link { display: inline; } }
+        @media (max-width: 760px) { .journey { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "tabs" "svg" "caption"; } .journey-tabs { margin-top: 0; } }
         @media (max-width: 640px) {
             header.top h1 { font-size: 1.35em; }
             .steps { font-size: 0.85em; gap: 6px 10px; }
@@ -66,8 +103,8 @@
     <header class="top">
         <div>
             <p class="eyebrow">LLM Tarot Reading</p>
-            <h1>Turn a Thoth tarot spread into a prompt for your&nbsp;AI</h1>
-            <p class="tagline">For tarot readers who use ChatGPT, Claude or another AI. OOTK draws the cards and looks up their correspondences; your AI interprets them.</p>
+            <h1>What does a complete 78-card Hermetic mapping actually look&nbsp;like?</h1>
+            <p class="tagline">For tarot readers who use ChatGPT, Claude or another AI. OOTK draws a Thoth spread, looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, and writes the prompt. Your AI interprets it; OOTK does not.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Draw a spread</li>
                 <li><span>2</span> Copy the prompt</li>
@@ -75,7 +112,7 @@
             </ol>
             <p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a> · Same seed, same cards · Book T and Liber 777 tables</p>
             <p class="hero-actions">
-                <a class="btn-cta" href="#readingForm">Get your reading</a>
+                <a class="btn-cta" href="#readingForm">Discover your own path</a>
                 <a href="/start" class="today-link">New here? Start here &rarr;</a>
                 {% if todays_card %}<a href="/today" class="today-link">Today&rsquo;s card: <strong>{{ todays_card }}</strong> &rarr;</a>{% endif %}
             </p>
@@ -83,11 +120,27 @@
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </header>
 
+    <!-- DIAGRAM: the layouts a full Opening of the Key moves through -->
+    <section class="panel journey" aria-labelledby="journeyTitle">
+        <h2 id="journeyTitle">From the heap to the wheel to the cube</h2>
+        <div class="journey-tabs" role="group" aria-label="Layout">
+            <button type="button" data-journey="heap" aria-pressed="true">1 · Heap</button>
+            <button type="button" data-journey="wheel" aria-pressed="false">2 · Wheel</button>
+            <button type="button" data-journey="cube" aria-pressed="false">3 · Cube</button>
+        </div>
+        <svg id="journeySvg" viewBox="-250 -250 500 500" role="img" aria-labelledby="journeyCaption"></svg>
+        <div class="journey-text">
+            <p class="journey-caption" id="journeyCaption" aria-live="polite"></p>
+            <p class="journey-detail" id="journeyDetail" aria-live="polite" hidden></p>
+            <p class="journey-hint">Tap a marker to see what it stands for.</p>
+        </div>
+    </section>
+
     <div class="front{% if not sample %} no-sample{% endif %}">
         {% if sample %}
         <!-- SAMPLE: what a reading looks like, before any settings are asked for -->
         <section class="panel sample" id="sample" aria-labelledby="sampleTitle">
-            <h2 id="sampleTitle">A sample reading</h2>
+            <h2 id="sampleTitle">A sample reading, in brief</h2>
             <p class="sample-meta">{{ sample.spread_name }} · seed {{ sample.seed }}</p>
             <ol class="sample-cards">
                 {% for c in sample.cards %}
@@ -96,20 +149,37 @@
                     {% if img %}<img src="{{ img }}" srcset="{{ card_srcset(c.title) }}" alt="{{ c.title }}" width="200" height="290" decoding="async">{% endif %}
                     <span class="pos">{{ c.position }}</span>
                     <strong>{{ c.title }}</strong>
-                    <span class="corr">{{ c.attribution }}</span>
                 </li>
                 {% endfor %}
             </ol>
-            <ul class="sample-dignities" aria-label="Elemental dignities">
-                {% for d in sample.dignities %}
-                <li><span class="score {{ 'pos' if d.score > 0 else ('neg' if d.score < 0 else 'zero') }}">{{ '+' if d.score > 0 }}{{ d.score }}</span> {{ d.pair | replace(" <-> ", " and ") }}: {{ d.relationship }}</li>
+            <div class="elements" aria-label="Cards by element">
+                {% for e, n in sample.elements %}
+                <span class="el"><span class="el-name">{{ e }}</span><span class="el-bar"><span style="width: {{ (100 * n / sample.cards|length)|round|int }}%; background: {{ element_colors[e] }}"></span></span><span class="el-n">{{ n }}</span></span>
                 {% endfor %}
-            </ul>
-            <h3>The prompt your AI gets</h3>
-            <div class="prompt-box" id="samplePromptBox">
-                <pre id="samplePrompt">{{ sample.prompt }}</pre>
             </div>
-            <button type="button" class="link-btn" id="expandSample" aria-controls="samplePromptBox" aria-expanded="false">Show the whole prompt</button>
+            <div class="summary">
+                {% for para in sample.summary %}<p>{{ para }}</p>{% endfor %}
+            </div>
+            <button type="button" class="btn-small mech-toggle" id="mechToggle" aria-controls="mechanics" aria-expanded="false">Show Hermetic / Cabbalistic mechanics</button>
+            <div id="mechanics" hidden>
+                <h3>Correspondences</h3>
+                <ul class="mech-list">
+                    {% for c in sample.cards %}
+                    <li><strong>{{ c.title }}</strong>: {{ c.attribution }}{% if c.hebrew_letter %} · {{ c.hebrew_letter }}{% endif %}{% if c.spatial_dimension %} · {{ c.spatial_dimension }}{% endif %}{% if c.platonic_solid %} · {{ c.platonic_solid }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+                <h3>Elemental dignities (Book T)</h3>
+                <ul class="sample-dignities" aria-label="Elemental dignities">
+                    {% for d in sample.dignities %}
+                    <li><span class="score {{ 'pos' if d.score > 0 else ('neg' if d.score < 0 else 'zero') }}">{{ '+' if d.score > 0 }}{{ d.score }}</span> {{ d.pair | replace(" <-> ", " and ") }}: {{ d.relationship }}</li>
+                    {% endfor %}
+                </ul>
+                <h3>The prompt your AI gets</h3>
+                <div class="prompt-box" id="samplePromptBox">
+                    <pre id="samplePrompt">{{ sample.prompt }}</pre>
+                </div>
+                <button type="button" class="link-btn" id="expandSample" aria-controls="samplePromptBox" aria-expanded="false">Show the whole prompt</button>
+            </div>
             <div class="sample-actions">
                 <button type="button" class="btn-small" id="copySample">Copy prompt</button>
                 <a class="btn-small" href="{{ sample.url }}">Full report</a>
@@ -122,7 +192,8 @@
         <form action="/generate_report" method="POST" id="readingForm">
             <!-- SETTINGS: everything that shapes a reading, in one place -->
             <section class="panel settings" aria-label="Settings">
-                <h2>Your own reading</h2>
+                <h2>Discover your own path through the Cube of Space</h2>
+                <p class="form-lede">Your cards get the same tables and the same scoring. Your AI does the reading.</p>
 
 {% include "_settings_fields.html" %}
                 <button type="submit" class="btn-submit">Generate reading</button>
@@ -132,7 +203,9 @@
     </div>
 
     <script type="application/json" id="positionsData">{{ positions | tojson }}</script>
+    {% if sample %}<script type="application/json" id="sampleCube">{{ sample.cube | tojson }}</script>{% endif %}
     <script src="{{ static_url('js/index.js') }}" defer></script>
+    <script src="{{ static_url('js/front-diagram.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>

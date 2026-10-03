@@ -1045,3 +1045,24 @@ def test_old_golden_dawn_links_keep_the_thoth_swap(client):
     r = client.get(f"/report/{client.saved['report_settings']['link']}")
     assert client.systems[-1] == "thoth"
     assert "Emperor on Tzaddi, Star on Heh" in r.text
+
+
+def test_sample_summary_states_facts_not_meanings():
+    r = {
+        "spread_results": [
+            {"position_name": "Past", "card_data": {"title": "Queen of Cups",
+             "attribution": "Water of Water - 20° Gemini to 20° Cancer", "spatial_dimension": "Lower-East Edge"}},
+            {"position_name": "Present", "card_data": {"title": "V - The Hierophant",
+             "attribution": "Taurus", "spatial_dimension": None}},
+        ],
+        "element_counts": {"Fire": 0, "Water": 1, "Air": 0, "Earth": 1, "Spirit": 0},
+        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": 1,
+                            "relationship": "Friendly (Water + Earth)"}],
+    }
+    first, second = app_module.sample_summary(r)
+    assert "the Queen of Cups in the Past position and The Hierophant in the Present position" in first
+    assert "Water of Water (20° Gemini to 20° Cancer) and Taurus" in first
+    assert "one Water and one Earth" in second
+    assert "friendly elements (Water and Earth), scored +1" in second
+    assert "the Queen of Cups sits on the lower-east edge" in second
+    assert second.endswith("What it means is left to your AI.")

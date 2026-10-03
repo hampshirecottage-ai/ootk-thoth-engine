@@ -196,6 +196,12 @@ if ($("samplePrompt")) {
             setTimeout(() => btn.textContent = label, 1200);
         }, () => {});
     });
+    $("mechToggle").addEventListener("click", e => {
+        const open = $("mechanics").hidden;
+        $("mechanics").hidden = !open;
+        e.currentTarget.setAttribute("aria-expanded", open);
+        e.currentTarget.textContent = (open ? "Hide" : "Show") + " Hermetic / Cabbalistic mechanics";
+    });
     $("expandSample").addEventListener("click", e => {
         const open = $("samplePromptBox").classList.toggle("open");
         e.currentTarget.setAttribute("aria-expanded", open);
