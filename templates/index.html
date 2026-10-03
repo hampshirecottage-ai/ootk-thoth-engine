@@ -39,6 +39,10 @@
         .prompt-box.open::after { display: none; }
         .prompt-box pre { margin: 0; padding: 12px; font-size: 0.78em; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
         .sample-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .today-link { margin: 12px 0 0; }
+        .today-link a { display: inline-block; color: var(--accent); text-decoration: none; border: 1px solid var(--control); background: var(--panel); border-radius: 999px; padding: 6px 14px; }
+        .today-link a:hover { border-color: var(--accent); }
+        a.btn-small { text-decoration: none; display: inline-block; }
         .own-link { margin-left: auto; align-self: center; color: var(--accent); font-size: 0.92em; }
         .btn-small.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
         @media (max-width: 1000px) { .front { grid-template-columns: minmax(0, 720px); } }
@@ -56,6 +60,7 @@
             <h1>Get an AI tarot reading built on the real Thoth correspondences</h1>
             <p class="tagline">OOTK draws your spread and calculates its elemental dignities, decans and Liber 777 correspondences. Paste the result into ChatGPT, Claude or any other LLM and it interprets them; OOTK never interprets the cards itself.</p>
             <p class="why"><strong>Why not just ask ChatGPT to read your cards?</strong> Left alone, an LLM often makes the correspondences up. Here they are looked up and calculated, so it interprets correct ones.</p>
+            {% if todays_card %}<p class="today-link"><a href="/today">Today&rsquo;s card: <strong>{{ todays_card }}</strong> &rarr;</a></p>{% endif %}
         </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </header>
@@ -90,6 +95,7 @@
             <div class="sample-actions">
                 <button type="button" class="btn-small primary" id="copySample">Copy prompt</button>
                 <button type="button" class="btn-small" id="expandSample" aria-controls="samplePromptBox" aria-expanded="false">Show the whole prompt</button>
+                <a class="btn-small" href="{{ sample.url }}">Open the full report</a>
                 <a class="own-link" href="#readingForm">Get your own reading &darr;</a>
             </div>
             <p class="credit">Card art: Pamela Colman Smith, Rider-Waite-Smith deck (1909), public domain, shown under the Thoth titles.</p>
