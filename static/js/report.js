@@ -64,15 +64,25 @@ try {
 } catch (e) {}
 if (document.getElementById("filters")) { syncChips(); applyFilters(); }
 
-// ---- Hover a card to light up its aspect lines ----
+// ---- Hover (or tap, on a touch screen) a card to light up its aspect lines ----
+function lightUp(svg, slot) {
+    const i = slot.dataset.idx;
+    document.querySelectorAll("svg.focus").forEach(o => o.classList.remove("focus"));
+    svg.classList.add("focus");
+    svg.querySelectorAll(".aspect-line").forEach(l => l.classList.toggle("lit", l.dataset.a === i || l.dataset.b === i));
+}
+const hoverable = matchMedia("(hover: hover)").matches;
 document.querySelectorAll("svg[data-seg]").forEach(svg => {
     svg.querySelectorAll(".card-slot").forEach(slot => {
-        slot.addEventListener("mouseenter", () => {
-            const i = slot.dataset.idx;
-            svg.classList.add("focus");
-            svg.querySelectorAll(".aspect-line").forEach(l => l.classList.toggle("lit", l.dataset.a === i || l.dataset.b === i));
+        slot.addEventListener("mouseenter", () => { if (hoverable) lightUp(svg, slot); });
+        slot.addEventListener("mouseleave", () => { if (hoverable) svg.classList.remove("focus"); });
+        // A tap has no hover, so it keeps the card's lines lit until the details close.
+        // On a phone the details open as a bottom sheet, so bring the drawing up above it.
+        slot.addEventListener("click", () => {
+            if (hoverable) return;
+            lightUp(svg, slot);
+            if (matchMedia("(max-width: 640px)").matches) svg.scrollIntoView({ block: "start", behavior: "smooth" });
         });
-        slot.addEventListener("mouseleave", () => svg.classList.remove("focus"));
     });
 });
 
@@ -109,10 +119,13 @@ function closeCard() {
     panel.classList.remove("open");
     panel.setAttribute("aria-hidden", "true");
     document.querySelectorAll("[data-card].selected").forEach(el => el.classList.remove("selected"));
+    if (!hoverable) document.querySelectorAll("svg.focus").forEach(o => o.classList.remove("focus"));
 }
 document.addEventListener("click", e => {
     const el = e.target.closest("[data-card]");
     if (el) openCard(Number(el.dataset.card));
+    // A tap outside the open panel closes it (on a phone it covers the lower part of the screen).
+    else if (panel.classList.contains("open") && !panel.contains(e.target)) closeCard();
 });
 document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeCard();

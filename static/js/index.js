@@ -87,6 +87,7 @@ function updateMode() {
     document.getElementById("seedNote").style.display = seedMode ? "" : "none";
     document.getElementById("deckPanel").classList.toggle("disabled", seedMode);
     document.getElementById("catalogHint").style.display = seedMode ? "" : "none";
+    document.body.classList.toggle("manual", !seedMode);
     updateSeedNote();
 }
 function updateSeedNote() {
@@ -140,13 +141,16 @@ function syncHiddenInput() {
     document.getElementById("slotCount").textContent = drawMode() === "manual"
         ? `${activeCardList.length} / ${positions.length}` : `${positions.length} card${positions.length === 1 ? "" : "s"}`;
     document.querySelectorAll(".card-item").forEach(el => el.classList.toggle("used", activeCardList.includes(el.dataset.title)));
+    document.getElementById("pickCount").textContent = `${activeCardList.length} / ${positions.length}`;
+    const n = activeCardList.length;
+    document.getElementById("pickLast").textContent = n ? `${activeCardList[n - 1]} → ${positions[n - 1]}` : "Tap cards in order";
 }
 
 document.getElementById("cardGrid").addEventListener("click", e => {
     const item = e.target.closest(".card-item");
     if (item) selectCard(item.dataset.title);
 });
-document.getElementById("undoCard").addEventListener("click", () => { activeCardList.pop(); updateSlots(); });
+document.querySelectorAll("#undoCard, #pickUndo").forEach(b => b.addEventListener("click", () => { activeCardList.pop(); updateSlots(); }));
 document.getElementById("clearCards").addEventListener("click", () => { activeCardList = []; updateSlots(); });
 document.getElementById("spreadSelect").addEventListener("change", updateSlots);
 document.getElementById("search").addEventListener("input", () => {
