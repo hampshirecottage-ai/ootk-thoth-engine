@@ -1,11 +1,10 @@
-# Keep the build context to what the Dockerfile copies; never send scans or personal data.
+# Keep the build context to what the Dockerfile copies; never send full-size scans or personal data.
 .git
 .env
 .env.*
 .venv
 venv
 static/images
-static/cards
 output
 outputs
 reports

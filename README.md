@@ -2,7 +2,7 @@
 
 **OOTK draws a Thoth tarot spread from a seed you can repeat, then works out its elemental dignities, aspects and Liber 777 correspondences, up to the full Opening of the Key.**
 
-**Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images aren't shown there because the Thoth art is copyrighted.
+**Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
 A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
 
@@ -118,13 +118,15 @@ On a fresh machine `schema.sql` may print errors about `transaction_timeout` (th
 
 ### 4. Card images (optional)
 
-The full-size card scans (about 180 MB) are not stored in git. Download them with:
+The card art is Pamela Colman Smith's 1909 Rider-Waite-Smith deck, which is public domain, shown under the Thoth titles (see [static/cards/CREDITS.md](static/cards/CREDITS.md)). The Thoth paintings by Lady Frieda Harris are still under copyright, so they are not in this repository.
+
+The web-sized copies in `static/cards/` are committed, so the GUI shows cards out of the box. The full-size scans (about 50 MB) are not stored in git. Download them with:
 
 ```bash
 python scripts/download_images.py
 ```
 
-The web GUI never serves these full-size scans. It uses small WebP copies in `static/cards/` (about 4.5 MB for all three sizes), which `download_images.py` builds at the end. To rebuild them after changing a scan, run `pip install -e ".[images]"` once, then `python scripts/optimize_images.py`.
+The web GUI never serves these full-size scans. It uses small WebP copies in `static/cards/` (about 7 MB for all three sizes), which `download_images.py` builds at the end. To rebuild them after changing a scan, run `pip install -e ".[images]"` once, then `python scripts/optimize_images.py`.
 
 ---
 
@@ -180,7 +182,7 @@ Open http://localhost:8000 for the form and http://localhost:8000/docs for the A
 
 ### Docker, Render and Hugging Face Spaces
 
-The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000, which Hugging Face requires). On start it loads `database/schema.sql` into an empty database. Card scans are not copied into the image, so cards show as text panels.
+The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000, which Hugging Face requires). On start it loads `database/schema.sql` into an empty database. It includes the public-domain card art in `static/cards/`, but not the full-size scans.
 
 ```bash
 docker build -t ootk .
