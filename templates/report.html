@@ -115,6 +115,7 @@
         .detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--panel); border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(0,0,0,0.35); z-index: 20; overflow-y: auto; padding: 18px; transform: translateX(105%); transition: transform 0.2s; }
         .detail.open { transform: none; }
         .detail header { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
+        .detail header .chip { white-space: nowrap; }
         .detail img, .detail .noimg { width: 100%; max-width: 220px; aspect-ratio: 5 / 8; object-fit: cover; border-radius: 6px; margin: 10px 0; border: 3px solid; }
         .detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 0.88em; margin: 8px 0 12px; }
         .detail dt { color: var(--muted); }
@@ -124,15 +125,45 @@
         .aspect-row td:first-child { white-space: nowrap; }
         pre { background: var(--code-bg); padding: 16px; border-radius: 8px; color: var(--pre-text); white-space: pre-wrap; font-size: 0.85em; font-family: "Fira Code", monospace; }
         @media (max-width: 640px) {
-            body { padding: 16px; }
+            body { padding: 12px; }
             h1 { font-size: 1.25em; }
             .panel, details.section > .body { padding: 14px; }
+            details.section > .body { padding-top: 0; }
             details.section > summary { padding: 12px 14px; }
+            details.section > summary { flex-wrap: nowrap; display: grid; grid-template-columns: 1em 1fr; gap: 2px 8px; }
+            details.section > summary h2 { font-size: 1.05em; }
+            details.section > summary > .muted { grid-column: 2; font-size: 0.9em; }
+            /* Toolbar: one swipeable row instead of three stacked rows of buttons. */
+            .topbar { flex-wrap: nowrap; overflow-x: auto; gap: 8px; margin: -4px -12px 12px; padding: 4px 12px; scrollbar-width: none; }
+            .topbar::-webkit-scrollbar { display: none; }
+            .topbar > * { flex: none; }
+            .topbar .btn { white-space: nowrap; }
+            .wide-only { display: none; }
             .filters { position: static; }
-            .search { min-width: 0; width: 100%; }
+            /* 16px stops iOS Safari zooming the page when the search box is focused. */
+            .search { min-width: 0; width: 100%; font-size: 16px; }
             .keycard { width: 100%; }
             .tile .big { font-size: 1.5em; }
+            /* Tables scroll sideways rather than squeezing every column to a word per line. */
+            .table-wrap table { min-width: 540px; }
+            .ops-table td:first-child { min-width: 11em; }
+            .svg-actions { position: static; text-align: right; margin-bottom: 6px; }
+            .drawing { padding: 6px; }
+            /* Card details: a bottom sheet, so the drawing and its lit aspects stay in view above it. */
+            .detail { top: auto; left: 0; width: 100%; max-height: 55vh; border-left: none; border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; box-shadow: 0 -8px 24px rgba(0,0,0,0.35); transform: translateY(105%); padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+            .detail header { position: sticky; top: -18px; background: var(--panel); margin: -18px -18px 0; padding: 18px 18px 8px; z-index: 1; }
+            .detail img, .detail .noimg { max-width: 120px; margin: 4px 0 8px; }
+            .detail dl { grid-template-columns: max-content minmax(0, 1fr); }
+            .detail dd { overflow-wrap: break-word; }
         }
+        @media (pointer: coarse) {
+            .chip { min-height: 36px; padding: 6px 13px; }
+            .btn { min-height: 40px; }
+            details.sub > summary { padding: 8px 0; }
+            .card-row td { padding-top: 10px; padding-bottom: 10px; }
+        }
+        .touch-only { display: none; }
+        @media (hover: none) { .touch-only { display: inline; } .hover-only { display: none; } }
         @media print {
             :root, :root[data-theme="light"] { --bg: #fff; --panel: #fff; --panel-2: #fff; --text: #000; --muted: #555; --line: #ccc; --code-bg: #fff; --pre-text: #000; --svg-face: #fff; --svg-hole: #fff; --card-base: #eee; --badge: #fff; }
             body { padding: 0; }
@@ -148,7 +179,7 @@
     {% macro signed(n) %}<span class="{{ 'pos' if n > 0 else 'neg' if n < 0 else '' }}">{{ '+' if n > 0 }}{{ n }}</span>{% endmacro %}
 
     <div class="topbar">
-        <a href="/" class="btn secondary">&larr; Back to settings</a>
+        <a href="/" class="btn secondary">&larr; Back<span class="wide-only"> to settings</span></a>
         <form action="/generate_report" method="POST" style="display:inline">
             {% for k, v in settings.items() %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endfor %}
             <button class="btn" type="submit" title="Run the same settings again{{ ' with the same seed' if seed }}">↻ Repeat this reading</button>
@@ -156,7 +187,7 @@
         <button class="btn secondary" type="button" data-download-md title="Download the analytical prompt as a .md file">Markdown</button>
         <button class="btn secondary" type="button" data-download-json>JSON</button>
         <button class="btn secondary" type="button" onclick="window.print()" title="Print, or save as PDF from the print dialog">Print / PDF</button>
-        <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light">◐ Theme</button>
+        <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </div>
 
     <h1>Session #{{ session_id or 'unsaved' }} · {{ spread_name }}</h1>
@@ -246,7 +277,7 @@
 
         {% if S.segments | length > 1 %}
         <h3 style="margin-top:18px">Operations</h3>
-        <div class="table-wrap"><table>
+        <div class="table-wrap"><table class="ops-table">
             <thead><tr><th>Operation</th><th>Cards</th><th>Elements</th><th>Dignity</th><th>Aspects</th></tr></thead>
             <tbody>
             {% for seg in S.segments %}
@@ -350,7 +381,7 @@
                     {% endfor %}
                     </g>
                 </svg>
-                <p class="muted" style="font-size:0.8em; margin:6px 0 0">Card borders show the element; a dashed border marks an ill-dignified card. Hover a card to light up its aspects.</p>
+                <p class="muted" style="font-size:0.8em; margin:6px 0 0">Card borders show the element; a dashed border marks an ill-dignified card. <span class="hover-only">Hover</span><span class="touch-only">Tap</span> a card to light up its aspects.</p>
             {% endif %}
             </div>
 
