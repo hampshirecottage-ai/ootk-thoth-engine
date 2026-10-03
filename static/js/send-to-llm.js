@@ -2,9 +2,9 @@
 // Sites that take a ?q= prompt get it in the link too, but only while the link stays
 // short enough to load reliably; longer prompts are pasted from the clipboard.
 const LLM_SITES = {
-    chatgpt: { name: "ChatGPT", url: "https://chatgpt.com/", param: "q" },
     claude: { name: "Claude", url: "https://claude.ai/new", param: "q" },
     gemini: { name: "Gemini", url: "https://gemini.google.com/app" },
+    chatgpt: { name: "ChatGPT", url: "https://chatgpt.com/", param: "q" },
     copilot: { name: "Copilot", url: "https://copilot.microsoft.com/", param: "q" },
     perplexity: { name: "Perplexity", url: "https://www.perplexity.ai/search", param: "q" },
 };
