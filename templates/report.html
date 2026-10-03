@@ -185,6 +185,13 @@
             details.section, .panel { break-inside: avoid-page; border-color: #ccc; }
             details.section > summary::before { display: none; }
         }
+        .send-llm { display: inline-block; vertical-align: top; }
+        .send-llm-controls { display: inline-flex; align-items: stretch; }
+        .send-llm select { border: 1px solid var(--accent); border-right: none; border-radius: 6px 0 0 6px; background: var(--panel); color: var(--text); padding: 0 6px; font: inherit; font-size: 0.9em; }
+        .send-llm select { width: auto; }
+        .send-llm .btn { border-radius: 0 6px 6px 0; white-space: nowrap; }
+        .send-llm-note { display: block; font-size: 0.85em; margin-top: 6px; max-width: 32em; }
+        .send-llm-note:empty { display: none; }
     </style>
 </head>
 <body>
@@ -194,7 +201,8 @@
 
     <div class="topbar">
         <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
-        <button class="btn" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this)" title="Copy the prompt, then paste it into your LLM">Copy prompt</button>
+        {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
+        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this)" title="Copy the prompt, then paste it into your LLM">Copy prompt</button>
         <details class="menu">
             <summary class="btn secondary">Save &#9662;</summary>
             <div class="menu-list">
@@ -511,6 +519,7 @@
 <script type="application/json" id="cardDetails">{{ S.card_details | tojson }}</script>
 <script type="application/json" id="readingData">{{ reading | tojson }}</script>
 <script src="{{ static_url('js/report.js') }}" defer></script>
+<script src="{{ static_url('js/send-to-llm.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>
