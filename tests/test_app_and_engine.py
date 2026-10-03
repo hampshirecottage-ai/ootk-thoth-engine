@@ -53,6 +53,9 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "save_spread_session", fake_save)
     monkeypatch.setattr(app_module, "load_report_settings",
                         lambda conn, sid: dict(saved["report_settings"]) if sid == 99 and saved else None)
+    monkeypatch.setattr(app_module, "load_report_by_link",
+                        lambda conn, link: (99, dict(saved["report_settings"]))
+                        if saved and saved["report_settings"].get("link") == link else None)
     monkeypatch.setattr(app_module, "load_withheld",
                         lambda conn, deck, titles, system="golden_dawn": analysis.withheld_summary(
                             [fake_card(c["title"]) for c in deck], titles))
@@ -733,12 +736,22 @@ def test_headline_names_ties_and_absent_elements():
 
 def test_report_has_its_own_link_and_reloading_saves_nothing(client):
     r = post(client, follow=False)
-    assert r.status_code == 303 and r.headers["location"] == "/report/99"
+    link = client.saved["report_settings"]["link"]
+    assert r.status_code == 303 and r.headers["location"] == f"/report/{link}"
     assert client.saved["count"] == 1
     assert client.saved["report_settings"]["card_titles"] == ["A", "B", "C"]
     for _ in range(2):                                                   # reload twice
-        page = client.get("/report/99")
+        page = client.get(f"/report/{link}")
         assert page.status_code == 200 and "Keep this reading" in page.text
     assert client.saved["count"] == 1
     missing = client.get("/report/5", headers={"Accept": "text/html"})
     assert missing.status_code == 404 and "Back to settings" in missing.text
+
+
+def test_report_links_are_random_not_session_numbers(client):
+    post(client, follow=False)
+    first = client.saved["report_settings"]["link"]
+    post(client, follow=False)
+    second = client.saved["report_settings"]["link"]
+    assert first != second and len(first) >= 20 and not first.isdigit()
+    assert client.get("/report/99").status_code == 404                  # the session number

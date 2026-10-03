@@ -171,9 +171,23 @@ def load_report_settings(conn, session_id):
         return None
     return row["report_settings"] if row else None
 
+def load_report_by_link(conn, link):
+    """(session_id, settings) of the web reading whose report link is `link`, or None.
+
+    Links are random tokens stored in report_settings, so a report can't be found by
+    counting through session numbers."""
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT session_id, report_settings FROM tarot_sessions "
+                        "WHERE report_settings->>'link' = %s;", (link,))
+            row = cur.fetchone()
+    except psycopg.errors.UndefinedColumn:
+        return None
+    return (row["session_id"], row["report_settings"]) if row else None
+
 def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results,
                         dignity_matrix=None, report_settings=None):
-    """Saves one reading. `report_settings` (web readings) lets /report/<id> rebuild the report;
+    """Saves one reading. `report_settings` (web readings) lets /report/<link> rebuild the report;
     a database without tarot_sessions.report_settings still saves the reading without it."""
     if report_settings is not None:
         try:
