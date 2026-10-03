@@ -1,7 +1,7 @@
 # Web GUI image for Hugging Face Spaces (Docker SDK) or any Docker host.
 # Runs PostgreSQL and the FastAPI app in one container on port 7860.
-# Card scans are deliberately not copied in: the Thoth art is copyrighted, and the
-# GUI falls back to text panels when static/cards is missing.
+# Card images are the public-domain 1909 Rider-Waite-Smith art (static/cards). The Thoth
+# paintings are copyrighted and never go in the image.
 FROM python:3.12-slim-trixie
 
 RUN apt-get update \
@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -e .
 
 COPY --chown=user templates ./templates
 COPY --chown=user static/js ./static/js
+COPY --chown=user static/cards ./static/cards
 COPY --chown=user config ./config
 COPY --chown=user database/schema.sql ./database/schema.sql
 COPY --chown=user deploy/huggingface/start.sh ./start.sh

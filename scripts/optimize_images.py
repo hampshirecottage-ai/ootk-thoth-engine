@@ -1,7 +1,6 @@
 """Builds the web-sized WebP card images from the full-size scans in static/images.
 
-The JPG scans are about 2,700 x 3,900 px and 2-3 MB each; the pages never show a card wider
-than 220 px. This writes three WebP copies per card, which the web GUI serves instead:
+The JPG scans are about 1,100 x 1,600 px; the pages never show a card wider than 220 px. This writes three WebP copies per card, which the web GUI serves instead:
 
     static/cards/full/<slug>.webp   440 px wide (the detail panel, 220 px at 2x)
     static/cards/thumb/<slug>.webp  200 px wide (catalog, spread rows and wheels on 2x screens)
