@@ -32,6 +32,7 @@ def fake_card(title, suit="Wands", arcana="Minor", attribution="Fire"):
 def client(monkeypatch):
     """App client with the database fully mocked out."""
     saved = {}
+    monkeypatch.setattr(app_module, "_sample_cache", {})
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [])
     lookups, systems = [], []
@@ -554,6 +555,23 @@ def test_start_page_has_the_picker_and_no_default_card(client):
     assert 'name="sig_birthday"' not in page and 'id="sigBirthday"' in page   # date is never sent
     pick = client.get("/pick").text
     assert 'name="significator"' not in pick and "first card you place is the significator" in pick
+
+
+def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeypatch):
+    deck = [dict(fake_card(f"Card {i}"), card_id=i) for i in range(78)]
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
+    page = client.get("/").text
+    expected, _ = shuffle.draw_spread(deck, app_module.SAMPLE_SETTINGS["seed"], spreads.spread_positions("3"))
+    assert all(title in page for title in expected)
+    assert page.index('id="sample"') < page.index('id="readingForm"')
+    assert 'id="copySample"' in page and "HERMETIC ANALYTICAL REPORT" in page
+    assert client.saved == {}                                   # the sample is never saved
+    assert 'id="sample"' not in client.get("/pick").text
+
+
+def test_start_page_without_a_full_deck_skips_the_sample(client):
+    page = client.get("/").text
+    assert page.count('id="sample"') == 0 and 'id="readingForm"' in page
 
 
 @pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"output_format": "pdf"}])

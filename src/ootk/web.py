@@ -143,16 +143,54 @@ def reading_export(session_id, spread_name, settings, significator, framework, f
     return json.loads(json.dumps(reading, default=str))
 
 
+# The start page shows this reading before asking for any settings. The seed is a throwaway
+# number, so the sample holds no personal data, and the same seed always draws the same cards.
+SAMPLE_SETTINGS = {
+    "spread_key": "3", "seed": "12345", "topic": "", "significator": "", "framework": "auto",
+    "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "output_format": "visual",
+}
+_sample_cache = {}
+
+
+def sample_reading(conn, deck):
+    """The start page's sample: drawn and analysed once per process, then reused. None when
+    the deck can't produce it (an empty or partial database), so the page still renders."""
+    if "sample" in _sample_cache:
+        return _sample_cache["sample"]
+    if len(deck) != 78:            # another deck size would draw other cards for this seed
+        return None
+    try:
+        positions = spread_positions(SAMPLE_SETTINGS["spread_key"])
+        card_titles, _ = draw_spread(deck, SAMPLE_SETTINGS["seed"], positions, None)
+        r = run_reading(conn, SAMPLE_SETTINGS, card_titles,
+                        "None (spread has no significator position)", deck)
+    except (HTTPException, LookupError, ValueError):
+        return None
+    sample = {
+        "seed": SAMPLE_SETTINGS["seed"],
+        "spread_name": r["spread_name"],
+        "mapping_label": MAPPING_LABELS[SAMPLE_SETTINGS["mapping_system"]],
+        "cards": [{"position": item["position_name"], **item["card_data"]}
+                  for item in r["spread_results"]],
+        "dignities": r["dignity_matrix"],
+        "prompt": r["analytical_prompt"],
+    }
+    _sample_cache["sample"] = sample
+    return sample
+
+
 def settings_page(request: Request, name: str, mode: str):
     """Sync endpoint body: FastAPI executes in threadpool to prevent blocking the event loop."""
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
+        sample = sample_reading(conn, cards) if mode == "seed" else None
     return templates.TemplateResponse(
         request=request,
         name=name,
         context={
             "cards": cards,
             "mode": mode,
+            "sample": sample,
             "spreads": SPREADS,
             "positions": {key: spread_positions(key) for key in SPREADS},
             "sig_ranks": significator_methods.RANKS,
