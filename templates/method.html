@@ -1,0 +1,65 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Method and limits" %}
+{% set page_description = "How LLM Tarot Reading draws the cards and works out their correspondences, what it can't do, what it stores and what it is for." %}
+{% set tagline = "How a reading is made, what it can't do, and what it is for." %}
+{% set active = "/method" %}
+{% block head %}
+    <style>
+        .guide ol, .guide ul { padding-left: 22px; }
+        .guide li { margin: 6px 0; }
+        table.scores { border-collapse: collapse; margin: 8px 0; font-size: 0.92em; }
+        table.scores th, table.scores td { border: 1px solid var(--line); padding: 4px 10px; text-align: left; }
+        table.scores td.n { text-align: right; font-variant-numeric: tabular-nums; }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel" aria-labelledby="useTitle">
+            <h2 id="useTitle">What it is for</h2>
+            <p>This site is a calculator and a prompt writer. It draws tarot cards, looks up their traditional correspondences, scores how they interact, and writes all of that up as a prompt. <strong>It does not interpret the cards itself.</strong> Your AI does that, from the prompt.</p>
+            <p>It is meant for studying the Thoth deck and its correspondences, for reflection, and for giving an AI the same careful groundwork every time instead of a bare list of card names.</p>
+            <p>It is not meant for decisions about health, money, law or safety, and it does not predict the future. Treat any reading, and anything an AI says about it, as something to think with rather than advice.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="howTitle">
+            <h2 id="howTitle">How a reading is made</h2>
+            <ol>
+                <li><strong>Shuffle.</strong> Your seed is turned into a number (SHA-256) that shuffles the 78 cards with Python&rsquo;s standard shuffler. The same seed always gives the same order, which is what lets you repeat or share a reading. A blank seed gets a random six-digit number. The shuffle is ordinary software: nothing outside the seed chooses the cards.</li>
+                <li><strong>Draw.</strong> Cards are dealt from the top into the spread&rsquo;s positions. For the 15-card heap and the full Opening of the Key, your significator is placed first.</li>
+                <li><strong>Look up.</strong> Each card&rsquo;s attribution, Hebrew letter or Sephira, path and King Scale colour come from Liber 777 tables, under the mapping system you chose (Thoth by default).</li>
+                <li><strong>Score.</strong> Neighbouring cards get a Book T elemental dignity:
+                    <table class="scores">
+                        <tr><th>Elements</th><th>Score</th></tr>
+                        <tr><td>Same element</td><td class="n">+2</td></tr>
+                        <tr><td>Friendly (for example Fire and Air)</td><td class="n">+1</td></tr>
+                        <tr><td>Contrary (Fire and Water, Air and Earth)</td><td class="n">&minus;2</td></tr>
+                        <tr><td>Spirit on either side</td><td class="n">0</td></tr>
+                    </table>
+                    Cards are also related by where they sit in the layout; on the wheels of houses, signs and decans that means astrological aspects, counted within set orbs. The report adds the elemental balance, where the cards fall on the Cube of Space, and their Platonic solids.</li>
+                <li><strong>Choose a lens.</strong> On Auto, the macro framework comes from whether the cards run down the Tree of Life towards Malkuth or up towards Kether. The report says which, and why.</li>
+                <li><strong>Write the prompt.</strong> Sections 1 to 6 hold the cards and every calculation. Section 7 asks your AI to synthesise them and to describe tendencies and tensions rather than a fixed outcome, leaving the conclusion to you.</li>
+            </ol>
+            <p class="note">The code, tables and tests are all <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a>, so every step above can be checked.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="limitsTitle">
+            <h2 id="limitsTitle">Limitations</h2>
+            <ul>
+                <li><strong>The interpretation is your AI&rsquo;s, not this site&rsquo;s.</strong> AIs can be wrong, invent details, or answer the same prompt differently each time. Nothing here checks what they say.</li>
+                <li><strong>One tradition among several.</strong> Card attributions differ between systems, which is why there are three to choose from. The dignity scores (+2, +1, &minus;2, 0) and the aspect orbs are this project&rsquo;s reading of Book T and astrological practice, not the only one.</li>
+                <li><strong>The 15-card heap is a variant.</strong> It is not the classic First Operation of the Opening of the Key, which splits the whole deck into four piles.</li>
+                <li><strong>The pictures don&rsquo;t match the Thoth deck.</strong> The Thoth paintings are still under copyright, so the cards shown are Pamela Colman Smith&rsquo;s 1909 public-domain art under the Thoth names.</li>
+                <li><strong>A seed is a repeatable shuffle, not chance.</strong> If you want a fresh draw, leave the seed blank or use a new one.</li>
+            </ul>
+        </section>
+
+        <section class="panel" aria-labelledby="dataTitle">
+            <h2 id="dataTitle">What is stored</h2>
+            <ul>
+                <li>A reading made with <strong>Generate reading</strong> is saved on the server, with its question, so its report has its own private link (a random address that search engines are told not to list).</li>
+                <li>Shared links (<code>/reading?seed=&hellip;</code>), the examples and the card of the day are worked out fresh each time and not saved.</li>
+                <li>Your last settings and your theme are remembered in your own browser only.</li>
+                <li>There are no accounts. The question is optional, so leave out anything you would not want stored.</li>
+            </ul>
+            <p class="note">Found a mistake in a table or a calculation? <a href="{{ bug_report_url }}" target="_blank" rel="noopener">Report a bug</a>.</p>
+        </section>
+{% endblock %}

@@ -220,11 +220,49 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
+    for path in ("/start", "/examples", "/library", "/method"):
+        assert f"<loc>https://ootk.example.com{path}</loc>" in sitemap.text
     assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
     assert icon.status_code == 200 and icon.headers["content-type"] == "image/x-icon"
     for name in ("site/favicon.svg", "site/apple-touch-icon.png", "site/og-image.jpg"):
         assert client.get(f"/static/{name}").status_code == 200
+
+
+def test_guide_pages_render_and_link_each_other(client, monkeypatch):
+    monkeypatch.setattr(app_module, "_examples_cache", {})
+    for path, heading in [("/start", "Your first reading, step by step"), ("/examples", "Open the report"),
+                          ("/library", "Every spread"), ("/method", "Limitations")]:
+        page = client.get(path)
+        assert page.status_code == 200 and heading in page.text
+        assert f'<a href="{path}" aria-current="page">' in page.text      # nav marks this page
+        assert 'class="site-footer"' in page.text and 'rel="canonical"' in page.text
+    assert 'href="/start"' in client.get("/").text                       # start page links in
+
+
+def test_start_here_links_preselect_each_spread(client):
+    page = client.get("/start").text
+    for key in app_module.SPREADS:
+        assert f'href="/?spread={key}#readingForm"' in page
+
+
+def test_examples_link_shared_readings_and_draw_cards_with_a_full_deck(client, monkeypatch):
+    monkeypatch.setattr(app_module, "_examples_cache", {})
+    page = client.get("/examples").text                                  # empty deck: links only
+    for ex in app_module.EXAMPLES:
+        assert f"/reading?seed={ex['seed']}&amp;spread={ex['spread_key']}" in page
+    deck = [fake_card(f"Card {i}") | {"card_id": i} for i in range(78)]
+    examples = app_module.example_readings(deck)
+    assert [len(ex["cards"]) for ex in examples] == [ex["count"] for ex in examples]
+    assert examples[0]["cards"][0]["title"] == shuffle.shuffle_deck(deck, "2026-01-01")[0]["title"]
+
+
+def test_library_terms_are_sorted_and_have_text():
+    library = app_module.load_library()
+    names = [t["term"].lower() for t in library["terms"]]
+    assert names == sorted(names) and len(set(names)) == len(names)
+    assert all(t["text"].strip() for t in library["terms"])
+    assert all(r["url"].startswith("https://") for r in library["reading"])
 
 
 def test_spread_12_needs_75_cards(client):

@@ -181,7 +181,10 @@ $("themeToggle").addEventListener("click", () => {
     try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
 });
 
-applySettings(readStore(LAST_KEY, {}));
+// A link such as /?spread=3#readingForm (from the Start here page) picks that spread.
+const linkedSpread = new URLSearchParams(location.search).get("spread");
+applySettings(Object.assign(readStore(LAST_KEY, {}),
+                            linkedSpread in positionsData ? { spread_key: linkedSpread } : {}));
 
 // ---------- sample reading (start page only) ----------
 if ($("samplePrompt")) {

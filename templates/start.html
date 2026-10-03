@@ -1,0 +1,78 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Start here" %}
+{% set page_description = "New to LLM Tarot Reading? Five short steps from your first card to a full Opening of the Key, and what each spread teaches." %}
+{% set tagline = "New here? Five steps from your first card to the Opening of the Key." %}
+{% set active = "/start" %}
+{% block head %}
+    <style>
+        ol.path { list-style: none; counter-reset: step; padding: 0; margin: 0; }
+        ol.path > li { counter-increment: step; position: relative; padding: 0 0 18px 44px; }
+        ol.path > li:last-child { padding-bottom: 0; }
+        ol.path > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-weight: 700; }
+        ol.path h3 { margin: 4px 0 4px; }
+        ol.path p { margin: 0 0 6px; }
+        .stages { display: grid; gap: 12px; }
+        .stage { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel-3); }
+        .stage h3 { margin: 0 0 4px; }
+        .stage .level { color: var(--muted); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+        .stage ul { margin: 6px 0 8px; padding-left: 20px; }
+        .stage li { margin: 2px 0; }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel" aria-labelledby="pathTitle">
+            <h2 id="pathTitle">Your first reading, step by step</h2>
+            <ol class="path">
+                <li>
+                    <h3>See what you get</h3>
+                    <p>A reading here is not an interpretation. It is a list of cards, their correspondences and how they interact, written as a prompt for your AI. The start page shows a three-card sample.</p>
+                    <div class="actions"><a class="btn secondary" href="/#sample">See the sample</a> <a class="btn secondary" href="/examples">More examples</a></div>
+                </li>
+                <li>
+                    <h3>Start with one card</h3>
+                    <p>Today&rsquo;s card is the same for everyone, so it is an easy first prompt to try.</p>
+                    <div class="actions"><a class="btn secondary" href="/today">Today&rsquo;s card</a></div>
+                </li>
+                <li>
+                    <h3>Draw three cards</h3>
+                    <p>Past, present and future. Add a question if you like, or leave it blank.</p>
+                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Draw three cards</a></div>
+                </li>
+                <li>
+                    <h3>Give the prompt to your AI</h3>
+                    <p>On the report, press <strong>Copy and open</strong> to copy the prompt and open Claude, ChatGPT or another AI, then paste it in. Your AI writes the interpretation from the cards and calculations in the prompt.</p>
+                </li>
+                <li>
+                    <h3>Learn what the numbers mean</h3>
+                    <p>The library explains each term in the report, and the method page shows how it is all worked out and where it falls short.</p>
+                    <div class="actions"><a class="btn secondary" href="/library">Library</a> <a class="btn secondary" href="/method">Method and limits</a></div>
+                </li>
+            </ol>
+        </section>
+
+        <section class="panel" aria-labelledby="stagesTitle">
+            <h2 id="stagesTitle">Learning stages</h2>
+            <p class="muted">The twelve spreads, grouped from first steps to the full Opening of the Key. Each stage adds one new idea.</p>
+            <div class="stages">
+                {% set stages = [
+                    ("Stage 1", "Single cards", ["1", "3"], "What one card carries: its attribution, element, Hebrew letter or Sephira, and King Scale colour. Three cards add a past, present and future."),
+                    ("Stage 2", "Elements in pairs", ["2", "4", "5"], "Elemental dignities: whether neighbouring cards strengthen or weaken each other, and the four worlds of the Tetragrammaton."),
+                    ("Stage 3", "Whole layouts", ["6", "7"], "Cards placed on the planets of the hexagram and the Sephiroth of the Tree of Life, and how each position relates to the others."),
+                    ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12"], "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the houses, the signs and the 36 decans, and finally all four together."),
+                ] %}
+                {% for level, name, keys, learn in stages %}
+                <div class="stage">
+                    <p class="level">{{ level }}</p>
+                    <h3>{{ name }}</h3>
+                    <p>{{ learn | safe }}</p>
+                    <ul>
+                        {% for key in keys %}
+                        <li><a href="/?spread={{ key }}#readingForm">{{ spreads[key].name }}</a> <span class="muted">({{ sizes[key] }} card{{ 's' if sizes[key] != 1 }})</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="note">Each link opens the start page with that spread chosen.</p>
+        </section>
+{% endblock %}

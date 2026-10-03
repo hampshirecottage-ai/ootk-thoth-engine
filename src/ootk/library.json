@@ -1,0 +1,33 @@
+{
+  "_comment": "The /library page. Add a term or a source here and it appears on the page; terms are sorted A-Z. Plain text only: no HTML.",
+  "terms": [
+    {"term": "Seed", "text": "The word or number that shuffles the deck. The same seed always draws the same cards, so a reading can be repeated or shared. Leave it blank and the site picks a six-digit number for you."},
+    {"term": "Spread", "text": "A layout of positions, each with a meaning, that the drawn cards fill in order. This site has twelve, from one card up to the full Opening of the Key."},
+    {"term": "Significator", "text": "A card chosen to stand for the person or the question. Only the 15-card heap and the full Opening of the Key use one: it is placed in the first position before the rest are drawn."},
+    {"term": "Attribution", "text": "The astrological or elemental quality a card is linked to, such as a planet, a zodiac sign, a decan or an element. The report shows it beside each card."},
+    {"term": "Hebrew letter", "text": "Each of the 22 Major Arcana is linked to one letter of the Hebrew alphabet, and through it to a path on the Tree of Life. Which card gets which letter depends on the mapping system."},
+    {"term": "Mapping system", "text": "The table that links cards to Hebrew letters. Thoth (Crowley) puts the Emperor on Tzaddi and the Star on Heh; Golden Dawn has them the other way round; French / Egyptian follows Lévi, Papus and Wirth. Thoth is the default."},
+    {"term": "Tree of Life", "text": "The Kabbalistic diagram of ten Sephiroth joined by 22 paths. Minor cards sit on the Sephiroth by number; Major cards sit on the paths by Hebrew letter."},
+    {"term": "Sephira", "text": "One of the ten spheres on the Tree of Life, from Kether (1) to Malkuth (10). Plural: Sephiroth."},
+    {"term": "King Scale", "text": "One of the four colour scales in Liber 777. The report gives each card's King Scale colour, the scale linked to the world of Atziluth."},
+    {"term": "Elemental dignity", "text": "How two neighbouring cards' elements get on, from the Golden Dawn's Book T. Here the same element scores +2, friendly elements +1, contrary elements −2, and Spirit 0. Fire and Water are contrary, as are Air and Earth."},
+    {"term": "Ill-dignified", "text": "A card weakened by contrary elements beside it. The report marks each card as dignified or not from its dignity scores."},
+    {"term": "Aspect", "text": "An astrological angle (conjunction, sextile, square, trine, quincunx, opposition) between two positions on the wheels of houses, signs and decans, counted only within an allowed orb. The report draws aspects as coloured lines."},
+    {"term": "Decan", "text": "A ten-degree third of a zodiac sign: 36 in all. Each small card from 2 to 10 stands for one decan, which has a planet as its ruler, as in the Book of Thoth."},
+    {"term": "Opening of the Key", "text": "The Golden Dawn's long divination method, done in operations: houses, signs and decans after a first operation built around the significator. Spreads 8 to 11 are single operations and spread 12 runs them all."},
+    {"term": "Book T", "text": "The Golden Dawn's instructional paper on the tarot. It is the source of the elemental dignity rules this site uses."},
+    {"term": "Liber 777", "text": "Aleister Crowley's 1909 book of correspondence tables, listing for each card its letter, path, colours, planets and much more. The card tables here follow it."},
+    {"term": "Thoth deck", "text": "The tarot designed by Aleister Crowley and painted by Lady Frieda Harris, described in The Book of Thoth (1944). Its card names (Lust, Art, Aeon, the Princes and Princesses) are the ones this site uses. The paintings are still under copyright, so the pictures shown here are the public-domain 1909 Rider-Waite-Smith cards."},
+    {"term": "Cube of Space", "text": "A three-dimensional arrangement of the Hebrew letters: three mother letters as axes, seven double letters as faces and centre, and twelve simple letters as edges. The report counts how a spread's cards fall across it."},
+    {"term": "Macro framework", "text": "The overall lens the prompt asks the AI to read through: Divine Light Flow, Soul Formation, Incarnational Life Path or Post-Mortem Return. On Auto it is chosen from whether the cards run down or up the Tree, and the report says why."},
+    {"term": "Prompt", "text": "The text this site writes for your AI: the cards, every calculation, and the instructions for interpreting them. Copy it and paste it into ChatGPT, Claude or any other chat AI."}
+  ],
+  "reading": [
+    {"title": "Liber 777", "by": "Aleister Crowley, 1909", "note": "The correspondence tables.", "url": "https://en.wikipedia.org/wiki/Liber_777"},
+    {"title": "The Book of Thoth", "by": "Aleister Crowley, 1944", "note": "The deck's own handbook, with the decan and letter attributions.", "url": "https://en.wikipedia.org/wiki/The_Book_of_Thoth_(Crowley)"},
+    {"title": "Thoth tarot", "by": "Crowley and Lady Frieda Harris", "note": "Background on the deck.", "url": "https://en.wikipedia.org/wiki/Thoth_tarot"},
+    {"title": "Hermetic Order of the Golden Dawn", "by": "", "note": "The order behind Book T and the Opening of the Key.", "url": "https://en.wikipedia.org/wiki/Hermetic_Order_of_the_Golden_Dawn"},
+    {"title": "Decans", "by": "", "note": "The 36 ten-degree divisions of the zodiac.", "url": "https://en.wikipedia.org/wiki/Decan"},
+    {"title": "Pamela Colman Smith", "by": "", "note": "The artist of the 1909 cards shown on this site.", "url": "https://en.wikipedia.org/wiki/Pamela_Colman_Smith"}
+  ]
+}
