@@ -458,17 +458,14 @@ def test_minor_spatial_letter_is_labelled_as_sephira():
 # ---------- shared scoring rules ----------
 
 def test_every_module_scores_aspects_the_same_way():
-    """Layout, ring and decan aspects all take their score and wording from ootk.rules."""
-    from ootk import decans, rules
+    """Layout and ring aspects both take their score and wording from ootk.rules."""
+    from ootk import rules
     for aspect in rules.ASPECTS:
         label, nature, score = analysis.calculate_spatial_aspect(aspect.angle)
         assert (label, nature, score) == (rules.aspect_label(aspect), aspect.nature, aspect.score)
     for short, label, angle, nature, score in spreads.RING_ASPECTS:
         a = rules.ASPECTS_BY_NAME[short]
         assert (label, angle, nature, score) == (rules.aspect_label(a), a.angle, a.nature, a.score)
-    r = decans.evaluate_decan_aspect("2 of Wands", "2 of Swords")   # 5 deg vs 185 deg
-    assert r["aspect_name"] == "Opposition"
-    assert r["composite_score"] == rules.ASPECTS_BY_NAME["Opposition"].score + r["planetary_synergy"]
 
 
 @pytest.mark.parametrize("angle,expected", [

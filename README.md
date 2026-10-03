@@ -39,7 +39,6 @@ ootk-thoth-engine/
 │   ├── db.py               # DB settings, card lookups, saving sessions
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
 │   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
-│   ├── decans.py           # Decanic aspect analysis (not yet wired in)
 │   └── visual.py           # Web report view: summary figures and drawable layouts
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
@@ -113,8 +112,6 @@ python scripts/db_inspect.py audit
 `schema.sql` is a full dump: it creates the tables and loads the 78 cards, correspondences and spread geometry, so there is no separate seed step. It already includes everything in `database/migrations/`, which you only need for older databases.
 
 These commands use your own Postgres role. If your install has a `postgres` superuser, add `-U postgres -h localhost` and set `DB_USER=postgres` in `.env`. On Homebrew installs the role is your macOS username instead, so set `DB_USER` to that.
-
-On a fresh machine `schema.sql` may print errors about `transaction_timeout` (the dump came from a newer Postgres) and about a missing `ootk_admin` role (grants). Both are harmless: the data still loads, and the audit above confirms it.
 
 ### 4. Card images (optional)
 

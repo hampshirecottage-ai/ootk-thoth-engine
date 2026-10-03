@@ -10,7 +10,6 @@
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
-SET transaction_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SELECT pg_catalog.set_config('search_path', '', false);
@@ -48,21 +47,6 @@ DROP TABLE IF EXISTS public.spread_position_geometry;
 DROP SEQUENCE IF EXISTS public.session_card_pulls_pull_id_seq;
 DROP TABLE IF EXISTS public.session_card_pulls;
 DROP TABLE IF EXISTS public.correspondences;
-DROP EXTENSION IF EXISTS dblink;
---
--- Name: dblink; Type: EXTENSION; Schema: -; Owner: -
---
-
-CREATE EXTENSION IF NOT EXISTS dblink WITH SCHEMA public;
-
-
---
--- Name: EXTENSION dblink; Type: COMMENT; Schema: -; Owner: 
---
-
-COMMENT ON EXTENSION dblink IS 'connect to other PostgreSQL databases from within a database';
-
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -601,83 +585,6 @@ ALTER TABLE ONLY public.session_card_pulls
 
 ALTER TABLE ONLY public.spread_pulls
     ADD CONSTRAINT spread_pulls_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.tarot_sessions(session_id) ON DELETE CASCADE;
-
-
---
--- Name: TABLE correspondences; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.correspondences TO ootk_admin;
-
-
---
--- Name: TABLE session_card_pulls; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.session_card_pulls TO ootk_admin;
-
-
---
--- Name: SEQUENCE session_card_pulls_pull_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.session_card_pulls_pull_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE spread_position_geometry; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.spread_position_geometry TO ootk_admin;
-
-
---
--- Name: SEQUENCE spread_position_geometry_position_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.spread_position_geometry_position_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE spread_pulls; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.spread_pulls TO ootk_admin;
-
-
---
--- Name: SEQUENCE spread_pulls_spread_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.spread_pulls_spread_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE tarot_sessions; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.tarot_sessions TO ootk_admin;
-
-
---
--- Name: SEQUENCE tarot_sessions_session_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.tarot_sessions_session_id_seq TO ootk_admin;
-
-
---
--- Name: TABLE thoth_cards; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON TABLE public.thoth_cards TO ootk_admin;
-
-
---
--- Name: SEQUENCE thoth_cards_card_id_seq; Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON SEQUENCE public.thoth_cards_card_id_seq TO ootk_admin;
 
 
 --
