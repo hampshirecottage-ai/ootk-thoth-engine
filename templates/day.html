@@ -39,6 +39,14 @@
             .day-card { grid-template-columns: 1fr; }
             .day-card .art { max-width: 240px; margin: 0 auto; }
         }
+        .send-llm { display: inline-block; vertical-align: top; }
+        .send-llm-controls { display: inline-flex; align-items: stretch; }
+        .send-llm select { border: 1px solid var(--accent); border-right: none; border-radius: 6px 0 0 6px; background: var(--panel); color: var(--text); padding: 0 6px; font: inherit; font-size: 0.95em; }
+        .send-llm select { width: auto; align-self: stretch; height: auto; padding: 9px 6px; }
+        .send-llm .btn { border-radius: 0 6px 6px 0; white-space: nowrap; }
+        .send-llm-note { display: block; font-size: 0.85em; margin-top: 6px; max-width: 32em; }
+        .send-llm-note:empty { display: none; }
+        .muted { color: var(--muted); }
     </style>
 </head>
 <body>
@@ -66,7 +74,8 @@
                     {% if card.king_scale_color %}<dt>King Scale</dt><dd>{{ card.king_scale_color }}</dd>{% endif %}
                 </dl>
                 <div class="actions">
-                    <button class="btn" type="button" id="copyPrompt">Copy prompt for your LLM</button>
+                    <button class="btn secondary" type="button" id="copyPrompt">Copy prompt for your LLM</button>
+                    {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
                     <a class="btn secondary" href="{{ reading_url }}">Full single-card report</a>
                 </div>
             </div>
@@ -99,6 +108,7 @@
             if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
         });
     </script>
+    <script src="{{ static_url('js/send-to-llm.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>
