@@ -20,23 +20,22 @@ from ootk.analysis import (
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings, load_withheld,
+    DB_CONFIG, DEFAULT_MAPPING, MAPPING_SYSTEMS, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings, load_withheld,
     save_spread_session,
 )
-from ootk.report import build_analytical_prompt
+from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk import significator as significator_methods
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions
 from ootk.visual import build_report_view, card_image_url, card_srcset, withheld_view
 
-VALID_MAPPINGS = {"golden_dawn", "french_egyptian"}
+VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
 VALID_DRAW_MODES = {"seed", "manual"}
 VALID_OUTPUT_FORMATS = {"visual", "markdown"}
-MAPPING_LABELS = {
-    "golden_dawn": "Golden Dawn / English System (Liber 777)",
-    "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
-}
+# Readings saved before 'thoth' existed stored 'golden_dawn' for what is now 'thoth' (the
+# swap was always applied). New readings carry this version, so old links keep their cards.
+MAPPING_VERSION = 2
 
 app = FastAPI(title="OOTK Thoth Graphic GUI")
 
@@ -182,7 +181,7 @@ def generate_report(
     topic: str = Form(""),
     significator: str = Form(""),
     framework: str = Form("auto"),
-    mapping_system: str = Form("golden_dawn"),
+    mapping_system: str = Form(DEFAULT_MAPPING),
     selected_cards: str = Form(""),
     draw_mode: str = Form("manual"),
     seed: str = Form(""),
@@ -276,7 +275,7 @@ def generate_report(
             reading["spread_results"],
             reading["dignity_matrix"],
             report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label,
-                                 link=link),
+                                 link=link, mapping_version=MAPPING_VERSION),
         )
         # An older database saves the reading without its settings; then there is no link.
         linked = bool(session_id) and (load_report_settings(conn, session_id) or {}).get("link") == link
@@ -305,6 +304,8 @@ def show_report(request: Request, link: str):
                 "database/migrations/add_report_links.sql."))
         session_id, stored = found
         stored.pop("link", None)
+        if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
+            stored["mapping_system"] = "thoth"
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
         reading = run_reading(conn, stored, card_titles, significator_label)

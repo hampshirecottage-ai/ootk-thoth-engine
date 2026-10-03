@@ -59,27 +59,41 @@ def fetch_all_cards(conn):
         cur.execute("SELECT card_id, title, arcana_type, key_scale FROM thoth_cards ORDER BY card_id ASC;")
         return cur.fetchall()
 
-def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
+# Crowley's Thoth deck swaps two letters: the Emperor (Aries) goes to Tzaddi (28) and the
+# Star (Aquarius) to Heh (15). thoth_cards.key_scale stores the Thoth layout, with the courts
+# following their Majors (Queen of Wands on 28, Prince of Swords on 15). Strict Golden Dawn
+# keeps the older letters, so under 'golden_dawn' these two paths trade back.
+
+MAPPING_SYSTEMS = ("thoth", "golden_dawn", "french_egyptian")
+DEFAULT_MAPPING = "thoth"
+
+def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
     """Looks up the correspondences of many cards in one query; returns {title: row}.
 
     Titles with no thoth_cards row are simply absent from the result.
 
-    GD data (spatial type, cube position, colours, GD letter) joins on the card's key_scale.
+    Letter data (spatial type, cube position, colours, Hebrew letter) joins on the card's
+    key_scale. Under 'thoth' that is the stored Thoth layout; under 'golden_dawn' the Tzaddi/Heh
+    swap is undone, so the Emperor sits on Heh and the Star on Tzaddi. The returned key_scale
+    is the one the active system uses. 'french_egyptian' keeps the Thoth layout for the cards
+    it has no French row for. thoth_hebrew_letter and gd_hebrew_letter are always both
+    returned, for the report's comparison line.
+
     French/Egyptian data joins separately (alias cf) because the French columns are indexed
     by French card number (0-21), not by the Golden Dawn path number, and only describe the
     Majors. Majors join on thoth_cards.french_number. Minors and Courts get no French row and
-    keep their GD values: rows 1-10 hold French *Major* data, so joining a Minor on its
+    keep their Thoth values: rows 1-10 hold French *Major* data, so joining a Minor on its
     key_scale would hand e.g. the 9 of Cups the Hermit's path.
 
     Under French/Egyptian a Major's letter geometry (spatial type, cube position, King Scale
     colour) comes from the path that carries its French letter (alias g, via cf.french_path),
     so the Sefer Yetzirah classification matches the letter shown.
 
-    What belongs to the card rather than the letter comes from the card in both systems:
-    under Golden Dawn the attribution is thoth_cards.attribution (the Major's sign, planet or
+    What belongs to the card rather than the letter comes from the card in every system:
+    under Thoth and Golden Dawn the attribution is thoth_cards.attribution (the Major's sign, planet or
     element, the pip's decan, the court's span), and the Platonic solid follows the card's
-    element (analysis.apply_card_solid). That keeps the Thoth swap whole: the Emperor sits on
-    Tzaddi but stays Aries, Fire and a Tetrahedron.
+    element (analysis.apply_card_solid). That keeps the Thoth swap whole: under 'thoth' the
+    Emperor sits on Tzaddi but stays Aries, Fire and a Tetrahedron.
     """
     query = """
     SELECT
@@ -89,12 +103,13 @@ def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
         tc.suit,
         tc.number_or_rank,
         tc.description,
-        tc.key_scale,
+        ks.key_scale,
         CASE WHEN %(sys)s = 'french_egyptian' AND cf.path_or_sephira_french IS NOT NULL
              THEN cf.path_or_sephira_french ELSE c.name END AS path_or_sephira,
         CASE WHEN %(sys)s = 'french_egyptian' AND cf.hebrew_letter_french IS NOT NULL
              THEN cf.hebrew_letter_french ELSE COALESCE(c.hebrew_letter, 'N/A') END AS hebrew_letter,
-        c.hebrew_letter AS gd_hebrew_letter,
+        thoth.hebrew_letter AS thoth_hebrew_letter,
+        gd.hebrew_letter AS gd_hebrew_letter,
         cf.hebrew_letter_french AS french_hebrew_letter,
         CASE WHEN %(sys)s = 'french_egyptian' AND cf.attribution_french IS NOT NULL
              THEN cf.attribution_french
@@ -106,7 +121,13 @@ def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE c.spatial_dimension END AS spatial_dimension,
         tc.attribution AS card_attribution
     FROM thoth_cards tc
-    LEFT JOIN correspondences c  ON c.key_scale = tc.key_scale
+    CROSS JOIN LATERAL (SELECT CASE tc.key_scale WHEN 15 THEN 28 WHEN 28 THEN 15
+                               ELSE tc.key_scale END AS key_scale) gd_ks
+    CROSS JOIN LATERAL (SELECT CASE WHEN %(sys)s = 'golden_dawn' THEN gd_ks.key_scale
+                               ELSE tc.key_scale END AS key_scale) ks
+    LEFT JOIN correspondences c     ON c.key_scale = ks.key_scale
+    LEFT JOIN correspondences thoth ON thoth.key_scale = tc.key_scale
+    LEFT JOIN correspondences gd    ON gd.key_scale = gd_ks.key_scale
     LEFT JOIN correspondences cf ON tc.arcana_type = 'Major' AND cf.key_scale = tc.french_number
     LEFT JOIN correspondences g  ON %(sys)s = 'french_egyptian' AND g.key_scale = cf.french_path
     WHERE tc.title = ANY(%(titles)s);
@@ -126,11 +147,11 @@ def fetch_cards_correspondences(conn, titles, system="golden_dawn"):
               f"database/migrations/fix_trump_attributions.sql", file=sys.stderr)
     return {row["title"]: apply_card_solid(row) for row in rows}
 
-def fetch_card_correspondences(conn, title, system="golden_dawn"):
+def fetch_card_correspondences(conn, title, system=DEFAULT_MAPPING):
     """One card's correspondences (see fetch_cards_correspondences), or None."""
     return fetch_cards_correspondences(conn, [title], system=system).get(title)
 
-def load_withheld(conn, deck, drawn_titles, system="golden_dawn"):
+def load_withheld(conn, deck, drawn_titles, system=DEFAULT_MAPPING):
     """analysis.withheld_summary for a draw from `deck` (fetch_all_cards rows), or None."""
     if len(deck) - len(set(drawn_titles)) > WITHHELD_MAX:
         return None                       # skip the whole-deck query when nothing is listed

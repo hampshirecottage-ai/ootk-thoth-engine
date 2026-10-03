@@ -4,13 +4,17 @@ import html
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import derive_primary_element, spirit_bearing_cards
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="golden_dawn", framework_basis=None, withheld=None):
+# The report header and the web form both name the systems from here, so the label always
+# says which way the Tzaddi/Heh swap goes (see db.fetch_cards_correspondences).
+MAPPING_LABELS = {
+    "thoth": "Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)",
+    "golden_dawn": "Golden Dawn / English System (Emperor on Heh, Star on Tzaddi)",
+    "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
+}
+
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None):
     total_cards = sum(element_counts.values()) or 1
-    mapping_labels = {
-        "golden_dawn": "Golden Dawn / English System (Liber 777)",
-        "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
-    }
-    mapping_label = mapping_labels.get(mapping_system, mapping_system)
+    mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
@@ -106,6 +110,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
         
         gd_letter = data.get('gd_hebrew_letter') or 'N/A'
+        thoth_letter = data.get('thoth_hebrew_letter') or gd_letter
         french_letter = data.get('french_hebrew_letter') or 'N/A'
 
         prompt_md += f"### Position {item['position_number']}: {item['position_name']}\n"
@@ -116,7 +121,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         if data['arcana_type'] == 'Minor':
             prompt_md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
         else:
-            prompt_md += f"- **Comparative Hebrew Mapping**: GD: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
+            prompt_md += f"- **Comparative Hebrew Mapping**: Thoth: `{thoth_letter}` | Golden Dawn: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
         stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
         if not stype and data['arcana_type'] == 'Minor':
             stype, sdim = 'Sephira_Point', 'Nodal Sphere (Sephira)'
