@@ -54,13 +54,7 @@
             <h2 id="stagesTitle">Learning stages</h2>
             <p class="muted">The twelve spreads, grouped from first steps to the full Opening of the Key. Each stage adds one new idea.</p>
             <div class="stages">
-                {% set stages = [
-                    ("Stage 1", "Single cards", ["1", "3"], "What one card carries: its attribution, element, Hebrew letter or Sephira, and King Scale colour. Three cards add a past, present and future."),
-                    ("Stage 2", "Elements in pairs", ["2", "4", "5"], "Elemental dignities: whether neighbouring cards strengthen or weaken each other, and the four worlds of the Tetragrammaton."),
-                    ("Stage 3", "Whole layouts", ["6", "7"], "Cards placed on the planets of the hexagram and the Sephiroth of the Tree of Life, and how each position relates to the others."),
-                    ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12"], "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the houses, the signs and the 36 decans, and finally all four together."),
-                ] %}
-                {% for level, name, keys, learn in stages %}
+                {% for level, name, keys, learn in spread_stages %}
                 <div class="stage">
                     <p class="level">{{ level }}</p>
                     <h3>{{ name }}</h3>

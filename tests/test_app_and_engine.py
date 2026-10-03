@@ -246,6 +246,20 @@ def test_start_here_links_preselect_each_spread(client):
         assert f'href="/?spread={key}#readingForm"' in page
 
 
+def test_spread_picker_groups_every_spread_by_stage_and_starts_on_three_cards(client):
+    staged = [key for _, _, keys, _ in app_module.SPREAD_STAGES for key in keys]
+    assert sorted(staged) == sorted(app_module.SPREADS)                  # each spread once
+    page = client.get("/").text
+    assert page.count("<optgroup") == len(app_module.SPREAD_STAGES)
+    assert f'<option value="{app_module.DEFAULT_SPREAD}" selected>' in page
+
+
+def test_report_opens_on_the_next_step_not_the_settings(client):
+    page = post(client).text
+    assert page.index('id="nowStep"') < page.index('id="summary"') < page.index('id="readingDetails"')
+    assert "<h1>Your reading · " in page
+
+
 def test_examples_link_shared_readings_and_draw_cards_with_a_full_deck(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
     page = client.get("/examples").text                                  # empty deck: links only

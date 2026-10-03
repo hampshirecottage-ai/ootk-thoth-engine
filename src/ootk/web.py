@@ -72,6 +72,24 @@ BUG_REPORT_URL = f"{REPO_URL}/issues/new?template=bug_report.yml"
 CONTACT_URL = f"{REPO_URL}/discussions"
 SITE_DESCRIPTION = ("Draw a Thoth tarot spread and get its Golden Dawn dignities, decans and "
                     "Liber 777 correspondences calculated, as a prompt for your LLM to interpret.")
+# The spreads from first steps to the full Opening of the Key: (level, name, spread keys, what
+# it teaches). Start here lists them and the spread picker groups its options the same way.
+SPREAD_STAGES = [
+    ("Stage 1", "Single cards", ["1", "3"],
+     "What one card carries: its attribution, element, Hebrew letter or Sephira, and King Scale "
+     "colour. Three cards add a past, present and future."),
+    ("Stage 2", "Elements in pairs", ["2", "4", "5"],
+     "Elemental dignities: whether neighbouring cards strengthen or weaken each other, and the "
+     "four worlds of the Tetragrammaton."),
+    ("Stage 3", "Whole layouts", ["6", "7"],
+     "Cards placed on the planets of the hexagram and the Sephiroth of the Tree of Life, and how "
+     "each position relates to the others."),
+    ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12"],
+     "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the "
+     "houses, the signs and the 36 decans, and finally all four together."),
+]
+# The spread a first visit starts on: three cards, like the sample and Start here step 3.
+DEFAULT_SPREAD = "3"
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = ["/", "/pick", "/start", "/examples", "/library", "/method"]
 
@@ -110,7 +128,8 @@ async def form_error_page(request: Request, exc: HTTPException):
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
-                             site_description=SITE_DESCRIPTION)
+                             site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
+                             default_spread=DEFAULT_SPREAD)
 
 
 def get_db_connection():

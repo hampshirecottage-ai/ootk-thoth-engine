@@ -62,6 +62,12 @@
         .next-step .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
         .next-step h3 { margin: 16px 0 0; font-size: 1em; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+        .now-step p { margin: 6px 0 0; }
+        .steps-done { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; font-size: 0.9em; counter-reset: step; }
+        .steps-done li { counter-increment: step; color: var(--muted); }
+        .steps-done li::before { content: counter(step); display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; margin-right: 6px; border-radius: 50%; border: 1px solid currentColor; font-size: 0.85em; }
+        .steps-done li.done::before { content: "✓"; }
+        .steps-done li.here { color: inherit; font-weight: 600; }
         .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; }
         .meta div span { display: block; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
         .seed { font-family: "Fira Code", monospace; font-size: 1.3em; color: var(--accent-2); font-weight: 700; }
@@ -213,7 +219,7 @@
     <div class="topbar">
         <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
         {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
-        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this)" title="Copy the prompt, then paste it into your LLM">Copy prompt</button>
+        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this)" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
         <details class="menu">
             <summary class="btn secondary">Save &#9662;</summary>
             <div class="menu-list">
@@ -225,44 +231,19 @@
         <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </div>
 
-    <h1>{% if shared %}Shared reading{% else %}Session #{{ session_id or 'unsaved' }}{% endif %} · {{ spread_name }}</h1>
+    <h1>{% if shared %}Shared reading{% else %}Your reading{% endif %} · {{ spread_name }}</h1>
 
-    <section class="panel">
-        <div class="meta">
-            <div><span>Topic</span>{{ topic or 'General Operation' }}</div>
-            {% if not significator.startswith('None') %}<div><span>Significator</span>{{ significator }}</div>{% endif %}
-            <div><span>Mapping</span>{{ mapping_label }}</div>
-            <div><span>Framework</span>{{ S.framework }}</div>
-            <div>
-                <span>Seed</span>
-                {% if seed %}
-                <strong class="seed" id="seedValue">{{ seed }}</strong>
-                <button class="chip" type="button" onclick="copyText('{{ seed }}', this)">Copy</button>
-                {% else %}<em class="muted">Cards picked by hand (no seed)</em>{% endif %}
-            </div>
-        </div>
-        {% if share_path %}
-        <div class="share no-print">
-            <p class="muted" style="margin:12px 0 0">Share link{% if topic %} (your question is left out){% endif %}:</p>
-            <div class="share-row">
-                <code class="cli" id="shareLink" data-path="{{ share_path }}">{{ share_path }}</code>
-                <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this)">Copy link</button>
-            </div>
-        </div>
-        <script>
-            (function () {
-                const el = document.getElementById("shareLink");
-                el.textContent = location.origin + el.dataset.path;
-            })();
-        </script>
-        {% endif %}
-        {% if cli_command %}
-        <details class="sub cli-box">
-            <summary>Run it in the terminal</summary>
-            <code class="cli" id="cliCommand">{{ cli_command }}</code>
-        </details>
-        {% endif %}
+    <!-- ===== WHAT TO DO NOW ===== -->
+    <section class="panel now-step no-print" id="nowStep">
+        <ol class="steps-done" aria-label="Your progress">
+            <li class="done">Cards drawn</li>
+            <li class="here">Copy the prompt</li>
+            <li>Paste it into your AI</li>
+        </ol>
+        {% if topic %}<p class="now-question">Your question: <strong>{{ topic }}</strong></p>{% endif %}
+        <p>Press <strong>Copy and open</strong> above to copy the prompt and open your AI, then paste it in. Your AI writes the interpretation; this page only shows what the prompt contains. <a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
     </section>
+
 
     <!-- ===== SUMMARY FIRST ===== -->
     <section class="panel" id="summary">
@@ -270,7 +251,6 @@
         <ul class="headline">
             {% for line in S.headline %}<li>{{ line }}</li>{% endfor %}
         </ul>
-        <p class="muted" style="margin:-6px 0 14px; font-size:0.88em">Framework basis: {{ S.framework_basis }}</p>
 
         <h3>Elemental balance</h3>
         <div class="ebar" role="img" aria-label="Elemental balance">
@@ -296,12 +276,16 @@
         <p class="muted" style="font-size:0.85em; margin:6px 0 0">{{ withheld.note }}</p>
         {% endif %}
 
+        {% if S.dignity.pairs or S.aspects.total %}
         <div class="tiles">
+            {% if S.dignity.pairs %}
             <div class="tile">
                 <div class="label">Elemental dignities</div>
                 <div class="big">{{ signed(S.dignity.net) }}</div>
                 <div class="muted" style="font-size:0.85em">{{ S.dignity.strong }} strong · {{ S.dignity.friendly }} friendly · {{ S.dignity.neutral }} neutral · {{ S.dignity.contrary }} contrary, over {{ S.dignity.pairs }} pairs</div>
             </div>
+            {% endif %}
+            {% if S.aspects.total %}
             <div class="tile">
                 <div class="label">Aspects</div>
                 <div class="big">{{ S.aspects.total }} <span style="font-size:0.5em">net {{ signed(S.aspects.net) }}</span></div>
@@ -309,12 +293,16 @@
                     {% for t in S.aspects.by_type %}<span><i class="dot" style="background:{{ t.color }}"></i>{{ t.type }} {{ t.count }}</span>{% endfor %}
                 </div>
             </div>
+            {% endif %}
+            {% if S.dignity.pairs %}
             <div class="tile">
                 <div class="label">Ill-dignified cards</div>
                 <div class="big">{{ S.ill_dignified_count }} <span style="font-size:0.5em" class="muted">of {{ S.card_count }}</span></div>
                 <div class="muted" style="font-size:0.85em">Cards whose neighbouring dignities sum below zero</div>
             </div>
+            {% endif %}
         </div>
+        {% endif %}
 
         {% if S.key_cards %}
         <div class="keycards">
@@ -375,7 +363,7 @@
     <details class="section" id="{{ seg.id }}" {{ 'open' if S.segments | length == 1 }}>
         <summary>
             <h2>{{ seg.name }}</h2>
-            <span class="muted">{{ seg.cards | length }} cards · dignity {{ signed(seg.dignity.net) }} · <span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> aspects shown</span>
+            <span class="muted">{{ seg.cards | length }} card{{ 's' if seg.cards | length != 1 }} · dignity {{ signed(seg.dignity.net) }} · <span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> aspects shown</span>
         </summary>
         <div class="body">
             <div class="drawing">
@@ -500,8 +488,47 @@
         </div>
     </details>
 
-    <details class="section">
-        <summary><h2>The prompt for your LLM</h2></summary>
+    <!-- ===== SETTINGS, SEED AND SHARE LINK ===== -->
+    <section class="panel" id="readingDetails">
+        <h2>Reading details</h2>
+        <div class="meta">
+            <div><span>Topic</span>{{ topic or 'General Operation' }}</div>
+            {% if not significator.startswith('None') %}<div><span>Significator</span>{{ significator }}</div>{% endif %}
+            <div><span>Mapping</span>{{ mapping_label }}</div>
+            <div><span>Framework</span>{{ S.framework }}<div class="muted" style="font-size:0.85em">{{ S.framework_basis }}</div></div>
+            <div>
+                <span>Seed</span>
+                {% if seed %}
+                <strong class="seed" id="seedValue">{{ seed }}</strong>
+                <button class="chip" type="button" onclick="copyText('{{ seed }}', this)">Copy</button>
+                {% else %}<em class="muted">Cards picked by hand (no seed)</em>{% endif %}
+            </div>
+        </div>
+        {% if share_path %}
+        <div class="share no-print">
+            <p class="muted" style="margin:12px 0 0">Share link{% if topic %} (your question is left out){% endif %}:</p>
+            <div class="share-row">
+                <code class="cli" id="shareLink" data-path="{{ share_path }}">{{ share_path }}</code>
+                <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this)">Copy link</button>
+            </div>
+        </div>
+        <script>
+            (function () {
+                const el = document.getElementById("shareLink");
+                el.textContent = location.origin + el.dataset.path;
+            })();
+        </script>
+        {% endif %}
+        {% if cli_command %}
+        <details class="sub cli-box">
+            <summary>Run it in the terminal</summary>
+            <code class="cli" id="cliCommand">{{ cli_command }}</code>
+        </details>
+        {% endif %}
+    </section>
+
+    <details class="section" id="promptSection">
+        <summary><h2>The prompt for your AI</h2></summary>
         <div class="body">
             <button class="btn secondary" type="button" onclick="copyText(document.getElementById('promptText').textContent, this)">Copy prompt</button>
             <pre id="promptText">{{ prompt }}</pre>
@@ -511,7 +538,7 @@
     <!-- ===== FINAL STEP ===== -->
     <section class="panel next-step no-print" id="nextStep">
         <h2>Next</h2>
-        <p class="muted">Paste the prompt into your LLM to get the interpretation.{% if session_id %} This reading is saved as session #{{ session_id }}.{% endif %}</p>
+        <p class="muted">Paste the prompt into your AI to get the interpretation.{% if session_id %} This reading is saved as session #{{ session_id }}.{% endif %}</p>
         <div class="actions">
             <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn">New reading</a>
             <form action="/generate_report" method="POST" style="display:inline">

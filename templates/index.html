@@ -105,7 +105,7 @@
                 <li><span class="score {{ 'pos' if d.score > 0 else ('neg' if d.score < 0 else 'zero') }}">{{ '+' if d.score > 0 }}{{ d.score }}</span> {{ d.pair | replace(" <-> ", " and ") }}: {{ d.relationship }}</li>
                 {% endfor %}
             </ul>
-            <h3>The prompt your LLM gets</h3>
+            <h3>The prompt your AI gets</h3>
             <div class="prompt-box" id="samplePromptBox">
                 <pre id="samplePrompt">{{ sample.prompt }}</pre>
             </div>

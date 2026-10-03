@@ -1,8 +1,12 @@
 {# Settings shared by both pages; `mode` is "seed" or "manual". #}
             <label for="spreadSelect">Spread</label>
             <select name="spread_key" id="spreadSelect">
-                {% for key, spread in spreads.items() %}
-                <option value="{{ key }}">{{ key }}. {{ spread.name }} ({{ positions[key] | length }})</option>
+                {% for level, name, keys, learn in spread_stages %}
+                <optgroup label="{{ level }} · {{ name }}">
+                    {% for key in keys %}{% set n = positions[key] | length %}
+                    <option value="{{ key }}"{{ ' selected' if key == default_spread }}>{{ spreads[key].name }} · {{ n }} card{{ 's' if n != 1 }}</option>
+                    {% endfor %}
+                </optgroup>
                 {% endfor %}
             </select>
 
