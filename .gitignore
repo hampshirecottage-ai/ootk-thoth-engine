@@ -40,6 +40,11 @@ run*.txt
 *.dump
 *backup*.sql
 *_dump.sql
+dump*.sql
+*.pgdump
+*.backup
+*.bak
+readings/
 
 # Keys and credential files
 *.pem
