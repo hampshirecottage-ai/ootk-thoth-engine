@@ -65,6 +65,10 @@ async def require_password(request: Request, call_next):
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
+REPO_URL = "https://github.com/hampshirecottage-ai/ootk-thoth-engine"
+BUG_REPORT_URL = f"{REPO_URL}/issues/new?template=bug_report.yml"
+CONTACT_URL = f"{REPO_URL}/discussions"
+
 
 @app.exception_handler(HTTPException)
 async def form_error_page(request: Request, exc: HTTPException):
@@ -80,12 +84,17 @@ async def form_error_page(request: Request, exc: HTTPException):
         '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}}'
         'main{max-width:560px;margin:10vh auto}h1{color:#6b3fc4;font-size:1.3em}'
         'a{display:inline-block;background:#6b3fc4;color:#fff;padding:10px 16px;'
-        'border-radius:6px;text-decoration:none;font-weight:600}</style></head><body><main>'
+        'border-radius:6px;text-decoration:none;font-weight:600}'
+        '.more{font-size:.9em}.more a.plain{background:none;color:inherit;padding:0;'
+        'text-decoration:underline;font-weight:normal}</style></head><body><main>'
         f'<h1>This reading can&rsquo;t be shown</h1><p>{html.escape(str(exc.detail))}</p>'
         '<p><a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
-        '&larr; Back to settings</a></p></main></body></html>'))
+        '&larr; Back to settings</a></p>'
+        f'<p class="more">Think this is a mistake? <a class="plain" href="{BUG_REPORT_URL}" '
+        'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url,
-                             card_srcset=card_srcset)
+                             card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
+                             contact_url=CONTACT_URL)
 
 
 def get_db_connection():

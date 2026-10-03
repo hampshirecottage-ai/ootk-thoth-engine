@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and contact
+    url: https://github.com/hampshirecottage-ai/ootk-thoth-engine/discussions
+    about: Ask a question, share an idea or get in touch.
+  - name: Security problem
+    url: https://github.com/hampshirecottage-ai/ootk-thoth-engine/security/advisories/new
+    about: Please report security problems privately.
