@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{%- set page_title = "Card of the day: " ~ name %}
-{%- set page_description %}The tarot card of the day for {{ day.strftime('%-d %B %Y') }} is {{ name }} ({{ card.attribution }}), with its Liber 777 correspondences and a ready-made prompt for your LLM.{% endset -%}
+{% set page_title = "Card of the day: " ~ name -%}
+{% set page_description %}The tarot card of the day for {{ day.strftime('%-d %B %Y') }} is {{ name }} ({{ card.attribution }}), with its Liber 777 correspondences and a ready-made prompt for your LLM.{% endset -%}
 {% include "_head_meta.html" %}
     <title>Card of the day, {{ day.strftime('%-d %B %Y') }}: {{ name }} · LLM Tarot Reading</title>
     <script>

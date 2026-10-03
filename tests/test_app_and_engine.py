@@ -205,7 +205,7 @@ def test_pages_have_description_previews_and_icons(client, monkeypatch):
         assert 'name="twitter:card" content="summary_large_image"' in page
         assert 'href="/favicon.ico"' in page and 'href="data:,"' not in page
     report = post(client).text
-    assert '<meta name="robots" content="noindex, nofollow">' in report    # readings stay unlisted
+    assert '<meta name="robots" content="noindex">' in report    # readings stay unlisted
     assert 'rel="canonical"' not in report and 'property="og:image"' in report
 
 
@@ -214,12 +214,13 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://ootk.example.com")
     robots = client.get("/robots.txt")
     assert robots.status_code == 200 and robots.headers["content-type"].startswith("text/plain")
-    assert "Disallow: /report/" in robots.text
+    assert "Disallow: /report/" in robots.text and "Disallow: /reading" in robots.text
     assert "Sitemap: https://ootk.example.com/sitemap.xml" in robots.text
     sitemap = client.get("/sitemap.xml")
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
+    assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
     assert icon.status_code == 200 and icon.headers["content-type"] == "image/x-icon"
     for name in ("site/favicon.svg", "site/apple-touch-icon.png", "site/og-image.jpg"):

@@ -4,7 +4,7 @@
     <meta name="theme-color" content="#3a1d5c">
     <meta name="description" content="{{ page_description | default(site_description) }}">
 {%- if noindex %}
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="noindex">
 {%- else %}
     <link rel="canonical" href="{{ site_url(request) }}{{ request.url.path }}">
 {%- endif %}
