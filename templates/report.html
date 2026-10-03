@@ -23,13 +23,14 @@
             color-scheme: dark;
         }
         :root[data-theme="light"] {
-            --bg: #f4ecdc; --panel: #fbf7ef; --panel-2: #efe5d2; --line: #ddd0b8; --text: #3a1d5c;
-            --muted: #66557a; --accent: #5a2d9c; --accent-2: #00665d; --bad: #c62828; --good: #1b8a5a;
-            --control: #c9bca4; --code-bg: #f7f0e3; --pre-text: #3a1d5c; --filters-bg: rgba(244, 236, 220, 0.96);
-            --svg-face: #fbf7ef; --svg-hole: #fffdf8; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #ebe2d0; --badge: #fff;
-            --on-accent: #fff; --mark: rgba(0, 120, 109, 0.18);
+            --bg: #2e8a56; --panel: #3f9a66; --panel-2: #4aa572; --line: #1f6b40; --text: #000;
+            --muted: #0f2e1b; --accent: #0d2617; --accent-2: #0d2617; --bad: #7a0d0d; --good: #0d2617;
+            --control: #1f6b40; --code-bg: #379660; --pre-text: #000; --filters-bg: rgba(46, 138, 86, 0.96);
+            --svg-face: #3a9a63; --svg-hole: #4caa74; --svg-rule: #1c5535; --svg-sector: #24734a; --card-base: #24734a; --badge: #d4ecdc;
+            --on-accent: #fff; --mark: rgba(255, 255, 255, 0.35);
             color-scheme: light;
         }
+        ::placeholder { color: var(--muted); opacity: 0.75; }
         * { box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; line-height: 1.5; }
         main { max-width: 1200px; margin: 0 auto; }

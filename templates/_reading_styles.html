@@ -1,8 +1,9 @@
 {# Styles shared by the start page and the pick-by-hand page. #}
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --panel-2: #2a2a2a; --panel-3: #252525; --line: #333; --text: #e0e0e0; --muted: #9a9a9a; --accent: #bb86fc; --accent-2: #03dac6; --control: #444; --hover: #382b47; --on-accent: #000; color-scheme: dark; }
-        :root[data-theme="light"] { --bg: #f4ecdc; --panel: #fbf7ef; --panel-2: #efe5d2; --panel-3: #f7f0e3; --line: #ddd0b8; --text: #3a1d5c; --muted: #66557a; --accent: #5a2d9c; --accent-2: #00665d; --control: #c9bca4; --hover: #ece1f3; --on-accent: #fff; color-scheme: light; }
+        :root[data-theme="light"] { --bg: #2e8a56; --panel: #3f9a66; --panel-2: #4aa572; --panel-3: #43a06b; --line: #1f6b40; --text: #000; --muted: #0f2e1b; --accent: #0d2617; --accent-2: #0d2617; --control: #1f6b40; --hover: #56ad7c; --on-accent: #fff; color-scheme: light; }
         * { box-sizing: border-box; }
+        ::placeholder { color: var(--muted); opacity: 0.75; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         h1, h2 { color: var(--accent); margin-top: 0; }
         h2 { font-size: 1.15em; }
