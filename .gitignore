@@ -40,3 +40,15 @@ run*.txt
 *.dump
 *backup*.sql
 *_dump.sql
+
+# Keys and credential files
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+.pgpass
+.envrc
+credentials*.json
+secrets/
