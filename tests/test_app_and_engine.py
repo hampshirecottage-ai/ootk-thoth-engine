@@ -145,7 +145,7 @@ def test_catalog_uses_versioned_webp_thumbnails(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     html = client.get("/pick").text
     assert '/static/cards/thumb/x---fortune.webp?v=' in html
-    assert 'loading="lazy"' in html and ".jpg" not in html
+    assert 'loading="lazy"' in html and "/static/images/" not in html    # no full-size JPG scans
     assert 'src="/static/js/index.js?v=' in html and "defer" in html
 
 
@@ -193,6 +193,37 @@ def test_pages_link_to_bug_report_and_contact(client):
     for html in (client.get("/").text, post(client).text):              # settings and report pages
         assert 'class="site-footer"' in html
         assert "/issues/new?template=bug_report.yml" in html and "/discussions" in html
+
+
+def test_pages_have_description_previews_and_icons(client, monkeypatch):
+    monkeypatch.setenv("SITE_URL", "https://example.org/")
+    for path in ("/", "/pick"):
+        page = client.get(path).text
+        assert '<meta name="description"' in page and 'name="robots"' not in page
+        assert '<meta property="og:image" content="https://example.org/static/site/og-image.jpg">' in page
+        assert f'<link rel="canonical" href="https://example.org{path}">' in page
+        assert 'name="twitter:card" content="summary_large_image"' in page
+        assert 'href="/favicon.ico"' in page and 'href="data:,"' not in page
+    report = post(client).text
+    assert '<meta name="robots" content="noindex, nofollow">' in report    # readings stay unlisted
+    assert 'rel="canonical"' not in report and 'property="og:image"' in report
+
+
+def test_robots_sitemap_and_favicon(client, monkeypatch):
+    monkeypatch.delenv("SITE_URL", raising=False)
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://ootk.example.com")
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200 and robots.headers["content-type"].startswith("text/plain")
+    assert "Disallow: /report/" in robots.text
+    assert "Sitemap: https://ootk.example.com/sitemap.xml" in robots.text
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.headers["content-type"].startswith("application/xml")
+    assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
+    assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
+    icon = client.get("/favicon.ico")
+    assert icon.status_code == 200 and icon.headers["content-type"] == "image/x-icon"
+    for name in ("site/favicon.svg", "site/apple-touch-icon.png", "site/og-image.jpg"):
+        assert client.get(f"/static/{name}").status_code == 200
 
 
 def test_spread_12_needs_75_cards(client):

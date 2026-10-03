@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir -e .
 COPY --chown=user templates ./templates
 COPY --chown=user static/js ./static/js
 COPY --chown=user static/cards ./static/cards
+COPY --chown=user static/site ./static/site
 COPY --chown=user config ./config
 COPY --chown=user database/schema.sql ./database/schema.sql
 COPY --chown=user deploy/huggingface/start.sh ./start.sh
