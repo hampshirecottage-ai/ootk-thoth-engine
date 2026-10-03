@@ -1,0 +1,21 @@
+# Keep the build context to what the Dockerfile copies; never send scans or personal data.
+.git
+.env
+.env.*
+.venv
+venv
+static/images
+static/cards
+output
+outputs
+reports
+private
+docs
+examples
+tests
+**/__pycache__
+*.log
+*.dump
+*.sqlite
+*.sqlite3
+*backup*.sql
