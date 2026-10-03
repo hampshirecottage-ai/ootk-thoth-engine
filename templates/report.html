@@ -6,11 +6,11 @@
     <link rel="icon" href="data:,">
     <title>Report - {{ spread_name }}</title>
     <script>
-        // Saved choice first, otherwise follow the system setting.
+        // Saved choice first, otherwise the light (beige) theme.
         (function () {
             let t = null;
             try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+            document.documentElement.dataset.theme = t || "light";
         })();
     </script>
     <style>
@@ -23,10 +23,10 @@
             color-scheme: dark;
         }
         :root[data-theme="light"] {
-            --bg: #f5f4f8; --panel: #ffffff; --panel-2: #f0eef5; --line: #dedbe6; --text: #1d1b22;
-            --muted: #6b6775; --accent: #6b3fc4; --accent-2: #00786d; --bad: #c62828; --good: #1b8a5a;
-            --control: #c9c4d4; --code-bg: #f3f1f7; --pre-text: #2d2a35; --filters-bg: rgba(245, 244, 248, 0.96);
-            --svg-face: #faf9fc; --svg-hole: #ffffff; --svg-rule: #c4bfcf; --svg-sector: #d9d4e2; --card-base: #e8e5ee; --badge: #fff;
+            --bg: #f4ecdc; --panel: #fbf7ef; --panel-2: #efe5d2; --line: #ddd0b8; --text: #3a1d5c;
+            --muted: #66557a; --accent: #5a2d9c; --accent-2: #00665d; --bad: #c62828; --good: #1b8a5a;
+            --control: #c9bca4; --code-bg: #f7f0e3; --pre-text: #3a1d5c; --filters-bg: rgba(244, 236, 220, 0.96);
+            --svg-face: #fbf7ef; --svg-hole: #fffdf8; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #ebe2d0; --badge: #fff;
             --on-accent: #fff; --mark: rgba(0, 120, 109, 0.18);
             color-scheme: light;
         }

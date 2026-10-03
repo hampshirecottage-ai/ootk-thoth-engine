@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
-    <title>Pick by hand · OOTK Thoth Engine</title>
+    <title>Pick by hand · LLM Tarot Reading</title>
     <script>
-        // Saved choice first, otherwise follow the system setting.
+        // Saved choice first, otherwise the light (beige) theme.
         (function () {
             let t = null;
             try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+            document.documentElement.dataset.theme = t || "light";
         })();
     </script>
 {% include "_reading_styles.html" %}
@@ -18,7 +18,7 @@
 <body class="manual">
     <header class="top">
         <div>
-            <h1><a href="/" class="home">OOTK Thoth Deck</a></h1>
+            <h1><a href="/" class="home">LLM Tarot Reading</a></h1>
             <p class="tagline">Choose a spread, then tap cards in the order you want them placed.</p>
         </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>

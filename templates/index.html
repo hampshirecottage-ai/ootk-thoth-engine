@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
-    <title>OOTK Thoth Engine</title>
+    <title>LLM Tarot Reading · OOTK Thoth Engine</title>
     <script>
-        // Saved choice first, otherwise follow the system setting.
+        // Saved choice first, otherwise the light (beige) theme.
         (function () {
             let t = null;
             try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+            document.documentElement.dataset.theme = t || "light";
         })();
     </script>
 {% include "_reading_styles.html" %}
@@ -18,7 +18,7 @@
 <body>
     <header class="top">
         <div>
-            <h1>OOTK Thoth Deck</h1>
+            <h1>LLM Tarot Reading</h1>
             <p class="tagline">A neutral instruction set for an LLM to interpret a tarot reading. OOTK draws a Thoth spread and works out its dignities, aspects and Liber 777 correspondences, then writes them up as a prompt you paste into an LLM. It does not interpret the cards itself.</p>
         </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
