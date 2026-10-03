@@ -759,3 +759,17 @@ def test_report_links_are_random_not_session_numbers(client):
     second = client.saved["report_settings"]["link"]
     assert first != second and len(first) >= 20 and not first.isdigit()
     assert client.get("/report/99").status_code == 404                  # the session number
+
+
+# ---------- database/schema.sql ----------
+
+def test_schema_sql_never_drops_an_existing_database():
+    """schema.sql builds a new database; on one that already has ootk tables it must stop first."""
+    sql = (Path(__file__).resolve().parents[1] / "database" / "schema.sql").read_text()
+    assert "DROP TABLE" not in sql and "DROP SEQUENCE" not in sql
+    lines = sql.splitlines()
+    stop, restrict = lines.index("\\set ON_ERROR_STOP on"), next(
+        i for i, line in enumerate(lines) if line.startswith("\\restrict "))
+    assert stop < restrict                      # \restrict blocks backslash commands after it
+    guard = sql.index("RAISE EXCEPTION")
+    assert guard < sql.index("CREATE TABLE") and guard < sql.index("setval")

@@ -2,6 +2,9 @@
 -- PostgreSQL database dump
 --
 
+-- Stop at the first error (see the safety guard below).
+\set ON_ERROR_STOP on
+
 \restrict TlcpppKLPezyITSwjwz9FNdJjzIqpmcAjeKjG6oYwPiHoUfzo7TEzYsYAcoSn51
 
 -- Dumped from database version 17.11 (Homebrew)
@@ -18,35 +21,19 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.spread_pulls DROP CONSTRAINT IF EXISTS spread_pulls_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_spread_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_card_id_fkey;
-DROP INDEX IF EXISTS public.idx_cards_key_scale;
-DROP INDEX IF EXISTS public.idx_cards_fts;
-ALTER TABLE IF EXISTS ONLY public.thoth_cards DROP CONSTRAINT IF EXISTS unique_card_title;
-ALTER TABLE IF EXISTS ONLY public.thoth_cards DROP CONSTRAINT IF EXISTS thoth_cards_pkey1;
-ALTER TABLE IF EXISTS ONLY public.tarot_sessions DROP CONSTRAINT IF EXISTS tarot_sessions_pkey;
-ALTER TABLE IF EXISTS ONLY public.spread_pulls DROP CONSTRAINT IF EXISTS spread_pulls_pkey;
-ALTER TABLE IF EXISTS ONLY public.spread_position_geometry DROP CONSTRAINT IF EXISTS spread_position_geometry_pkey;
-ALTER TABLE IF EXISTS ONLY public.session_card_pulls DROP CONSTRAINT IF EXISTS session_card_pulls_pkey;
-ALTER TABLE IF EXISTS ONLY public.correspondences DROP CONSTRAINT IF EXISTS correspondences_pkey;
-ALTER TABLE IF EXISTS public.thoth_cards ALTER COLUMN card_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.tarot_sessions ALTER COLUMN session_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.spread_pulls ALTER COLUMN spread_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.spread_position_geometry ALTER COLUMN position_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.session_card_pulls ALTER COLUMN pull_id DROP DEFAULT;
-DROP SEQUENCE IF EXISTS public.thoth_cards_card_id_seq;
-DROP TABLE IF EXISTS public.thoth_cards;
-DROP SEQUENCE IF EXISTS public.tarot_sessions_session_id_seq;
-DROP TABLE IF EXISTS public.tarot_sessions;
-DROP SEQUENCE IF EXISTS public.spread_pulls_spread_id_seq;
-DROP TABLE IF EXISTS public.spread_pulls;
-DROP SEQUENCE IF EXISTS public.spread_position_geometry_position_id_seq;
-DROP TABLE IF EXISTS public.spread_position_geometry;
-DROP SEQUENCE IF EXISTS public.session_card_pulls_pull_id_seq;
-DROP TABLE IF EXISTS public.session_card_pulls;
-DROP TABLE IF EXISTS public.correspondences;
+-- Safety guard (not part of the original dump): this file builds a NEW database. It used to
+-- start by dropping every table, so running it on a database in use deleted all saved readings.
+-- It now stops before changing anything if the ootk tables already exist (ON_ERROR_STOP is set
+-- at the top of the file, before \restrict, which blocks later backslash commands).
+DO $guard$
+BEGIN
+    IF to_regclass('public.thoth_cards') IS NOT NULL
+       OR to_regclass('public.tarot_sessions') IS NOT NULL THEN
+        RAISE EXCEPTION 'This database already has ootk tables, so schema.sql stopped without changing anything. Load it into a new, empty database (createdb), or run the files in database/migrations/ to update this one.';
+    END IF;
+END
+$guard$;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
