@@ -270,10 +270,18 @@ function download(name, type, text) {
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-const READING = JSON.parse(document.getElementById("readingData").textContent);
 const fileStem = "ootk_reading";
-document.querySelectorAll("[data-download-json]").forEach(btn => btn.addEventListener("click", () =>
-    download(`${fileStem}.json`, "application/json", JSON.stringify(READING, null, 2))));
+// A report with its own address downloads the JSON from the server; it is too big to carry
+// in every page. A report without one (a database too old to save links) has it embedded.
+document.querySelectorAll("[data-download-json]").forEach(btn => btn.addEventListener("click", () => {
+    if (btn.dataset.jsonUrl) {
+        const a = Object.assign(document.createElement("a"), { href: btn.dataset.jsonUrl, download: `${fileStem}.json` });
+        document.body.appendChild(a); a.click(); a.remove();
+        return;
+    }
+    const reading = JSON.parse(document.getElementById("readingData").textContent);
+    download(`${fileStem}.json`, "application/json", JSON.stringify(reading, null, 2));
+}));
 // The prompt is already on the page, so the download needs no new request (and saves no
 // second copy of the session).
 document.querySelectorAll("[data-download-md]").forEach(btn => btn.addEventListener("click", () =>

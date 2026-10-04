@@ -964,6 +964,21 @@ def shared_reading(request: Request, seed: str = "", spread: str = "",
     Nothing is saved, and no saved reading can be reached this way: those keep their random
     /report/<link> addresses.
     """
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator)
+    return render_report(request, None, settings, reading, shared=True,
+                         json_url="/reading/json?" + request.url.query)
+
+
+@app.get("/reading/json")
+def shared_reading_json(seed: str = "", spread: str = "", system: str = DEFAULT_MAPPING,
+                        framework: str = "auto", significator: str = ""):
+    """The report's JSON download for a shared reading: the same link, drawn again."""
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator)
+    return reading_json_response(settings, reading)
+
+
+def shared_reading_parts(seed, spread, system, framework, significator):
+    """The settings and run_reading() result for a shared link's parameters."""
     seed, spread, framework, significator = seed.strip(), spread.strip(), framework.strip(), significator.strip()
     system = SYSTEM_ALIASES.get(system.strip().lower(), system.strip().lower())
     check_lengths(spread=spread, system=system, framework=framework, significator=significator)
@@ -984,8 +999,7 @@ def shared_reading(request: Request, seed: str = "", spread: str = "",
     }
     deck = reference_deck()
     card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
-    reading = run_reading(settings, card_titles, significator_label, deck)
-    return render_report(request, None, settings, reading, shared=True)
+    return settings, run_reading(settings, card_titles, significator_label, deck)
 
 
 def utc_today() -> date:
@@ -1048,6 +1062,19 @@ NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was co
 @app.get("/report/{link}", response_class=HTMLResponse)
 def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
+    session_id, stored, reading = saved_reading_parts(link)
+    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json")
+
+
+@app.get("/report/{link}/json")
+def saved_reading_json(link: str):
+    """The report's JSON download for a saved reading."""
+    _, settings, reading = saved_reading_parts(link)
+    return reading_json_response(settings, reading)
+
+
+def saved_reading_parts(link):
+    """(session_id, settings, run_reading() result) for a saved report's link; 404 if unknown."""
     if not REPORT_LINK.fullmatch(link):
         raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
     with get_db_connection() as conn:
@@ -1060,8 +1087,7 @@ def show_report(request: Request, link: str):
             stored["mapping_system"] = "thoth"
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
-    reading = run_reading(stored, card_titles, significator_label)
-    return render_report(request, session_id, stored, reading)
+    return session_id, stored, run_reading(stored, card_titles, significator_label)
 
 
 # Which Major carries each sign, per mapping system, for the card panel's small maps. Reference
@@ -1139,13 +1165,35 @@ def run_reading(settings, card_titles, significator_label, deck=None):
     }
 
 
-def render_report(request, session_id, settings, r, shared=False):
-    """The visual report for a reading from run_reading()."""
+def report_view(settings, r):
+    return build_report_view(settings["spread_key"], r["spread_results"], r["element_counts"],
+                             r["dignity_matrix"], r["spatial_matrix"], r["macro_framework"],
+                             r["framework_basis"], r.get("sign_carriers"))
+
+
+def export_reading(settings, r, view):
+    return reading_export(r["spread_name"], settings, r["significator_label"],
+                          r["macro_framework"], r["framework_basis"], r["element_counts"],
+                          r["spread_results"], view, r["dignity_matrix"], r["spatial_matrix"],
+                          r["withheld"])
+
+
+def reading_json_response(settings, r):
+    """The report's JSON download, built when asked for rather than embedded in every page."""
+    data = export_reading(settings, r, report_view(settings, r))
+    return Response(json.dumps(data, ensure_ascii=False, indent=2), media_type="application/json",
+                    headers={"Content-Disposition":
+                             'attachment; filename="ootk_reading.json"'})
+
+
+def render_report(request, session_id, settings, r, shared=False, json_url=None):
+    """The visual report for a reading from run_reading().
+
+    A full Opening of the Key export is about 300 KB, so a report that has an address of its
+    own (json_url) fetches it from there on demand instead of carrying it in the page."""
     spread_key, seed = settings["spread_key"], settings["seed"]
     mapping_system, framework = settings["mapping_system"], settings["framework"]
-    view = build_report_view(spread_key, r["spread_results"], r["element_counts"], r["dignity_matrix"],
-                             r["spatial_matrix"], r["macro_framework"], r["framework_basis"],
-                             r.get("sign_carriers"))
+    view = report_view(settings, r)
     return templates.TemplateResponse(
         request=request,
         name="report.html",
@@ -1173,9 +1221,7 @@ def render_report(request, session_id, settings, r, shared=False):
             "dual_pairings": r["dual_pairings"],
             "withheld": withheld_view(r["withheld"]),
             "view": view,
-            "reading": reading_export(r["spread_name"], settings, r["significator_label"],
-                                      r["macro_framework"], r["framework_basis"], r["element_counts"],
-                                      r["spread_results"], view, r["dignity_matrix"],
-                                      r["spatial_matrix"], r["withheld"]),
+            "json_url": json_url,
+            "reading": None if json_url else export_reading(settings, r, view),
         }
     )
