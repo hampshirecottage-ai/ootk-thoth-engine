@@ -7,7 +7,7 @@
 {% set src = static_url("history/" ~ file) %}
                 <figure class="photo">
                     {% if src %}<img src="{{ src }}" alt="{{ alt }}" loading="lazy">{% endif %}
-                    <figcaption>{{ caption | safe }}<br><span class="credit">{{ credit | safe }} · <a href="{{ source }}" target="_blank" rel="noopener">Wikimedia Commons</a> · {{ licence }}</span></figcaption>
+                    <figcaption>{{ caption | safe }}<br><span class="credit">{{ credit | safe }} · <a href="{{ source }}" target="_blank" rel="noopener">Wikimedia Commons</a> · {{ licence | safe }}</span></figcaption>
                 </figure>
 {%- endmacro %}
 {% block head %}
@@ -26,8 +26,8 @@
             <h2 id="originsTitle">A card game from Italy</h2>
             <p>Tarot began in northern Italy in the 1440s as <em>tarocchi</em>, a trick-taking card game. Rich families had decks painted by hand; the best known were made for the Visconti and Sforza dukes of Milan, around 1450. The game spread to France and Switzerland, where cheaper woodcut decks such as the Tarot de Marseille fixed the 22 trumps in roughly the order still used today.</p>
             <div class="figures">
-{{ photo("visconti-sforza-world.webp", "A gilded hand-painted card showing two cherubs holding a globe with a walled city", "The World, Visconti-Sforza deck, Milan, about 1450", "Attributed to Bonifacio Bembo", "https://commons.wikimedia.org/wiki/File:Visconti-Sforza_tarot_deck._The_World.jpg", "Public domain") }}
-{{ photo("conver-1760-le-mat.webp", "A woodcut card of a wandering fool with a stick and bundle, a dog at his leg", "Le Mat (The Fool), Tarot de Marseille, Nicolas Conver, 1760", "Nicolas Conver", "https://commons.wikimedia.org/wiki/File:LE_MAT_Nicolas_Conver_Tarot_1760.jpg", "Public domain") }}
+{{ photo("visconti-sforza-world.webp", "A gilded hand-painted card showing two cherubs holding a globe with a walled city", "The World, Visconti-Sforza deck, Milan, about 1450", "Traditionally attributed to Bonifacio Bembo", "https://commons.wikimedia.org/wiki/File:Visconti-Sforza_tarot_deck._The_World.jpg", "Public domain") }}
+{{ photo("conver-1760-le-mat.webp", "A woodcut card of a wandering fool with a stick and bundle, a dog at his leg", "Le Mat (The Fool), Tarot de Marseille, Nicolas Conver, 1760, from a 2020 reprint", "Photo: Tarot World Project", "https://commons.wikimedia.org/wiki/File:LE_MAT_Nicolas_Conver_Tarot_1760.jpg", '<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>') }}
             </div>
             <p>Only in 1781 did anyone claim the cards were secret wisdom: Antoine Court de G&eacute;belin wrote that they came from ancient Egypt. There is no evidence for that, but the idea took hold. In the 1850s &Eacute;liphas L&eacute;vi tied the 22 trumps to the 22 letters of the Hebrew alphabet, and the occult tarot was born.</p>
         </section>
@@ -43,7 +43,7 @@
             <h2 id="rwsTitle">Pamela Colman Smith and A.&nbsp;E. Waite</h2>
             <p>Arthur Edward Waite, a scholar of mysticism and a Golden Dawn member, designed a deck that William Rider &amp; Son of London published in December 1909. He asked the artist and stage designer Pamela Colman Smith to draw it. Smith drew all 78 cards in about six months and, unusually, gave every numbered card a scene with people in it, which made the deck easy to read from the pictures alone. She was paid a flat fee and died poor in 1951; only lately has her name been added, as the Rider-Waite-<strong>Smith</strong> deck.</p>
             <div class="figures">
-{{ photo("smith-1912.webp", "Portrait photograph of Pamela Colman Smith", "Pamela Colman Smith (1878&ndash;1951), from <em>The Craftsman</em>, October 1912", "Photographer unknown", "https://commons.wikimedia.org/wiki/File:Pamela_Colman_Smith_circa_1912.jpg", "Public domain") }}
+{{ photo("smith-1912.webp", "Portrait photograph of Pamela Colman Smith", "Pamela Colman Smith (1878&ndash;1951), from <em>The Craftsman</em>, October 1912", "Photographer unknown", "https://commons.wikimedia.org/wiki/File:Pamela_Colman_Smith_circa_1912.jpg", "Public domain in the US") }}
 {{ photo("waite-1911.webp", "Portrait photograph of Arthur Edward Waite", "Arthur Edward Waite (1857&ndash;1942), 1911", "J. Russell &amp; Sons", "https://commons.wikimedia.org/wiki/File:Arthur_Waite_Author.JPG", "Public domain") }}
                 <figure class="photo">
                     {% set img = card_image_url("The Fool", "thumb") %}{% if img %}<img src="{{ img }}" alt="Smith's Fool: a young traveller at a cliff edge with a white dog" loading="lazy">{% endif %}
@@ -63,5 +63,5 @@
             <p>Neither lived to see it printed. Crowley died in 1947 and Harris in 1962; the deck was first published in 1969, and the better-known edition followed in 1977. Harris&rsquo;s paintings are still under copyright, which is why this site shows Smith&rsquo;s cards in their place. <a href="/method#art">About the card art</a> explains how each Thoth card is matched to its Waite counterpart and why some names differ.</p>
         </section>
 
-        <p class="note">Photographs are from Wikimedia Commons and out of copyright; each caption links to its source page. Full credits are in <a href="https://github.com/hampshirecottage-ai/ootk-thoth-engine/blob/main/static/history/CREDITS.md" target="_blank" rel="noopener">static/history/CREDITS.md</a>.</p>
+        <p class="note">Pictures are from Wikimedia Commons: five are out of copyright and the Marseille card photo is shared under CC&nbsp;BY-SA&nbsp;4.0. Each caption links to its source page. Full credits are in <a href="https://github.com/hampshirecottage-ai/ootk-thoth-engine/blob/main/static/history/CREDITS.md" target="_blank" rel="noopener">static/history/CREDITS.md</a>.</p>
 {% endblock %}
