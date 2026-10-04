@@ -630,7 +630,12 @@ def seeded_draw(deck, seed, spread_key, significator):
         raise HTTPException(status_code=400,
                             detail=f"{SPREADS[spread_key]['name']} needs a significator. "
                                    f"Choose one under Significator on the start page.")
-    card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
+    try:
+        card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
+    except ValueError as e:                 # a card table that is empty or only partly loaded
+        log.warning("cannot draw: %s", e)
+        raise HTTPException(status_code=503, detail="The card database is incomplete, so no cards "
+                                                    "can be drawn. Please try again later.") from e
     return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
 
 
@@ -1096,7 +1101,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
     dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
     spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
     spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
-    solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
+    solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_key)
     macro_framework, framework_basis = evaluate_macro_framework(spread_results,
                                                                 forced_framework=settings["framework"])
     deck = deck or reference_deck()
