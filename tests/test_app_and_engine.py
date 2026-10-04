@@ -714,6 +714,15 @@ def test_prompt_states_repeated_facts_once():
     assert "Comparative Hebrew Mapping" in prompt and "Spatial Dimension**: `Simple_Edge`" in prompt
 
 
+def test_prompt_names_its_last_line_so_a_cut_copy_is_noticed(tmp_path, monkeypatch):
+    prompt, _ = build_report(tmp_path, monkeypatch)
+    assert prompt.rstrip("\n").endswith("\nEND OF OOTK PROMPT (3 positions)")
+    first_lines = prompt.split("**Operation/Spread:**", 1)[0]
+    assert "very last line is `END OF OOTK PROMPT (3 positions)`" in first_lines
+    assert "do not interpret the reading until you have all of it" in first_lines
+    assert report.end_of_prompt_marker(1) == "END OF OOTK PROMPT (1 position)"
+
+
 def test_view_output_recognises_sections_by_title_not_number():
     vo = load_view_output()
     assert vo.section_kind("## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n* x") == "dignity"

@@ -27,6 +27,8 @@ The same command with the same database always draws the same cards. Everything 
 --> PRNG Auto-Drawn: 5 of Disks - Worry
 
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
+> **Before you start:** this prompt lists 3 positions and its very last line is `END OF OOTK PROMPT (3 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
+
 **Operation/Spread:** Triad (Timeline & Motion)
 **Query/Intent Topic:** Example reading
 **Significator:** None (spread has no significator position)
@@ -132,3 +134,5 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
 3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
 4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
 5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
+
+END OF OOTK PROMPT (3 positions)
