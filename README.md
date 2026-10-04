@@ -23,7 +23,7 @@ It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
 - **PostgreSQL persistence** of sessions, spreads and card pulls.
-- **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
+- **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`, live at [ootk.onrender.com](https://ootk.onrender.com)), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
 
 ---
 
@@ -41,25 +41,32 @@ ootk-thoth-engine/
 │   ├── db.py               # DB settings, card lookups, saving sessions
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
 │   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
-│   └── visual.py           # Web report view: summary figures and drawable layouts
+│   ├── significator.py     # Book T significator: court card from description or birth date
+│   ├── visual.py           # Web report view: summary figures, drawable layouts, link notes
+│   ├── assets.py           # Static files: versioned URLs, cache headers, compression
+│   └── library.json        # Glossary and further reading for the /library page
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
 │   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
 │   ├── download_images.py  # Fetch card images into static/images/
 │   ├── optimize_images.py  # Build the WebP copies the web GUI serves
+│   ├── make_site_images.py # Rebuild the favicon and link-preview image in static/site/
+│   ├── export_hf_space.sh  # Copy the files a Hugging Face Space needs into a folder
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
 │   ├── schema.sql          # Full dump: schema, all migrations, and reference data
 │   └── migrations/         # Only needed for DBs created before the current schema
 ├── config/                 # config.json (DB name/host/port defaults)
-├── prompts/                # System/operation prompts for LLM-assisted readings
 ├── templates/              # Jinja2 templates for the web GUI and reports
-├── static/images/          # Card images (not in git; see below)
+├── static/images/          # Full-size card scans (not in git; see below)
 ├── static/cards/           # WebP card images served by the web GUI
 ├── static/js/              # Page scripts, loaded with defer
+├── static/site/            # Favicon, app icon and link-preview image
+├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker, Render and Hugging Face Spaces)
+├── deploy/huggingface/     # Space README and start script, also used by the Docker image
 ├── output/                 # Generated HTML reports (not in git)
 ├── examples/               # A sample reading made with a dummy seed
-├── docs/                   # Thoth_Tarot_Engine_Guide.docx
+├── docs/images/            # README screenshot
 └── tests/                  # pytest suite (+ opt-in real-database tests)
 ```
 
@@ -166,20 +173,37 @@ python scripts/view_output.py --file output/ootk_output_20.html
 uvicorn ootk.web:app --reload --port 8000
 ```
 
-Open http://localhost:8000 for the form and http://localhost:8000/docs for the API docs.
+Open http://localhost:8000 for the start page and http://localhost:8000/docs for the API docs.
 
-- **Settings panel.** The start page is one panel: spread, seed, significator, mapping system, framework and output format. It remembers your last settings in your browser.
-- **Significator.** Spreads 8 and 12 start with a significator. Choose it one of three ways: **Describe** (Book T: rank from age and gender, suit from colouring or temperament, giving one of the 16 court cards), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
-- **Pick by hand.** To place the cards yourself, follow "Pick them by hand instead" to `/pick`, which adds the spread board and the card catalog. Your settings carry over between the two pages.
-- **Seeds.** Leave the seed blank to get a new one. The report always shows the seed and the matching `ootk` command, and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
-- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address.
-- **Summary first.** The report opens with a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
-- **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels, and decans as a 36-segment ring, with card images and aspects as coloured lines. Hover a card to light up its aspects. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
-- **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or toggle individual types; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
-- **Card details.** Click any card, in a drawing or a table, to open a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, and every aspect and dignity it takes part in. Escape closes it.
+**Pages**
+
+| Address | What it is |
+|---|---|
+| `/` | Start page: a sample Opening of the Key (heap, wheel and Cube of Space), then the form |
+| `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
+| `/start` | Start here: a five-step path for newcomers and which spreads to learn in what order |
+| `/examples` | Example readings with fixed seeds |
+| `/library` | Glossary and further reading (edit `src/ootk/library.json`), plus every spread |
+| `/method` | Intended use, how a reading is made, limitations and what is stored |
+| `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
+| `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
+| `/report/<link>` | A saved reading |
+
+`/?spread=N` opens the start page with that spread chosen.
+
+- **The form.** Spread, question and Generate reading. Seed, mapping system and framework sit under **More options**. The page remembers your last settings in your browser, and they carry over to `/pick` ("Pick them by hand").
+- **Significator.** Spreads 8 and 12 start with a significator, and the box only appears for those. Choose it one of three ways: **Describe** (Book T: rank from age and gender, suit from colouring or temperament, giving one of the 16 court cards), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
+- **Seeds.** Leave the seed blank to get a new one. A seeded report shows the seed, a share link and the matching `ootk` command (under "Run it in the terminal"), and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
+- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
+- **What now.** The report opens with three steps (cards drawn, copy the prompt, paste it into your AI). **Copy prompt** copies it; **Copy and open** copies it and opens Claude, ChatGPT, Gemini, Copilot or Perplexity, filling the prompt in where the site allows it.
+- **Summary first.** Then come a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
+- **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels (the houses with each house's meaning), and decans as a 36-segment ring, with card images. Switch between **Aspect lines** and **Element pairs**. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
+- **How the cards are linked.** Each operation explains in plain words which cards are compared. Tap a card in a drawing to see its element pairs and aspects, each with its score and reason, in an inspector beside the drawing (below it on phones); tap a partner to jump to it.
+- **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or pick types under **Types**; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
+- **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, and every aspect and dignity it takes part in. Escape closes it.
 - **Search.** The search box in the filter bar matches card titles, positions, letters, elements and attributions. It dims non-matching cards in the drawings, hides non-matching table rows, and opens the operations that have matches.
-- **Output.** "Visual report" renders the page above; "Markdown file" downloads the analytical prompt. The full prompt is also in a collapsed section of every visual report. The report also downloads the whole reading as JSON, each drawing as an SVG (card images link back to the running server), and prints or saves as PDF with every section expanded.
-- **Theme and phones.** A dark/light toggle (it follows the system setting until you choose) is remembered per browser. Both pages collapse to one column on narrow screens.
+- **Save.** The **Save** menu prints or saves a PDF with every section expanded, downloads the prompt as Markdown, or the whole reading as JSON. Each drawing also downloads as an SVG (card images link back to the running server).
+- **Theme and phones.** The default theme is green; a dark/light toggle (it follows the system setting until you choose) is remembered per browser. Pages collapse to one column on narrow screens.
 
 ### Docker, Render and Hugging Face Spaces
 
@@ -196,7 +220,7 @@ Set `APP_PASSWORD` to make every page ask for that password (any user name works
 
 On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [ootk.onrender.com](https://ootk.onrender.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked. Free services sleep after 15 idle minutes, so the first page afterwards takes about a minute.
 
-Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start and pick pages; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
+Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start, pick and guide pages and the card of the day; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap, and `/reading` share links are disallowed in `robots.txt`. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
 
 For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private, or set `APP_PASSWORD`, if you don't want strangers adding readings to your database.
 
@@ -256,7 +280,7 @@ The repository holds only the engine and reference data. Your own readings stay 
 | Table | Purpose |
 |---|---|
 | `thoth_cards` | The 78 cards (title, arcana, suit, rank, key scale, description) |
-| `correspondences` | Hebrew letter, path/sephira, element/planet/sign, colour scale, Platonic solid and spatial data, for both mapping schemes |
+| `correspondences` | Hebrew letter, path/sephira, element/planet/sign, colour scale, Platonic solid and spatial data, for each mapping scheme |
 | `spread_position_geometry` | 3D/polar coordinates for each spread position |
 | `tarot_sessions` | One row per reading (operation, significator, notes) |
 | `spread_pulls` | Spreads within a session |
