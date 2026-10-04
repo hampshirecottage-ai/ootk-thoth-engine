@@ -9,6 +9,7 @@ import pytest
 
 from ootk import analysis, db, report, shuffle, spreads
 from ootk import web as app_module
+from ootk.lockout import FailedLogins
 from fastapi.testclient import TestClient
 
 
@@ -45,6 +46,7 @@ def client(monkeypatch):
 
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
     monkeypatch.setattr(app_module, "_reference_cache", {})
+    monkeypatch.setattr(app_module, "failed_logins", FailedLogins())
     # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
     monkeypatch.setattr(app_module, "card_rows", lambda titles, system: fake_fetch(None, titles, system))
 
@@ -130,6 +132,60 @@ def test_password_required_when_set(client, monkeypatch):
     assert client.get("/", auth=("anyone", "wrong")).status_code == 401
     assert client.get("/static/js/index.js").status_code == 401
     assert client.get("/", auth=("anyone", "s3cret")).status_code == 200
+
+
+def test_wrong_passwords_lock_the_visitor_out(client, monkeypatch):
+    monkeypatch.setenv("APP_PASSWORD", "s3cret")
+    assert client.get("/").status_code == 401                 # the browser's first, empty try
+    for _ in range(9):
+        assert client.get("/", auth=("x", "guess")).status_code == 401
+    r = client.get("/", auth=("x", "guess"))                    # the tenth wrong password
+    assert r.status_code == 429 and int(r.headers["retry-after"]) == 900
+    r = client.get("/", auth=("x", "s3cret"))                   # even the right one, while locked
+    assert r.status_code == 429 and "Try again in 15 minutes" in r.text
+    assert r.headers["x-frame-options"] == "DENY"
+
+
+def test_right_password_resets_the_count(client, monkeypatch):
+    monkeypatch.setenv("APP_PASSWORD", "s3cret")
+    for _ in range(9):
+        client.get("/", auth=("x", "guess"))
+    assert client.get("/", auth=("x", "s3cret")).status_code == 200
+    for _ in range(9):
+        assert client.get("/", auth=("x", "guess")).status_code == 401
+
+
+def test_lockout_ends_and_old_failures_expire():
+    now = [0.0]
+    f = FailedLogins(attempts=3, window=60, clock=lambda: now[0])
+    assert f.failed("a") == 0 and f.failed("a") == 0
+    now[0] = 61                                                 # both fall out of the window
+    assert f.failed("a") == 0 and f.retry_after("a") == 0
+    f.failed("a")
+    assert f.failed("a") == 60 and f.retry_after("a") == 60
+    assert f.retry_after("b") == 0                              # other visitors unaffected
+    now[0] = 121.5
+    assert f.retry_after("a") == 0 and f.failed("a") == 0
+
+
+def test_lockout_table_stays_bounded():
+    f = FailedLogins(max_tracked=5)
+    for i in range(50):
+        f.failed(str(i))
+    assert len(f._failures) == 5 and "49" in f._failures
+
+
+def test_lockout_uses_cloudflares_address_on_render_not_x_forwarded_for(monkeypatch):
+    class Req:
+        def __init__(self, headers):
+            self.headers, self.client = headers, type("C", (), {"host": "10.0.0.1"})()
+
+    spoof = {"x-forwarded-for": "1.2.3.4", "cf-connecting-ip": "203.0.113.9"}
+    monkeypatch.delenv("RENDER", raising=False)
+    assert app_module.visitor_address(Req(spoof)) == "10.0.0.1"
+    monkeypatch.setenv("RENDER", "true")
+    assert app_module.visitor_address(Req(spoof)) == "203.0.113.9"
+    assert app_module.visitor_address(Req({"x-forwarded-for": "1.2.3.4"})) == "10.0.0.1"
 
 
 def test_security_headers(client, monkeypatch):
@@ -282,7 +338,7 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
-    for path in ("/start", "/examples", "/library", "/maps", "/method"):
+    for path in ("/start", "/history", "/examples", "/library", "/maps", "/method"):
         assert f"<loc>https://ootk.example.com{path}</loc>" in sitemap.text
     assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
@@ -293,13 +349,27 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
 
 def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
-    for path, heading in [("/start", "Your first reading, step by step"), ("/examples", "Open the report"),
+    for path, heading in [("/start", "Your first reading, step by step"), ("/history", "The Golden Dawn"),
+                          ("/examples", "Open the report"),
                           ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Limitations")]:
         page = client.get(path)
         assert page.status_code == 200 and heading in page.text
         assert f'<a href="{path}" aria-current="page">' in page.text      # nav marks this page
         assert 'class="site-footer"' in page.text and 'rel="canonical"' in page.text
     assert 'href="/start"' in client.get("/").text                       # start page links in
+
+
+def test_history_page_credits_every_photo_and_links_from_start_here(client):
+    assert 'href="/history"' in client.get("/start").text
+    page = client.get("/history").text
+    assert 'href="/method#art"' in page                                  # links the art explainer, not a copy
+    photos = sorted(p.name for p in (app_module.BASE_DIR / "static" / "history").glob("*.webp"))
+    assert photos, "no history photos"
+    for name in photos:
+        assert f"/static/history/{name}?v=" in page, name               # every photo shown
+    credits = (app_module.BASE_DIR / "static" / "history" / "CREDITS.md").read_text()
+    for name in photos:
+        assert name in credits, name                                    # and credited
 
 
 def test_start_here_links_preselect_each_spread(client):
@@ -1236,7 +1306,7 @@ def test_database_down_gives_a_retry_page_and_keeps_static_pages(client, monkeyp
     assert r.status_code == 503
     api = client.get("/maps")
     assert api.status_code == 503 and "card database" in api.json()["detail"]
-    for path in ("/start", "/library", "/method"):
+    for path in ("/start", "/history", "/library", "/method"):
         assert client.get(path).status_code == 200, path
     examples = client.get("/examples")                               # listed, without card names
     assert examples.status_code == 200 and "/reading?seed=777" in examples.text
@@ -1312,3 +1382,63 @@ def test_long_seed_and_topic_are_refused(seeded_client):
 def test_earliest_day_has_no_previous_link(seeded_client):
     r = seeded_client.get("/day/0001-01-01")
     assert r.status_code == 200 and "Previous day" not in r.text
+
+
+# ---------- app: privacy and input limits ----------
+
+def test_saved_reports_are_never_cached_or_indexed(client):
+    r = post(client, follow=False)
+    assert r.headers["cache-control"] == "no-store" and "noindex" in r.headers["x-robots-tag"]
+    page = client.get(f"/report/{client.saved['report_settings']['link']}")
+    assert page.headers["cache-control"] == "no-store" and "noindex" in page.headers["x-robots-tag"]
+    assert "x-robots-tag" not in client.get("/").headers
+
+
+def test_report_shows_no_session_number(client):
+    post(client, follow=False)
+    page = client.get(f"/report/{client.saved['report_settings']['link']}")
+    assert "session #" not in page.text and '"session_id"' not in page.text
+    r = post(client, output_format="markdown")
+    assert r.headers["content-disposition"] == 'attachment; filename="ootk_report.md"'
+
+
+def test_malformed_report_links_never_reach_the_database(client, monkeypatch):
+    def no_db():
+        raise AssertionError("database opened for a link that can't exist")
+
+    monkeypatch.setattr(app_module, "get_db_connection", no_db)
+    for link in ["5", "x" * 65, "abc$def%20ghijklmnopq", "' OR 1=1 --aaaaaaaaaa"]:
+        assert client.get(f"/report/{link}").status_code == 404
+
+
+def test_access_log_hides_report_links():
+    import logging
+    record = logging.LogRecord("uvicorn.access", logging.INFO, "", 0, '%s - "%s %s HTTP/%s" %d',
+                               ("1.2.3.4:5", "GET", "/report/AbC_123-xyzAbC_123-xy?x=1", "1.1", 200), None)
+    app_module.RedactReportLinks().filter(record)
+    assert "AbC_123" not in record.getMessage() and "/report/<redacted>?x=1" in record.getMessage()
+
+
+def test_oversized_posts_are_refused_unread(client):
+    r = client.post("/generate_report", data={"spread_key": "3", "topic": "q" * 70_000})
+    assert r.status_code == 413
+    assert "count" not in client.saved
+
+
+@pytest.mark.parametrize("over", [
+    {"significator": "Q" * 65},
+    {"spread_key": "3" * 65},
+    {"mapping_system": "m" * 65},
+    {"selected_cards": "A," * 2001},
+])
+def test_overlong_fields_are_refused(client, over):
+    r = post(client, **over)
+    assert r.status_code == 400 and "count" not in client.saved
+    assert "Q" * 41 not in r.text and "m" * 41 not in r.text
+
+
+def test_error_messages_echo_at_most_40_characters(client):
+    r = client.get("/day/" + "9" * 60)
+    assert r.status_code == 404 and "9" * 41 not in r.text and "…" in r.json()["detail"]
+    r = client.get("/reading", params={"seed": "1", "spread": "s" * 64})
+    assert r.status_code == 400 and "s" * 41 not in r.text

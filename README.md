@@ -216,7 +216,7 @@ docker run --rm -p 7860:7860 ootk
 
 The local database lives inside the container and starts empty on every run. To keep readings, pass `DB_HOST`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` for an external PostgreSQL; the local one is then not started, and the card tables are loaded on first start if missing.
 
-Set `APP_PASSWORD` to make every page ask for that password (any user name works). Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link.
+Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link.
 
 On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [ootk.onrender.com](https://ootk.onrender.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked. Free services sleep after 15 idle minutes, so the first page afterwards takes about a minute.
 
