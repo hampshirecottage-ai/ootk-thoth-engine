@@ -23,4 +23,4 @@ if [ "$(psql -tAc "SELECT to_regclass('public.thoth_cards') IS NOT NULL")" != "t
     echo "Cards loaded: $(psql -tAc 'SELECT count(*) FROM thoth_cards')"
 fi
 
-exec uvicorn ootk.web:app --host 0.0.0.0 --port "${PORT:-7860}" --proxy-headers --forwarded-allow-ips='*'
+exec uvicorn ootk.web:app --host 0.0.0.0 --port "${PORT:-7860}" --proxy-headers --forwarded-allow-ips='*' --no-server-header

@@ -32,7 +32,8 @@ document.querySelectorAll("[data-send-llm]").forEach(box => {
         // Open in the same click, before any await, so pop-up blockers allow it. Without
         // "noopener" window.open tells us when a blocker stopped the tab; opener is cut by hand.
         const tab = window.open(link.href, "_blank");
-        if (tab) tab.opener = null;
+        // Cross-origin-opener-policy may already have cut it, and then setting it throws.
+        if (tab) try { tab.opener = null; } catch (e) {}
         copied.then(ok => {
             note.textContent = "";
             if (!tab) {
