@@ -1028,10 +1028,41 @@ def test_report_embeds_card_details_and_reading_json(client):
     assert "How the cards are linked" in r.text and 'id="inspect-op1"' in r.text
     assert ["Platonic solid", "Tetrahedron"] in cards[0]["fields"]
     assert cards[1]["dignities"]                                  # middle card touches two pairs
-    reading = embedded("readingData")
+    # The JSON export is fetched from the report's own address, not carried in the page.
+    link = client.saved["report_settings"]["link"]
+    assert 'id="readingData"' not in r.text and f'data-json-url="/report/{link}/json"' in r.text
+    download = client.get(f"/report/{link}/json")
+    assert download.headers["content-disposition"] == 'attachment; filename="ootk_reading.json"'
+    assert download.headers["cache-control"] == "no-store"         # carries the question, like the page
+    reading = download.json()
+    assert reading["settings"]["topic"] == "Love & War <3" and "session_id" not in reading
+    assert len(reading["cards"]) == 3 and reading["cards"][0]["primary_element"] == "Fire"
+    assert client.get("/report/nope/json").status_code == 404
+
+
+def test_report_without_a_link_embeds_its_json(client, monkeypatch):
+    # An older database saves no settings, so the report has no address to fetch the JSON from.
+    monkeypatch.setattr(app_module, "load_report_settings", lambda conn, sid: None)
+    r = post(client, topic="Love & War <3")
+    assert r.status_code == 200 and "data-json-url" not in r.text
+    blob = r.text.split('<script type="application/json" id="readingData">')[1].split("</script>")[0]
+    reading = json.loads(blob)
     assert reading["settings"]["topic"] == "Love & War <3"      # raw text survives the embed
     assert len(reading["cards"]) == 3 and reading["cards"][0]["primary_element"] == "Fire"
-    assert "<3" not in r.text.split('id="readingData">')[1].split("</script>")[0]   # escaped inside <script>
+    assert "<3" not in blob                                      # escaped inside <script>
+
+
+def test_shared_reading_json_redraws_the_same_cards(seeded_client):
+    path = "/reading?seed=918851&spread=12&system=gd&significator=Knight+of+Swords"
+    page = seeded_client.get(path)
+    drawn = seeded_client.lookups[-1]
+    json_path = path.replace("/reading?", "/reading/json?")
+    assert f'data-json-url="{json_path.replace("&", "&amp;")}"' in page.text
+    assert 'id="readingData"' not in page.text
+    reading = seeded_client.get(json_path).json()
+    assert [c["title"] for c in reading["cards"]] == drawn
+    assert reading["settings"]["mapping_system"] == "golden_dawn"
+    assert seeded_client.get("/reading/json?spread=12").status_code == 400
 
 
 def test_report_cards_are_clickable_and_searchable(client):
