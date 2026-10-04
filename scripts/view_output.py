@@ -82,7 +82,7 @@ def render_header(section):
     meta.add_column("Key", style="bold magenta")
     meta.add_column("Value", style="bold white")
     for line in lines[1:]:
-        if "**" in line:
+        if "**" in line and not line.startswith(">"):     # skip the note to the AI
             parts = line.replace("**", "").split(":", 1)
             if len(parts) == 2:
                 meta.add_row(escape(parts[0].strip()), escape(parts[1].strip()))

@@ -40,7 +40,10 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
+    end_marker = end_of_prompt_marker(len(spread_results))
     prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
+> **Before you start:** this prompt lists {_positions(len(spread_results))} and its very last line is `{end_marker}`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
+
 **Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
@@ -191,7 +194,16 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
 5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
 """
     # The header keeps the querent's own text exactly as typed.
+    prompt_md += f"\n{end_marker}\n"
     return header_md + strip_hebrew_points(prompt_md)
+
+def _positions(n):
+    return f"{n} position{'s' if n != 1 else ''}"
+
+def end_of_prompt_marker(n):
+    """The prompt's last line. The top of the prompt names it, so an AI that was handed a
+    cut-off copy (an upload or paste limit) can tell, and say so instead of reading on."""
+    return f"END OF OOTK PROMPT ({_positions(n)})"
 
 def _signed(n):
     return f"+{n}" if n > 0 else str(n)
