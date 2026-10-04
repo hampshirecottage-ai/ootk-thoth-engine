@@ -13,7 +13,7 @@ from ootk.assets import static_url
 from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
-from ootk.spreads import RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
+from ootk.spreads import HEAP_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
 
 ELEMENTS = ("Fire", "Water", "Air", "Earth", "Spirit")
 ELEMENT_COLORS = {
@@ -505,7 +505,10 @@ def link_explainer(layout_key, n_cards, has_layout):
     else:
         first = "The cards are linked in the order they were laid out: 1 with 2, 2 with 3, and so on."
     lines = [first, f"Each pair gets an element score. {SCORE_RULE}"]
-    if has_layout:
+    if layout_key in HEAP_LAYOUTS:
+        lines.append("A heap is not a wheel, so these pairs get no astrological aspect: the "
+                     "places in the drawing only show where each card lies.")
+    elif has_layout:
         lines.append("Each pair also gets an aspect: the angle between the two places, seen from the "
                      "middle of the layout, matched to the nearest astrological aspect. A pair with no "
                      "aspect is drawn dashed. The angle belongs to the layout, so it is the same in "

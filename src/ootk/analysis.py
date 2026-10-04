@@ -4,7 +4,7 @@ import re
 
 from ootk.rules import aspect_label, element_dignity, find_aspect, separation
 from ootk.spreads import (
-    RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments,
+    HEAP_LAYOUTS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments,
 )
 
 ELEMENT_WORDS = {"fire": "Fire", "water": "Water", "air": "Air", "earth": "Earth"}
@@ -177,6 +177,8 @@ def analyze_spatial_vectors(spread_results, spread_key):
     Master pipelines are analysed one operation at a time against that operation's own layout,
     so no pair spans two operations. Ring layouts (see RING_LAYOUT_ASPECTS) are paired by
     exact aspect between any two positions; all other layouts pair consecutive positions.
+    Heap layouts (HEAP_LAYOUTS, Op 1) pair consecutive positions by distance only, with no
+    aspect: their drawing coordinates are not a wheel.
     Segments without a defined layout are skipped (no fake geometry). A position sitting on
     the centroid has no direction, so consecutive pairs involving it are reported as a
     centre/axis node.
@@ -253,7 +255,12 @@ def analyze_spatial_vectors(spread_results, spread_key):
             dist = math.hypot(x2 - x1, y2 - y1)
 
             a1, a2 = polar(coords[j]), polar(coords[j + 1])
-            if a1 is None or a2 is None:
+            if layout_key in HEAP_LAYOUTS:
+                delta_angle = None
+                aspect_name, aspect_desc, modifier = (
+                    "Heap Pair", "Neighbours in the deal; a heap has no angular relation", 0)
+                short = None
+            elif a1 is None or a2 is None:
                 delta_angle = 0.0
                 aspect_name, aspect_desc, modifier = (
                     "Centre Node", "Axis / Core Point (no angular relation)", 0)
@@ -267,7 +274,7 @@ def analyze_spatial_vectors(spread_results, spread_key):
             spatial_matrix.append({
                 "pair": pair_label(item1, item2),
                 "distance": round(dist, 3),
-                "delta_angle": round(delta_angle, 1),
+                "delta_angle": None if delta_angle is None else round(delta_angle, 1),
                 "aspect": aspect_name,
                 "description": aspect_desc,
                 "score_modifier": modifier,

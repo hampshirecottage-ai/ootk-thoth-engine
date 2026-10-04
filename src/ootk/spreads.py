@@ -189,6 +189,12 @@ RING_LAYOUT_ASPECTS = {
     "11": _ALL_RING_ASPECTS,   # 36 decans
 }
 
+# Heap layouts are not wheels: their coordinates are a drawing convention, so the angle two
+# positions make around the middle of the drawing says nothing about the cards. Neighbouring
+# pairs side by side in one heap would read as a 0.8 deg "Conjunction" (+2). Pairs on these
+# layouts keep their distance but take no aspect and no modifier.
+HEAP_LAYOUTS = {"8"}   # OOTK Op 1
+
 OP_TAG = re.compile(r"^\[Op (\d+)\]")
 
 def spread_segments(spread_results, spread_key):
