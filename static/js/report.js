@@ -199,8 +199,8 @@ function openCard(i) {
     document.getElementById("dPos").textContent = `Position ${c.number} · ${c.position}`;
     document.getElementById("dTitle").textContent = c.title;
     const img = c.image
-        ? `<img src="${esc(c.image)}" alt="${esc(c.title)}" decoding="async" style="border-color:${c.color}">`
-        : `<div class="noimg" style="border-color:${c.color}">${esc(c.title)}</div>`;
+        ? `<img src="${esc(c.image)}" alt="${esc(c.title)}" decoding="async" style="border-color:${esc(c.color)}">`
+        : `<div class="noimg" style="border-color:${esc(c.color)}">${esc(c.title)}</div>`;
     const fields = [["Element", c.element], ["Dignified", c.dignified ? "yes" : "no (neighbouring dignities sum below zero)"], ...c.fields]
         .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
     const list = (title, items) => items.length

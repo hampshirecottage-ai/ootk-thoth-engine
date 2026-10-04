@@ -7,7 +7,8 @@
     const f1 = n => Math.round(n * 10) / 10;
     const hebrew = t => (String(t || "").match(/[א-ת]/) || [""])[0];
     const tip = t => `<title>${esc(t)}</title>`;
-    const pick = (i, label) => i == null ? "" : ` data-pick="${i}" tabindex="0" role="button" aria-label="${esc(label)}"`;
+    // Tap target for card `i`: indexes come from the page's JSON, so they are forced to integers.
+    const pick = (i, label) => Number.isInteger(i) ? ` data-pick="${Number(i)}" tabindex="0" role="button" aria-label="${esc(label)}"` : "";
 
     // ---------- Tree of Life ----------
     const SEPH = [[0, 0], [1, 1], [-1, 1], [1, 2.5], [-1, 2.5], [0, 3.3], [1, 4.6], [-1, 4.6], [0, 5.5], [0, 6.6]];
@@ -108,7 +109,7 @@
                 const [x, y] = iso(pt), c = deck.cards[ids[0]];
                 const on = pl === place || (axis && axis === axisOf(place));
                 const courts = deck.cards.filter(o => o.kind === "Court" && o.cube.place === pl).map(o => o.short);
-                s += `<g class="a-node${on ? " on" : ""}${PLACES[pl] && PLACES[pl].filter(v => v).length === 1 ? " face" : ""}"${pick(ids[0], pl)} transform="translate(${x},${y})">${tip(`${pl}: ${c.letter} · ${c.short}${courts.length ? ", " + courts.join(", ") : ""}`)}<circle r="11"/><text dy="0.35em">${hebrew(c.letter)}</text></g>`;
+                s += `<g class="a-node${on ? " on" : ""}${PLACES[pl] && PLACES[pl].filter(v => v).length === 1 ? " face" : ""}"${pick(ids[0], pl)} transform="translate(${x},${y})">${tip(`${pl}: ${c.letter} · ${c.short}${courts.length ? ", " + courts.join(", ") : ""}`)}<circle r="11"/><text dy="0.35em">${esc(hebrew(c.letter))}</text></g>`;
             });
         } else if (place) {
             const axis = axisOf(place);
@@ -144,7 +145,7 @@
             const d = deck && deck.decans[i], ruler = d ? d.ruler : CHALDEAN[i % 7];
             const label = `${SIGNS[Math.floor(i / 3)]} ${i % 3 * 10}°–${i % 3 * 10 + 10}°: ${ruler}${d ? ", " + d.card : ""}`;
             s += `<g class="a-dec${decans.has(i) ? " on" : ""}"${c ? "" : pick(d && d.index, label)}><path d="${sector(R.dec[0], R.dec[1], i * 10, i * 10 + 10)}"/>${tip(label)}`;
-            if (!c) { const [x, y] = pt((R.dec[0] + R.dec[1]) / 2, i * 10 + 5); s += `<text class="a-glyph sm" x="${x}" y="${y}" dy="0.35em">${PLANET_GLYPHS[ruler]}︎</text>`; }
+            if (!c) { const [x, y] = pt((R.dec[0] + R.dec[1]) / 2, i * 10 + 5); s += `<text class="a-glyph sm" x="${x}" y="${y}" dy="0.35em">${esc(PLANET_GLYPHS[ruler] || "")}︎</text>`; }
             s += `</g>`;
         }
         // court spans: Knights, Queens and Princes tile the circle from 20° of each sign;
@@ -155,7 +156,7 @@
             const on = sel && sel.title === cd.title;
             const [rank, , suit] = cd.short.split(" ");
             s += `<g class="a-court${on ? " on" : ""}"${pick(i, cd.short)}><path d="${sector(band[0], band[1], a, b)}"/>${tip(`${cd.short}: ${cd.zodiac.note}`)}`;
-            if (!c) { const [x, y] = pt((band[0] + band[1]) / 2, (a + b) / 2); s += `<text class="a-small" x="${x}" y="${y}" dy="0.35em">${pss ? "Princess" : rank[0] === "P" ? "Pr" : rank.slice(0, rank[0] === "K" ? 2 : 1)} ${suit[0]}</text>`; }
+            if (!c) { const [x, y] = pt((band[0] + band[1]) / 2, (a + b) / 2); s += `<text class="a-small" x="${x}" y="${y}" dy="0.35em">${esc(pss ? "Princess" : rank[0] === "P" ? "Pr" : rank.slice(0, rank[0] === "K" ? 2 : 1))} ${esc(suit[0])}</text>`; }
             s += `</g>`;
         });
         if (sel && !deck && sel.kind === "Court" && sel.zodiac.arcs.length) {
