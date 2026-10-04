@@ -265,7 +265,7 @@
 
     <div class="topbar">
         <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
-        {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
+        {% with prompt_source = "promptText", llm_note_elsewhere = true %}{% include "_send_to_llm.html" %}{% endwith %}
         <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
         <details class="menu">
             <summary class="btn secondary">Save &#9662;</summary>
@@ -294,6 +294,7 @@
         </ol>
         {% if topic %}<p class="now-question">Your question: <strong>{{ topic }}</strong></p>{% endif %}
         <p>Press <strong>Copy and open</strong> above to copy the prompt and open your AI, then paste it in. Your AI writes the interpretation; this page only shows what the prompt contains. <a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
+        <p class="muted">{% include "_llm_left_out.html" %}</p>
     </section>
 
 
