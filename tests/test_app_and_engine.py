@@ -282,7 +282,7 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
-    for path in ("/start", "/examples", "/library", "/maps", "/method"):
+    for path in ("/start", "/history", "/examples", "/library", "/maps", "/method"):
         assert f"<loc>https://ootk.example.com{path}</loc>" in sitemap.text
     assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
@@ -293,13 +293,27 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
 
 def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
-    for path, heading in [("/start", "Your first reading, step by step"), ("/examples", "Open the report"),
+    for path, heading in [("/start", "Your first reading, step by step"), ("/history", "The Golden Dawn"),
+                          ("/examples", "Open the report"),
                           ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Limitations")]:
         page = client.get(path)
         assert page.status_code == 200 and heading in page.text
         assert f'<a href="{path}" aria-current="page">' in page.text      # nav marks this page
         assert 'class="site-footer"' in page.text and 'rel="canonical"' in page.text
     assert 'href="/start"' in client.get("/").text                       # start page links in
+
+
+def test_history_page_credits_every_photo_and_links_from_start_here(client):
+    assert 'href="/history"' in client.get("/start").text
+    page = client.get("/history").text
+    assert 'href="/method#art"' in page                                  # links the art explainer, not a copy
+    photos = sorted(p.name for p in (app_module.BASE_DIR / "static" / "history").glob("*.webp"))
+    assert photos, "no history photos"
+    for name in photos:
+        assert f"/static/history/{name}?v=" in page, name               # every photo shown
+    credits = (app_module.BASE_DIR / "static" / "history" / "CREDITS.md").read_text()
+    for name in photos:
+        assert name in credits, name                                    # and credited
 
 
 def test_start_here_links_preselect_each_spread(client):
@@ -1225,7 +1239,7 @@ def test_database_down_gives_a_retry_page_and_keeps_static_pages(client, monkeyp
     assert r.status_code == 503
     api = client.get("/maps")
     assert api.status_code == 503 and "card database" in api.json()["detail"]
-    for path in ("/start", "/library", "/method"):
+    for path in ("/start", "/history", "/library", "/method"):
         assert client.get(path).status_code == 200, path
     examples = client.get("/examples")                               # listed, without card names
     assert examples.status_code == 200 and "/reading?seed=777" in examples.text

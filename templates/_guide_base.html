@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-{# Shared layout for the guide pages (start here, examples, library, method). A page sets
+{# Shared layout for the guide pages (start here, history, examples, library, method). A page sets
    page_title, page_description and active, and fills the content block. -#}
 {% include "_head_meta.html" %}
     <title>{{ page_title }} · LLM Tarot Reading</title>
@@ -46,7 +46,7 @@
             <h1><a class="home" href="/">LLM Tarot Reading</a></h1>
             <p class="tagline">{{ tagline }}</p>
             <nav class="guide-nav" aria-label="Guide">
-                {% for href, label in [("/start", "Start here"), ("/examples", "Examples"), ("/library", "Library"), ("/maps", "Card maps"), ("/method", "Method and limits")] %}
+                {% for href, label in [("/start", "Start here"), ("/history", "History"), ("/examples", "Examples"), ("/library", "Library"), ("/maps", "Card maps"), ("/method", "Method and limits")] %}
                 <a href="{{ href }}"{% if href == active %} aria-current="page"{% endif %}>{{ label }}</a>
                 {% endfor %}
             </nav>
