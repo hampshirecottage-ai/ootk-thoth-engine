@@ -5,6 +5,9 @@
 {% set active = "/method" %}
 {% block head %}
     <style>
+        .art-pair { display: flex; flex-wrap: wrap; gap: 18px; margin: 10px 0 4px; }
+        .art-pair figure { margin: 0; width: 170px; font-size: 0.9em; line-height: 1.35; }
+        .art-pair img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); display: block; margin-bottom: 6px; }
         .art-table { border-collapse: collapse; margin: 6px 0 12px; font-size: 0.95em; }
         .art-table th, .art-table td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
         .guide ol, .guide ul { padding-left: 22px; }
@@ -69,7 +72,24 @@
                     <tr><td>Princess</td><td>Page</td><td>Earth of the suit</td></tr>
                 </tbody>
             </table>
-            <p>So the Thoth Knight of Wands is pictured with Waite&rsquo;s King of Wands. Some comparison charts pair the cards by name instead (Knight with Knight). That matches the horses but not the ranks, and it leaves the Thoth Prince and Princess with no clear partner.</p>
+            <div class="art-pair">
+                <figure>
+                    {% set img = card_image_url("Knight of Wands", "thumb") %}{% if img %}<img src="{{ img }}" alt="Waite's King of Wands" width="200" height="333" loading="lazy">{% endif %}
+                    <figcaption><strong>Thoth Knight of Wands</strong><br>shown with Waite&rsquo;s King of Wands<br><span class="muted">Fire of Fire. Crowley&rsquo;s Knight rides a horse.</span></figcaption>
+                </figure>
+                <figure>
+                    {% set img = card_image_url("Prince of Wands", "thumb") %}{% if img %}<img src="{{ img }}" alt="Waite's Knight of Wands" width="200" height="333" loading="lazy">{% endif %}
+                    <figcaption><strong>Thoth Prince of Wands</strong><br>shown with Waite&rsquo;s Knight of Wands<br><span class="muted">Air of Fire. Crowley&rsquo;s Prince rides a chariot.</span></figcaption>
+                </figure>
+            </div>
+            <p class="note">The Thoth paintings themselves can&rsquo;t be shown here because they are still under copyright.</p>
+            <h3>The debate</h3>
+            <p>Which Waite court card goes with which Thoth one is still argued over, and the decks&rsquo; own books don&rsquo;t settle it. Waite&rsquo;s <em>Pictorial Key to the Tarot</em> (1910) simply uses the playing-card names. Crowley&rsquo;s <em>Book of Thoth</em> (1944) explains that his Knight is the Golden Dawn&rsquo;s King, renamed. There are two common readings:</p>
+            <ul>
+                <li><strong>By rank (used on this site, and the most common):</strong> the top card of each suit goes with the top card, and so on down, so the Thoth Knight is the Waite King and the Prince the Waite Knight.</li>
+                <li><strong>By the horse:</strong> the Golden Dawn King and Crowley&rsquo;s Knight both ride horses, like Waite&rsquo;s Knights. On this reading the Thoth Knight is the Waite Knight and the Thoth Prince the Waite King.</li>
+            </ul>
+            <p>Both readings pair the Queens with each other, and the Princesses with Waite&rsquo;s Pages. For more, see <a href="https://www.tarotforum.net/threads/thoth-vs-rider-court-cards-names-and-order.220812/" target="_blank" rel="noopener">&ldquo;Thoth vs Rider court cards&rdquo;</a> on Tarot Forum, and Michael Sternbach&rsquo;s <a href="https://michaelsternbach.wordpress.com/2015/08/23/how-do-the-courts-cards-of-various-decks-really-relate-to-one-another/" target="_blank" rel="noopener">&ldquo;How do the court cards of various decks really relate to one another?&rdquo;</a>, which argues for the second reading.</p>
             <h3>Suit and trumps</h3>
             <table class="art-table">
                 <thead><tr><th>Thoth</th><th>Waite</th></tr></thead>
