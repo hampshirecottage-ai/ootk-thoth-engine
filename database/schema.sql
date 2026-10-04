@@ -543,6 +543,13 @@ CREATE INDEX idx_cards_key_scale ON public.thoth_cards USING btree (key_scale);
 
 
 --
+-- Name: idx_sessions_report_link; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_report_link ON public.tarot_sessions USING btree (((report_settings ->> 'link'::text)));
+
+
+--
 -- Name: session_card_pulls session_card_pulls_card_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
