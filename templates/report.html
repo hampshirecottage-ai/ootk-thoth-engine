@@ -619,7 +619,7 @@
     <!-- ===== FINAL STEP ===== -->
     <section class="panel next-step no-print" id="nextStep">
         <h2>Next</h2>
-        <p class="muted">Paste the prompt into your AI to get the interpretation.{% if session_id %} This reading is saved as session #{{ session_id }}.{% endif %}</p>
+        <p class="muted">Paste the prompt into your AI to get the interpretation.{% if session_id %} This reading is saved.{% endif %}</p>
         <div class="actions">
             <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn">New reading</a>
             <form action="/generate_report" method="POST" style="display:inline">

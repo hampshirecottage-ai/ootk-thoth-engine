@@ -34,6 +34,7 @@ from ootk.db import (
     DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings,
     save_spread_session,
 )
+from ootk.lockout import FailedLogins
 from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk.rules import element_dignity
 from ootk import atlas
@@ -48,6 +49,13 @@ VALID_DRAW_MODES = {"seed", "manual"}
 VALID_OUTPUT_FORMATS = {"visual", "markdown"}
 TOPIC_MAX = 2000
 SHARED_SEED_MAX = 64
+# Every other field is a short name (a spread key, a system, a card title); the card list is at
+# most a whole deck of titles.
+FIELD_MAX = 64
+SELECTED_CARDS_MAX = 4000
+# Report links: secrets.token_urlsafe(16) (22 characters) or, for readings from before random
+# links, a 32-character hex UUID. Anything else can't be a link and never reaches the database.
+REPORT_LINK = re.compile(r"[A-Za-z0-9_-]{16,64}")
 # Readings saved before 'thoth' existed stored 'golden_dawn' for what is now 'thoth' (the
 # swap was always applied). New readings carry this version, so old links keep their cards.
 MAPPING_VERSION = 2
@@ -77,13 +85,50 @@ app.mount("/static", CachedStaticFiles(directory=str(static_dir)), name="static"
 app.add_middleware(CompressionMiddleware)
 
 
+# Form posts are a few kilobytes at most (the question is capped at TOPIC_MAX characters), so
+# anything far larger is refused before it is read, rather than parsed into memory.
+MAX_BODY_BYTES = 64 * 1024
+
+
+@app.middleware("http")
+async def limit_body_size(request: Request, call_next):
+    if request.method in ("POST", "PUT", "PATCH"):
+        length = request.headers.get("content-length")
+        if length is None or not length.isdigit() or int(length) > MAX_BODY_BYTES:
+            return error_page(request, 413, "This form is too large",
+                              "The settings sent were far larger than any reading needs. "
+                              "Go back, shorten the question and try again.")
+    return await call_next(request)
+
+
+failed_logins = FailedLogins()
+
+
+def visitor_address(request: Request) -> str:
+    """Who is knocking, for the password lockout. On Render every request comes through
+    Cloudflare, which sets CF-Connecting-IP to the real visitor and overwrites any copy the
+    visitor sends; X-Forwarded-For starts with whatever the visitor wrote, so it can't be used."""
+    if os.getenv("RENDER"):
+        forwarded = request.headers.get("cf-connecting-ip") or request.headers.get("true-client-ip")
+        if forwarded:
+            return forwarded.strip()[:64]
+    return request.client.host if request.client else "unknown"
+
+
 @app.middleware("http")
 async def require_password(request: Request, call_next):
     """When APP_PASSWORD is set (e.g. on a public host), every page asks for it via HTTP
-    Basic auth; any user name is accepted. Unset, the app is open as before."""
+    Basic auth; any user name is accepted. Unset, the app is open as before.
+
+    Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15
+    minutes; while locked out, even the right password is refused, so guessing gains nothing."""
     password = os.getenv("APP_PASSWORD")
     if not password:
         return await call_next(request)
+    visitor = visitor_address(request)
+    wait = failed_logins.retry_after(visitor)
+    if wait:
+        return locked_out(wait)
     scheme, _, encoded = request.headers.get("authorization", "").partition(" ")
     if scheme.lower() == "basic":
         try:
@@ -91,9 +136,23 @@ async def require_password(request: Request, call_next):
         except (ValueError, UnicodeDecodeError):
             given = ""
         if secrets.compare_digest(given.encode(), password.encode()):
+            failed_logins.succeeded(visitor)
             return await call_next(request)
+        # Only a password that was actually sent counts; the browser's first, empty request doesn't.
+        wait = failed_logins.failed(visitor)
+        if wait:
+            log.warning("password lockout started for one visitor (%d wrong passwords)",
+                        failed_logins.attempts)
+            return locked_out(wait)
     return PlainTextResponse("Password required.", status_code=401,
                              headers={"WWW-Authenticate": 'Basic realm="ootk"'})
+
+
+def locked_out(wait: int):
+    minutes = max(1, (wait + 59) // 60)
+    return PlainTextResponse(f"Too many wrong passwords. Try again in {minutes} minute"
+                             f"{'' if minutes == 1 else 's'}.", status_code=429,
+                             headers={"Retry-After": str(wait)})
 
 
 # Pages use inline <script> and style attributes, so scripts and styles allow 'unsafe-inline';
@@ -123,7 +182,32 @@ async def security_headers(request: Request, call_next):
         response.headers.setdefault(name, value)
     if request.url.scheme == "https":
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    if is_private_path(request.url.path):
+        # A saved reading carries the querent's question: no copies in shared caches or the
+        # browser's back-forward store, and never in search results.
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
+
+
+def is_private_path(path: str) -> bool:
+    return path.startswith("/report/") or path == "/generate_report"
+
+
+class RedactReportLinks(logging.Filter):
+    """Access logs show /report/<redacted>: a report link opens a saved reading and its
+    question, so it shouldn't sit in the host's logs where anyone with log access can read it."""
+
+    def filter(self, record):
+        if isinstance(record.args, tuple) and len(record.args) >= 3 and isinstance(record.args[2], str):
+            args = list(record.args)
+            args[2] = REPORT_LINK_IN_PATH.sub("/report/<redacted>", args[2])
+            record.args = tuple(args)
+        return True
+
+
+REPORT_LINK_IN_PATH = re.compile(r"/report/[^/?#\s]+")
+logging.getLogger("uvicorn.access").addFilter(RedactReportLinks())
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -319,6 +403,20 @@ def withheld_cards(deck, drawn_titles, system):
     return withheld_summary([rows[c["title"]] for c in deck if c["title"] in rows], drawn_titles)
 
 
+def quoted(value: str) -> str:
+    """A visitor's value repeated in an error message, cut short so a page can't be made to
+    echo back an arbitrarily long text."""
+    return repr(value if len(value) <= 40 else value[:40] + "…")
+
+
+def check_lengths(**fields):
+    """400 for any field longer than FIELD_MAX; names it without repeating its value."""
+    for name, value in fields.items():
+        if len(value) > FIELD_MAX:
+            raise HTTPException(status_code=400, detail=f"The {name.replace('_', ' ')} field is too long "
+                                                        f"(at most {FIELD_MAX} characters).")
+
+
 def new_seed() -> str:
     """A fresh six-digit seed, shown on the report so the reading can be repeated."""
     return str(secrets.randbelow(900000) + 100000)
@@ -335,12 +433,11 @@ def cli_command(spread_key, seed, mapping_system, framework, significator, topic
     return " ".join(shlex.quote(p) for p in parts)
 
 
-def reading_export(session_id, spread_name, settings, significator, framework, framework_basis,
+def reading_export(spread_name, settings, significator, framework, framework_basis,
                    element_counts, spread_results, view, dignity_matrix, spatial_matrix,
                    withheld=None):
     """The whole reading as plain JSON data, for the report's JSON download."""
     reading = {
-        "session_id": session_id,
         "spread": spread_name,
         "settings": {k: v for k, v in settings.items() if k not in ("output_format", "selected_cards")},
         "significator": significator,
@@ -526,7 +623,7 @@ def seeded_draw(deck, seed, spread_key, significator):
     sig_card = resolve_significator(deck, significator)
     if significator and sig_card is None:
         raise HTTPException(status_code=400,
-                            detail=f"Significator {significator!r} was not found in the deck. "
+                            detail=f"Significator {quoted(significator)} was not found in the deck. "
                                    f"Pick a title from the list, e.g. 'Queen of Cups' "
                                    f"or 'Princess of Disks'.")
     if sig_card is None and has_significator_position(positions):
@@ -716,6 +813,7 @@ def maps_page(request: Request, card: str = "", system: str = DEFAULT_MAPPING):
     and the elemental grid, under the chosen mapping system."""
     if system not in MAPPING_SYSTEMS:
         system = DEFAULT_MAPPING
+    card = card[:FIELD_MAX]
     deck = reference_deck()
     rows = reference_rows(system)
     deck_map = atlas.deck_atlas([rows[c["title"]] for c in deck if c["title"] in rows])
@@ -763,16 +861,20 @@ def generate_report(
     output_format = output_format.strip()
 
     # --- Domain Input Validation ---
+    check_lengths(spread_key=spread_key, significator=significator, framework=framework,
+                  mapping_system=mapping_system, draw_mode=draw_mode, output_format=output_format)
+    if len(selected_cards) > SELECTED_CARDS_MAX:
+        raise HTTPException(status_code=400, detail="The list of cards is longer than a whole deck.")
     if spread_key not in SPREADS:
-        raise HTTPException(status_code=400, detail=f"Unknown spread key: {spread_key!r}.")
+        raise HTTPException(status_code=400, detail=f"Unknown spread key: {quoted(spread_key)}.")
     if mapping_system not in VALID_MAPPINGS:
-        raise HTTPException(status_code=400, detail=f"Unknown mapping system: {mapping_system!r}.")
+        raise HTTPException(status_code=400, detail=f"Unknown mapping system: {quoted(mapping_system)}.")
     if framework not in VALID_FRAMEWORKS:
-        raise HTTPException(status_code=400, detail=f"Unknown framework: {framework!r}.")
+        raise HTTPException(status_code=400, detail=f"Unknown framework: {quoted(framework)}.")
     if draw_mode not in VALID_DRAW_MODES:
-        raise HTTPException(status_code=400, detail=f"Unknown draw mode: {draw_mode!r}.")
+        raise HTTPException(status_code=400, detail=f"Unknown draw mode: {quoted(draw_mode)}.")
     if output_format not in VALID_OUTPUT_FORMATS:
-        raise HTTPException(status_code=400, detail=f"Unknown output format: {output_format!r}.")
+        raise HTTPException(status_code=400, detail=f"Unknown output format: {quoted(output_format)}.")
     if len(seed) > SHARED_SEED_MAX:
         raise HTTPException(status_code=400, detail=f"A seed can be at most {SHARED_SEED_MAX} characters.")
     if len(topic) > TOPIC_MAX:
@@ -836,7 +938,7 @@ def generate_report(
         return PlainTextResponse(
             reading["analytical_prompt"],
             media_type="text/markdown; charset=utf-8",
-            headers={"Content-Disposition": f'attachment; filename="ootk_report_{session_id or "latest"}.md"'},
+            headers={"Content-Disposition": 'attachment; filename="ootk_report.md"'},
         )
     if linked:
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
@@ -859,16 +961,17 @@ def shared_reading(request: Request, seed: str = "", spread: str = "",
     """
     seed, spread, framework, significator = seed.strip(), spread.strip(), framework.strip(), significator.strip()
     system = SYSTEM_ALIASES.get(system.strip().lower(), system.strip().lower())
+    check_lengths(spread=spread, system=system, framework=framework, significator=significator)
     if not seed:
         raise HTTPException(status_code=400, detail="This link has no seed, so there are no cards to draw.")
     if len(seed) > SHARED_SEED_MAX:
         raise HTTPException(status_code=400, detail=f"A seed can be at most {SHARED_SEED_MAX} characters.")
     if spread not in SPREADS:
-        raise HTTPException(status_code=400, detail=f"Unknown spread: {spread!r}. Use a number from 1 to {len(SPREADS)}.")
+        raise HTTPException(status_code=400, detail=f"Unknown spread: {quoted(spread)}. Use a number from 1 to {len(SPREADS)}.")
     if system not in VALID_MAPPINGS:
-        raise HTTPException(status_code=400, detail=f"Unknown system: {system!r}. Use thoth, gd or french_egyptian.")
+        raise HTTPException(status_code=400, detail=f"Unknown system: {quoted(system)}. Use thoth, gd or french_egyptian.")
     if framework not in VALID_FRAMEWORKS:
-        raise HTTPException(status_code=400, detail=f"Unknown framework: {framework!r}.")
+        raise HTTPException(status_code=400, detail=f"Unknown framework: {quoted(framework)}.")
     settings = {
         "spread_key": spread, "topic": "", "significator": significator, "framework": framework,
         "mapping_system": system, "draw_mode": "seed", "seed": seed, "output_format": "visual",
@@ -897,9 +1000,9 @@ def card_of_the_day(request: Request, day: str):
     try:
         when = date.fromisoformat(day)
     except ValueError:
-        raise HTTPException(status_code=404, detail=f"{day!r} is not a date. Use the form 2026-10-03.")
+        raise HTTPException(status_code=404, detail=f"{quoted(day)} is not a date. Use the form 2026-10-03.")
     if when.isoformat() != day:
-        raise HTTPException(status_code=404, detail=f"{day!r} is not a date. Use the form 2026-10-03.")
+        raise HTTPException(status_code=404, detail=f"{quoted(day)} is not a date. Use the form 2026-10-03.")
     today = utc_today()
     # A day ahead of UTC is allowed, so it is "today" everywhere on Earth.
     if when > today + timedelta(days=1):
@@ -932,16 +1035,20 @@ def card_of_the_day(request: Request, day: str):
     )
 
 
+NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "
+                  "saved before links were random get theirs from "
+                  "database/migrations/add_report_links.sql.")
+
+
 @app.get("/report/{link}", response_class=HTMLResponse)
 def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
+    if not REPORT_LINK.fullmatch(link):
+        raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
     with get_db_connection() as conn:
         found = load_report_by_link(conn, link)
         if not found:
-            raise HTTPException(status_code=404, detail=(
-                "No reading has this link. Check that the whole address was copied; readings "
-                "saved before links were random get theirs from "
-                "database/migrations/add_report_links.sql."))
+            raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
         session_id, stored = found
         stored.pop("link", None)
         if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
@@ -977,7 +1084,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         if not card_data:
             raise HTTPException(
                 status_code=400,
-                detail=f"Card title {title!r} was not found in the database."
+                detail=f"Card title {quoted(title)} was not found in the database."
             )
         spread_results.append({
             "position_number": idx + 1,
@@ -1061,7 +1168,7 @@ def render_report(request, session_id, settings, r, shared=False):
             "dual_pairings": r["dual_pairings"],
             "withheld": withheld_view(r["withheld"]),
             "view": view,
-            "reading": reading_export(session_id, r["spread_name"], settings, r["significator_label"],
+            "reading": reading_export(r["spread_name"], settings, r["significator_label"],
                                       r["macro_framework"], r["framework_basis"], r["element_counts"],
                                       r["spread_results"], view, r["dignity_matrix"],
                                       r["spatial_matrix"], r["withheld"]),
