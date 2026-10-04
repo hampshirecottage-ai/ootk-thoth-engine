@@ -322,7 +322,12 @@ def analyze_hebrew_spatial_distribution(spread_results):
 
     return distribution, spatial_details
 
-def analyze_platonic_topology(spread_results):
+def analyze_platonic_topology(spread_results, spread_key=None):
+    """Solid counts, per-card topology and dual pairings between neighbouring cards.
+
+    Like the dignities, dual pairings never cross an operation boundary: in the master
+    pipeline the last card of one operation is not the neighbour of the next one's first.
+    """
     solid_counts = {
         "Dodecahedron": 0,
         "Tetrahedron": 0,
@@ -355,7 +360,9 @@ def analyze_platonic_topology(spread_results):
         })
 
     dual_pairings = []
-    for i in range(len(topology_details) - 1):
+    neighbours = [i for _, start, end, _ in spread_segments(spread_results, spread_key)
+                  for i in range(start, end - 1)]
+    for i in neighbours:
         s1 = topology_details[i]["solid"]
         s2 = topology_details[i+1]["solid"]
         p1 = topology_details[i]["position"]
