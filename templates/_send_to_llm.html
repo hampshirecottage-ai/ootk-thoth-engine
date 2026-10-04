@@ -1,10 +1,10 @@
 <span class="send-llm no-print" data-send-llm="{{ prompt_source }}"><span class="send-llm-controls">
     <select aria-label="AI to open">
         <option value="claude">Claude</option>
-        <option value="gemini">Gemini</option>
         <option value="chatgpt">ChatGPT</option>
         <option value="copilot">Copilot</option>
-        <option value="perplexity">Perplexity</option>
+        <option value="grok">Grok</option>
     </select><button class="btn" type="button" title="Copy the prompt and open the chosen AI in a new tab">Copy and open</button></span>
     <span class="send-llm-note muted" data-send-llm-note role="status"></span>
+    {% if not llm_note_elsewhere %}<span class="send-llm-left-out muted">{% include "_llm_left_out.html" %}</span>{% endif %}
 </span>

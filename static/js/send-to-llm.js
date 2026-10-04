@@ -1,12 +1,12 @@
 // "Copy and open": copies the prompt, then opens the chosen LLM site in a new tab.
 // Sites that take a ?q= prompt get it in the link too, but only while the link stays
 // short enough to load reliably; longer prompts are pasted from the clipboard.
+// Gemini and Perplexity were dropped (2026-10): they cut long OOTK prompts short.
 const LLM_SITES = {
     claude: { name: "Claude", url: "https://claude.ai/new", param: "q" },
-    gemini: { name: "Gemini", url: "https://gemini.google.com/app" },
     chatgpt: { name: "ChatGPT", url: "https://chatgpt.com/", param: "q" },
     copilot: { name: "Copilot", url: "https://copilot.microsoft.com/", param: "q" },
-    perplexity: { name: "Perplexity", url: "https://www.perplexity.ai/search", param: "q" },
+    grok: { name: "Grok", url: "https://grok.com/", param: "q" },
 };
 const LLM_MAX_URL = 8000;
 
