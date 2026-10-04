@@ -40,9 +40,10 @@
         .card-item { background: var(--panel-2); border: 1px solid var(--control); border-radius: 6px; padding: 6px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
         .card-item:hover { background: var(--hover); border-color: var(--accent); transform: translateY(-3px); }
         .card-item.used { opacity: 0.3; }
-        .card-item img, .card-item .noimg { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; margin-bottom: 6px; background: var(--bg); }
+        .card-item img, .card-item .noimg { width: 100%; height: auto; aspect-ratio: 3 / 5; object-fit: cover; border-radius: 4px; margin-bottom: 6px; background: var(--bg); }
         .card-item .noimg { display: flex; align-items: center; justify-content: center; font-size: 0.7em; color: var(--muted); border: 1px dashed var(--control); }
         .card-title { font-size: 0.75em; font-weight: 600; line-height: 1.2; }
+        .card-art { font-size: 0.65em; line-height: 1.2; color: var(--muted); margin-top: 2px; }
         .slots { max-height: 60vh; overflow-y: auto; }
         .slot { background: var(--panel-3); border: 2px dashed var(--accent-2); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.85em; }
         .slot .pos-name { font-weight: bold; color: var(--accent-2); }
@@ -83,7 +84,6 @@
             /* 16px stops iOS Safari zooming the page when a field is focused. */
             input, select { font-size: 16px; }
             .card-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
-            .card-item img, .card-item .noimg { height: 118px; }
             .card-item:hover { transform: none; }
             .slot { flex-wrap: wrap; }
             .slot .card-selected { white-space: normal; }

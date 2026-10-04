@@ -81,6 +81,7 @@
             return `<div>${c.img ? `<img src="${esc(c.img)}" alt="">` : ""}</div><div>
                 <div class="ins-pos">${esc(place)}</div>
                 <div class="ins-title">${esc(c.title)}</div>
+                ${c.art ? `<div class="ins-pos">${esc(c.art)}</div>` : ""}
                 <div><span class="dot" style="background:${esc(data.colors[c.element] || "transparent")}"></span>${esc(c.element)} · ${esc(c.attribution)}${c.letter ? " · " + esc(c.letter) : ""}</div>
                 ${c.place ? `<div class="ins-pos">Cube of Space: ${esc(c.place)}</div>` : ""}
                 ${scores ? `<div class="ins-scores">${scores}</div>` : ""}</div>`;

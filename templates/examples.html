@@ -9,6 +9,7 @@
         .ex h2 small { color: var(--muted); font-weight: normal; font-size: 0.75em; }
         .ex-cards { list-style: none; padding: 0; margin: 10px 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
         .ex-cards li { font-size: 0.78em; line-height: 1.25; text-align: center; }
+        .ex-cards .art { color: var(--muted); font-size: 0.9em; }
         .ex-cards img { width: 100%; height: auto; border-radius: 5px; border: 1px solid var(--line); display: block; margin-bottom: 4px; }
         .ex .shows { margin: 6px 0 0; }
     </style>
@@ -21,7 +22,7 @@
             <ol class="ex-cards">
                 {% for c in ex.cards %}
                 {% set img = card_image_url(c.title, "thumb") %}
-                <li>{% if img %}<img src="{{ img }}" alt="" width="200" height="290" loading="lazy" decoding="async">{% endif %}{{ c.name }}</li>
+                <li>{% if img %}<img src="{{ img }}" alt=""{% set art = art_note(c.title) %}{% if art %} title="{{ art }}"{% endif %} width="200" height="333" loading="lazy" decoding="async">{% endif %}{{ c.name }}{% if art %}<br><span class="art">{{ art | replace("Pictured: Rider-Waite-Smith ", "Pictured: RWS ") }}</span>{% endif %}</li>
                 {% endfor %}
             </ol>
             {% endif %}
