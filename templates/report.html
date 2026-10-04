@@ -441,7 +441,7 @@
                         <circle class="w-rule" r="{{ d.r_band }}"/>
                         {% for sct in d.sectors %}<path d="{{ sct.d }}" fill="{{ sct.color }}" fill-opacity="0.13" class="w-sector"><title>{{ sct.title }}</title></path>{% endfor %}
                         <circle class="w-hole" r="{{ d.r_in }}"/>
-                        {% for l in d.labels %}<text x="{{ l.x }}" y="{{ l.y }}" font-size="{{ d.label_size }}" text-anchor="middle" dominant-baseline="central">{{ l.text }}</text>{% endfor %}
+                        {% for l in d.labels %}{% if l.sub %}<text x="{{ l.x }}" y="{{ l.y - 6 * l.sub | length }}" font-size="{{ d.label_size }}" font-weight="600" text-anchor="middle" dominant-baseline="central">{{ l.text }}{% for line in l.sub %}<tspan x="{{ l.x }}" dy="{{ 16 if loop.first else 13 }}" font-size="12" font-weight="400">{{ line }}</tspan>{% endfor %}</text>{% else %}<text x="{{ l.x }}" y="{{ l.y }}" font-size="{{ d.label_size }}" text-anchor="middle" dominant-baseline="central">{{ l.text }}</text>{% endif %}{% endfor %}
                     {% elif d.frame %}
                         <polygon class="w-face" points="{{ d.frame }}" stroke-dasharray="6 6"/>
                     {% endif %}

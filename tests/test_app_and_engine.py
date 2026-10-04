@@ -834,7 +834,11 @@ def test_report_view_explains_and_lists_each_operations_links():
         assert sum(i in (a["a"], a["b"]) for a in decans["aspects"]) == 7
     assert decans["aspects"][0]["apart"] == "18 decans apart (180\u00b0)"
     assert decans["aspects"][0]["cards"]
-    assert segs[1]["links"]["cards"][2]["where"] == "3. Third House"
+    assert segs[1]["links"]["cards"][2]["where"] == "3. Third House: Local Mind & Travel"
+    assert segs[2]["links"]["cards"][0]["where"] == "1. Aries"
+    houses = segs[1]["drawing"]["labels"]
+    assert houses[0] == dict(houses[0], text="House 1", sub=["Ascendant /", "Physical Self"])
+    assert houses[6]["sub"] == ["Partnerships"]
 
 
 @pytest.mark.parametrize("e1,e2,text", [

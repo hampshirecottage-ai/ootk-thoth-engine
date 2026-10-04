@@ -49,6 +49,7 @@ WHEEL = {
     36: {"r_out": 450, "r_band": 412, "r_card": 350, "card": (36, 56), "r_in": 305},
 }
 PAD = 24
+HOUSE_R_OUT = 345   # Op 2's outer radius: its band also carries each house's definition
 
 # Element-pair links (neighbouring cards), coloured by their Book T score.
 DIGNITY_COLORS = {DIGNITY_SAME: "#ffe0a0", DIGNITY_FRIENDLY: "#d6f5e3", 0: "#b9c4bd", DIGNITY_CONTRARY: "#ff6b6b"}
@@ -82,6 +83,23 @@ def short_card_name(title):
         head, tail = t.split(" - ", 1)
         return tail if re.fullmatch(r"[0IVXL]+", head) else head
     return t
+
+
+def position_note(position_name):
+    """'[Op 2] 4. Fourth House (Home & Roots)' -> 'Home & Roots' ('' when there is none)."""
+    m = re.search(r"\(([^()]*)\)\s*$", position_name)
+    return m.group(1).strip() if m else ""
+
+
+def _note_lines(note, width=16):
+    """A house definition on one or two short lines, split after its first '&' or '/'."""
+    if len(note) <= width:
+        return [note]
+    for joiner in (" / ", " & "):
+        if joiner in note:
+            head, tail = note.split(joiner, 1)
+            return [head + joiner.rstrip(), tail]
+    return [note]
 
 
 def position_label(position_name):
@@ -249,7 +267,9 @@ def _layout_drawing(layout_key, cards, aspects, pairs=()):
 
 def _wheel_drawing(layout_key, cards, aspects, pairs=()):
     n = len(cards)
-    geo = WHEEL[36 if n > 12 else 12]
+    geo = dict(WHEEL[36 if n > 12 else 12])
+    if layout_key == "9":
+        geo["r_out"] = HOUSE_R_OUT   # a wider band, to fit each house's definition
     w, h = geo["card"]
     coords = SPREAD_DEFAULT_COORDINATES[layout_key][:n]
     angles = [math.degrees(math.atan2(y, x)) % 360 for x, y in coords]
@@ -262,11 +282,13 @@ def _wheel_drawing(layout_key, cards, aspects, pairs=()):
         sectors.append({"d": _sector_path(geo["r_in"], geo["r_band"], ang - half, ang + half),
                         "color": card["color"], "title": card["position_name"]})
         lx, ly = _svg_point((geo["r_band"] + geo["r_out"]) / 2, ang)
+        sub = []
         if layout_key == "9":
             text = f"House {i}"
+            sub = _note_lines(position_note(card["position_name"]))
         else:
             text = (SIGN_GLYPHS.get(card["label"], "") + " " + card["label"]).strip()
-        labels.append({"x": lx, "y": ly, "text": text})
+        labels.append({"x": lx, "y": ly, "text": text, "sub": [s_ for s_ in sub if s_]})
 
     band = []
     if n == 36:
@@ -471,6 +493,16 @@ def _apart_text(layout_key, aspect):
     return f"{angle:g}\u00b0 apart round the middle"
 
 
+def _where(layout_key, card):
+    """How the link list names a card's place: numbered like the drawing's badges, unless the
+    label already is ('Decan 5: ...'); a house also gives its definition."""
+    if re.match(r"\w+ \d+:", card["label"]):
+        return card["label"]
+    where = f"{card['index'] + 1}. {card['label']}"
+    note = position_note(card["position_name"]) if layout_key == "9" else ""
+    return f"{where}: {note}" if note else where
+
+
 def link_view(layout_key, cards, aspects, pairs):
     """Data for a segment's link inspector: its cards, element pairs and aspects, each link
     with a short reason. Indices are segment-local."""
@@ -480,7 +512,7 @@ def link_view(layout_key, cards, aspects, pairs):
         "cards": [dict({k: c[k] for k in ("index", "gindex", "position_name", "title", "element",
                                           "color", "image", "attribution")},
                        # Numbered like the drawing's badges, unless the label already is ("Decan 5: ...").
-                       where=c["label"] if re.match(r"\w+ \d+:", c["label"]) else f"{c['index'] + 1}. {c['label']}")
+                       where=_where(layout_key, c))
                   for c in cards],
         "pairs": [dict(p, score_text=_signed(p["score"]),
                        why=element_reason(cards[p["a"]]["element"], cards[p["b"]]["element"]))
