@@ -1,6 +1,6 @@
-function copyText(text, btn) {
-    const done = () => { const t = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = t, 1200); };
-    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
+// sourceId: the element holding the text, selected for a manual copy if the browser refuses.
+function copyText(text, btn, sourceId) {
+    ootkCopyButton(btn, text, sourceId && document.getElementById(sourceId));
 }
 
 function openSection(id) {

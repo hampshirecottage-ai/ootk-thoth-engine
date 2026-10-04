@@ -7,7 +7,7 @@ from ootk.analysis import (
     analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
 )
 from ootk.db import (
-    DEFAULT_MAPPING, MAPPING_SYSTEMS, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
+    DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
 from ootk.report import build_analytical_prompt, generate_html_output
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
@@ -174,7 +174,11 @@ def run_spread_session():
 
 
 def main():
-    run_spread_session()
+    try:
+        run_spread_session()
+    except DatabaseOutdated as e:
+        print(f"[ERROR] {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

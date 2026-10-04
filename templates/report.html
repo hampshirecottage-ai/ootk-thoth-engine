@@ -264,7 +264,7 @@
     <div class="topbar">
         <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
         {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
-        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this)" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
+        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
         <details class="menu">
             <summary class="btn secondary">Save &#9662;</summary>
             <div class="menu-list">
@@ -589,7 +589,7 @@
             <p class="muted" style="margin:12px 0 0">Share link{% if topic %} (your question is left out){% endif %}:</p>
             <div class="share-row">
                 <code class="cli" id="shareLink" data-path="{{ share_path }}">{{ share_path }}</code>
-                <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this)">Copy link</button>
+                <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this, 'shareLink')">Copy link</button>
             </div>
         </div>
         <script>
@@ -610,7 +610,7 @@
     <details class="section" id="promptSection">
         <summary><h2>The prompt for your AI</h2></summary>
         <div class="body">
-            <button class="btn secondary" type="button" onclick="copyText(document.getElementById('promptText').textContent, this)">Copy prompt</button>
+            <button class="btn secondary" type="button" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')">Copy prompt</button>
             <pre id="promptText">{{ prompt }}</pre>
         </div>
     </details>
@@ -637,6 +637,7 @@
 <script type="application/json" id="cardDetails">{{ S.card_details | tojson }}</script>
 <script type="application/json" id="readingData">{{ reading | tojson }}</script>
 <script src="{{ static_url('js/atlas.js') }}" defer></script>
+<script src="{{ static_url('js/copy.js') }}" defer></script>
 <script src="{{ static_url('js/report.js') }}" defer></script>
 <script src="{{ static_url('js/send-to-llm.js') }}" defer></script>
 {% include "_site_footer.html" %}
