@@ -1255,7 +1255,7 @@ def admin_testimonial(request: Request, testimonial_id: int, action: str = Form(
         else:
             set_testimonial_approved(conn, testimonial_id, action == "approve")
     _testimonial_cache.clear()          # the front page picks the change up straight away
-    return RedirectResponse(f"/admin#t{testimonial_id}", status_code=303)
+    return RedirectResponse("/admin", status_code=303)
 
 
 NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "
