@@ -1203,6 +1203,17 @@ def test_report_has_its_own_link_and_reloading_saves_nothing(client):
     assert missing.status_code == 404 and "Back to settings" in missing.text
 
 
+def test_failed_save_says_so_on_the_report(client, monkeypatch):
+    monkeypatch.setattr(app_module, "save_spread_session", lambda *a, **k: None)
+    r = post(client, follow=False)
+    assert r.status_code == 200 and 'id="saveFailed"' in r.text
+    assert "Copy the prompt now" in r.text and "saved as session" not in r.text
+
+
+def test_saved_report_has_no_save_failed_notice(client):
+    assert 'id="saveFailed"' not in post(client).text
+
+
 def test_report_links_are_random_not_session_numbers(client):
     post(client, follow=False)
     first = client.saved["report_settings"]["link"]

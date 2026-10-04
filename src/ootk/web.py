@@ -948,7 +948,11 @@ def generate_report(
     if linked:
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
         return RedirectResponse(f"/report/{link}", status_code=303)
-    return render_report(request, session_id, settings, reading)
+    if not session_id:
+        # The database refused the write (db.py printed why). Still show the reading, but say so:
+        # without a link a hand-picked reading is gone once the page is left.
+        log.error("reading was not saved; showing the report without a link")
+    return render_report(request, session_id, settings, reading, unsaved=not session_id)
 
 
 # Short names accepted in shared links, e.g. ?system=gd.
@@ -1186,7 +1190,7 @@ def reading_json_response(settings, r):
                              'attachment; filename="ootk_reading.json"'})
 
 
-def render_report(request, session_id, settings, r, shared=False, json_url=None):
+def render_report(request, session_id, settings, r, shared=False, json_url=None, unsaved=False):
     """The visual report for a reading from run_reading().
 
     A full Opening of the Key export is about 300 KB, so a report that has an address of its
@@ -1211,6 +1215,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None)
             "seed": seed,
             "settings": settings,
             "shared": shared,
+            "unsaved": unsaved,
             "share_path": share_path(settings) if seed else "",
             "cli_command": cli_command(spread_key, seed, mapping_system, framework,
                                        settings["significator"], settings["topic"]) if seed else "",
