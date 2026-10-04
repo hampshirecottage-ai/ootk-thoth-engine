@@ -29,6 +29,8 @@ from ootk.db import (
     save_spread_session,
 )
 from ootk.report import MAPPING_LABELS, build_analytical_prompt
+from ootk.rules import element_dignity
+from ootk import atlas
 from ootk import significator as significator_methods
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions, spread_segments
@@ -94,7 +96,7 @@ SPREAD_STAGES = [
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
-PUBLIC_PAGES = ["/", "/pick", "/start", "/examples", "/library", "/method"]
+PUBLIC_PAGES = ["/", "/pick", "/start", "/examples", "/library", "/maps", "/method"]
 
 
 def site_url(request: Request) -> str:
@@ -524,6 +526,24 @@ def library_page(request: Request):
                       positions={key: spread_positions(key) for key in SPREADS})
 
 
+@app.get("/maps", response_class=HTMLResponse)
+def maps_page(request: Request, card: str = "", system: str = DEFAULT_MAPPING):
+    """Card maps: where each card sits on the Tree, the Cube of Space, the decans, the solids
+    and the elemental grid, under the chosen mapping system."""
+    if system not in MAPPING_SYSTEMS:
+        system = DEFAULT_MAPPING
+    with get_db_connection() as conn:
+        deck = fetch_all_cards(conn)
+        rows = fetch_cards_correspondences(conn, [c["title"] for c in deck], system=system)
+    deck_map = atlas.deck_atlas([rows[c["title"]] for c in deck if c["title"] in rows])
+    names = [(c["title"], c["short"]) for c in deck_map["cards"]]
+    selected = next((i for i, n in enumerate(names) if card in n), None)
+    return guide_page(request, "maps.html", atlas=deck_map, system=system, systems=MAPPING_LABELS,
+                      selected=selected,
+                      letters=atlas.letter_rows(deck_map), signs=atlas.sign_rows(deck_map),
+                      dignity=element_dignity)
+
+
 @app.get("/method", response_class=HTMLResponse)
 def method_page(request: Request):
     """How a reading is made, its limits, what is stored and what it is for."""
@@ -747,6 +767,19 @@ def show_report(request: Request, link: str):
     return render_report(request, session_id, stored, reading)
 
 
+# Which Major carries each sign, per mapping system, for the card panel's small maps. Reference
+# data that changes only with a migration, so it is read once per process.
+_sign_carriers_cache = {}
+
+
+def load_sign_carriers(conn, deck, system):
+    if system not in _sign_carriers_cache:
+        majors = [c["title"] for c in deck if c["arcana_type"] == "Major"]
+        rows = fetch_cards_correspondences(conn, majors, system=system) if majors else {}
+        _sign_carriers_cache[system] = atlas.sign_carriers(rows.values())
+    return _sign_carriers_cache[system]
+
+
 def run_reading(conn, settings, card_titles, significator_label, deck=None):
     """Looks up the drawn cards and runs every analysis. Returns the pieces the report needs."""
     spread_key, mapping_system = settings["spread_key"], settings["mapping_system"]
@@ -774,7 +807,9 @@ def run_reading(conn, settings, card_titles, significator_label, deck=None):
     solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
     macro_framework, framework_basis = evaluate_macro_framework(spread_results,
                                                                 forced_framework=settings["framework"])
-    withheld = load_withheld(conn, deck or fetch_all_cards(conn), card_titles, mapping_system)
+    deck = deck or fetch_all_cards(conn)
+    withheld = load_withheld(conn, deck, card_titles, mapping_system)
+    sign_carriers = load_sign_carriers(conn, deck, mapping_system)
 
     analytical_prompt = build_analytical_prompt(
         spread_name=selected_spread["name"],
@@ -803,7 +838,7 @@ def run_reading(conn, settings, card_titles, significator_label, deck=None):
         "solid_counts": solid_counts, "topology_details": topology_details,
         "dual_pairings": dual_pairings, "macro_framework": macro_framework,
         "framework_basis": framework_basis, "withheld": withheld,
-        "analytical_prompt": analytical_prompt,
+        "analytical_prompt": analytical_prompt, "sign_carriers": sign_carriers,
     }
 
 
@@ -812,7 +847,8 @@ def render_report(request, session_id, settings, r, shared=False):
     spread_key, seed = settings["spread_key"], settings["seed"]
     mapping_system, framework = settings["mapping_system"], settings["framework"]
     view = build_report_view(spread_key, r["spread_results"], r["element_counts"], r["dignity_matrix"],
-                             r["spatial_matrix"], r["macro_framework"], r["framework_basis"])
+                             r["spatial_matrix"], r["macro_framework"], r["framework_basis"],
+                             r.get("sign_carriers"))
     return templates.TemplateResponse(
         request=request,
         name="report.html",

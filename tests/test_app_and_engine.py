@@ -33,6 +33,7 @@ def client(monkeypatch):
     """App client with the database fully mocked out."""
     saved = {}
     monkeypatch.setattr(app_module, "_sample_cache", {})
+    monkeypatch.setattr(app_module, "_sign_carriers_cache", {s: {} for s in app_module.MAPPING_SYSTEMS})
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [])
     lookups, systems = [], []
@@ -220,7 +221,7 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
-    for path in ("/start", "/examples", "/library", "/method"):
+    for path in ("/start", "/examples", "/library", "/maps", "/method"):
         assert f"<loc>https://ootk.example.com{path}</loc>" in sitemap.text
     assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
@@ -232,7 +233,7 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
 def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
     for path, heading in [("/start", "Your first reading, step by step"), ("/examples", "Open the report"),
-                          ("/library", "Every spread"), ("/method", "Limitations")]:
+                          ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Limitations")]:
         page = client.get(path)
         assert page.status_code == 200 and heading in page.text
         assert f'<a href="{path}" aria-current="page">' in page.text      # nav marks this page

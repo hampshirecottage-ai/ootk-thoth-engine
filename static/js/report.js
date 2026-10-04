@@ -177,6 +177,21 @@ document.getElementById("themeToggle").addEventListener("click", () => {
 const CARDS = JSON.parse(document.getElementById("cardDetails").textContent);
 const panel = document.getElementById("detailPanel");
 
+// Small maps of where the card sits (static/js/atlas.js); /maps has the full-size ones.
+function maps(c) {
+    const a = c.atlas, A = window.Atlas;
+    if (!a || !A) return "";
+    const fig = (title, svg, note) => `<figure>${svg}<figcaption><b>${title}</b>${esc(note || "Not placed in this system.")}</figcaption></figure>`;
+    const solid = a.solid ? `${a.solid.name}: ${a.solid.faces} faces, ${a.solid.vertices} vertices, ${a.solid.edges} edges.` : "";
+    const href = `/maps?card=${encodeURIComponent(a.title)}&system=${encodeURIComponent(panel.dataset.system || "")}`;
+    return `<h3>Where it sits</h3><div class="maps-mini">` +
+        fig("Tree of Life", A.tree(a, null, { compact: true }), a.tree.note) +
+        fig("Cube of Space", A.cube(a, null, { compact: true }), a.cube.note) +
+        fig("Zodiac and decans", A.ring(a, null, { compact: true }), a.zodiac.note) +
+        fig("Platonic solid", A.solid(a, null, { compact: true }), solid) +
+        `</div><p style="margin:0 0 12px;font-size:0.85em"><a href="${esc(href)}">Open the card maps</a></p>`;
+}
+
 function openCard(i) {
     const c = CARDS[i];
     if (!c) return;
@@ -189,7 +204,7 @@ function openCard(i) {
         .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
     const list = (title, items) => items.length
         ? `<h3>${title} (${items.length})</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
-    document.getElementById("dBody").innerHTML = img + `<dl>${fields}</dl>` + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities);
+    document.getElementById("dBody").innerHTML = img + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities);
     document.querySelectorAll("[data-card]").forEach(el => el.classList.toggle("selected", el.dataset.card === String(i)));
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
