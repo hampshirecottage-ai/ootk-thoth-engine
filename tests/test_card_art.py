@@ -4,7 +4,7 @@ Three checks, so a card can't quietly show the wrong art:
 - every title has its small, thumb and full WebP;
 - the Waite card each image was cut from (scripts/download_images.py) is the one the page
   names in its "Pictured: Rider-Waite-Smith ..." note, or carries the same name when there is none;
-- each image still looks like the picture checked by eye on 2026-10-04 (with printed Waite names; courts by Golden Dawn rank) (a 256-bit difference
+- each image still looks like the picture checked by eye on 2026-10-04 (with printed Waite names, courts by Golden Dawn rank, and added banners on the 2-10s) (a 256-bit difference
   hash per card in card_art_fingerprints.json), in all three sizes.
 
 After deliberately replacing the art, look at every card, then refresh the fingerprints:
@@ -99,6 +99,24 @@ def test_art_notes_cover_only_the_renamed_cards():
     assert art_note("XI - Lust") == "Pictured: Rider-Waite-Smith Strength"
     assert art_note("VIII - Adjustment") == "Pictured: Rider-Waite-Smith Justice"
     assert art_note("Queen of Swords") == art_note("5 of Disks - Worry") == art_note("XIX - The Sun") == ""
+
+
+def test_numbered_cards_get_a_banner_with_their_thoth_title():
+    pytest.importorskip("PIL")
+    sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+    try:
+        from download_images import pip_banner_text
+    finally:
+        sys.path.pop(0)
+    banners = {t: pip_banner_text(card_slug(t)) for t in TITLES}
+    assert sum(1 for b in banners.values() if b) == 36
+    for title, banner in banners.items():
+        if re.fullmatch(r"\d+ of \w+ - \w+", title):     # '2 of Disks - Change'
+            number_suit, name = title.split(" - ")
+            number, suit = number_suit.split(" of ")
+            assert banner == f"{number} of {suit.upper()} · {name.upper()}", title
+        else:
+            assert banner is None, title
 
 
 def dhash(path, side=16):
