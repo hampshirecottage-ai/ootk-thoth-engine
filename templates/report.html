@@ -186,6 +186,7 @@
         .detail header { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
         .detail header .chip { white-space: nowrap; }
         .detail img, .detail .noimg { width: 100%; max-width: 220px; aspect-ratio: 5 / 8; object-fit: cover; border-radius: 6px; margin: 10px 0; border: 3px solid; }
+        .detail .art-note { margin: -4px 0 10px; font-size: 0.8em; color: var(--muted); }
         .detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 0.88em; margin: 8px 0 12px; }
         .detail dt { color: var(--muted); }
         .detail dd { margin: 0; }
@@ -314,7 +315,7 @@
             {% for c in withheld.cards %}
             <div class="keycard">
                 {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="290" loading="lazy" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
-                <div><strong>{{ c.title }}</strong><div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{% if c.attribution %} · {{ c.attribution }}{% endif %}{% if c.solid %} · {{ c.solid }}{% endif %}</div></div>
+                <div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{% if c.attribution %} · {{ c.attribution }}{% endif %}{% if c.solid %} · {{ c.solid }}{% endif %}</div></div>
             </div>
             {% endfor %}
         </div>
@@ -354,7 +355,7 @@
             {% for c in S.key_cards %}
             <div class="keycard" data-card="{{ c.gindex }}" tabindex="0" role="button">
                 {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="290" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
-                <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong><div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
+                <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
             </div>
             {% endfor %}
         </div>
@@ -423,7 +424,7 @@
                 <div class="row-cards">
                 {% for c in d.slots %}
                     <figure title="{{ c.position_name }}" class="card-row" data-card="{{ c.gindex }}" data-search="{{ c.search }}" tabindex="0" role="button">
-                        {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="290" loading="lazy" decoding="async" style="border-color:{{ c.color }}">{% else %}<div class="noimg" style="border-color:{{ c.color }}">{{ c.short }}</div>{% endif %}
+                        {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}"{% if c.art %} title="{{ c.art }}"{% endif %} width="200" height="290" loading="lazy" decoding="async" style="border-color:{{ c.color }}">{% else %}<div class="noimg" style="border-color:{{ c.color }}">{{ c.short }}</div>{% endif %}
                         <figcaption><strong>{{ c.number }}.</strong> {{ c.label }}<br><span class="muted">{{ c.short }}</span></figcaption>
                     </figure>
                 {% endfor %}

@@ -71,6 +71,31 @@ def card_image_url(title, size="thumb"):
     return static_url(f"cards/{size}/{card_slug(title)}.webp")
 
 
+# The art is the 1909 Rider-Waite-Smith deck (static/cards/CREDITS.md). These Thoth cards show
+# a Waite card under a different name, so the page says which one rather than look mislabelled.
+# Courts go by Golden Dawn rank: the Thoth Knight is the Waite King, the Prince the Waite Knight.
+RWS_TRUMPS = {"VIII - Adjustment": "Justice", "XI - Lust": "Strength", "XIV - Art": "Temperance",
+              "XX - The Aeon": "Judgement", "XXI - The Universe": "The World"}
+RWS_COURTS = {"Knight": "King", "Prince": "Knight", "Princess": "Page"}
+RWS_SUITS = {"Disks": "Pentacles"}
+
+
+def rws_art_name(title):
+    """The Rider-Waite-Smith card a renamed Thoth card is pictured with ('Knight of Wands' ->
+    'King of Wands'), or None when the picture carries the same name (Queens, pips, most trumps)."""
+    t = str(title)
+    if t in RWS_TRUMPS:
+        return RWS_TRUMPS[t]
+    m = re.fullmatch(r"(Knight|Prince|Princess) of (\w+)", t)
+    return f"{RWS_COURTS[m[1]]} of {RWS_SUITS.get(m[2], m[2])}" if m else None
+
+
+def art_note(title):
+    """'Art: Rider-Waite-Smith King of Wands', or '' when no note is needed."""
+    name = rws_art_name(title)
+    return f"Art: Rider-Waite-Smith {name}" if name else ""
+
+
 def card_srcset(title):
     """srcset for a card shown about 100 px wide: 'small' on 1x screens, 'thumb' on 2x."""
     small, thumb = card_image_url(title, "small"), card_image_url(title, "thumb")
@@ -167,6 +192,7 @@ def _card_view(item, index, dignity_matrix):
         "short": short_card_name(data["title"]),
         "image": card_image_url(data["title"]),
         "srcset": card_srcset(data["title"]),
+        "art": art_note(data["title"]),
         "element": element,
         "color": ELEMENT_COLORS[element],
         "attribution": data.get("attribution") or "",
@@ -198,7 +224,7 @@ def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix, sig
         i = card["gindex"]
         out.append({
             "title": card["title"], "position": card["position_name"], "number": card["number"],
-            "image": card_image_url(card["title"], "full"),
+            "image": card_image_url(card["title"], "full"), "art": art_note(card["title"]),
             "element": card["element"], "color": card["color"],
             "dignified": card["dignified"],
             "fields": [[label, str(data.get(key))] for label, key in DETAIL_FIELDS
@@ -425,6 +451,7 @@ def withheld_view(withheld):
         element = derive_primary_element(row)
         cards.append({"title": row["title"], "short": short_card_name(row["title"]),
                       "image": card_image_url(row["title"]), "srcset": card_srcset(row["title"]),
+                      "art": art_note(row["title"]),
                       "element": element,
                       "color": ELEMENT_COLORS[element], "attribution": row.get("attribution"),
                       "solid": row.get("platonic_solid")})
@@ -514,7 +541,7 @@ def link_view(layout_key, cards, aspects, pairs):
     return {
         "unit": RING_UNITS.get(layout_key, "place"),
         "cards": [dict({k: c[k] for k in ("index", "gindex", "position_name", "title", "element",
-                                          "color", "image", "attribution")},
+                                          "color", "image", "art", "attribution")},
                        # Numbered like the drawing's badges, unless the label already is ("Decan 5: ...").
                        where=_where(layout_key, c))
                   for c in cards],

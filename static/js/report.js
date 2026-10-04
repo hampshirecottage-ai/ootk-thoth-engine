@@ -125,6 +125,7 @@ function inspect(seg, i) {
     let html = `<div class="li-head">${img}<div>
         <div class="li-pos">${esc(c.position_name)}</div>
         <div class="li-title">${esc(c.title)}</div>
+        ${c.art ? `<div class="li-pos">${esc(c.art)}</div>` : ""}
         <div><i class="dot" style="background:${c.color}"></i>${esc(c.element)}${c.attribution ? " · " + esc(c.attribution) : ""}</div>
         <div class="li-pos">${pairs.length} element pair${pairs.length === 1 ? "" : "s"}${data.aspects.length ? ` · ${aspects.length} aspect link${aspects.length === 1 ? "" : "s"}` : ""}</div>
         </div></div>`;
@@ -205,7 +206,8 @@ function openCard(i) {
         .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
     const list = (title, items) => items.length
         ? `<h3>${title} (${items.length})</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
-    document.getElementById("dBody").innerHTML = img + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities);
+    const art = c.art ? `<p class="art-note">${esc(c.art)}</p>` : "";
+    document.getElementById("dBody").innerHTML = img + art + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities);
     document.querySelectorAll("[data-card]").forEach(el => el.classList.toggle("selected", el.dataset.card === String(i)));
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");

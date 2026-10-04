@@ -38,7 +38,7 @@ from ootk import atlas
 from ootk import significator as significator_methods
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions, spread_segments
-from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
+from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -235,7 +235,7 @@ async def unexpected_error_page(request: Request, exc: Exception):
                       "may work; if it keeps happening, please report it.", retry=True)
 
 
-templates.env.globals.update(static_url=static_url, card_image_url=card_image_url, element_colors=ELEMENT_COLORS,
+templates.env.globals.update(static_url=static_url, card_image_url=card_image_url, art_note=art_note, element_colors=ELEMENT_COLORS,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
@@ -360,7 +360,7 @@ def _sample_card(item, start):
         "short": short_card_name(d["title"]), "element": derive_primary_element(d),
         "attribution": d.get("attribution") or "", "letter": d.get("hebrew_letter") or "",
         "place": d.get("spatial_dimension") or "", "place_type": d.get("spatial_type") or "",
-        "img": card_image_url(d["title"], "small"),
+        "img": card_image_url(d["title"], "small"), "art": art_note(d["title"]),
         "dignities": [],   # filled in by sample_view, which has the whole operation
     }
 

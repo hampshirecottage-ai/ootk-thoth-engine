@@ -69,6 +69,7 @@
                 <p class="date">{% if is_today %}Today · {% endif %}{{ day.strftime('%A %-d %B %Y') }}</p>
                 <h2>{{ name }}</h2>
                 {% if card.title != name %}<p class="full-title">{{ card.title }}</p>{% endif %}
+                {% set art = art_note(card.title) %}{% if art %}<p class="full-title">{{ art }}</p>{% endif %}
                 <dl class="facts">
                     <dt>Attribution</dt><dd>{{ card.attribution }}</dd>
                     <dt>{{ 'Sephira' if card.arcana_type == 'Minor' else 'Hebrew letter' }}</dt><dd>{{ card.hebrew_letter }}, {{ card.path_or_sephira }}</dd>
