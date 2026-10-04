@@ -24,7 +24,8 @@
         .map-tree { max-width: 320px; margin: 0 auto; }
         .map-cube, .map-ring { max-width: 440px; margin: 0 auto; }
         .tablewrap { overflow-x: auto; }
-        table.matrix { border-collapse: collapse; width: 100%; font-size: 0.86em; }
+        table.matrix { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.86em; }
+        table.matrix.dignity { min-width: 0; }
         table.matrix th, table.matrix td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
         table.matrix th { background: var(--panel-2); }
         table.matrix td.n { text-align: center; font-variant-numeric: tabular-nums; }
