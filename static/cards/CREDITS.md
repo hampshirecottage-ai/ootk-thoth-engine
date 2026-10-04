@@ -11,11 +11,9 @@ Source scans: restored scans of a 1909 "Pam-A" printing, taken from
 at a pinned commit. `scripts/download_images.py` fetches them, cuts away each card's numeral
 strip and title banner, and `scripts/optimize_images.py` builds these WebP copies.
 
-The cards are shown under their Thoth titles. The trumps follow the Golden Dawn
-correspondences both decks share; the courts are matched by picture (the mounted Waite Knight
-for the Thoth Knight, the young Waite Page for the Prince), not by Golden Dawn rank. Waite's
-courts have no young woman, so the four Princesses have no picture and show their name instead,
-and Waite's Kings are not used:
+Each card keeps its printed Waite numeral and name. The page shows it under its Thoth title,
+using the Golden Dawn correspondences both decks share, so the printed name differs from the
+title on these cards:
 
 | Thoth | Rider-Waite-Smith |
 |-------|-------------------|
@@ -24,10 +22,10 @@ and Waite's Kings are not used:
 | XIV Art | XIV Temperance |
 | XX The Aeon | XX Judgement |
 | XXI The Universe | XXI The World |
-| Knight | Knight |
+| Knight | King |
 | Queen | Queen |
-| Prince | Page |
-| Princess | (no picture) |
+| Prince | Knight |
+| Princess | Page |
 | Disks | Pentacles |
 
 The Thoth paintings by Lady Frieda Harris are still under copyright and are not included.

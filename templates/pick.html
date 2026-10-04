@@ -55,7 +55,7 @@
                 {% for card in cards %}
                 {% set img = card_image_url(card.title) %}
                 <div class="card-item" data-title="{{ card.title }}">
-                    {% if img %}<img src="{{ img }}" srcset="{{ card_srcset(card.title) }}" alt="{{ card.title }}" width="200" height="290" loading="lazy" decoding="async">
+                    {% if img %}<img src="{{ img }}" srcset="{{ card_srcset(card.title) }}" alt="{{ card.title }}" width="200" height="333" loading="lazy" decoding="async">
                     {% else %}<div class="noimg">{{ card.title }}</div>{% endif %}
                     <div class="card-title">{{ card.title }}</div>
                     {% set art = art_note(card.title) %}{% if art %}<div class="card-art" title="{{ art }}">{{ art | replace("Pictured: Rider-Waite-Smith ", "Pictured: RWS ") }}</div>{% endif %}

@@ -88,7 +88,7 @@
         .pos { color: var(--good); } .neg { color: var(--bad); }
         .keycards { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 16px; }
         .keycard { display: flex; gap: 10px; align-items: center; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px 8px 8px; }
-        .keycard img, .keycard .noimg { width: 52px; height: 82px; object-fit: cover; border-radius: 4px; background: var(--card-base); }
+        .keycard img, .keycard .noimg { width: 51px; height: 85px; object-fit: cover; border-radius: 4px; background: var(--card-base); }
         .keycard { cursor: pointer; }
         table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
         th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -134,7 +134,7 @@
         svg text { fill: var(--text); font-family: inherit; }
         .row-cards { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
         .row-cards figure { margin: 0; width: 90px; text-align: center; font-size: 0.75em; }
-        .row-cards img, .row-cards .noimg { width: 90px; height: 140px; object-fit: cover; border-radius: 4px; border: 2px solid; }
+        .row-cards img, .row-cards .noimg { width: 84px; height: 140px; object-fit: cover; border-radius: 4px; border: 2px solid; }
         .noimg { display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.7em; padding: 4px; color: var(--muted); border: 1px dashed var(--control); }
         .is-hidden, .search-hidden { display: none !important; }
         .card-row { cursor: pointer; }
@@ -164,7 +164,7 @@
             .op-view .link-inspector { margin-top: 0; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; }
         }
         .li-head { display: flex; gap: 12px; align-items: flex-start; }
-        .li-head img, .li-head .noimg { width: 64px; height: 100px; object-fit: cover; border-radius: 4px; border: 2px solid; flex: none; }
+        .li-head img, .li-head .noimg { width: 60px; height: 100px; object-fit: cover; border-radius: 4px; border: 2px solid; flex: none; }
         .li-pos { color: var(--muted); font-size: 0.92em; }
         .li-title { font-weight: 700; font-size: 1.05em; }
         .link-inspector h4 { margin: 10px 0 4px; font-size: 0.95em; }
@@ -185,7 +185,7 @@
         .detail.open { transform: none; }
         .detail header { display: flex; justify-content: space-between; gap: 10px; align-items: start; }
         .detail header .chip { white-space: nowrap; }
-        .detail img, .detail .noimg { width: 100%; max-width: 220px; aspect-ratio: 5 / 8; object-fit: cover; border-radius: 6px; margin: 10px 0; border: 3px solid; }
+        .detail img, .detail .noimg { width: 100%; max-width: 220px; aspect-ratio: 3 / 5; object-fit: cover; border-radius: 6px; margin: 10px 0; border: 3px solid; }
         .detail .art-note { margin: -4px 0 10px; font-size: 0.8em; color: var(--muted); }
         .detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 0.88em; margin: 8px 0 12px; }
         .detail dt { color: var(--muted); }
@@ -314,7 +314,7 @@
         <div class="keycards">
             {% for c in withheld.cards %}
             <div class="keycard">
-                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="290" loading="lazy" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" loading="lazy" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
                 <div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{% if c.attribution %} · {{ c.attribution }}{% endif %}{% if c.solid %} · {{ c.solid }}{% endif %}</div></div>
             </div>
             {% endfor %}
@@ -354,7 +354,7 @@
         <div class="keycards">
             {% for c in S.key_cards %}
             <div class="keycard" data-card="{{ c.gindex }}" tabindex="0" role="button">
-                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="290" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
                 <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
             </div>
             {% endfor %}
@@ -424,7 +424,7 @@
                 <div class="row-cards">
                 {% for c in d.slots %}
                     <figure title="{{ c.position_name }}" class="card-row" data-card="{{ c.gindex }}" data-search="{{ c.search }}" tabindex="0" role="button">
-                        {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}"{% if c.art %} title="{{ c.art }}"{% endif %} width="200" height="290" loading="lazy" decoding="async" style="border-color:{{ c.color }}">{% else %}<div class="noimg" style="border-color:{{ c.color }}">{{ c.short }}</div>{% endif %}
+                        {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}"{% if c.art %} title="{{ c.art }}"{% endif %} width="200" height="333" loading="lazy" decoding="async" style="border-color:{{ c.color }}">{% else %}<div class="noimg" style="border-color:{{ c.color }}">{{ c.short }}</div>{% endif %}
                         <figcaption><strong>{{ c.number }}.</strong> {{ c.label }}<br><span class="muted">{{ c.short }}</span></figcaption>
                     </figure>
                 {% endfor %}

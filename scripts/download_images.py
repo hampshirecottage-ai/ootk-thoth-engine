@@ -5,10 +5,10 @@ UK), mapped onto the Thoth titles. The Thoth paintings themselves are still unde
 so they are never downloaded or committed.
 
 The scans come from a pinned commit of github.com/mixvlad/TarotCards (rider-waite/full,
-restored scans of a 1909 "Pam-A" printing). Each one has its Roman numeral strip and title
-banner cut away, because the Waite numbers and names differ from Thoth's (Strength VIII is
-Lust XI, Justice XI is Adjustment VIII, Page is Prince, and so on). The page shows the
-Thoth title instead.
+restored scans of a 1909 "Pam-A" printing). Each card keeps its printed Waite numeral and
+name, so the picture always says which Waite card it is; the page shows the Thoth title next
+to it. The two differ for the renamed trumps (Strength VIII is Lust XI, Justice XI is
+Adjustment VIII, Temperance is Art, ...) and the courts (the Waite King is the Thoth Knight).
 
     python scripts/download_images.py          # needs Pillow: pip install -e ".[images]"
     python scripts/download_images.py --force  # re-download and rebuild everything
@@ -26,10 +26,9 @@ SOURCE = ("https://raw.githubusercontent.com/mixvlad/TarotCards/"
           "840b84d012c6b74dc1634fa2d00d1b21f5b28093/tarot/rider-waite/full/")
 
 # Thoth slug -> Rider-Waite-Smith file. The trumps follow Thoth numbering, so Strength and
-# Justice swap places. The courts match by picture rather than Golden Dawn rank: the Knight is
-# the mounted Waite Knight and the Prince the young Waite Page. Waite has no young woman among
-# his courts, so the Princesses get no picture (the page shows her name instead) and his Kings
-# go unused. Pentacles are Disks.
+# Justice swap places; the courts follow the Golden Dawn order (King -> Knight,
+# Knight -> Prince, Page -> Princess) and Pentacles are Disks. Each card keeps its printed Waite
+# name, so the picture always says which Waite card it is.
 TRUMPS = {
     "0---the-fool": "00_Fool", "i---the-magus": "01_Magician",
     "ii---the-priestess": "02_High_Priestess", "iii---the-empress": "03_Empress",
@@ -53,7 +52,7 @@ PIP_TITLES = {
     "disks": ["change", "works", "power", "worry", "success", "failure", "prudence", "gain",
               "wealth"],
 }
-COURTS = {"prince": 11, "knight": 12, "queen": 13}
+COURTS = {"princess": 11, "prince": 12, "queen": 13, "knight": 14}
 
 
 def card_sources():
@@ -67,25 +66,6 @@ def card_sources():
     return cards
 
 
-def trim_labels(image):
-    """Cuts out the numeral strip and the title banner but keeps the black outer frame.
-
-    Rows are measured on the 1086 x 1810 source scans: the frame's top line ends at 38,
-    the numeral strip at 128, the title banner starts at 1643 and the bottom line at 1775.
-    """
-    scale = image.height / 1810
-    top, art_top, art_bottom, bottom = (round(y * scale) for y in (38, 128, 1643, 1775))
-    parts = [image.crop((0, 0, image.width, top)),
-             image.crop((0, art_top, image.width, art_bottom)),
-             image.crop((0, bottom, image.width, image.height))]
-    out = Image.new("RGB", (image.width, sum(p.height for p in parts)))
-    y = 0
-    for part in parts:
-        out.paste(part, (0, y))
-        y += part.height
-    return out
-
-
 def download_images(force=False):
     IMAGE_DIR.mkdir(parents=True, exist_ok=True)
     cards = card_sources()
@@ -96,7 +76,7 @@ def download_images(force=False):
             continue
         with urllib.request.urlopen(f"{SOURCE}{name}.jpg", timeout=120) as response:
             image = Image.open(BytesIO(response.read())).convert("RGB")
-        trim_labels(image).save(dest, "JPEG", quality=92)
+        image.save(dest, "JPEG", quality=92)
         fetched += 1
         print(f"✓ {slug}.jpg  <- {name}.jpg")
     print(f"{fetched} of {len(cards)} cards downloaded into {IMAGE_DIR}.")
