@@ -835,7 +835,11 @@ def generate_report(
     if linked:
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
         return RedirectResponse(f"/report/{link}", status_code=303)
-    return render_report(request, session_id, settings, reading)
+    if not session_id:
+        # The database refused the write (db.py printed why). Still show the reading, but say so:
+        # without a link a hand-picked reading is gone once the page is left.
+        log.error("reading was not saved; showing the report without a link")
+    return render_report(request, session_id, settings, reading, unsaved=not session_id)
 
 
 # Short names accepted in shared links, e.g. ?system=gd.
@@ -1021,7 +1025,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
     }
 
 
-def render_report(request, session_id, settings, r, shared=False):
+def render_report(request, session_id, settings, r, shared=False, unsaved=False):
     """The visual report for a reading from run_reading()."""
     spread_key, seed = settings["spread_key"], settings["seed"]
     mapping_system, framework = settings["mapping_system"], settings["framework"]
@@ -1045,6 +1049,7 @@ def render_report(request, session_id, settings, r, shared=False):
             "seed": seed,
             "settings": settings,
             "shared": shared,
+            "unsaved": unsaved,
             "share_path": share_path(settings) if seed else "",
             "cli_command": cli_command(spread_key, seed, mapping_system, framework,
                                        settings["significator"], settings["topic"]) if seed else "",

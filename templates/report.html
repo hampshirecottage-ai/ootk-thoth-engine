@@ -42,6 +42,7 @@
         h3 { font-size: 1em; color: var(--text); }
         a { color: var(--accent-2); }
         .muted { color: var(--muted); }
+        .save-failed { border-left: 4px solid var(--bad); }
         .topbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
         .btn { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 8px 14px; text-decoration: none; font-weight: 600; border-radius: 6px; border: 1px solid var(--accent); cursor: pointer; font-size: 0.9em; line-height: 1.5; }
         .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); }
@@ -278,6 +279,11 @@
     </div>
 
     <h1>{% if shared %}Shared reading{% else %}Your reading{% endif %} · {{ spread_name }}</h1>
+    {% if unsaved %}
+    <p class="panel save-failed" id="saveFailed" role="alert"><strong>This reading couldn't be saved.</strong>
+        It has no link of its own and won't come back if you leave or reload this page.
+        {% if share_path %}The share link further down redraws the same cards.{% else %}Copy the prompt now if you want to keep it.{% endif %}</p>
+    {% endif %}
 
     <!-- ===== WHAT TO DO NOW ===== -->
     <section class="panel now-step no-print" id="nowStep">
