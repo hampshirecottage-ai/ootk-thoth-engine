@@ -44,6 +44,8 @@ ootk-thoth-engine/
 │   ├── significator.py     # Book T significator: court card from description or birth date
 │   ├── visual.py           # Web report view: summary figures, drawable layouts, link notes
 │   ├── assets.py           # Static files: versioned URLs, cache headers, compression
+│   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
+│   ├── lockout.py          # Locks out repeated wrong passwords (APP_PASSWORD, ADMIN_PASSWORD)
 │   └── library.json        # Glossary and further reading for the /library page
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
@@ -61,6 +63,8 @@ ootk-thoth-engine/
 ├── static/images/          # Full-size card scans (not in git; see below)
 ├── static/cards/           # WebP card images served by the web GUI
 ├── static/js/              # Page scripts, loaded with defer
+├── static/fonts/           # Self-hosted Cinzel, Inter and JetBrains Mono (SIL Open Font License)
+├── static/history/         # Archival photos for the /history page (credits in CREDITS.md)
 ├── static/site/            # Favicon, app icon and link-preview image
 ├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker, Render and Hugging Face Spaces)
 ├── deploy/huggingface/     # Space README and start script, also used by the Docker image
@@ -109,6 +113,18 @@ DB_PORT=5432
 ```
 
 Environment variables take priority over the `database` block in `config/config.json`, which only supplies `dbname`, `host` and `port` defaults. Keep usernames and passwords in `.env`.
+
+Everything else is optional:
+
+| Variable | What it does | Default |
+|---|---|---|
+| `APP_PASSWORD` | Every web page asks for this password | off |
+| `ADMIN_PASSWORD` | Turns on `/admin` for approving testimonials | off (no `/admin` page) |
+| `VISITOR_HASH_KEY` | Stores a keyed hash of a testimonial sender's IP address (never the address itself) | off |
+| `SITE_URL` | Public address used in link previews, `robots.txt` and `sitemap.xml` | Render's address, then the request's |
+| `DB_CONNECT_TIMEOUT` | Seconds to wait for the database before showing the "database down" page | `10` |
+| `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
+| `PGSSLMODE` | Standard PostgreSQL setting; set `require` for a hosted database such as Neon | libpq default |
 
 ### 3. Create the database
 
@@ -173,22 +189,25 @@ python scripts/view_output.py --file output/ootk_output_20.html
 uvicorn ootk.web:app --reload --port 8000
 ```
 
-Open http://localhost:8000 for the start page and http://localhost:8000/docs for the API docs.
+Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, `/redoc`, `/openapi.json`) are turned off.
 
 **Pages**
 
 | Address | What it is |
 |---|---|
-| `/` | Start page: a sample Opening of the Key (heap, wheel and Cube of Space), then the form |
+| `/` | Start page: the banner, a sample Opening of the Key (heap, wheel and Cube of Space), the testimonial of the day, then the form |
 | `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
 | `/start` | Start here: a five-step path for newcomers and which spreads to learn in what order |
 | `/examples` | Example readings with fixed seeds |
 | `/library` | Glossary and further reading (edit `src/ootk/library.json`), plus every spread |
-| `/method` | Intended use, how a reading is made, limitations and what is stored |
+| `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
+| `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and the elements |
+| `/history` | History of the decks, with archival photos and their credits |
 | `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
 | `/testimonial` | Send a testimonial (one per visitor session); the start page shows one approved testimonial a day |
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
 | `/report/<link>` | A saved reading |
+| `/admin` | Approve, hide or delete testimonials; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
 
 `/?spread=N` opens the start page with that spread chosen.
 
@@ -196,12 +215,12 @@ Open http://localhost:8000 for the start page and http://localhost:8000/docs for
 - **Significator.** Spreads 8 and 12 start with a significator, and the box only appears for those. Choose it one of three ways: **Describe** (Book T: rank from age and gender, suit from colouring or temperament, giving one of the 16 court cards), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
 - **Seeds.** Leave the seed blank to get a new one. A seeded report shows the seed, a share link and the matching `ootk` command (under "Run it in the terminal"), and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
 - **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
-- **What now.** The report opens with three steps (cards drawn, copy the prompt, paste it into your AI). **Copy prompt** copies it; **Copy and open** copies it and opens Claude, ChatGPT, Copilot or Grok, filling the prompt in where the site allows it. Gemini and Perplexity are left out because they cut long prompts short.
+- **What now.** The report opens with three steps (cards drawn, copy the prompt, paste it into your AI). **Copy prompt** copies it; **Copy and open** copies it and opens Claude, ChatGPT, Copilot or Grok, filling the prompt in where the site allows it. Gemini and Perplexity are left out because they cut long prompts short. The prompt names its own last line (`END OF OOTK PROMPT (N positions)`) at the top and asks the AI to say so, rather than interpret, if that line never arrives.
 - **Summary first.** Then come a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
-- **Drawings.** Operation 1 is drawn as the 15-card layout inside a triangle, houses and signs as 12-segment wheels (the houses with each house's meaning), and decans as a 36-segment ring, with card images. Switch between **Aspect lines** and **Element pairs**. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
+- **Drawings.** Operation 1 is drawn as the 15-card heap inside a triangle (its cards are compared by element only: side-by-side cards in a heap take no astrological aspect), houses and signs as 12-segment wheels (the houses with each house's meaning), and decans as a 36-segment ring, with card images. Switch between **Aspect lines** and **Element pairs**. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **How the cards are linked.** Each operation explains in plain words which cards are compared. Tap a card in a drawing to see its element pairs and aspects, each with its score and reason, in an inspector beside the drawing (below it on phones); tap a partner to jump to it.
 - **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or pick types under **Types**; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
-- **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, and every aspect and dignity it takes part in. Escape closes it.
+- **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, small maps of where it sits (as on `/maps`), and every aspect and dignity it takes part in. Escape closes it.
 - **Search.** The search box in the filter bar matches card titles, positions, letters, elements and attributions. It dims non-matching cards in the drawings, hides non-matching table rows, and opens the operations that have matches.
 - **Save.** The **Save** menu prints or saves a PDF with every section expanded, downloads the prompt as Markdown, or the whole reading as JSON. Each drawing also downloads as an SVG (card images link back to the running server).
 - **Theme and phones.** The default theme is green; a dark/light toggle (it follows the system setting until you choose) is remembered per browser. Pages collapse to one column on narrow screens.
@@ -224,6 +243,34 @@ On Render's free plan, `render.yaml` is a Blueprint for the same image (the publ
 Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start, pick and guide pages and the card of the day; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap, and `/reading` share links are disallowed in `robots.txt`. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
 
 For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private, or set `APP_PASSWORD`, if you don't want strangers adding readings to your database.
+
+### Update an existing database
+
+`schema.sql` already contains every migration, so a new database needs none of this. A database made from an older `schema.sql` needs the migrations it is missing, in this order. Each one is safe to re-run.
+
+```bash
+psql -d my_tarot_db -f database/migrations/<file>.sql
+```
+
+| Migration | Needed when |
+|---|---|
+| `add_french_number.sql` | `thoth_cards.french_number` is missing |
+| `add_report_settings.sql` | Reports have no link of their own (readings still save without it) |
+| `add_report_links.sql` | Readings saved before links were random; also lists every reading's address |
+| `fix_correspondences.sql` | `thoth_cards.attribution` is missing (the engine stops and says so) |
+| `fix_trump_attributions.sql` | Each Major's own sign, planet or element as its attribution, path 32 named 'Cross' (the engine warns on stderr) |
+| `fix_court_paths.sql` | Queen of Wands and Prince of Swords on the same paths as the Emperor and the Star; four court descriptions |
+| `fix_correspondence_audit.sql` | Six Cube of Space edges as Paul Case gives them, axis directions, French Magus and Priestess planets |
+| `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
+| `add_testimonials.sql` | Testimonials (without it the start page simply shows none); lists the approve queries |
+
+The other files in `database/migrations/` built the early schema and are only kept for history.
+
+The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
+
+### Testimonials
+
+New testimonials from `/testimonial` are saved unapproved. With `ADMIN_PASSWORD` set, sign in at `/admin` to approve, hide or delete them (wrong passwords lock out like `APP_PASSWORD`). Without it, approve one with `UPDATE testimonials SET approved = true WHERE testimonial_id = <id>;`. Each is stored with a random session id from a cookie, the time and the browser's user agent, plus a keyed IP hash when `VISITOR_HASH_KEY` is set. Approved testimonials take turns by date and reach the start page within five minutes.
 
 ### Sanity-check a full run
 
@@ -255,16 +302,6 @@ The default suite mocks the database. To also run the real SQL against a databas
 createdb ootk_test && psql -d ootk_test -f database/schema.sql
 OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -v
 ```
-
-Existing databases created before `thoth_cards.french_number` existed need `database/migrations/add_french_number.sql`.
-Databases created before reports had their own link need `database/migrations/add_report_settings.sql` (safe to re-run); without it readings still save, but the report is shown without a link.
-Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
-Then run `database/migrations/fix_trump_attributions.sql` (also safe to re-run): it gives each Major its own sign, planet or element as its attribution and names path 32 'Cross'. The engine warns on stderr when it is missing.
-Then run `database/migrations/fix_court_paths.sql` (safe to re-run): it puts the Queen of Wands and the Prince of Swords on the same paths as their Thoth Majors (Tzaddi with the Emperor, Heh with the Star) and corrects four court descriptions.
-Then run `database/migrations/fix_correspondence_audit.sql` (safe to re-run): it puts Teth, Yod, Lamed, Nun, Samekh and Ayin (Lust, the Hermit, Adjustment, Death, Art and the Devil) on their Cube of Space edges as Paul Case gives them, names which way each mother axis runs, and gives the Magus and the Priestess their own planets under French / Egyptian.
-Databases with many saved readings should run `database/migrations/add_report_link_index.sql` (safe to re-run): it indexes report links, so opening `/report/<link>` stays fast as readings pile up.
-Databases created before testimonials need `database/migrations/add_testimonials.sql` (safe to re-run); without it the start page simply shows no testimonial. New testimonials are saved unapproved. Set `ADMIN_PASSWORD` to turn on `/admin`, a page linked from nowhere where you sign in and approve, hide or delete them (wrong passwords lock out like `APP_PASSWORD`); without it the page doesn't exist and you approve with `UPDATE testimonials SET approved = true WHERE testimonial_id = <id>;` (the migration lists the queries). Each is stored with a random session id from a cookie, the time and the browser's user agent; set `VISITOR_HASH_KEY` to any long random string to also store a keyed hash of the visitor's IP address (never the address itself). Approved testimonials take turns by date and reach the start page within five minutes.
-The web app reads the card and correspondence tables once per process, so restart it after running a migration.
 
 ---
 
