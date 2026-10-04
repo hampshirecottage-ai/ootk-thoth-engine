@@ -260,6 +260,7 @@ Databases created before reports had their own link need `database/migrations/ad
 Databases created before the correspondence fixes (no `thoth_cards.attribution` column) need `database/migrations/fix_correspondences.sql`; it is safe to re-run, and the engine stops with that instruction if it is missing.
 Then run `database/migrations/fix_trump_attributions.sql` (also safe to re-run): it gives each Major its own sign, planet or element as its attribution and names path 32 'Cross'. The engine warns on stderr when it is missing.
 Then run `database/migrations/fix_court_paths.sql` (safe to re-run): it puts the Queen of Wands and the Prince of Swords on the same paths as their Thoth Majors (Tzaddi with the Emperor, Heh with the Star) and corrects four court descriptions.
+Then run `database/migrations/fix_cube_edges.sql` (safe to re-run): it puts Teth, Yod, Lamed, Nun, Samekh and Ayin (Lust, the Hermit, Adjustment, Death, Art and the Devil) on their Cube of Space edges as Paul Case gives them, and names which way each mother axis runs.
 
 ---
 

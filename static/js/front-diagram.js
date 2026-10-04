@@ -33,7 +33,7 @@
     };
 
     // ---------- the Cube of Space (x east, y up, z south), isometric ----------
-    // Edge and face names as the database's cube positions name them.
+    // Edge and face names as the database's cube positions name them (Paul Case's layout).
     // Turned 45 degrees and tilted 25, so no edge midpoint lands on a face centre.
     const S = 125, YAW = 45 * Math.PI / 180, TILT = 25 * Math.PI / 180;
     const iso = ([x, y, z]) => {
@@ -43,14 +43,14 @@
     const EDGES = {   // sign -> edge midpoint
         "Aries": ["North-East Edge", [1, 0, -1]], "Taurus": ["South-East Edge", [1, 0, 1]],
         "Gemini": ["Upper-East Edge", [1, 1, 0]], "Cancer": ["Lower-East Edge", [1, -1, 0]],
-        "Leo": ["North-West Edge", [-1, 0, -1]], "Virgo": ["South-West Edge", [-1, 0, 1]],
-        "Libra": ["Upper-West Edge", [-1, 1, 0]], "Scorpio": ["Lower-West Edge", [-1, -1, 0]],
-        "Sagittarius": ["Upper-North Edge", [0, 1, -1]], "Capricorn": ["Lower-North Edge", [0, -1, -1]],
+        "Leo": ["Upper-North Edge", [0, 1, -1]], "Virgo": ["Lower-North Edge", [0, -1, -1]],
+        "Libra": ["North-West Edge", [-1, 0, -1]], "Scorpio": ["South-West Edge", [-1, 0, 1]],
+        "Sagittarius": ["Upper-West Edge", [-1, 1, 0]], "Capricorn": ["Lower-West Edge", [-1, -1, 0]],
         "Aquarius": ["Upper-South Edge", [0, 1, 1]], "Pisces": ["Lower-South Edge", [0, -1, 1]],
     };
     const AXIS_END = 1.4;   // mother markers sit just outside the cube, at the axis ends
     const MOTHERS = [   // letter, element, axis, point on the axis
-        ["א", "Aleph, Air", "Vertical Axis", [0, AXIS_END, 0]],
+        ["א", "Aleph, Air", "Vertical Axis (above to below)", [0, AXIS_END, 0]],
         ["מ", "Mem, Water", "Horizontal Axis (east to west)", [AXIS_END, 0, 0]],
         ["ש", "Shin, Fire", "Longitudinal Axis (north to south)", [0, 0, AXIS_END]],
     ];

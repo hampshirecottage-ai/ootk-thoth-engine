@@ -8,9 +8,9 @@ UPDATE correspondences SET spatial_type = NULL, spatial_dimension = NULL;
 
 -- Step 3: Mother Letters (3 Primary Spatial Axes)
 -- Key Scale 11 (Aleph), 23 (Mem), 31 (Shin)
-UPDATE correspondences SET spatial_type = 'Mother_Axis', spatial_dimension = 'Vertical Axis (Height/Depth)' WHERE key_scale = '11';
-UPDATE correspondences SET spatial_type = 'Mother_Axis', spatial_dimension = 'Horizontal Axis (Width/Breadth)' WHERE key_scale = '23';
-UPDATE correspondences SET spatial_type = 'Mother_Axis', spatial_dimension = 'Longitudinal Axis (Length/Depth)' WHERE key_scale = '31';
+UPDATE correspondences SET spatial_type = 'Mother_Axis', spatial_dimension = 'Vertical Axis (above to below)' WHERE key_scale = '11';
+UPDATE correspondences SET spatial_type = 'Mother_Axis', spatial_dimension = 'Horizontal Axis (east to west)' WHERE key_scale = '23';
+UPDATE correspondences SET spatial_type = 'Mother_Axis', spatial_dimension = 'Longitudinal Axis (north to south)' WHERE key_scale = '31';
 
 -- Step 4: Double Letters (7 Cardinal Spatial Directions / Boundaries)
 -- Key Scale 12 (Beth), 13 (Gimel), 14 (Daleth), 21 (Kaph), 27 (Peh), 30 (Resh), 32 (Tav)
@@ -28,11 +28,11 @@ UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'No
 UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'South-East Edge' WHERE key_scale = '16';
 UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Upper-East Edge' WHERE key_scale = '17';
 UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Lower-East Edge' WHERE key_scale = '18';
-UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'North-West Edge' WHERE key_scale = '19';
-UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'South-West Edge' WHERE key_scale = '20';
-UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Upper-West Edge' WHERE key_scale = '22';
-UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Lower-West Edge' WHERE key_scale = '24';
-UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Upper-North Edge' WHERE key_scale = '25';
-UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Lower-North Edge' WHERE key_scale = '26';
+UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Upper-North Edge' WHERE key_scale = '19';
+UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Lower-North Edge' WHERE key_scale = '20';
+UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'North-West Edge' WHERE key_scale = '22';
+UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'South-West Edge' WHERE key_scale = '24';
+UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Upper-West Edge' WHERE key_scale = '25';
+UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Lower-West Edge' WHERE key_scale = '26';
 UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Upper-South Edge' WHERE key_scale = '28';
 UPDATE correspondences SET spatial_type = 'Simple_Edge', spatial_dimension = 'Lower-South Edge' WHERE key_scale = '29';
