@@ -44,6 +44,9 @@ def client(monkeypatch):
         return {t: fake_card(t) for t in titles}
 
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
+    monkeypatch.setattr(app_module, "_reference_cache", {})
+    # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
+    monkeypatch.setattr(app_module, "card_rows", lambda titles, system: fake_fetch(None, titles, system))
 
     def fake_save(conn, spread_name, query_prompt, notes, significator, results, dignity_matrix=None,
                   report_settings=None):
@@ -59,8 +62,8 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "load_report_by_link",
                         lambda conn, link: (99, dict(saved["report_settings"]))
                         if saved and saved["report_settings"].get("link") == link else None)
-    monkeypatch.setattr(app_module, "load_withheld",
-                        lambda conn, deck, titles, system="thoth": analysis.withheld_summary(
+    monkeypatch.setattr(app_module, "withheld_cards",
+                        lambda deck, titles, system="thoth": analysis.withheld_summary(
                             [fake_card(c["title"]) for c in deck], titles))
     c = TestClient(app_module.app)
     c.saved = saved
@@ -91,8 +94,7 @@ def test_bad_input_returns_400(client, over):
 
 
 def test_unknown_card_returns_400(client, monkeypatch):
-    monkeypatch.setattr(app_module, "fetch_cards_correspondences",
-                        lambda conn, titles, system="thoth": {"A": fake_card("A")})
+    monkeypatch.setattr(app_module, "card_rows", lambda titles, system: {"A": fake_card("A")})
     r = post(client)
     assert r.status_code == 400
     assert "'B'" in r.json()["detail"]                    # first missing title, in draw order
@@ -166,6 +168,47 @@ def test_catalog_uses_versioned_webp_thumbnails(client, monkeypatch):
     assert '/static/cards/thumb/x---fortune.webp?v=' in html
     assert 'loading="lazy"' in html and "/static/images/" not in html    # no full-size JPG scans
     assert 'src="/static/js/index.js?v=' in html and "defer" in html
+
+
+def test_reference_tables_are_read_once_per_process(client, monkeypatch):
+    calls = {"deck": 0, "rows": 0, "connect": 0}
+
+    def fake_deck(conn):
+        calls["deck"] += 1
+        return [{"card_id": 1, "title": "X - Fortune", "arcana_type": "Major", "key_scale": 1}]
+
+    def fake_rows(conn, titles, system="thoth"):
+        calls["rows"] += 1
+        return {t: fake_card(t) for t in titles}
+
+    def connect():
+        calls["connect"] += 1
+        return nullcontext(object())
+
+    monkeypatch.setattr(app_module, "fetch_all_cards", fake_deck)
+    monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_rows)
+    monkeypatch.setattr(app_module, "get_db_connection", connect)
+    for _ in range(3):
+        assert client.get("/maps").status_code == 200
+    assert calls == {"deck": 1, "rows": 1, "connect": 2}     # first request only
+
+
+def test_card_rows_are_copies(monkeypatch):
+    monkeypatch.setattr(app_module, "_reference_cache",
+                        {"deck": [{"title": "A"}], "thoth": {"A": fake_card("A")}})
+    row = app_module.card_rows(["A", "missing"], "thoth")
+    assert list(row) == ["A"]
+    row["A"]["title"] = "changed"
+    assert app_module.reference_rows("thoth")["A"]["title"] == "A"
+
+
+def test_static_url_is_cached_briefly(monkeypatch):
+    from ootk import assets
+    monkeypatch.setattr(assets, "_url_cache", {})
+    url = assets.static_url("js/index.js")
+    assert url.startswith("/static/js/index.js?v=") and assets.static_url("js/index.js") == url
+    assert assets.static_url("js/missing.js") is None
+    assert set(assets._url_cache) == {"js/index.js", "js/missing.js"}
 
 
 def test_static_cache_headers(client):
@@ -1208,6 +1251,7 @@ def test_outdated_database_is_a_page_not_a_server_exit(client, monkeypatch):
         raise db.DatabaseOutdated("column tc.french_number does not exist")
 
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", outdated)
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     r = client.get("/maps", headers=HTML)
     assert r.status_code == 503 and "needs an update" in r.text
 
