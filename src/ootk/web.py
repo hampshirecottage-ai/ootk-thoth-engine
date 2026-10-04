@@ -9,9 +9,11 @@ import secrets
 from collections import Counter
 import shlex
 import time
+from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlencode
 
+import anyio.to_thread
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -23,13 +25,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
-    analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
+    WITHHELD_MAX, analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
     analyze_spatial_vectors, calculate_elemental_dignities, derive_primary_element,
-    evaluate_macro_framework,
+    evaluate_macro_framework, withheld_summary,
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings, load_withheld,
+    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings,
     save_spread_session,
 )
 from ootk.report import MAPPING_LABELS, build_analytical_prompt
@@ -50,9 +52,24 @@ SHARED_SEED_MAX = 64
 # swap was always applied). New readings carry this version, so old links keep their cards.
 MAPPING_VERSION = 2
 
+# Pages render in a thread pool, 40 threads by default. A full Opening of the Key report needs
+# about 10 MB while it renders, so 40 at once can pass the 512 MB of a small host, and the
+# memory isn't handed back afterwards. Python runs one render at a time anyway (the GIL), so a
+# smaller pool costs no throughput: extra requests wait their turn instead.
+WEB_THREADS = int(os.getenv("WEB_THREADS", "8"))
+
+
+@asynccontextmanager
+async def lifespan(app):
+    anyio.to_thread.current_default_thread_limiter().total_tokens = WEB_THREADS
+    yield
+
+
 # No interactive API docs: the site has no API clients, and the docs page loads scripts from a CDN.
-app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None)
+app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None,
+              lifespan=lifespan)
 log = logging.getLogger("ootk.web")
+
 
 static_dir = BASE_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
@@ -257,6 +274,51 @@ def get_db_connection():
         return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
 
 
+# thoth_cards and correspondences are reference data that change only with a migration, so the
+# pages read them once per process, like the sample and the sign carriers. Drawing and analysing
+# a reading then needs no database round trip; only saving and opening a saved report connect.
+# After running a migration, restart the app to pick it up.
+_reference_cache = {}
+
+
+def reference_deck():
+    """fetch_all_cards, read once per process. An empty table isn't kept, so a database
+    loaded after start-up is picked up on the next request."""
+    if "deck" not in _reference_cache:
+        with get_db_connection() as conn:
+            deck = fetch_all_cards(conn)
+        if not deck:
+            return deck
+        _reference_cache["deck"] = deck
+    return _reference_cache["deck"]
+
+
+def reference_rows(system):
+    """Every card's fetch_cards_correspondences row under `system`, read once per process.
+    The rows are shared: callers that hand rows on copy them (card_rows)."""
+    if system not in _reference_cache:
+        titles = [c["title"] for c in reference_deck()]
+        if not titles:
+            return {}
+        with get_db_connection() as conn:
+            _reference_cache[system] = fetch_cards_correspondences(conn, titles, system=system)
+    return _reference_cache[system]
+
+
+def card_rows(titles, system):
+    """{title: row} for the drawn `titles` under `system`; titles not in the deck are absent."""
+    rows = reference_rows(system)
+    return {t: dict(rows[t]) for t in titles if t in rows}
+
+
+def withheld_cards(deck, drawn_titles, system):
+    """db.load_withheld from the cached rows: analysis.withheld_summary, or None."""
+    if len(deck) - len(set(drawn_titles)) > WITHHELD_MAX:
+        return None
+    rows = reference_rows(system)
+    return withheld_summary([rows[c["title"]] for c in deck if c["title"] in rows], drawn_titles)
+
+
 def new_seed() -> str:
     """A fresh six-digit seed, shown on the report so the reading can be repeated."""
     return str(secrets.randbelow(900000) + 100000)
@@ -438,7 +500,7 @@ def sample_view(r, settings):
     }
 
 
-def sample_reading(conn, deck):
+def sample_reading(deck):
     """The start page's sample: drawn and analysed once per process, then reused. None when
     the deck can't produce it (an empty or partial database), so the page still renders."""
     if "sample" in _sample_cache:
@@ -449,7 +511,7 @@ def sample_reading(conn, deck):
         card_titles, significator_label = seeded_draw(deck, SAMPLE_SETTINGS["seed"],
                                                       SAMPLE_SETTINGS["spread_key"],
                                                       SAMPLE_SETTINGS["significator"])
-        r = run_reading(conn, SAMPLE_SETTINGS, card_titles, significator_label, deck)
+        r = run_reading(SAMPLE_SETTINGS, card_titles, significator_label, deck)
     except (HTTPException, LookupError, ValueError):
         return None
     sample = sample_view(r, SAMPLE_SETTINGS)
@@ -489,9 +551,8 @@ def share_path(settings) -> str:
 
 def settings_page(request: Request, name: str, mode: str):
     """Sync endpoint body: FastAPI executes in threadpool to prevent blocking the event loop."""
-    with get_db_connection() as conn:
-        cards = fetch_all_cards(conn)
-        sample = sample_reading(conn, cards) if mode == "seed" else None
+    cards = reference_deck()
+    sample = sample_reading(cards) if mode == "seed" else None
     todays_card = None
     if mode == "seed" and cards:
         # Same draw as /day/<today>, so the link names the card it opens.
@@ -629,8 +690,7 @@ def examples_page(request: Request):
     """Sample readings at fixed seeds, each opening its full report. Without the database the
     page still lists them, just without naming the cards each seed draws."""
     try:
-        with get_db_connection() as conn:
-            deck = fetch_all_cards(conn)
+        deck = reference_deck()
     except psycopg.OperationalError as e:
         log.warning("examples page without card names: %s", e)
         deck = []
@@ -650,9 +710,8 @@ def maps_page(request: Request, card: str = "", system: str = DEFAULT_MAPPING):
     and the elemental grid, under the chosen mapping system."""
     if system not in MAPPING_SYSTEMS:
         system = DEFAULT_MAPPING
-    with get_db_connection() as conn:
-        deck = fetch_all_cards(conn)
-        rows = fetch_cards_correspondences(conn, [c["title"] for c in deck], system=system)
+    deck = reference_deck()
+    rows = reference_rows(system)
     deck_map = atlas.deck_atlas([rows[c["title"]] for c in deck if c["title"] in rows])
     names = [(c["title"], c["short"]) for c in deck_map["cards"]]
     selected = next((i for i, n in enumerate(names) if card in n), None)
@@ -718,38 +777,38 @@ def generate_report(
     positions = spread_positions(spread_key)
     significator_label = significator
 
+    deck = None
+    if draw_mode == "seed":
+        seed = seed or new_seed()
+        deck = reference_deck()
+        card_titles, significator_label = seeded_draw(deck, seed, spread_key, significator)
+    else:
+        seed = ""
+        card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
+        significator_label = (card_titles[0] if card_titles and has_significator_position(positions)
+                              else "None (spread has no significator position)")
+        if not card_titles:
+            raise HTTPException(status_code=400, detail="No card titles were provided.")
+
+        if len(card_titles) != len(positions):
+            raise HTTPException(
+                status_code=400,
+                detail=f"'{selected_spread['name']}' requires {len(positions)} cards; received {len(card_titles)}."
+            )
+
+        lowered = [t.lower() for t in card_titles]
+        if len(set(lowered)) != len(lowered):
+            raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
+
+    settings = {
+        "spread_key": spread_key, "topic": topic, "significator": significator,
+        "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
+        "seed": seed, "output_format": "visual",
+        "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
+    }
+    reading = run_reading(settings, card_titles, significator_label, deck)
+
     with get_db_connection() as conn:
-        deck = None
-        if draw_mode == "seed":
-            seed = seed or new_seed()
-            deck = fetch_all_cards(conn)
-            card_titles, significator_label = seeded_draw(deck, seed, spread_key, significator)
-        else:
-            seed = ""
-            card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
-            significator_label = (card_titles[0] if card_titles and has_significator_position(positions)
-                                  else "None (spread has no significator position)")
-            if not card_titles:
-                raise HTTPException(status_code=400, detail="No card titles were provided.")
-
-            if len(card_titles) != len(positions):
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"'{selected_spread['name']}' requires {len(positions)} cards; received {len(card_titles)}."
-                )
-
-            lowered = [t.lower() for t in card_titles]
-            if len(set(lowered)) != len(lowered):
-                raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
-
-        settings = {
-            "spread_key": spread_key, "topic": topic, "significator": significator,
-            "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-            "seed": seed, "output_format": "visual",
-            "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
-        }
-        reading = run_reading(conn, settings, card_titles, significator_label, deck)
-
         source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
         # The report's address: random, so readings can't be found by counting session numbers.
         link = secrets.token_urlsafe(16)
@@ -809,10 +868,9 @@ def shared_reading(request: Request, seed: str = "", spread: str = "",
         "mapping_system": system, "draw_mode": "seed", "seed": seed, "output_format": "visual",
         "selected_cards": "",
     }
-    with get_db_connection() as conn:
-        deck = fetch_all_cards(conn)
-        card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
-        reading = run_reading(conn, settings, card_titles, significator_label, deck)
+    deck = reference_deck()
+    card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
+    reading = run_reading(settings, card_titles, significator_label, deck)
     return render_report(request, None, settings, reading, shared=True)
 
 
@@ -845,10 +903,9 @@ def card_of_the_day(request: Request, day: str):
         "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "seed": day,
         "output_format": "visual", "selected_cards": "",
     }
-    with get_db_connection() as conn:
-        deck = fetch_all_cards(conn)
-        card_titles, significator_label = seeded_draw(deck, day, "1", "")
-        reading = run_reading(conn, settings, card_titles, significator_label, deck)
+    deck = reference_deck()
+    card_titles, significator_label = seeded_draw(deck, day, "1", "")
+    reading = run_reading(settings, card_titles, significator_label, deck)
     card = reading["spread_results"][0]["card_data"]
     title = card["title"]
     return templates.TemplateResponse(
@@ -885,7 +942,7 @@ def show_report(request: Request, link: str):
             stored["mapping_system"] = "thoth"
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
-        reading = run_reading(conn, stored, card_titles, significator_label)
+    reading = run_reading(stored, card_titles, significator_label)
     return render_report(request, session_id, stored, reading)
 
 
@@ -894,21 +951,21 @@ def show_report(request: Request, link: str):
 _sign_carriers_cache = {}
 
 
-def load_sign_carriers(conn, deck, system):
+def load_sign_carriers(deck, system):
     if system not in _sign_carriers_cache:
-        majors = [c["title"] for c in deck if c["arcana_type"] == "Major"]
-        rows = fetch_cards_correspondences(conn, majors, system=system) if majors else {}
-        _sign_carriers_cache[system] = atlas.sign_carriers(rows.values())
+        rows = reference_rows(system)
+        _sign_carriers_cache[system] = atlas.sign_carriers(
+            rows[c["title"]] for c in deck if c["arcana_type"] == "Major" and c["title"] in rows)
     return _sign_carriers_cache[system]
 
 
-def run_reading(conn, settings, card_titles, significator_label, deck=None):
+def run_reading(settings, card_titles, significator_label, deck=None):
     """Looks up the drawn cards and runs every analysis. Returns the pieces the report needs."""
     spread_key, mapping_system = settings["spread_key"], settings["mapping_system"]
     selected_spread = SPREADS[spread_key]
     positions = spread_positions(spread_key)
     spread_results = []
-    rows = fetch_cards_correspondences(conn, card_titles, system=mapping_system)
+    rows = card_rows(card_titles, mapping_system)
     for idx, title in enumerate(card_titles):
         card_data = rows.get(title)
         if not card_data:
@@ -929,9 +986,9 @@ def run_reading(conn, settings, card_titles, significator_label, deck=None):
     solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
     macro_framework, framework_basis = evaluate_macro_framework(spread_results,
                                                                 forced_framework=settings["framework"])
-    deck = deck or fetch_all_cards(conn)
-    withheld = load_withheld(conn, deck, card_titles, mapping_system)
-    sign_carriers = load_sign_carriers(conn, deck, mapping_system)
+    deck = deck or reference_deck()
+    withheld = withheld_cards(deck, card_titles, mapping_system)
+    sign_carriers = load_sign_carriers(deck, mapping_system)
 
     analytical_prompt = build_analytical_prompt(
         spread_name=selected_spread["name"],

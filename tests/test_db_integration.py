@@ -263,3 +263,13 @@ def test_deck_atlas_places_every_card(conn, system):
     assert sorted(d for c in courts for d in c["zodiac"]["decans"]) == list(range(36))   # spans tile the circle
     assert all(c["solid"] for c in a["cards"]) and len(a["signs"]) == 12
     assert all(s["carrier"].get("place") for s in a["signs"])
+
+
+def test_report_link_lookup_uses_its_index(conn):
+    with conn.cursor() as cur:
+        cur.execute("SET LOCAL enable_seqscan = off")
+        cur.execute("EXPLAIN SELECT session_id FROM tarot_sessions WHERE report_settings->>'link' = %s",
+                    ("x",))
+        plan = " ".join(r["QUERY PLAN"] for r in cur.fetchall())
+    conn.rollback()
+    assert "idx_sessions_report_link" in plan

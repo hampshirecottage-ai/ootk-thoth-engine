@@ -1,6 +1,7 @@
 """Static files for the web GUI: versioned URLs, long cache headers and response compression."""
 import functools
 import gzip
+import time
 
 import anyio.to_thread
 from starlette.datastructures import Headers, MutableHeaders
@@ -19,16 +20,32 @@ IMMUTABLE = "public, max-age=31536000, immutable"
 UNVERSIONED = "public, max-age=3600"
 
 
+# A report page asks for a few hundred static URLs (every card image in every size); each
+# answer is kept for a moment instead of a file-system stat per call.
+URL_TTL = 2.0
+URL_CACHE_MAX = 4096       # well above the ~250 files under static/
+_url_cache = {}
+
+
 def static_url(relpath):
     """'/static/<relpath>?v=<mtime>', or None when the file is missing.
 
     The version changes whenever the file does, so the long cache never serves a stale copy.
+    An edited file gets its new version within URL_TTL seconds.
     """
+    now = time.monotonic()
+    hit = _url_cache.get(relpath)
+    if hit and now - hit[0] < URL_TTL:
+        return hit[1]
     try:
         mtime = (STATIC_DIR / relpath).stat().st_mtime_ns
+        url = f"/static/{relpath}?v={mtime // 1_000_000:x}"
     except OSError:
-        return None
-    return f"/static/{relpath}?v={mtime // 1_000_000:x}"
+        url = None
+    if len(_url_cache) >= URL_CACHE_MAX:
+        _url_cache.clear()
+    _url_cache[relpath] = (now, url)
+    return url
 
 
 class CachedStaticFiles(StaticFiles):
