@@ -4,7 +4,7 @@
 
 **Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![A report for the Second Operation (12 houses): the summary, elemental balance and key cards, then the houses drawn as a wheel with each card's aspects as coloured lines](docs/images/report.png)
+![A report for the Second Operation (12 houses): the three steps to take next, the summary, elemental balance and key cards, then the houses drawn as a wheel with the First House card tapped, showing its element pairs and aspects beside the wheel](docs/images/report.png)
 
 A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
 
