@@ -287,3 +287,18 @@ def test_testimonials_one_per_session_and_only_approved_shown(conn):
         with conn.cursor() as cur:
             cur.execute("UPDATE testimonials SET approved = true;")
         assert db.approved_testimonials(conn) == [{"name": "Ann", "body": "Clear."}]
+
+
+def test_admin_testimonial_queries(conn):
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM testimonials;")
+        db.save_testimonial(conn, "a" * 22, "", "One.", None, None)
+        db.save_testimonial(conn, "b" * 22, "Bo", "Two.", None, None)
+        rows = db.list_testimonials(conn)
+        assert [r["body"] for r in rows] == ["Two.", "One."] and "session_id" not in rows[0]
+        db.set_testimonial_approved(conn, rows[1]["testimonial_id"], True)
+        assert db.approved_testimonials(conn) == [{"name": None, "body": "One."}]
+        assert [r["body"] for r in db.list_testimonials(conn)] == ["Two.", "One."]   # waiting first
+        db.delete_testimonial(conn, rows[0]["testimonial_id"])
+        assert [r["body"] for r in db.list_testimonials(conn)] == ["One."]

@@ -1,0 +1,54 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Admin" %}
+{% set page_description = "Site admin." %}
+{% set tagline = "Testimonials" %}
+{% set active = "" %}
+{% block head %}
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        .admin form.inline { display: inline; }
+        .admin button { background: var(--accent); color: var(--on-accent); border: none; padding: 7px 14px; border-radius: 6px; font: inherit; font-weight: 600; cursor: pointer; }
+        .admin button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); font-weight: normal; }
+        .admin button.danger { background: #8b1e1e; color: #fff; }
+        .admin .error { color: #b00020; background: #fff3f3; border: 1px solid #f0b8b8; padding: 8px 10px; border-radius: 6px; }
+        .admin .item { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; background: var(--panel-3); }
+        .admin .item.waiting { border-left: 4px solid var(--accent); }
+        .admin .meta { font-size: 0.82em; color: var(--muted); margin: 0 0 4px; }
+        .admin blockquote { margin: 4px 0 10px; white-space: pre-line; overflow-wrap: anywhere; }
+        .admin .badge { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; border-radius: 4px; background: var(--panel-2); }
+        .admin .top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel admin" aria-labelledby="adminTitle">
+            {% if not signed_in %}
+            <h2 id="adminTitle">Sign in</h2>
+            {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+            <form method="post" action="/admin/login">
+                <label for="adminPassword">Admin password</label>
+                <input id="adminPassword" type="password" name="password" autocomplete="current-password" required autofocus>
+                <button type="submit">Sign in</button>
+            </form>
+            {% else %}
+            <div class="top-row">
+                <h2 id="adminTitle">Testimonials</h2>
+                <form method="post" action="/admin/logout" class="inline"><button type="submit" class="secondary">Sign out</button></form>
+            </div>
+            <p class="note">{{ waiting }} waiting for approval · {{ testimonials | length - waiting }} approved. Approved ones take turns on the start page, one a day.</p>
+            {% for t in testimonials %}
+            <div class="item{% if not t.approved %} waiting{% endif %}" id="t{{ t.testimonial_id }}">
+                <p class="meta"><span class="badge">{{ "Approved" if t.approved else "Waiting" }}</span> #{{ t.testimonial_id }} · {{ t.created_at.strftime('%-d %b %Y, %H:%M') }} UTC{% if t.name %} · {{ t.name }}{% endif %}</p>
+                <blockquote>{{ t.body }}</blockquote>
+                {% if t.approved %}
+                <form method="post" action="/admin/testimonials/{{ t.testimonial_id }}" class="inline"><button type="submit" name="action" value="hide" class="secondary">Hide</button></form>
+                {% else %}
+                <form method="post" action="/admin/testimonials/{{ t.testimonial_id }}" class="inline"><button type="submit" name="action" value="approve">Approve</button></form>
+                {% endif %}
+                <form method="post" action="/admin/testimonials/{{ t.testimonial_id }}" class="inline" onsubmit="return confirm('Delete this testimonial for good?');"><button type="submit" name="action" value="delete" class="danger">Delete</button></form>
+            </div>
+            {% else %}
+            <p>No testimonials yet.</p>
+            {% endfor %}
+            {% endif %}
+        </section>
+{% endblock %}

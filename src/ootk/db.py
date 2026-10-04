@@ -319,3 +319,21 @@ def approved_testimonials(conn):
             return [dict(row) for row in cur.fetchall()]
     except psycopg.errors.UndefinedTable:
         return []
+
+def list_testimonials(conn):
+    """Every testimonial for the admin page, waiting ones first, newest first. Session details
+    are left out: the admin page doesn't need them."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT testimonial_id, created_at AT TIME ZONE 'UTC' AS created_at, name, body, approved "
+                    "FROM testimonials "
+                    "ORDER BY approved, testimonial_id DESC;")
+        return [dict(row) for row in cur.fetchall()]
+
+def set_testimonial_approved(conn, testimonial_id, approved):
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE testimonials SET approved = %s WHERE testimonial_id = %s;",
+                    (approved, testimonial_id))
+
+def delete_testimonial(conn, testimonial_id):
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM testimonials WHERE testimonial_id = %s;", (testimonial_id,))
