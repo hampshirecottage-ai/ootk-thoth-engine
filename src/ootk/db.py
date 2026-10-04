@@ -284,3 +284,38 @@ def _save_spread_session(conn, spread_name, query_prompt, notes, significator, s
     except Exception as e:
         print(f"\n[ERROR] Failed to record session to database: {e}")
         return None
+
+def save_testimonial(conn, session_id, name, body, user_agent=None, ip_hash=None):
+    """Saves a visitor's testimonial, unapproved. Returns False when this session has already
+    sent one (testimonials.session_id is unique). A database without the table raises
+    DatabaseOutdated."""
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("INSERT INTO testimonials (session_id, name, body, user_agent, ip_hash) "
+                        "VALUES (%s, %s, %s, %s, %s) ON CONFLICT (session_id) DO NOTHING "
+                        "RETURNING testimonial_id;",
+                        (session_id, name or None, body, user_agent or None, ip_hash))
+            return cur.fetchone() is not None
+    except psycopg.errors.UndefinedTable as e:
+        raise DatabaseOutdated("testimonials table is missing: run "
+                               "database/migrations/add_testimonials.sql") from e
+
+def session_has_testimonial(conn, session_id):
+    """Whether this session has already sent a testimonial (False without the table)."""
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM testimonials WHERE session_id = %s;", (session_id,))
+            return cur.fetchone() is not None
+    except psycopg.errors.UndefinedTable:
+        return False
+
+def approved_testimonials(conn):
+    """[{name, body}] of approved testimonials, oldest first; [] without the table.
+    Session details are never read here, so they can't reach a page."""
+    try:
+        with conn.transaction(), conn.cursor() as cur:
+            cur.execute("SELECT name, body FROM testimonials WHERE approved "
+                        "ORDER BY testimonial_id;")
+            return [dict(row) for row in cur.fetchall()]
+    except psycopg.errors.UndefinedTable:
+        return []

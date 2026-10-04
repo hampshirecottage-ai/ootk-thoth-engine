@@ -273,3 +273,17 @@ def test_report_link_lookup_uses_its_index(conn):
         plan = " ".join(r["QUERY PLAN"] for r in cur.fetchall())
     conn.rollback()
     assert "idx_sessions_report_link" in plan
+
+
+def test_testimonials_one_per_session_and_only_approved_shown(conn):
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM testimonials;")
+        assert db.save_testimonial(conn, "s" * 22, "Ann", "Clear.", "UA/1", None) is True
+        assert db.save_testimonial(conn, "s" * 22, "Ann", "Again.", "UA/1", None) is False
+        assert db.session_has_testimonial(conn, "s" * 22)
+        assert not db.session_has_testimonial(conn, "t" * 22)
+        assert db.approved_testimonials(conn) == []
+        with conn.cursor() as cur:
+            cur.execute("UPDATE testimonials SET approved = true;")
+        assert db.approved_testimonials(conn) == [{"name": "Ann", "body": "Clear."}]
