@@ -1,0 +1,139 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Card maps" %}
+{% set page_description = "Where each Thoth tarot card sits on the Tree of Life, the Cube of Space, the 36 decans, the five Platonic solids and the elemental grid, with the 22 letters and 12 signs as tables." %}
+{% set tagline = "Where each card sits on the Tree, the Cube of Space, the decans, the solids and the elements." %}
+{% set active = "/maps" %}
+{% block head %}
+{% include "_atlas_styles.html" %}
+    <style>
+        .guide { max-width: 980px; }
+        .pickbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+        .pickbar > div { flex: 1 1 220px; }
+        .pickbar select { margin-bottom: 0; }
+        .pickbar .btns { display: flex; gap: 6px; flex: 0 0 auto; }
+        .pickbar .btn-small { padding: 8px 12px; }
+        .summary { margin: 14px 0 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .summary strong { font-size: 1.1em; }
+        .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 3px; border: 1px solid var(--text); vertical-align: -3px; margin-right: 4px; }
+        .maps { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .maps figure { margin: 0; }
+        .maps figure.wide { grid-column: 1 / -1; }
+        .maps h2 { margin-bottom: 4px; }
+        .maps figcaption { font-size: 0.9em; margin-top: 8px; }
+        .maps figcaption .muted { display: block; margin-top: 4px; font-size: 0.92em; }
+        .map-tree { max-width: 320px; margin: 0 auto; }
+        .map-cube, .map-ring { max-width: 440px; margin: 0 auto; }
+        .tablewrap { overflow-x: auto; }
+        table.matrix { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.86em; }
+        table.matrix.dignity { min-width: 0; }
+        table.matrix th, table.matrix td { border: 1px solid var(--line); padding: 5px 7px; text-align: left; vertical-align: top; }
+        table.matrix th { background: var(--panel-2); }
+        table.matrix td.n { text-align: center; font-variant-numeric: tabular-nums; }
+        table.matrix button.link { background: none; border: none; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; text-align: left; }
+        table.dignity { width: auto; }
+        table.dignity td { text-align: center; min-width: 64px; }
+        @media (max-width: 640px) { .maps { grid-template-columns: 1fr; } }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel" aria-labelledby="pickTitle">
+            <h2 id="pickTitle">Pick a card</h2>
+            <p class="muted" style="margin-top:0">The maps below mark where the card sits in each system. Tap a letter, a decan or a court card on any map to jump to it. They show positions only, not meanings.</p>
+            <div class="pickbar">
+                <div>
+                    <label for="cardPick">Card</label>
+                    <select id="cardPick">
+                        <option value="">Whole deck (nothing marked)</option>
+                        {% for group, kinds in [("Major Arcana", ["Major"]), ("Wands", ["Wands"]), ("Cups", ["Cups"]), ("Swords", ["Swords"]), ("Disks", ["Disks"])] %}
+                        <optgroup label="{{ group }}">
+                            {% for c in atlas.cards %}{% if (c.kind == "Major" and "Major" in kinds) or (c.kind != "Major" and c.short.split(" ")[-1] in kinds) %}
+                            <option value="{{ loop.index0 }}"{% if selected == loop.index0 %} selected{% endif %}>{{ c.title }}</option>
+                            {% endif %}{% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="btns">
+                    <button type="button" class="btn-small" id="prevCard" aria-label="Previous card">‹ Prev</button>
+                    <button type="button" class="btn-small" id="nextCard" aria-label="Next card">Next ›</button>
+                </div>
+                <form method="get" action="/maps" id="systemForm">
+                    <label for="systemPick">Mapping system</label>
+                    <input type="hidden" name="card" id="systemCard" value="">
+                    <select id="systemPick" name="system">
+                        {% for key, label in systems.items() %}<option value="{{ key }}"{% if key == system %} selected{% endif %}>{{ label.split(" (")[0] }}</option>{% endfor %}
+                    </select>
+                </form>
+            </div>
+            <div class="summary" id="mapSummary" aria-live="polite"></div>
+        </section>
+
+        <div class="maps">
+            <figure class="panel">
+                <h2>Tree of Life</h2>
+                <div class="map-tree" id="mapTree"></div>
+                <figcaption id="capTree"></figcaption>
+            </figure>
+            <figure class="panel">
+                <h2>Cube of Space</h2>
+                <div class="map-cube" id="mapCube"></div>
+                <figcaption id="capCube"></figcaption>
+            </figure>
+            <figure class="panel">
+                <h2>Zodiac and decans</h2>
+                <div class="map-ring" id="mapRing"></div>
+                <figcaption id="capRing"></figcaption>
+            </figure>
+            <figure class="panel">
+                <h2>Platonic solid</h2>
+                <div id="mapSolid"></div>
+                <figcaption id="capSolid"></figcaption>
+            </figure>
+            <figure class="panel wide">
+                <h2>Elements</h2>
+                <div id="mapGrid"></div>
+                <figcaption id="capGrid"></figcaption>
+            </figure>
+        </div>
+
+        <section class="panel" aria-labelledby="dignityTitle">
+            <h2 id="dignityTitle">How elements score together</h2>
+            <p class="muted" style="margin-top:0">The Book T element pairs the report scores between neighbouring cards. Fire and Water are contrary, as are Air and Earth; every other unlike pair is friendly.</p>
+            <div class="tablewrap"><table class="matrix dignity">
+                <thead><tr><th></th>{% for e in ["Fire", "Water", "Air", "Earth"] %}<th scope="col">{{ e }}</th>{% endfor %}</tr></thead>
+                <tbody>{% for a in ["Fire", "Water", "Air", "Earth"] %}<tr><th scope="row">{{ a }}</th>{% for b in ["Fire", "Water", "Air", "Earth"] %}{% set d = dignity(a, b) %}<td title="{{ d[1] }}">{{ "%+d" % d[0] }} {{ d[1].split(" /")[0].split(" (")[0] }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+            </table></div>
+        </section>
+
+        <section class="panel" aria-labelledby="lettersTitle">
+            <h2 id="lettersTitle">The 22 letters</h2>
+            <p class="muted" style="margin-top:0">Each path of the Tree carries a Hebrew letter and a place on the Cube of Space. The Major on it follows the mapping system ({{ systems[system] }}).</p>
+            <div class="tablewrap"><table class="matrix">
+                <thead><tr><th>Path</th><th>Letter</th><th>Joins</th><th>Major</th><th>Attribution</th><th>Cube of Space</th><th>Solid</th><th>King Scale</th><th>Courts</th></tr></thead>
+                <tbody>{% for r in letters %}<tr>
+                    <td class="n">{{ r.path }}</td><td>{{ r.letter }}</td><td>{{ r.joins }}</td>
+                    <td>{% if r.major_index is not none %}<button type="button" class="link" data-pick="{{ r.major_index }}">{{ r.major }}</button>{% endif %}</td>
+                    <td>{{ r.attribution }}</td><td>{{ r.place }}</td><td>{{ r.solid }}</td>
+                    <td>{% if r.colour and r.colour.startswith("#") %}<span class="swatch" style="background:{{ r.colour }}"></span>{% endif %}{{ r.colour_name }}</td>
+                    <td>{{ r.courts }}</td>
+                </tr>{% endfor %}</tbody>
+            </table></div>
+        </section>
+
+        <section class="panel" aria-labelledby="signsTitle">
+            <h2 id="signsTitle">The 12 signs</h2>
+            <p class="muted" style="margin-top:0">Each sign's element, the Major and letter that carry it, its place on the cube, its three decan cards with their ruling planets, and the court cards whose thirty degrees touch it.</p>
+            <div class="tablewrap"><table class="matrix">
+                <thead><tr><th>Sign</th><th>Element</th><th>Major</th><th>Cube of Space</th><th>Decans</th><th>Courts</th></tr></thead>
+                <tbody>{% for r in signs %}<tr>
+                    <td>{{ r.sign }}</td><td>{{ r.element }}</td><td>{{ r.carrier }} {{ r.letter }}</td><td>{{ r.place }}</td>
+                    <td>{{ r.decans | join("; ") }}</td><td>{{ r.courts }}</td>
+                </tr>{% endfor %}</tbody>
+            </table></div>
+            <p class="note">Sources: the Tree, letters and colours follow Liber 777; decans, court spans and quadrants follow Book T; cube places follow Paul Case's Cube of Space. A card's solid follows its element, as in the report. <a href="/library">Library</a> explains the terms.</p>
+        </section>
+
+    <script type="application/json" id="atlasData">{{ atlas | tojson }}</script>
+    <script src="{{ static_url('js/atlas.js') }}" defer></script>
+    <script src="{{ static_url('js/maps.js') }}" defer></script>
+{% endblock %}

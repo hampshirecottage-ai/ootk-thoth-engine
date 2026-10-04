@@ -1,0 +1,50 @@
+{# Styles for the card maps (static/js/atlas.js), shared by /maps and the report's card panel. #}
+    <style>
+        :root { --atlas-hl: #ffb74d; --atlas-hl-soft: rgba(255, 183, 77, 0.28); --atlas-cell: #262626; }
+        :root[data-theme="light"] { --atlas-hl: #b0124f; --atlas-hl-soft: rgba(176, 18, 79, 0.22); --atlas-cell: #b9e9cd; }
+        .atlas-svg { width: 100%; height: auto; display: block; font-family: inherit; }
+        .atlas-svg text { fill: var(--text); font-size: 12px; }
+        .atlas-svg text:not([text-anchor]) { text-anchor: middle; }
+        .atlas-svg .a-small { font-size: 10px; }
+        .atlas-svg .a-muted, .atlas-svg .a-compass { fill: var(--muted); }
+        .atlas-svg .a-text { font-size: 13px; }
+        .atlas-svg .a-frame { stroke: var(--muted); stroke-width: 1.2; opacity: 0.55; fill: none; }
+        .atlas-svg .a-frame.axis { stroke-dasharray: 4 4; }
+        .atlas-svg .a-hl-line { stroke: var(--atlas-hl); stroke-width: 5; stroke-linecap: round; }
+        .atlas-svg .dashed { stroke-dasharray: 7 6; }
+        .atlas-svg .a-hl-face { fill: var(--atlas-hl-soft); stroke: var(--atlas-hl); stroke-width: 1.5; }
+        .atlas-svg .a-hl-fill { fill: var(--atlas-hl); }
+        .atlas-svg .a-node circle { fill: var(--panel); stroke: var(--muted); stroke-width: 1; }
+        .atlas-svg .a-node.face circle { stroke-dasharray: 2 2; }
+        .atlas-svg .a-node text { font-size: 12px; }
+        .atlas-svg .a-node.on circle { fill: var(--atlas-hl); stroke: var(--atlas-hl); }
+        .atlas-svg .a-node.on text { fill: var(--panel); font-weight: 700; }
+        .atlas-svg .a-seph circle { fill: var(--panel-2); stroke: var(--muted); stroke-width: 1.2; }
+        .atlas-svg .a-seph.on circle { fill: var(--atlas-hl); stroke: var(--atlas-hl); }
+        .atlas-svg .a-seph.on > text:not(.a-small) { fill: var(--panel); font-weight: 700; }
+        .atlas-svg .a-band { fill: var(--panel-2); stroke: var(--line); }
+        .atlas-svg .a-band.on { fill: var(--atlas-hl-soft); }
+        .atlas-svg .a-dec path, .atlas-svg .a-court path { fill: var(--atlas-cell); stroke: var(--line); }
+        .atlas-svg .a-dec.on path, .atlas-svg .a-court.on path, .atlas-svg path.a-court.on { fill: var(--atlas-hl); }
+        .atlas-svg .a-dec.on text, .atlas-svg .a-court.on text { fill: var(--panel); font-weight: 700; }
+        .atlas-svg .a-glyph { font-size: 15px; }
+        .atlas-svg .a-glyph.sm { font-size: 12px; }
+        .atlas-svg .a-solid line { stroke: var(--muted); stroke-width: 1.3; }
+        .atlas-svg .a-solid line.back { stroke-dasharray: 3 3; opacity: 0.45; }
+        .atlas-svg .a-solid.on line { stroke: var(--atlas-hl); stroke-width: 2; }
+        .atlas-svg .a-solid.on line.back { stroke-width: 1.2; }
+        .atlas-svg [data-pick] { cursor: pointer; }
+        .atlas-svg [data-pick]:hover circle, .atlas-svg [data-pick]:focus circle,
+        .atlas-svg [data-pick]:hover path, .atlas-svg [data-pick]:focus path { stroke: var(--text); stroke-width: 2; }
+        .atlas-svg [data-pick]:focus { outline: none; }
+        table.atlas-grid { border-collapse: collapse; width: 100%; font-size: 0.85em; table-layout: fixed; }
+        table.atlas-grid th, table.atlas-grid td { border: 1px solid var(--line); padding: 6px 4px; text-align: center; line-height: 1.25; }
+        table.atlas-grid th { font-weight: 600; background: var(--panel-2); }
+        table.atlas-grid td { background: var(--atlas-cell); }
+        table.atlas-grid td[data-pick] { cursor: pointer; }
+        table.atlas-grid td[data-pick]:hover { outline: 2px solid var(--text); outline-offset: -2px; }
+        table.atlas-grid .on, table.atlas-grid tr.on td { background: var(--atlas-hl-soft); }
+        table.atlas-grid td.on { background: var(--atlas-hl); color: var(--panel); font-weight: 700; }
+        table.atlas-grid td.on .a-muted { color: inherit; }
+        .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    </style>

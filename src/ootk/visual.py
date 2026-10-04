@@ -10,6 +10,7 @@ from collections import Counter
 
 from ootk.analysis import card_is_dignified, derive_primary_element, spirit_bearing_cards
 from ootk.assets import static_url
+from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
@@ -187,8 +188,10 @@ DETAIL_FIELDS = (
 )
 
 
-def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix):
-    """Per-card data for the click-to-open detail panel, indexed like spread_results."""
+def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix, sign_carriers=None):
+    """Per-card data for the click-to-open detail panel, indexed like spread_results. Each card
+    carries its atlas (ootk.atlas) for the small maps; `sign_carriers` places a pip through its
+    sign's Major and may be left out."""
     out = []
     for item, card in zip(spread_results, cards):
         data = item["card_data"]
@@ -203,6 +206,7 @@ def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix):
             "aspects": all_aspects_by_card.get(i, []),
             "dignities": [f"{_signed(d['score'])} {d['relationship']}: {d['pair']}"
                           for d in dignity_matrix if i in (d["from_index"], d["to_index"])],
+            "atlas": card_atlas(data, sign_carriers or {}),
         })
     return out
 
@@ -529,7 +533,7 @@ def link_view(layout_key, cards, aspects, pairs):
 
 
 def build_report_view(spread_key, spread_results, element_counts, dignity_matrix, spatial_matrix,
-                      macro_framework, framework_basis):
+                      macro_framework, framework_basis, sign_carriers=None):
     """Everything report.html needs beyond the raw prompt: summary first, then segments."""
     cards = [_card_view(item, i, dignity_matrix) for i, item in enumerate(spread_results)]
     all_aspects = []
@@ -582,7 +586,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "card_count": len(cards),
         "key_cards": key_cards,
         "segments": segments,
-        "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix),
+        "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix, sign_carriers),
         "aspect_types": [{"type": t, "color": ASPECT_COLORS[t], "strong": is_strong(
             next((a.score for a in ASPECTS if a.name == t), 0)),
             "key": (f"{ASPECTS_BY_NAME[t].angle:g}\u00b0, {_signed(ASPECTS_BY_NAME[t].score)}"

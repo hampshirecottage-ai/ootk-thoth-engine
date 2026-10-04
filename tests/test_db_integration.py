@@ -232,3 +232,34 @@ def test_french_attribution_is_the_cards_own(conn):
         gd = fetch(conn, title, "golden_dawn")["attribution"]
         fr = fetch(conn, title, "french_egyptian")["attribution"]
         assert gd in fr, (title, gd, fr)
+
+
+def test_atlas_frames_match_the_database(conn):
+    """The Tree's paths and Book T's decans written in ootk.atlas agree with the tables."""
+    from ootk import atlas
+    with conn.cursor() as cur:
+        cur.execute("SELECT key_scale, attributions->>'tree_of_life' AS t FROM correspondences "
+                    "WHERE key_scale BETWEEN 11 AND 32")
+        for r in cur.fetchall():
+            assert r["t"] == "%d to %d" % atlas.PATH_ENDS[r["key_scale"]], r["key_scale"]
+    titles = {c["title"] for c in db.fetch_all_cards(conn)}
+    rows = db.fetch_cards_correspondences(conn, titles)
+    pips = {(r["suit"], int(r["number_or_rank"])): r["attribution"] for r in rows.values()
+            if r["arcana_type"] == "Minor" and r["number_or_rank"] not in ("1", "Ace")}
+    for i in range(36):
+        assert pips[atlas.decan_pip(i)] == f"{atlas.DECAN_RULERS[i]} in {atlas.SIGNS[i // 3]}", i
+
+
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])
+def test_deck_atlas_places_every_card(conn, system):
+    from ootk import atlas
+    deck = db.fetch_all_cards(conn)
+    rows = db.fetch_cards_correspondences(conn, [c["title"] for c in deck], system=system)
+    a = atlas.deck_atlas([rows[c["title"]] for c in deck])
+    majors = [c for c in a["cards"] if c["kind"] == "Major"]
+    assert sorted(c["tree"]["path"] for c in majors) == list(range(11, 33))
+    assert len({c["cube"]["place"] for c in majors}) == 22
+    courts = [c for c in a["cards"] if c["kind"] == "Court" and c["zodiac"]["arcs"][0][1] - c["zodiac"]["arcs"][0][0] == 30]
+    assert sorted(d for c in courts for d in c["zodiac"]["decans"]) == list(range(36))   # spans tile the circle
+    assert all(c["solid"] for c in a["cards"]) and len(a["signs"]) == 12
+    assert all(s["carrier"].get("place") for s in a["signs"])
