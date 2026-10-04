@@ -13,7 +13,9 @@ strip and title banner, and `scripts/optimize_images.py` builds these WebP copie
 
 The cards are shown under their Thoth titles. The trumps follow the Golden Dawn
 correspondences both decks share; the courts are matched by picture (the mounted Waite Knight
-for the Thoth Knight), not by Golden Dawn rank:
+for the Thoth Knight, the young Waite Page for the Prince), not by Golden Dawn rank. Waite's
+courts have no young woman, so the four Princesses have no picture and show their name instead,
+and Waite's Kings are not used:
 
 | Thoth | Rider-Waite-Smith |
 |-------|-------------------|
@@ -24,8 +26,8 @@ for the Thoth Knight), not by Golden Dawn rank:
 | XXI The Universe | XXI The World |
 | Knight | Knight |
 | Queen | Queen |
-| Prince | King |
-| Princess | Page |
+| Prince | Page |
+| Princess | (no picture) |
 | Disks | Pentacles |
 
 The Thoth paintings by Lady Frieda Harris are still under copyright and are not included.

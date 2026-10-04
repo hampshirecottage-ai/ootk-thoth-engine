@@ -1,10 +1,10 @@
 """Card art: every one of the 78 Thoth titles shows the right Rider-Waite-Smith picture.
 
 Three checks, so a card can't quietly show the wrong art:
-- every title has its small, thumb and full WebP;
+- every title but the four Princesses has its small, thumb and full WebP;
 - the Waite card each image was cut from (scripts/download_images.py) is the one the page
   names in its "Pictured: Rider-Waite-Smith ..." note, or carries the same name when there is none;
-- each image still looks like the picture checked by eye on 2026-10-04 (courts matched by picture) (a 256-bit difference
+- each image still looks like the picture checked by eye on 2026-10-04 (courts matched by picture: Knight = Waite Knight, Prince = Waite Page) (a 256-bit difference
   hash per card in card_art_fingerprints.json), in all three sizes.
 
 After deliberately replacing the art, look at every card, then refresh the fingerprints:
@@ -68,16 +68,21 @@ def test_there_are_78_titles():
     assert len(TITLES) == 78 and len(set(map(card_slug, TITLES))) == 78
 
 
+# The Waite deck has no young woman among its courts, so the Princesses have no picture.
+NO_PICTURE = [t for t in TITLES if t.startswith("Princess of ")]
+PICTURED = [t for t in TITLES if t not in NO_PICTURE]
+
+
 @pytest.mark.parametrize("title", TITLES)
-def test_every_title_has_an_image_in_every_size(title):
+def test_every_pictured_title_has_an_image_in_every_size_and_princesses_have_none(title):
     for size in SIZES:
-        assert (CARDS / size / f"{card_slug(title)}.webp").is_file(), (size, title)
+        assert (CARDS / size / f"{card_slug(title)}.webp").is_file() == (title in PICTURED), (size, title)
 
 
 def test_art_note_names_the_waite_card_each_image_comes_from():
     sources = card_sources()
-    assert sorted(sources) == sorted(map(card_slug, TITLES))
-    for title in TITLES:
+    assert sorted(sources) == sorted(map(card_slug, PICTURED))
+    for title in PICTURED:
         number, waite = waite_name(sources[card_slug(title)])
         named = rws_art_name(title)
         if " - " in title and title.split(" - ")[0] in ROMAN:            # a trump
@@ -92,11 +97,10 @@ def test_art_note_names_the_waite_card_each_image_comes_from():
 
 def test_art_notes_cover_only_the_renamed_cards():
     noted = [t for t in TITLES if art_note(t)]
-    assert len(noted) == 13                     # 5 trumps + 8 Princes and Princesses
-    assert art_note("Prince of Wands") == "Pictured: Rider-Waite-Smith King of Wands"
-    assert art_note("Knight of Wands") == ""
-    assert art_note("Prince of Disks") == "Pictured: Rider-Waite-Smith King of Pentacles"
-    assert art_note("Princess of Cups") == "Pictured: Rider-Waite-Smith Page of Cups"
+    assert len(noted) == 9                      # 5 trumps + 4 Princes
+    assert art_note("Prince of Wands") == "Pictured: Rider-Waite-Smith Page of Wands"
+    assert art_note("Prince of Disks") == "Pictured: Rider-Waite-Smith Page of Pentacles"
+    assert art_note("Knight of Wands") == art_note("Princess of Cups") == ""
     assert art_note("XI - Lust") == "Pictured: Rider-Waite-Smith Strength"
     assert art_note("VIII - Adjustment") == "Pictured: Rider-Waite-Smith Justice"
     assert art_note("Queen of Swords") == art_note("5 of Disks - Worry") == art_note("XIX - The Sun") == ""
@@ -123,7 +127,7 @@ SAME_CARD_BITS = 40
 def test_every_image_still_shows_its_checked_picture():
     pytest.importorskip("PIL")
     expected = {slug: int(h, 16) for slug, h in json.loads(FINGERPRINTS.read_text()).items()}
-    assert sorted(expected) == sorted(map(card_slug, TITLES))
+    assert sorted(expected) == sorted(map(card_slug, PICTURED))
     wrong = []
     for slug, want in expected.items():
         for size in SIZES:
@@ -136,6 +140,6 @@ def test_every_image_still_shows_its_checked_picture():
 
 if __name__ == "__main__" and "--update" in sys.argv:
     FINGERPRINTS.write_text(json.dumps(
-        {card_slug(t): f"{dhash(CARDS / 'full' / f'{card_slug(t)}.webp'):064x}" for t in sorted(TITLES, key=card_slug)},
+        {card_slug(t): f"{dhash(CARDS / 'full' / f'{card_slug(t)}.webp'):064x}" for t in sorted(PICTURED, key=card_slug)},
         indent=1) + "\n")
     print(f"Wrote {FINGERPRINTS}")

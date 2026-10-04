@@ -7,7 +7,7 @@ so they are never downloaded or committed.
 The scans come from a pinned commit of github.com/mixvlad/TarotCards (rider-waite/full,
 restored scans of a 1909 "Pam-A" printing). Each one has its Roman numeral strip and title
 banner cut away, because the Waite numbers and names differ from Thoth's (Strength VIII is
-Lust XI, Justice XI is Adjustment VIII, Page is Princess, and so on). The page shows the
+Lust XI, Justice XI is Adjustment VIII, Page is Prince, and so on). The page shows the
 Thoth title instead.
 
     python scripts/download_images.py          # needs Pillow: pip install -e ".[images]"
@@ -27,8 +27,9 @@ SOURCE = ("https://raw.githubusercontent.com/mixvlad/TarotCards/"
 
 # Thoth slug -> Rider-Waite-Smith file. The trumps follow Thoth numbering, so Strength and
 # Justice swap places. The courts match by picture rather than Golden Dawn rank: the Knight is
-# the mounted Waite Knight, the Prince the crowned Waite King, the Princess the Waite Page.
-# Pentacles are Disks.
+# the mounted Waite Knight and the Prince the young Waite Page. Waite has no young woman among
+# his courts, so the Princesses get no picture (the page shows her name instead) and his Kings
+# go unused. Pentacles are Disks.
 TRUMPS = {
     "0---the-fool": "00_Fool", "i---the-magus": "01_Magician",
     "ii---the-priestess": "02_High_Priestess", "iii---the-empress": "03_Empress",
@@ -52,7 +53,7 @@ PIP_TITLES = {
     "disks": ["change", "works", "power", "worry", "success", "failure", "prudence", "gain",
               "wealth"],
 }
-COURTS = {"princess": 11, "knight": 12, "queen": 13, "prince": 14}
+COURTS = {"prince": 11, "knight": 12, "queen": 13}
 
 
 def card_sources():
