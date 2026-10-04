@@ -62,6 +62,19 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "save_testimonial", fake_save_testimonial)
     monkeypatch.setattr(app_module, "session_has_testimonial",
                         lambda conn, sid: any(t["session_id"] == sid for t in testimonials))
+    monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
+
+    def fake_list(conn):
+        from datetime import datetime
+        return [dict(t, testimonial_id=i + 1, created_at=datetime(2026, 10, 4, 21, 0))
+                for i, t in enumerate(testimonials)]
+
+    def fake_set_approved(conn, tid, approved):
+        testimonials[tid - 1]["approved"] = approved
+
+    monkeypatch.setattr(app_module, "list_testimonials", fake_list)
+    monkeypatch.setattr(app_module, "set_testimonial_approved", fake_set_approved)
+    monkeypatch.setattr(app_module, "delete_testimonial", lambda conn, tid: testimonials.pop(tid - 1))
     monkeypatch.setattr(app_module, "approved_testimonials",
                         lambda conn: [{"name": t["name"], "body": t["body"]} for t in testimonials if t["approved"]])
     # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
@@ -976,6 +989,62 @@ def test_testimonial_of_the_day_rotates_by_date_and_is_escaped(client, monkeypat
     monkeypatch.setattr(app_module, "utc_today", lambda: day)
     other = ["First &lt;b&gt;one&lt;/b&gt;", "Second one"][day.toordinal() % 2]
     assert other != expected and other in client.get("/").text
+
+
+def test_admin_page_does_not_exist_without_a_password(client, monkeypatch):
+    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    assert client.get("/admin").status_code == 404
+    assert client.post("/admin/login", data={"password": ""}).status_code == 404
+    assert client.post("/admin/testimonials/1", data={"action": "approve"}).status_code == 404
+
+
+def test_admin_is_linked_from_nowhere(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    for path in ["/", "/start", "/testimonial", "/robots.txt", "/sitemap.xml"]:
+        assert "/admin" not in client.get(path).text, path
+
+
+def test_admin_signs_in_and_approves_hides_and_deletes(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/testimonial", data={"body": "Waiting one", "name": "Ann"})
+    page = client.get("/admin")
+    assert 'name="password"' in page.text and "Waiting one" not in page.text
+    assert page.headers["cache-control"] == "no-store" and "noindex" in page.text
+    # Not signed in: the buttons do nothing.
+    assert client.post("/admin/testimonials/1", data={"action": "approve"}).status_code == 403
+    assert client.testimonials[0]["approved"] is False
+    r = client.post("/admin/login", data={"password": "wrong"})
+    assert r.status_code == 401 and "isn&#39;t right" in r.text
+    r = client.post("/admin/login", data={"password": "secret"}, follow_redirects=False)
+    assert r.status_code == 303 and "samesite=strict" in r.headers["set-cookie"].lower()
+    page = client.get("/admin").text
+    assert "Waiting one" in page and "1 waiting for approval" in page
+    assert client.testimonials[0]["session_id"] not in page             # session info stays private
+    client.get("/")                                                       # caches "nothing approved"
+    client.post("/admin/testimonials/1", data={"action": "approve"})
+    assert client.testimonials[0]["approved"] is True
+    assert "Waiting one" in client.get("/").text                          # shown straight away
+    client.post("/admin/testimonials/1", data={"action": "hide"})
+    assert client.testimonials[0]["approved"] is False
+    assert client.post("/admin/testimonials/1", data={"action": "nonsense"}).status_code == 400
+    client.post("/admin/testimonials/1", data={"action": "delete"})
+    assert client.testimonials == []
+    client.post("/admin/logout")
+    assert 'name="password"' in client.get("/admin").text
+
+
+def test_admin_cookie_stops_working_when_the_password_changes(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/admin/login", data={"password": "secret"})
+    monkeypatch.setenv("ADMIN_PASSWORD", "new-secret")
+    assert 'name="password"' in client.get("/admin").text
+
+
+def test_wrong_admin_passwords_lock_the_visitor_out(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    codes = [client.post("/admin/login", data={"password": "x"}).status_code for _ in range(10)]
+    assert codes[-1] == 429
+    assert client.post("/admin/login", data={"password": "secret"}).status_code == 429
 
 
 def test_front_page_survives_a_testimonial_database_error(client, monkeypatch):

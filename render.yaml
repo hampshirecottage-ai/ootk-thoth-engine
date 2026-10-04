@@ -19,6 +19,9 @@ services:
         sync: false
       - key: APP_PASSWORD
         sync: false
+      # Password for the unlinked /admin page (approving testimonials); leave empty to turn it off.
+      - key: ADMIN_PASSWORD
+        sync: false
       # Key for hashing visitors' IP addresses stored with testimonials (the address itself never is).
       - key: VISITOR_HASH_KEY
         generateValue: true

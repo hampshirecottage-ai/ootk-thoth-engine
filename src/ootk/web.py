@@ -33,8 +33,9 @@ from ootk.analysis import (
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, fetch_all_cards, fetch_cards_correspondences,
-    load_report_by_link, load_report_settings, save_spread_session, save_testimonial, session_has_testimonial,
+    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
+    list_testimonials, load_report_by_link, load_report_settings, save_spread_session, save_testimonial,
+    session_has_testimonial, set_testimonial_approved,
 )
 from ootk.lockout import FailedLogins
 from ootk.report import MAPPING_LABELS, build_analytical_prompt
@@ -193,7 +194,7 @@ async def security_headers(request: Request, call_next):
 
 
 def is_private_path(path: str) -> bool:
-    return path.startswith("/report/") or path in ("/generate_report", "/testimonial")
+    return (path.startswith(("/report/", "/admin")) or path in ("/generate_report", "/testimonial"))
 
 
 class RedactReportLinks(logging.Filter):
@@ -1162,6 +1163,99 @@ def send_testimonial(request: Request, body: str = Form(""), name: str = Form(""
         testimonial_senders.failed(visitor)
         log.info("testimonial received, waiting for approval")
     return testimonial_page(request, sid, sent=True, just_sent=saved)
+
+
+# ---------- admin: approving testimonials ----------
+
+# /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
+# doesn't exist (404). Signing in sets a cookie derived from the password, so changing the
+# password signs every browser out. The cookie is SameSite=Strict, so another site can't make a
+# signed-in browser press the buttons.
+ADMIN_COOKIE = "ootk_admin"
+ADMIN_MAX_AGE = 7 * 24 * 3600
+admin_logins = FailedLogins()
+
+
+def admin_password() -> str:
+    password = os.getenv("ADMIN_PASSWORD", "")
+    if not password:
+        raise HTTPException(status_code=404, detail="There is no page at this address.")
+    return password
+
+
+def admin_token(password: str) -> str:
+    return hmac.new(password.encode(), b"ootk-admin-session", hashlib.sha256).hexdigest()
+
+
+def is_admin(request: Request) -> bool:
+    given = request.cookies.get(ADMIN_COOKIE, "")
+    return secrets.compare_digest(given.encode(), admin_token(admin_password()).encode())
+
+
+def admin_page(request: Request, status: int = 200, **context):
+    response = guide_page(request, "admin.html", **context)
+    response.status_code = status
+    return response
+
+
+@app.get("/admin", response_class=HTMLResponse)
+def admin_home(request: Request):
+    """Sign-in form, or every testimonial with approve, hide and delete buttons."""
+    if not is_admin(request):
+        return admin_page(request, signed_in=False)
+    with get_db_connection() as conn:
+        try:
+            rows = list_testimonials(conn)
+        except psycopg.errors.UndefinedTable as e:
+            raise DatabaseOutdated("testimonials table is missing") from e
+    return admin_page(request, signed_in=True, testimonials=rows,
+                      waiting=sum(not t["approved"] for t in rows))
+
+
+@app.post("/admin/login")
+def admin_login(request: Request, password: str = Form("")):
+    expected = admin_password()
+    visitor = visitor_address(request)
+    wait = admin_logins.retry_after(visitor)
+    if wait:
+        return locked_out(wait)
+    if not secrets.compare_digest(password.encode(), expected.encode()):
+        wait = admin_logins.failed(visitor)
+        if wait:
+            log.warning("admin lockout started for one visitor")
+            return locked_out(wait)
+        return admin_page(request, status=401, signed_in=False, error="That password isn't right.")
+    admin_logins.succeeded(visitor)
+    response = RedirectResponse("/admin", status_code=303)
+    response.set_cookie(ADMIN_COOKIE, admin_token(expected), max_age=ADMIN_MAX_AGE, httponly=True,
+                        samesite="strict", secure=request.url.scheme == "https", path="/admin")
+    return response
+
+
+@app.post("/admin/logout")
+def admin_logout(request: Request):
+    admin_password()
+    response = RedirectResponse("/admin", status_code=303)
+    response.delete_cookie(ADMIN_COOKIE, path="/admin")
+    return response
+
+
+ADMIN_ACTIONS = {"approve", "hide", "delete"}
+
+
+@app.post("/admin/testimonials/{testimonial_id}")
+def admin_testimonial(request: Request, testimonial_id: int, action: str = Form("")):
+    if not is_admin(request):
+        raise HTTPException(status_code=403, detail="Sign in at /admin first.")
+    if action not in ADMIN_ACTIONS:
+        raise HTTPException(status_code=400, detail="Unknown action.")
+    with get_db_connection() as conn:
+        if action == "delete":
+            delete_testimonial(conn, testimonial_id)
+        else:
+            set_testimonial_approved(conn, testimonial_id, action == "approve")
+    _testimonial_cache.clear()          # the front page picks the change up straight away
+    return RedirectResponse(f"/admin#t{testimonial_id}", status_code=303)
 
 
 NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "
