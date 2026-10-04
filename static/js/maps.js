@@ -15,8 +15,9 @@
     const order = [...pickEl.options].map(o => o.value).filter(v => v !== "");
 
     function show(i, push) {
-        const c = i === "" || i == null ? null : data.cards[+i];
-        pickEl.value = c ? String(i) : "";
+        const n = Number.parseInt(i, 10);   // an index from the menu or a map; anything else shows the whole deck
+        const c = Number.isInteger(n) && n >= 0 && n < data.cards.length ? data.cards[n] : null;
+        pickEl.value = c ? String(n) : "";
         $("mapTree").innerHTML = A.tree(c, data);
         $("mapCube").innerHTML = A.cube(c, data);
         $("mapRing").innerHTML = A.ring(c, data);

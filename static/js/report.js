@@ -183,7 +183,8 @@ function maps(c) {
     if (!a || !A) return "";
     const fig = (title, svg, note) => `<figure>${svg}<figcaption><b>${title}</b>${esc(note || "Not placed in this system.")}</figcaption></figure>`;
     const solid = a.solid ? `${a.solid.name}: ${a.solid.faces} faces, ${a.solid.vertices} vertices, ${a.solid.edges} edges.` : "";
-    const href = `/maps?card=${encodeURIComponent(a.title)}&system=${encodeURIComponent(panel.dataset.system || "")}`;
+    const system = ["thoth", "golden_dawn", "french_egyptian"].find(k => k === panel.dataset.system) || "thoth";
+    const href = `/maps?card=${encodeURIComponent(a.title)}&system=${system}`;
     return `<h3>Where it sits</h3><div class="maps-mini">` +
         fig("Tree of Life", A.tree(a, null, { compact: true }), a.tree.note) +
         fig("Cube of Space", A.cube(a, null, { compact: true }), a.cube.note) +
@@ -193,7 +194,7 @@ function maps(c) {
 }
 
 function openCard(i) {
-    const c = CARDS[i];
+    const c = CARDS[Number.parseInt(i, 10)];
     if (!c) return;
     document.getElementById("dPos").textContent = `Position ${c.number} · ${c.position}`;
     document.getElementById("dTitle").textContent = c.title;
