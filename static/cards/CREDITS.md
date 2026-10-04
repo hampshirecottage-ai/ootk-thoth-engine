@@ -11,7 +11,9 @@ Source scans: restored scans of a 1909 "Pam-A" printing, taken from
 at a pinned commit. `scripts/download_images.py` fetches them, cuts away each card's numeral
 strip and title banner, and `scripts/optimize_images.py` builds these WebP copies.
 
-Each card keeps its printed Waite numeral and name. The page shows it under its Thoth title,
+Each card keeps its printed Waite numeral and name. Waite printed the numbered cards (2 to 10) without a name, so
+`scripts/download_images.py` adds a banner in the same place with the Thoth title ("2 of DISKS ·
+CHANGE"); that lettering is ours, not Smith's. The page shows it under its Thoth title,
 using the Golden Dawn correspondences both decks share, so the printed name differs from the
 title on these cards:
 
