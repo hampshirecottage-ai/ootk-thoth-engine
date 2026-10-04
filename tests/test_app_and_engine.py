@@ -130,6 +130,24 @@ def test_password_required_when_set(client, monkeypatch):
     assert client.get("/", auth=("anyone", "s3cret")).status_code == 200
 
 
+def test_security_headers(client, monkeypatch):
+    monkeypatch.delenv("APP_PASSWORD", raising=False)
+    for path in ["/", "/static/js/index.js", "/robots.txt"]:
+        r = client.get(path)
+        assert r.headers["x-content-type-options"] == "nosniff"
+        assert "frame-ancestors 'none'" in r.headers["content-security-policy"]
+        assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+        assert "strict-transport-security" not in r.headers          # plain http here
+    assert client.get("https://testserver/").headers["strict-transport-security"] == "max-age=31536000"
+    monkeypatch.setenv("APP_PASSWORD", "s3cret")
+    assert client.get("/").headers["x-frame-options"] == "DENY"     # the password prompt too
+
+
+def test_api_docs_are_off(client):
+    for path in ["/docs", "/redoc", "/openapi.json"]:
+        assert client.get(path).status_code == 404
+
+
 # ---------- app: web performance ----------
 
 def test_pages_are_compressed(client):

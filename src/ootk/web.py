@@ -44,7 +44,8 @@ VALID_OUTPUT_FORMATS = {"visual", "markdown"}
 # swap was always applied). New readings carry this version, so old links keep their cards.
 MAPPING_VERSION = 2
 
-app = FastAPI(title="OOTK Thoth Graphic GUI")
+# No interactive API docs: the site has no API clients, and the docs page loads scripts from a CDN.
+app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None)
 
 static_dir = BASE_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
@@ -69,6 +70,36 @@ async def require_password(request: Request, call_next):
             return await call_next(request)
     return PlainTextResponse("Password required.", status_code=401,
                              headers={"WWW-Authenticate": 'Basic realm="ootk"'})
+
+
+# Pages use inline <script> and style attributes, so scripts and styles allow 'unsafe-inline';
+# everything else (images, fonts, fetches, forms, framing) is limited to this site.
+CONTENT_SECURITY_POLICY = (
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; "
+    "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
+SECURITY_HEADERS = {
+    "Content-Security-Policy": CONTENT_SECURITY_POLICY,
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    # Links out (e.g. to an LLM) carry only the site's origin, never a /report/<link> address.
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    """Browser hardening headers on every response, including the password prompt. HSTS only
+    over https (on Render, uvicorn's --proxy-headers sets the scheme from X-Forwarded-Proto)."""
+    response = await call_next(request)
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+    if request.url.scheme == "https":
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    return response
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -401,14 +432,11 @@ def settings_page(request: Request, name: str, mode: str):
 @app.get("/robots.txt", response_class=PlainTextResponse)
 def robots_txt(request: Request):
     """Search engines may list the start, pick and card-of-the-day pages, never saved or
-    shared readings or the API."""
+    shared readings."""
     return ("User-agent: *\n"
             "Disallow: /report/\n"
             "Disallow: /generate_report\n"
             "Disallow: /reading\n"
-            "Disallow: /docs\n"
-            "Disallow: /redoc\n"
-            "Disallow: /openapi.json\n"
             f"\nSitemap: {site_url(request)}/sitemap.xml\n")
 
 
