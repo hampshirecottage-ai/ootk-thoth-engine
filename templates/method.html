@@ -5,6 +5,8 @@
 {% set active = "/method" %}
 {% block head %}
     <style>
+        .art-table { border-collapse: collapse; margin: 6px 0 12px; font-size: 0.95em; }
+        .art-table th, .art-table td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
         .guide ol, .guide ul { padding-left: 22px; }
         .guide li { margin: 6px 0; }
         table.scores { border-collapse: collapse; margin: 8px 0; font-size: 0.92em; }
@@ -47,9 +49,40 @@
                 <li><strong>The interpretation is your AI&rsquo;s, not this site&rsquo;s.</strong> AIs can be wrong, invent details, or answer the same prompt differently each time. Nothing here checks what they say.</li>
                 <li><strong>One tradition among several.</strong> Card attributions differ between systems, which is why there are three to choose from. The dignity scores (+2, +1, &minus;2, 0) and the aspect orbs are this project&rsquo;s reading of Book T and astrological practice, not the only one.</li>
                 <li><strong>The 15-card heap is a variant.</strong> It is not the classic First Operation of the Opening of the Key, which splits the whole deck into four piles.</li>
-                <li><strong>The pictures don&rsquo;t match the Thoth deck.</strong> The Thoth paintings are still under copyright, so the cards shown are Pamela Colman Smith&rsquo;s 1909 public-domain art under the Thoth names.</li>
+                <li><strong>The pictures don&rsquo;t match the Thoth deck.</strong> The Thoth paintings are still under copyright, so the cards shown are Pamela Colman Smith&rsquo;s 1909 public-domain art under the Thoth names. See <a href="#art">About the card art</a>.</li>
                 <li><strong>A seed is a repeatable shuffle, not chance.</strong> If you want a fresh draw, leave the seed blank or use a new one.</li>
             </ul>
+        </section>
+
+        <section class="panel" id="art" aria-labelledby="artTitle">
+            <h2 id="artTitle">About the card art</h2>
+            <p>The readings use the Thoth deck of Aleister Crowley and Lady Frieda Harris (painted 1938&ndash;43). Harris&rsquo;s paintings are still under copyright, so each card is shown with its counterpart from the Rider-Waite-Smith deck, drawn by Pamela Colman Smith for A.&nbsp;E. Waite in 1909 and now in the public domain. Both decks come from the Golden Dawn&rsquo;s system, so every Thoth card has a Waite counterpart, though many go by a different name.</p>
+            <p>Each picture keeps the name Waite printed on it, as a check on the Thoth title above it. Waite printed no names on the numbered cards (2 to 10), so this site adds a banner with the Thoth title there. Where the names differ, the card also says which Waite card is pictured, for example <em>&ldquo;Pictured: Rider-Waite-Smith King of Wands&rdquo;</em>.</p>
+            <h3>Court cards</h3>
+            <p>The Golden Dawn named its courts King, Queen, Prince and Princess, with the King on horseback. Waite kept the older playing-card names, King, Queen, Knight and Page. Crowley renamed the Golden Dawn&rsquo;s mounted King &ldquo;Knight&rdquo;. This site pairs the cards by rank and element, as the Golden Dawn did:</p>
+            <table class="art-table">
+                <thead><tr><th>Thoth</th><th>Shown with Waite&rsquo;s</th><th>Element</th></tr></thead>
+                <tbody>
+                    <tr><td>Knight (on a horse)</td><td>King (on a throne)</td><td>Fire of the suit</td></tr>
+                    <tr><td>Queen</td><td>Queen</td><td>Water of the suit</td></tr>
+                    <tr><td>Prince (in a chariot)</td><td>Knight (on a horse)</td><td>Air of the suit</td></tr>
+                    <tr><td>Princess</td><td>Page</td><td>Earth of the suit</td></tr>
+                </tbody>
+            </table>
+            <p>So the Thoth Knight of Wands is pictured with Waite&rsquo;s King of Wands. Some comparison charts pair the cards by name instead (Knight with Knight). That matches the horses but not the ranks, and it leaves the Thoth Prince and Princess with no clear partner.</p>
+            <h3>Suit and trumps</h3>
+            <table class="art-table">
+                <thead><tr><th>Thoth</th><th>Waite</th></tr></thead>
+                <tbody>
+                    <tr><td>Disks</td><td>Pentacles</td></tr>
+                    <tr><td>VIII Adjustment</td><td>XI Justice</td></tr>
+                    <tr><td>XI Lust</td><td>VIII Strength</td></tr>
+                    <tr><td>XIV Art</td><td>XIV Temperance</td></tr>
+                    <tr><td>XX The Aeon</td><td>XX Judgement</td></tr>
+                    <tr><td>XXI The Universe</td><td>XXI The World</td></tr>
+                </tbody>
+            </table>
+            <p class="note">Waite followed the Golden Dawn in swapping Strength and Justice to VIII and XI; Crowley kept the older order, so Lust is XI and Adjustment VIII, and the printed numerals on those two pictures differ from their titles. The Magus, the Priestess and Fortune are Waite&rsquo;s Magician, High Priestess and Wheel of Fortune under shorter names.</p>
         </section>
 
         <section class="panel" aria-labelledby="dataTitle">
