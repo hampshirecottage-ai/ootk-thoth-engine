@@ -223,3 +223,12 @@ def test_withheld_lists_the_cards_left_out(conn):
     w = db.load_withheld(conn, deck, drawn)
     assert [r["title"] for r in w["cards"]] == [c["title"] for c in deck[:3]]
     assert w["deck_elements"] == {"Fire": 21, "Water": 19, "Air": 19, "Earth": 19, "Spirit": 0}
+
+
+def test_french_attribution_is_the_cards_own(conn):
+    # French rows give the card's own sign, planet or element ('Justice / Libra' for Libra);
+    # only the Fool reads differently ('Unnumbered / Primeval Spirit').
+    for title in majors(conn)[1:]:
+        gd = fetch(conn, title, "golden_dawn")["attribution"]
+        fr = fetch(conn, title, "french_egyptian")["attribution"]
+        assert gd in fr, (title, gd, fr)

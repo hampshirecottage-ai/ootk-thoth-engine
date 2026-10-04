@@ -5,8 +5,8 @@ ADD COLUMN IF NOT EXISTS path_or_sephira_french VARCHAR(50),
 ADD COLUMN IF NOT EXISTS attribution_french VARCHAR(100);
 
 -- Update Major Arcana mappings for French/Egyptian System (I = Aleph, II = Beth, ..., Fool Shin/Unnumbered)
-UPDATE correspondences SET hebrew_letter_french = 'Aleph (א)', path_or_sephira_french = 'Path 11 (Kether-Chokmah)', attribution_french = 'Air / Magus Spirit' WHERE key_scale = 1; -- The Magician
-UPDATE correspondences SET hebrew_letter_french = 'Beth (ב)', path_or_sephira_french = 'Path 12 (Kether-Binah)', attribution_french = 'Mercury' WHERE key_scale = 2; -- High Priestess
+UPDATE correspondences SET hebrew_letter_french = 'Aleph (א)', path_or_sephira_french = 'Path 11 (Kether-Chokmah)', attribution_french = 'Mercury' WHERE key_scale = 1; -- The Magician
+UPDATE correspondences SET hebrew_letter_french = 'Beth (ב)', path_or_sephira_french = 'Path 12 (Kether-Binah)', attribution_french = 'Moon' WHERE key_scale = 2; -- High Priestess
 UPDATE correspondences SET hebrew_letter_french = 'Gimel (ג)', path_or_sephira_french = 'Path 13 (Chokmah-Binah)', attribution_french = 'Venus' WHERE key_scale = 3; -- Empress
 UPDATE correspondences SET hebrew_letter_french = 'Daleth (ד)', path_or_sephira_french = 'Path 14 (Chokmah-Tiphareth)', attribution_french = 'Aries' WHERE key_scale = 4; -- Emperor
 UPDATE correspondences SET hebrew_letter_french = 'Heh (ה)', path_or_sephira_french = 'Path 15 (Chokmah-Chesed)', attribution_french = 'Taurus' WHERE key_scale = 5; -- Hierophant

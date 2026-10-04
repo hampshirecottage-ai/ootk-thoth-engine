@@ -1,4 +1,5 @@
--- Cube of Space edges for Teth, Yod, Lamed, Nun, Samekh and Ayin, and clearer axis names.
+-- Correspondence audit of 2026-10-04: Cube of Space edges for Teth, Yod, Lamed, Nun, Samekh and
+-- Ayin, clearer axis names, and the French/Egyptian attributions of the Magus and Priestess.
 -- Safe to re-run: every statement sets absolute values.
 --
 -- The twelve simple letters now follow Paul Case's Cube of Space, which takes Sepher
@@ -8,6 +9,10 @@
 -- Qoph south-below. Before, Teth and Yod sat on the west verticals, Lamed and Nun on the
 -- west face and Samekh and Ayin on the north face, which matches no version of the text.
 -- The three mother axes keep their places; only their names now say which way they run.
+--
+-- French/Egyptian attributions: rows 3-21 give the card's own sign, planet or element, but
+-- the Magus (French 1) showed 'Air / Magus Spirit' (the Fool's element) and the Priestess
+-- (French 2) 'Mercury' (the Magus's planet). They now read Mercury and Moon like the rest.
 
 BEGIN;
 
@@ -24,5 +29,8 @@ FROM (VALUES
     (26, 'Lower-West Edge')
 ) AS v(key_scale, place)
 WHERE c.key_scale = v.key_scale;
+
+UPDATE correspondences SET attribution_french = 'Mercury' WHERE key_scale = 1;
+UPDATE correspondences SET attribution_french = 'Moon'    WHERE key_scale = 2;
 
 COMMIT;
