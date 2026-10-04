@@ -590,6 +590,16 @@ def test_spatial_centre_node_has_no_fake_aspect():
     assert all(o["score_modifier"] == 0 for o in out)
 
 
+def test_op1_heap_pairs_take_no_aspect():
+    # Pairs side by side in one heap (2-3, 4-5) used to read as a 0.8 deg Conjunction (+2).
+    cards = [fake_card(f"C{i}") for i in range(15)]
+    out = analysis.analyze_spatial_vectors(results_for(*cards), "8")
+    assert len(out) == 14
+    assert all(o["aspect"] == "Heap Pair" and o["aspect_name"] is None for o in out)
+    assert all(o["score_modifier"] == 0 and o["delta_angle"] is None for o in out)
+    assert out[1]["distance"] == out[3]["distance"] == 0.5
+
+
 def test_spatial_hexagram_uses_real_angles():
     cards = [fake_card(f"C{i}") for i in range(7)]
     out = analysis.analyze_spatial_vectors(results_for(*cards), "6")

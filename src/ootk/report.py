@@ -97,7 +97,8 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
                 prompt_md += f"* {s['pair']}" + (f" | cards: {cards}" if cards else "") + "\n"
             else:
                 prompt_md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
-                prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
+                angle = "" if s["delta_angle"] is None else f" | Angular Delta: `{s['delta_angle']}°`"
+                prompt_md += f"  - Spatial Distance: `{s['distance']}` units{angle}\n"
                 prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
     else:
         prompt_md += "* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.\n"
