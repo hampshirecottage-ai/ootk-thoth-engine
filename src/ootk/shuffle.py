@@ -23,13 +23,16 @@ def shuffle_deck(deck: list, seed) -> list:
 
 
 def resolve_significator(cards, name):
-    """Finds the significator card by full title or by name after the 'XI - ' style prefix."""
+    """Finds the significator card by full title, by the name after the ' - ' ('Lust' for
+    'XI - Lust', 'Dominion' for '2 of Wands - Dominion') or by a pip's name before it
+    ('2 of Wands')."""
     wanted = (name or "").strip().lower()
     if not wanted:
         return None
     for c in cards:
         t = c["title"].lower()
-        if t == wanted or t.split(" - ", 1)[-1] == wanted:
+        head, _, tail = t.partition(" - ")
+        if wanted in (t, tail, head if c.get("arcana_type") == "Minor" else None):
             return c
     return None
 
@@ -45,12 +48,16 @@ def draw_spread(cards, seed, positions, sig_card=None):
     `sig_card` is pinned to position 1 only when that position is a significator position;
     it is then removed from the shuffled deck so it cannot be drawn twice. The rest of the
     order is unchanged, so a given seed draws the same cards in the CLI and the web GUI.
-    Returns (titles, pinned).
+    Returns (titles, pinned). Raises ValueError when the deck holds fewer cards than the
+    spread needs, rather than dealing some cards twice.
     """
     deck = shuffle_deck(cards, seed)
     pinned = bool(sig_card) and has_significator_position(positions)
     if pinned:
         deck = [c for c in deck if c["card_id"] != sig_card["card_id"]]
+    if len(deck) < len(positions) - pinned:
+        raise ValueError(f"The deck has {len(cards)} cards but this spread needs {len(positions)}. "
+                         f"Load every card from database/schema.sql.")
     titles = []
     for idx in range(len(positions)):
         if pinned and idx == 0:

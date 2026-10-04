@@ -272,7 +272,7 @@
             <div class="menu-list">
                 <button type="button" onclick="window.print()">PDF (print)</button>
                 <button type="button" data-download-md>Markdown</button>
-                <button type="button" data-download-json>JSON</button>
+                <button type="button" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>JSON</button>
             </div>
         </details>
         <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
@@ -642,7 +642,7 @@
 </aside>
 
 <script type="application/json" id="cardDetails">{{ S.card_details | tojson }}</script>
-<script type="application/json" id="readingData">{{ reading | tojson }}</script>
+{% if reading %}<script type="application/json" id="readingData">{{ reading | tojson }}</script>{% endif %}
 <script src="{{ static_url('js/atlas.js') }}" defer></script>
 <script src="{{ static_url('js/copy.js') }}" defer></script>
 <script src="{{ static_url('js/report.js') }}" defer></script>

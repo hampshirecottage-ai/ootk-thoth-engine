@@ -14,6 +14,10 @@ from ootk.shuffle import draw_spread, has_significator_position, resolve_signifi
 from ootk.significator import RANKS, SUITS, book_t_card
 from ootk.spreads import SPREADS, spread_positions
 
+class CliError(Exception):
+    """A problem with the command line or the answers given; printed without a traceback."""
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Thoth Tarot & Liber 777 Calculation Engine")
     parser.add_argument("--topic", type=str, help="Query or topic intent string", default=None)
@@ -55,6 +59,11 @@ def display_card_selection(cards):
 
 def run_spread_session():
     args = parse_args()
+    # The web form strips the seed, so ' 42' must draw what 42 draws there.
+    args.seed = (args.seed or "").strip() or None
+    if args.spread is not None and args.spread.strip() not in SPREADS:
+        raise CliError(f"Unknown spread {args.spread!r}. Use a number from 1 to {len(SPREADS)}.")
+    args.spread = args.spread.strip() if args.spread else None
 
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
@@ -65,7 +74,7 @@ def run_spread_session():
         print("       THOTH TAROT & LIBER 777 ENGINE           ")
         print("==================================================")
 
-        if args.spread and args.spread in SPREADS:
+        if args.spread:
             spread_choice = args.spread
         else:
             print("Select a spread layout:\n")
@@ -103,13 +112,15 @@ def run_spread_session():
             significator = ask_significator()
         sig_card = resolve_significator(cards, significator)
         if significator and sig_card is None:
-            print(f"[ERROR] Significator '{significator}' not found in thoth_cards.")
-            sys.exit(1)
+            raise CliError(f"Significator '{significator}' not found in thoth_cards.")
 
         # Only pin when the spread actually has a significator position (first position).
         pin_significator = bool(sig_card) and has_significator_position(target_positions)
         # Same draw as the web GUI for the same seed (see ootk.shuffle.draw_spread).
-        seeded_titles = draw_spread(cards, args.seed, target_positions, sig_card)[0] if args.seed else None
+        try:
+            seeded_titles = draw_spread(cards, args.seed, target_positions, sig_card)[0] if args.seed else None
+        except ValueError as e:
+            raise CliError(str(e)) from e
         significator_label = (
             sig_card["title"] if pin_significator
             else "None (spread has no significator position)"
@@ -137,6 +148,11 @@ def run_spread_session():
                         print("Invalid card selection. Type 'list' or try again.")
                         if user_input.lower() == 'list':
                             display_card_selection(cards)
+                    if selected_title in selected_titles:
+                        # One deck: a card can't fall twice (the web form refuses it too).
+                        print(f"{selected_title} is already at position "
+                              f"{selected_titles.index(selected_title) + 1}. Choose another card.")
+                        selected_title = None
 
             selected_titles.append(selected_title)
 
@@ -153,7 +169,7 @@ def run_spread_session():
         dignity_matrix = calculate_elemental_dignities(spread_results, spread_choice)
         spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
         spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
-        solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results)
+        solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_choice)
         macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=args.framework)
         withheld = load_withheld(conn, cards, selected_titles, args.mapping)
 
@@ -176,9 +192,16 @@ def run_spread_session():
 def main():
     try:
         run_spread_session()
-    except DatabaseOutdated as e:
+    except (CliError, DatabaseOutdated) as e:
         print(f"[ERROR] {e}", file=sys.stderr)
         sys.exit(1)
+    except EOFError:
+        print("\n[ERROR] Input ended before the reading was complete. To run without prompts, "
+              "give --spread, --seed and --topic (and --significator for OOTK Op 1).", file=sys.stderr)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nCancelled.", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":
