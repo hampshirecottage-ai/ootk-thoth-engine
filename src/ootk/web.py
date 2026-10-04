@@ -235,7 +235,7 @@ SPREAD_STAGES = [
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
-PUBLIC_PAGES = ["/", "/pick", "/start", "/examples", "/library", "/maps", "/method"]
+PUBLIC_PAGES = ["/", "/pick", "/start", "/history", "/examples", "/library", "/maps", "/method"]
 
 
 def site_url(request: Request) -> str:
@@ -780,6 +780,12 @@ def start_here(request: Request):
     """Start here: a path for newcomers, then the spreads grouped into learning stages."""
     return guide_page(request, "start.html",
                       sizes={key: len(spread_positions(key)) for key in SPREADS})
+
+
+@app.get("/history", response_class=HTMLResponse)
+def history_page(request: Request):
+    """Where the decks come from, with archival photographs (static/history)."""
+    return guide_page(request, "history.html")
 
 
 @app.get("/examples", response_class=HTMLResponse)
