@@ -19,3 +19,6 @@ services:
         sync: false
       - key: APP_PASSWORD
         sync: false
+      # Key for hashing visitors' IP addresses stored with testimonials (the address itself never is).
+      - key: VISITOR_HASH_KEY
+        generateValue: true

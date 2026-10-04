@@ -1,0 +1,47 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Share your experience" %}
+{% set page_description = "Tell other readers how LLM Tarot Reading worked for you. One testimonial a day appears on the start page." %}
+{% set tagline = "How has OOTK worked for you? One testimonial a day appears on the start page." %}
+{% set active = "" %}
+{% block head %}
+    <meta name="robots" content="noindex">
+    <style>
+        .testimonial-form textarea { width: 100%; min-height: 140px; padding: 8px 10px; margin-bottom: 4px; background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 4px; font: inherit; font-size: 0.95em; resize: vertical; }
+        .testimonial-form .count { display: block; text-align: right; font-size: 0.8em; color: var(--muted); margin-bottom: 12px; }
+        .testimonial-form .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+        .testimonial-form .error { color: #b00020; background: #fff3f3; border: 1px solid #f0b8b8; padding: 8px 10px; border-radius: 6px; }
+        .testimonial-form button.send { background: var(--accent); color: var(--on-accent); border: none; padding: 9px 16px; border-radius: 6px; font: inherit; font-weight: 600; cursor: pointer; }
+        .testimonial-form button.send:hover { background: var(--accent-2); }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel testimonial-form" aria-labelledby="testimonialTitle">
+            {% if sent %}
+            <h2 id="testimonialTitle">{% if just_sent %}Thank you{% else %}You&rsquo;ve already shared one{% endif %}</h2>
+            <p>{% if just_sent %}Your testimonial has been received. It will appear on the start page once it has been read and approved.{% else %}Each visitor can send one testimonial. Thank you for yours.{% endif %}</p>
+            <div class="actions"><a class="btn" href="/">Back to the start page</a></div>
+            {% else %}
+            <h2 id="testimonialTitle">Share your experience</h2>
+            <p>A sentence or two on how you use OOTK, or what it showed you. Testimonials are read before they appear, and each visitor can send one.</p>
+            {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+            <form method="post" action="/testimonial">
+                <label for="testimonialBody">Your testimonial</label>
+                <textarea id="testimonialBody" name="body" maxlength="{{ max_body }}" required>{{ given_body or "" }}</textarea>
+                <span class="count" id="testimonialCount" aria-live="polite"></span>
+                <label for="testimonialName">Name to show (optional)</label>
+                <input id="testimonialName" name="name" maxlength="{{ max_name }}" autocomplete="nickname" placeholder="e.g. Sam, tarot reader" value="{{ given_name or "" }}">
+                <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+                <p class="note">Only your words and the name you give are ever shown. A random session id, the time and your browser type are stored with them so each visitor sends one.</p>
+                <div class="actions"><button type="submit" class="send">Send testimonial</button></div>
+            </form>
+            <script>
+                (function () {
+                    const box = document.getElementById("testimonialBody"), count = document.getElementById("testimonialCount");
+                    const update = () => { count.textContent = box.value.length + " / {{ max_body }}"; };
+                    box.addEventListener("input", update);
+                    update();
+                })();
+            </script>
+            {% endif %}
+        </section>
+{% endblock %}

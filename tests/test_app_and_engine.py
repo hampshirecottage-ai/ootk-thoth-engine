@@ -5,6 +5,7 @@ import json
 from contextlib import nullcontext
 from pathlib import Path
 
+import psycopg
 import pytest
 
 from ootk import analysis, db, report, shuffle, spreads
@@ -47,6 +48,22 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
     monkeypatch.setattr(app_module, "_reference_cache", {})
     monkeypatch.setattr(app_module, "failed_logins", FailedLogins())
+    testimonials = []
+
+    def fake_save_testimonial(conn, session_id, name, body, user_agent=None, ip_hash=None):
+        if any(t["session_id"] == session_id for t in testimonials):
+            return False
+        testimonials.append(dict(session_id=session_id, name=name, body=body, approved=False,
+                                 user_agent=user_agent, ip_hash=ip_hash))
+        return True
+
+    monkeypatch.setattr(app_module, "_testimonial_cache", {})
+    monkeypatch.setattr(app_module, "testimonial_senders", FailedLogins(attempts=3, window=3600))
+    monkeypatch.setattr(app_module, "save_testimonial", fake_save_testimonial)
+    monkeypatch.setattr(app_module, "session_has_testimonial",
+                        lambda conn, sid: any(t["session_id"] == sid for t in testimonials))
+    monkeypatch.setattr(app_module, "approved_testimonials",
+                        lambda conn: [{"name": t["name"], "body": t["body"]} for t in testimonials if t["approved"]])
     # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
     monkeypatch.setattr(app_module, "card_rows", lambda titles, system: fake_fetch(None, titles, system))
 
@@ -71,6 +88,7 @@ def client(monkeypatch):
     c.saved = saved
     c.lookups = lookups
     c.systems = systems
+    c.testimonials = testimonials
     return c
 
 
@@ -867,18 +885,104 @@ def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeyp
     assert 'id="sample"' not in client.get("/pick").text
 
 
-def test_start_page_links_the_card_of_the_day_and_the_sample_report(client, monkeypatch):
-    from datetime import date
-    deck = sample_deck()
-    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
-    monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
+def test_start_page_links_the_sample_report_and_no_longer_the_card_of_the_day(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
     page = client.get("/").text
-    top = shuffle.shuffle_deck(deck, "2026-10-03")[0]["title"]
-    assert f'<a href="/today" class="today-link">Today&rsquo;s card: <strong>{top}</strong>' in page
+    assert "Today&rsquo;s card" not in page                   # replaced by the testimonial
     link = "/reading?seed=12345&spread=12&system=thoth&significator=Queen+of+Cups"
     assert f'href="{link.replace("&", "&amp;")}"' in page
     assert client.get(link).status_code == 200
-    assert 'href="/today">Today' not in client.get("/pick").text
+    assert client.get("/today", follow_redirects=False).status_code == 307   # still its own page
+
+
+# ---------- testimonials ----------
+
+def test_front_page_invites_a_testimonial_until_one_is_approved(client):
+    page = client.get("/").text
+    assert 'href="/testimonial"' in page and "Testimonial of the day" not in page
+    assert 'href="/testimonial"' not in client.get("/pick").text
+
+
+def test_testimonial_is_saved_unapproved_with_its_session(client, monkeypatch):
+    monkeypatch.setenv("VISITOR_HASH_KEY", "k")
+    form = client.get("/testimonial")
+    sid = form.cookies.get("ootk_session")
+    assert form.status_code == 200 and len(sid) == 22 and 'name="body"' in form.text
+    assert form.headers["cache-control"] == "no-store"
+    r = client.post("/testimonial", data={"body": "  Clear and thorough.  ", "name": " Sam  R "},
+                    headers={"user-agent": "TestBrowser/1.0"})
+    assert r.status_code == 200 and "Thank you" in r.text
+    [t] = client.testimonials
+    assert t == {"session_id": sid, "name": "Sam R", "body": "Clear and thorough.", "approved": False,
+                 "user_agent": "TestBrowser/1.0", "ip_hash": t["ip_hash"]}
+    assert len(t["ip_hash"]) == 64 and "testclient" not in t["ip_hash"]   # keyed hash, never the address
+    assert "Clear and thorough" not in client.get("/").text            # not shown until approved
+
+
+def test_one_testimonial_per_session(client):
+    client.post("/testimonial", data={"body": "first"})
+    r = client.post("/testimonial", data={"body": "second"})
+    assert "already shared one" in r.text and len(client.testimonials) == 1
+    assert "already shared one" in client.get("/testimonial").text
+    client.cookies.clear()                                             # a new session may send one
+    client.post("/testimonial", data={"body": "other visitor"})
+    assert len(client.testimonials) == 2
+
+
+def test_one_address_sends_at_most_three_an_hour(client):
+    for n in range(3):
+        client.cookies.clear()
+        assert "Thank you" in client.post("/testimonial", data={"body": f"t{n}"}).text
+    client.cookies.clear()
+    r = client.post("/testimonial", data={"body": "t3"})
+    assert r.status_code == 429 and "try again in an hour" in r.text and len(client.testimonials) == 3
+
+
+def test_no_ip_hash_without_a_key(client, monkeypatch):
+    monkeypatch.delenv("VISITOR_HASH_KEY", raising=False)
+    client.post("/testimonial", data={"body": "hello"})
+    assert client.testimonials[0]["ip_hash"] is None
+
+
+@pytest.mark.parametrize("data, message", [
+    ({"body": "   "}, "write a few words"),
+    ({"body": "x" * 601}, "600 characters"),
+    ({"body": "ok", "name": "n" * 61}, "60 characters"),
+])
+def test_bad_testimonials_are_refused_and_kept_in_the_form(client, data, message):
+    r = client.post("/testimonial", data=data)
+    assert r.status_code == 400 and message in r.text and client.testimonials == []
+
+
+def test_honeypot_field_drops_bot_testimonials(client):
+    r = client.post("/testimonial", data={"body": "buy now", "website": "http://spam"})
+    assert r.status_code == 200 and client.testimonials == []
+
+
+def test_testimonial_of_the_day_rotates_by_date_and_is_escaped(client, monkeypatch):
+    from datetime import date
+    client.testimonials.extend([
+        {"session_id": "a", "name": "Ann", "body": "First <b>one</b>", "approved": True},
+        {"session_id": "b", "name": "", "body": "Second one", "approved": True},
+        {"session_id": "c", "name": "Spam", "body": "Unapproved", "approved": False},
+    ])
+    day = date(2026, 10, 4)
+    monkeypatch.setattr(app_module, "utc_today", lambda: day)
+    page = client.get("/").text
+    expected = ["First &lt;b&gt;one&lt;/b&gt;", "Second one"][day.toordinal() % 2]
+    assert "Testimonial of the day" in page and expected in page and "Unapproved" not in page
+    assert "<b>one</b>" not in page
+    day = date(2026, 10, 5)
+    monkeypatch.setattr(app_module, "utc_today", lambda: day)
+    other = ["First &lt;b&gt;one&lt;/b&gt;", "Second one"][day.toordinal() % 2]
+    assert other != expected and other in client.get("/").text
+
+
+def test_front_page_survives_a_testimonial_database_error(client, monkeypatch):
+    def broken(conn):
+        raise psycopg.OperationalError("down")
+    monkeypatch.setattr(app_module, "approved_testimonials", broken)
+    assert client.get("/").status_code == 200
 
 
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):

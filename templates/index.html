@@ -50,6 +50,12 @@
         a.btn-cta:hover { background: var(--accent-2); }
         .today-link { color: var(--accent); text-decoration: none; font-size: 0.92em; padding: 4px 0; }
         .today-link:hover { text-decoration: underline; }
+        .testimonial { margin: 16px auto 0; max-width: 56ch; padding: 10px 0 0; border-top: 1px solid var(--line); }
+        .testimonial-label { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+        .testimonial blockquote { margin: 4px 0 6px; font-style: italic; font-size: 1.02em; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+        .testimonial-by { margin: 0; font-size: 0.9em; }
+        :root[data-theme="light"] .testimonial blockquote, :root[data-theme="light"] .testimonial-label { color: #ffe0a0; }
+        :root[data-theme="light"] .testimonial { border-top-color: rgba(255, 224, 160, 0.4); }
         a.btn-small { text-decoration: none; display: inline-block; }
         .link-btn { background: none; border: none; padding: 6px 0; color: var(--accent); cursor: pointer; text-decoration: underline; font-size: 0.9em; }
         /* Diagram: the same fifteen markers move between the heap, the wheel and the cube. */
@@ -128,8 +134,18 @@
             <p class="hero-actions">
                 <a class="btn-cta" href="#readingForm">Discover your own path</a>
                 <a href="/start" class="today-link">New here? Start here &rarr;</a>
-                {% if todays_card %}<a href="/today" class="today-link">Today&rsquo;s card: <strong>{{ todays_card }}</strong> &rarr;</a>{% endif %}
             </p>
+            {% if show_testimonials %}
+            {% if testimonial %}
+            <figure class="testimonial" aria-labelledby="testimonialLabel">
+                <figcaption id="testimonialLabel" class="testimonial-label">Testimonial of the day</figcaption>
+                <blockquote>&ldquo;{{ testimonial.body }}&rdquo;</blockquote>
+                <p class="testimonial-by">{% if testimonial.name %}&mdash; {{ testimonial.name }} · {% endif %}<a href="/testimonial" class="today-link">Share yours &rarr;</a></p>
+            </figure>
+            {% else %}
+            <p class="hero-actions"><a href="/testimonial" class="today-link">Used OOTK? Share a testimonial &rarr;</a></p>
+            {% endif %}
+            {% endif %}
         </div>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </header>
