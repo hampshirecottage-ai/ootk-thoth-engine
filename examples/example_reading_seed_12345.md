@@ -3,7 +3,7 @@
 This is a sample of what `ootk` prints. It was made with a throwaway seed and a placeholder topic, so it contains no personal data:
 
 ```bash
-ootk --spread 3 --seed 12345 --significator "Knight of Swords" --topic "Example reading"
+ootk --spread 3 --seed 12345 --topic "Example reading"
 ```
 
 The same command with the same database always draws the same cards. Everything below is the program's output, unedited apart from the final database line.
@@ -33,7 +33,7 @@ The same command with the same database always draws the same cards. Everything 
 **PRNG Seed:** 12345
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution (Arcana Progression)
 **Framework Basis:** auto: only 2 card(s) carry Sephirothic data (minimum 6); defaulted to Life Path
-**Active Mapping System:** Golden Dawn / English System (Liber 777)
+**Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 
 ---
 
@@ -92,7 +92,7 @@ The same command with the same database always draws the same cards. Everything 
 - **Arcana/Suit**: Court | Cups
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Comparative Hebrew Mapping**: GD: `ח (Cheth)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Topology**: `Icosahedron` (Faces: 20, Vertices: 12) | Dual: `Dodecahedron`
 - **Topological Role**: Receptive Matrix (Fluid Volume)
@@ -103,7 +103,7 @@ The same command with the same database always draws the same cards. Everything 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
-- **Comparative Hebrew Mapping**: GD: `ו (Vau)` | French/Egyptian: `Heh (ה)`
+- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Topology**: `Hexahedron (Cube)` (Faces: 6, Vertices: 8) | Dual: `Octahedron`
 - **Topological Role**: Crystallized Vessel (Physical Boundary)
@@ -126,7 +126,7 @@ The same command with the same database always draws the same cards. Everything 
 
 Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
 
-1. **Active System Context (Golden Dawn / English System (Liber 777)):** Analyze how the cards function under the `golden_dawn` mapping.
+1. **Active System Context (Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)):** Analyze how the cards function under the `thoth` mapping.
 2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
 3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
 4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
