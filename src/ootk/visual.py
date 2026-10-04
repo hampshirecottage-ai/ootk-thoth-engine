@@ -11,7 +11,7 @@ from collections import Counter
 from ootk.analysis import card_is_dignified, derive_primary_element, spirit_bearing_cards
 from ootk.assets import static_url
 from ootk.report import withheld_sentence
-from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME
+from ootk.rules import ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
 
 ELEMENTS = ("Fire", "Water", "Air", "Earth", "Spirit")
@@ -49,6 +49,12 @@ WHEEL = {
     36: {"r_out": 450, "r_band": 412, "r_card": 350, "card": (36, 56), "r_in": 305},
 }
 PAD = 24
+HOUSE_R_OUT = 345   # Op 2's outer radius: its band also carries each house's definition
+
+# Element-pair links (neighbouring cards), coloured by their Book T score.
+DIGNITY_COLORS = {DIGNITY_SAME: "#ffe0a0", DIGNITY_FRIENDLY: "#d6f5e3", 0: "#b9c4bd", DIGNITY_CONTRARY: "#ff6b6b"}
+# What one step round each ring is called, for "4 houses apart".
+RING_UNITS = {"9": "house", "10": "sign", "11": "decan"}
 
 # Op 1 is drawn inside a triangle frame (layout units). Purely decorative.
 TRIANGLE_FRAME = {"8": [(0.0, 4.1), (-4.6, -2.3), (4.6, -2.3)]}
@@ -77,6 +83,23 @@ def short_card_name(title):
         head, tail = t.split(" - ", 1)
         return tail if re.fullmatch(r"[0IVXL]+", head) else head
     return t
+
+
+def position_note(position_name):
+    """'[Op 2] 4. Fourth House (Home & Roots)' -> 'Home & Roots' ('' when there is none)."""
+    m = re.search(r"\(([^()]*)\)\s*$", position_name)
+    return m.group(1).strip() if m else ""
+
+
+def _note_lines(note, width=16):
+    """A house definition on one or two short lines, split after its first '&' or '/'."""
+    if len(note) <= width:
+        return [note]
+    for joiner in (" / ", " & "):
+        if joiner in note:
+            head, tail = note.split(joiner, 1)
+            return [head + joiner.rstrip(), tail]
+    return [note]
 
 
 def position_label(position_name):
@@ -122,6 +145,7 @@ def _aspect_view(entry, start):
         "score_text": _signed(score),
         "strong": is_strong(score),
         "color": ASPECT_COLORS.get(name, ASPECT_COLORS[UNASPECTED]),
+        "angle": entry.get("delta_angle"),
         "a": entry["from_index"] - start,
         "b": entry["to_index"] - start,
         # Ring aspects also carry the dignity of the two cards drawn in those positions.
@@ -144,6 +168,7 @@ def _card_view(item, index, dignity_matrix):
         "srcset": card_srcset(data["title"]),
         "element": element,
         "color": ELEMENT_COLORS[element],
+        "attribution": data.get("attribution") or "",
         "dignified": card_is_dignified(index, dignity_matrix),
         "gindex": index,
         "search": " ".join(str(v) for v in (
@@ -182,7 +207,35 @@ def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix):
     return out
 
 
-def _layout_drawing(layout_key, cards, aspects):
+def _pair_curve(p, q, centre, bulge=0.22):
+    """A curve from p to q bowed away from centre, so a link between two far-apart cards
+    does not run under the cards between them. Returns (path, badge point)."""
+    (x1, y1), (x2, y2) = p, q
+    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+    length = math.hypot(x2 - x1, y2 - y1) or 1.0
+    nx, ny = -(y2 - y1) / length, (x2 - x1) / length
+    if (mx - centre[0]) * nx + (my - centre[1]) * ny < 0:
+        nx, ny = -nx, -ny
+    off = bulge * length
+    return (f"M{x1:.1f},{y1:.1f} Q{mx + nx * off:.1f},{my + ny * off:.1f} {x2:.1f},{y2:.1f}",
+            (round(mx + nx * off / 2, 1), round(my + ny * off / 2, 1)))
+
+
+def _ring_arc(r, a0, a1):
+    """The short arc between two angles (degrees) on radius r. Returns (path, badge point)."""
+    d = (a1 - a0 + 540) % 360 - 180
+    x0, y0 = _svg_point(r, a0)
+    x1, y1 = _svg_point(r, a0 + d)
+    return f"M{x0},{y0} A{r},{r} 0 0 {0 if d > 0 else 1} {x1},{y1}", _svg_point(r, a0 + d / 2)
+
+
+def _pair_link(pair, path, badge):
+    return {"a": pair["a"], "b": pair["b"], "score": pair["score"], "score_text": _signed(pair["score"]),
+            "color": DIGNITY_COLORS.get(pair["score"], DIGNITY_COLORS[0]),
+            "d": path, "bx": badge[0], "by": badge[1]}
+
+
+def _layout_drawing(layout_key, cards, aspects, pairs=()):
     scale = LAYOUT_SCALE.get(layout_key, DEFAULT_LAYOUT_SCALE)
     w, h = LAYOUT_CARD.get(layout_key, DEFAULT_LAYOUT_CARD)
     coords = SPREAD_DEFAULT_COORDINATES[layout_key][:len(cards)]
@@ -198,8 +251,12 @@ def _layout_drawing(layout_key, cards, aspects):
              for card, (px, py) in zip(cards, points)]
     lines = [dict(a, x1=points[a["a"]][0], y1=points[a["a"]][1],
                   x2=points[a["b"]][0], y2=points[a["b"]][1]) for a in aspects]
+    centre = (sum(x for x, _ in points) / len(points), sum(y for _, y in points) / len(points))
+    pair_links = [_pair_link(p, *_pair_curve(points[p["a"]], points[p["b"]], centre)) for p in pairs]
     return {
         "kind": "layout",
+        "pair_links": pair_links,
+        "badge_r": 10,
         "viewbox": f"{min_x:.0f} {min_y:.0f} {max_x - min_x:.0f} {max_y - min_y:.0f}",
         "width": round(max_x - min_x),
         "frame": " ".join(f"{x:.1f},{y:.1f}" for x, y in frame),
@@ -208,9 +265,11 @@ def _layout_drawing(layout_key, cards, aspects):
     }
 
 
-def _wheel_drawing(layout_key, cards, aspects):
+def _wheel_drawing(layout_key, cards, aspects, pairs=()):
     n = len(cards)
-    geo = WHEEL[36 if n > 12 else 12]
+    geo = dict(WHEEL[36 if n > 12 else 12])
+    if layout_key == "9":
+        geo["r_out"] = HOUSE_R_OUT   # a wider band, to fit each house's definition
     w, h = geo["card"]
     coords = SPREAD_DEFAULT_COORDINATES[layout_key][:n]
     angles = [math.degrees(math.atan2(y, x)) % 360 for x, y in coords]
@@ -223,11 +282,13 @@ def _wheel_drawing(layout_key, cards, aspects):
         sectors.append({"d": _sector_path(geo["r_in"], geo["r_band"], ang - half, ang + half),
                         "color": card["color"], "title": card["position_name"]})
         lx, ly = _svg_point((geo["r_band"] + geo["r_out"]) / 2, ang)
+        sub = []
         if layout_key == "9":
             text = f"House {i}"
+            sub = _note_lines(position_note(card["position_name"]))
         else:
             text = (SIGN_GLYPHS.get(card["label"], "") + " " + card["label"]).strip()
-        labels.append({"x": lx, "y": ly, "text": text})
+        labels.append({"x": lx, "y": ly, "text": text, "sub": [s_ for s_ in sub if s_]})
 
     band = []
     if n == 36:
@@ -244,9 +305,14 @@ def _wheel_drawing(layout_key, cards, aspects):
     ends = [_svg_point(r_line, ang) for ang in angles]
     lines = [dict(a, x1=ends[a["a"]][0], y1=ends[a["a"]][1],
                   x2=ends[a["b"]][0], y2=ends[a["b"]][1]) for a in aspects]
+    # Element pairs run round the inside of the card ring, between neighbouring cards.
+    r_pair = (geo["r_in"] + geo["r_card"] - geo["card"][1] / 2) / 2
+    pair_links = [_pair_link(p, *_ring_arc(r_pair, angles[p["a"]], angles[p["b"]])) for p in pairs]
     r = geo["r_out"] + PAD
     return {
         "kind": "wheel",
+        "pair_links": pair_links,
+        "badge_r": 9 if n > 12 else 10,
         "viewbox": f"{-r} {-r} {2 * r} {2 * r}",
         "width": 2 * r,
         "r_out": geo["r_out"], "r_band": geo["r_band"], "r_in": geo["r_in"], "r_line": r_line,
@@ -259,14 +325,17 @@ def _wheel_drawing(layout_key, cards, aspects):
     }
 
 
-def segment_drawing(layout_key, cards, aspects):
-    """Pixel geometry for one segment, or a plain card row when it has no layout."""
+def segment_drawing(layout_key, cards, aspects, pairs=()):
+    """Pixel geometry for one segment, or a plain card row when it has no layout.
+
+    `pairs` are the segment's element pairs ({a, b, score}, segment-local indices).
+    """
     coords = SPREAD_DEFAULT_COORDINATES.get(layout_key)
     if not coords or len(coords) < len(cards):
-        return {"kind": "row", "slots": cards, "lines": []}
+        return {"kind": "row", "slots": cards, "lines": [], "pair_links": []}
     if layout_key in RING_LAYOUT_ASPECTS:
-        return _wheel_drawing(layout_key, cards, aspects)
-    return _layout_drawing(layout_key, cards, aspects)
+        return _wheel_drawing(layout_key, cards, aspects, pairs)
+    return _layout_drawing(layout_key, cards, aspects, pairs)
 
 
 def _dignity_counts(entries):
@@ -360,6 +429,105 @@ def withheld_view(withheld):
                          for e, c in withheld["elements"].items() if c]}
 
 
+SCORE_RULE = ("Element scores follow Book T: the same element +2, friendly elements +1, contrary "
+              "elements \u22122 (Fire with Water, Air with Earth), and 0 when either card is Spirit.")
+
+
+def element_reason(e1, e2):
+    """Why two elements score what they do, in a few words: 'Fire and Water: contrary elements'."""
+    score, _ = element_dignity(e1, e2)
+    if score == DIGNITY_SAME:
+        return f"both {e1}: same element"
+    if score == DIGNITY_CONTRARY:
+        return f"{e1} and {e2}: contrary elements"
+    if score == DIGNITY_FRIENDLY:
+        return f"{e1} and {e2}: friendly elements"
+    return f"{e1} and {e2}: Spirit scores 0 with any element"
+
+
+def link_explainer(layout_key, n_cards, has_layout):
+    """Plain sentences on how one operation links its cards. Mechanics only, never meaning."""
+    if n_cards < 2:
+        return []
+    unit = RING_UNITS.get(layout_key)
+    if unit and has_layout:
+        n = len(SPREAD_DEFAULT_COORDINATES[layout_key])
+        step = 360 / n
+        names = [a for a in ("Sextile", "Square", "Trine", "Opposition")
+                 if a in RING_LAYOUT_ASPECTS[layout_key]]
+        bits = [f"{round(ASPECTS_BY_NAME[a].angle / step)} {unit}s apart is {'an' if a[0] in 'AEIOU' else 'a'} {a.lower()} "
+                f"({ASPECTS_BY_NAME[a].angle:g}\u00b0, {_signed(ASPECTS_BY_NAME[a].score)})" for a in names]
+        per_card = sum(1 if ASPECTS_BY_NAME[a].angle == 180 else 2 for a in names)
+        return [
+            f"The {n_cards} cards sit round a wheel of {n} {unit}s, one in each {unit}.",
+            f"Element pairs link each {unit} with the next, and the last with the first, so the "
+            f"circle closes. {SCORE_RULE}",
+            f"Aspect lines link every two {unit}s that stand an exact aspect apart: {_and(bits)}. "
+            f"So each card has {per_card} aspect links. They belong to the wheel and are the same in "
+            f"every reading; what changes is which cards sit at the two ends.",
+        ]
+    if layout_key == "8":
+        first = (f"The {n_cards} cards are laid out in a heap around the significator and linked in the "
+                 f"order they were dealt: 1 with 2, 2 with 3, and so on to {n_cards - 1} with {n_cards}.")
+    else:
+        first = "The cards are linked in the order they were laid out: 1 with 2, 2 with 3, and so on."
+    lines = [first, f"Each pair gets an element score. {SCORE_RULE}"]
+    if has_layout:
+        lines.append("Each pair also gets an aspect: the angle between the two places, seen from the "
+                     "middle of the layout, matched to the nearest astrological aspect. A pair with no "
+                     "aspect is drawn dashed. The angle belongs to the layout, so it is the same in "
+                     "every reading.")
+    return lines
+
+
+def _apart_text(layout_key, aspect):
+    unit = RING_UNITS.get(layout_key)
+    angle = aspect.get("angle")
+    if angle is None:
+        return ""
+    if unit:
+        step = 360 / len(SPREAD_DEFAULT_COORDINATES[layout_key])
+        return f"{round(angle / step)} {unit}s apart ({angle:g}\u00b0)"
+    if aspect["type"] == UNASPECTED:
+        return f"{angle:g}\u00b0 apart, no aspect within orb"
+    return f"{angle:g}\u00b0 apart round the middle"
+
+
+def _where(layout_key, card):
+    """How the link list names a card's place: numbered like the drawing's badges, unless the
+    label already is ('Decan 5: ...'); a house also gives its definition."""
+    if re.match(r"\w+ \d+:", card["label"]):
+        return card["label"]
+    where = f"{card['index'] + 1}. {card['label']}"
+    note = position_note(card["position_name"]) if layout_key == "9" else ""
+    return f"{where}: {note}" if note else where
+
+
+def link_view(layout_key, cards, aspects, pairs):
+    """Data for a segment's link inspector: its cards, element pairs and aspects, each link
+    with a short reason. Indices are segment-local."""
+    ring = layout_key in RING_LAYOUT_ASPECTS
+    return {
+        "unit": RING_UNITS.get(layout_key, "place"),
+        "cards": [dict({k: c[k] for k in ("index", "gindex", "position_name", "title", "element",
+                                          "color", "image", "attribution")},
+                       # Numbered like the drawing's badges, unless the label already is ("Decan 5: ...").
+                       where=_where(layout_key, c))
+                  for c in cards],
+        "pairs": [dict(p, score_text=_signed(p["score"]),
+                       why=element_reason(cards[p["a"]]["element"], cards[p["b"]]["element"]))
+                  for p in pairs],
+        "aspects": [{
+            "a": a["a"], "b": a["b"], "type": a["type"], "color": a["color"],
+            "score": a["score"], "score_text": a["score_text"], "apart": _apart_text(layout_key, a),
+            # On a wheel the aspect pairs are not neighbours, so they carry their own element score.
+            "cards": (f"{element_reason(cards[a['a']]['element'], cards[a['b']]['element'])} "
+                      f"({_signed(element_dignity(cards[a['a']]['element'], cards[a['b']]['element'])[0])})"
+                      if ring else ""),
+        } for a in aspects],
+    }
+
+
 def build_report_view(spread_key, spread_results, element_counts, dignity_matrix, spatial_matrix,
                       macro_framework, framework_basis):
     """Everything report.html needs beyond the raw prompt: summary first, then segments."""
@@ -373,11 +541,14 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         seg_aspects = [_aspect_view(s, start) for s in spatial_matrix
                        if start <= s["from_index"] < end]
         seg_dignity = [d for d in dignity_matrix if start <= d["from_index"] < end]
+        seg_pairs = [{"a": d["from_index"] - start, "b": d["to_index"] - start, "score": d["score"]}
+                     for d in seg_dignity]
         all_aspects.extend(seg_aspects)
         for a in seg_aspects:
             for i in (a["a"] + start, a["b"] + start):
                 aspects_by_card.setdefault(i, []).append(f"{a['label']} ({a['score_text']}): {a['pair']}")
         seg_elements = Counter(c["element"] for c in seg_cards)
+        drawing = segment_drawing(layout_key, seg_cards, seg_aspects, seg_pairs)
         segments.append({
             "id": f"op{number}",
             "name": name or "Spread",
@@ -388,7 +559,9 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             "aspects": seg_aspects,
             "aspect_counts": _aspect_counts(seg_aspects),
             "ill_dignified": [c for c in seg_cards if not c["dignified"]],
-            "drawing": segment_drawing(layout_key, seg_cards, seg_aspects),
+            "drawing": drawing,
+            "how": link_explainer(layout_key, len(seg_cards), drawing["kind"] != "row"),
+            "links": link_view(layout_key, seg_cards, seg_aspects, seg_pairs),
         })
 
     element_rows = _element_rows(element_counts)
@@ -411,5 +584,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "segments": segments,
         "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix),
         "aspect_types": [{"type": t, "color": ASPECT_COLORS[t], "strong": is_strong(
-            next((a.score for a in ASPECTS if a.name == t), 0))} for t in ASPECT_TYPES],
+            next((a.score for a in ASPECTS if a.name == t), 0)),
+            "key": (f"{ASPECTS_BY_NAME[t].angle:g}\u00b0, {_signed(ASPECTS_BY_NAME[t].score)}"
+                    if t in ASPECTS_BY_NAME else "no aspect, 0")} for t in ASPECT_TYPES],
     }

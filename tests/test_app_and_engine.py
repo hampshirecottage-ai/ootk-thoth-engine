@@ -808,6 +808,48 @@ def test_report_view_draws_every_operation():
     assert view["headline"]
 
 
+def test_report_view_explains_and_lists_each_operations_links():
+    from ootk import visual
+    elements = ["Wands", "Cups", "Swords", "Pentacles"]
+    cards = [fake_card(f"C{i}", suit=elements[i % 4], attribution=None) for i in range(75)]
+    results = [{"position_number": i + 1, "position_name": p, "card_data": c}
+               for i, (p, c) in enumerate(zip(spreads.spread_positions("12"), cards))]
+    dignity = analysis.calculate_elemental_dignities(results, "12")
+    spatial = analysis.analyze_spatial_vectors(results, "12")
+    segs = visual.build_report_view("12", results, analysis.analyze_elemental_balance(results),
+                                    dignity, spatial, "x", "y")["segments"]
+    assert "1 with 2" in segs[0]["how"][0]
+    assert "4 houses apart is a trine (120\u00b0, +2)" in segs[1]["how"][2]
+    assert "18 decans apart is an opposition (180\u00b0, -1)" in segs[3]["how"][2]
+    for seg in segs:
+        links = seg["links"]
+        # Every element pair and aspect is listed once, and drawn once in element-pair mode.
+        assert len(links["pairs"]) == len(seg["dignity_rows"]) == len(seg["drawing"]["pair_links"])
+        assert len(links["aspects"]) == len(seg["aspects"])
+        assert all(p["why"] for p in links["pairs"])
+    # On a wheel each card has two neighbours and seven aspects; each aspect also gives the cards' score.
+    decans = segs[3]["links"]
+    for i in range(36):
+        assert sum(i in (p["a"], p["b"]) for p in decans["pairs"]) == 2
+        assert sum(i in (a["a"], a["b"]) for a in decans["aspects"]) == 7
+    assert decans["aspects"][0]["apart"] == "18 decans apart (180\u00b0)"
+    assert decans["aspects"][0]["cards"]
+    assert segs[1]["links"]["cards"][2]["where"] == "3. Third House: Local Mind & Travel"
+    assert segs[2]["links"]["cards"][0]["where"] == "1. Aries"
+    houses = segs[1]["drawing"]["labels"]
+    assert houses[0] == dict(houses[0], text="House 1", sub=["Ascendant /", "Physical Self"])
+    assert houses[6]["sub"] == ["Partnerships"]
+
+
+@pytest.mark.parametrize("e1,e2,text", [
+    ("Fire", "Fire", "both Fire: same element"), ("Fire", "Water", "Fire and Water: contrary elements"),
+    ("Air", "Fire", "Air and Fire: friendly elements"), ("Spirit", "Earth", "Spirit and Earth: Spirit scores 0 with any element"),
+])
+def test_element_reason(e1, e2, text):
+    from ootk import visual
+    assert visual.element_reason(e1, e2) == text
+
+
 def test_report_view_without_layout_falls_back_to_a_row():
     from ootk import visual
     cards = [fake_card(f"C{i}") for i in range(10)]
@@ -836,6 +878,9 @@ def test_report_embeds_card_details_and_reading_json(client):
         return json.loads(m.group(1))
     cards = embedded("cardDetails")
     assert [c["title"] for c in cards] == ["A", "B", "C"]
+    links = embedded("links-op1")
+    assert [c["title"] for c in links["cards"]] == ["A", "B", "C"] and len(links["pairs"]) == 2
+    assert "How the cards are linked" in r.text and 'id="inspect-op1"' in r.text
     assert ["Platonic solid", "Tetrahedron"] in cards[0]["fields"]
     assert cards[1]["dignities"]                                  # middle card touches two pairs
     reading = embedded("readingData")

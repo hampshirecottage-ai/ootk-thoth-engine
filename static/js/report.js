@@ -68,27 +68,103 @@ try {
 } catch (e) {}
 if (document.getElementById("filters")) { syncChips(); applyFilters(); }
 
-// ---- Hover (or tap, on a touch screen) a card to light up its aspect lines ----
-function lightUp(svg, slot) {
-    const i = slot.dataset.idx;
-    document.querySelectorAll("svg.focus").forEach(o => o.classList.remove("focus"));
+// ---- Operation drawings: hover lights a card's links, a tap opens the link inspector ----
+const esc = v => String(v).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+const LINKS = {};
+document.querySelectorAll('script[id^="links-"]').forEach(s => {
+    try { LINKS[s.id.slice(6)] = JSON.parse(s.textContent); } catch (e) {}
+});
+const selectedIn = {};   // segment id -> selected card index (segment-local)
+
+// Light the lines (aspects or element pairs, whichever is drawn) touching card i, and fade
+// the cards it has no link to.
+function lightUp(svg, i) {
+    i = String(i);
     svg.classList.add("focus");
-    svg.querySelectorAll(".aspect-line").forEach(l => l.classList.toggle("lit", l.dataset.a === i || l.dataset.b === i));
+    const pairs = svg.classList.contains("mode-pairs");
+    const linked = new Set([i]);
+    svg.querySelectorAll(pairs ? ".pair-link, .pair-badge" : ".aspect-line").forEach(l => {
+        const on = l.dataset.a === i || l.dataset.b === i;
+        l.classList.toggle("lit", on);
+        if (on && !l.classList.contains("is-hidden")) { linked.add(l.dataset.a); linked.add(l.dataset.b); }
+    });
+    svg.querySelectorAll(".card-slot").forEach(s => s.classList.toggle("unlinked", !linked.has(s.dataset.idx)));
 }
+function unlight(svg) {
+    svg.classList.remove("focus");
+    svg.querySelectorAll(".unlinked").forEach(s => s.classList.remove("unlinked"));
+}
+function restore(svg) {
+    const sel = selectedIn[svg.dataset.seg];
+    if (sel === undefined) unlight(svg); else lightUp(svg, sel);
+}
+
+const signedText = n => (n > 0 ? "+" : "") + n;
+const scoreChip = (n, text) => `<span class="score ${n > 0 ? "pos" : n < 0 ? "neg" : ""}">${esc(text || signedText(n))}</span>`;
+
+function inspect(seg, i) {
+    const data = LINKS[seg], box = document.getElementById(`inspect-${seg}`);
+    if (!data || !box) return;
+    const svg = document.querySelector(`svg[data-seg="${seg}"]`);
+    selectedIn[seg] = i;
+    if (svg) {
+        svg.querySelectorAll(".card-slot").forEach(s => s.classList.toggle("selected", s.dataset.idx === String(i)));
+        lightUp(svg, i);
+    }
+    const c = data.cards[i];
+    const who = j => {
+        const o = data.cards[j];
+        return `<button type="button" data-pick="${j}">${esc(o.title)}</button> <span class="why">(${esc(o.where)}, <i class="dot" style="background:${o.color}"></i>${esc(o.element)})</span>`;
+    };
+    const other = l => (l.a === i ? l.b : l.a);
+    const pairs = data.pairs.filter(p => p.a === i || p.b === i);
+    const aspects = data.aspects.filter(a => a.a === i || a.b === i);
+    const img = c.image
+        ? `<img src="${esc(c.image)}" alt="${esc(c.title)}" style="border-color:${c.color}" decoding="async">`
+        : `<div class="noimg" style="border-color:${c.color}">${esc(c.title)}</div>`;
+    let html = `<div class="li-head">${img}<div>
+        <div class="li-pos">${esc(c.position_name)}</div>
+        <div class="li-title">${esc(c.title)}</div>
+        <div><i class="dot" style="background:${c.color}"></i>${esc(c.element)}${c.attribution ? " · " + esc(c.attribution) : ""}</div>
+        <div class="li-pos">${pairs.length} element pair${pairs.length === 1 ? "" : "s"}${data.aspects.length ? ` · ${aspects.length} aspect link${aspects.length === 1 ? "" : "s"}` : ""}</div>
+        </div></div>`;
+    if (pairs.length) {
+        html += `<h4>Element pairs (its neighbours)</h4><ul>` + pairs.map(p =>
+            `<li>${scoreChip(p.score)} with ${who(other(p))}<br><span class="why">${esc(p.why)}</span></li>`).join("") + `</ul>`;
+    }
+    if (aspects.length) {
+        html += `<h4>Aspects</h4><ul>` + aspects.map(a =>
+            `<li><i class="dot" style="background:${a.color}"></i><strong>${esc(a.type)}</strong> ${scoreChip(a.score, a.score_text)} with ${who(other(a))}` +
+            `<br><span class="why">${esc(a.apart)}${a.cards ? ". Cards: " + esc(a.cards) : ""}</span></li>`).join("") + `</ul>`;
+    }
+    const n = data.cards.length;
+    html += `<div class="more"><button class="chip" type="button" data-pick="${(i + n - 1) % n}" aria-label="Previous card">‹ Prev</button> <button class="chip" type="button" data-pick="${(i + 1) % n}" aria-label="Next card">Next ›</button> <button class="chip" type="button" data-more="${c.gindex}">All card details</button> <button class="chip" type="button" data-clear="${seg}">Clear</button></div>`;
+    box.innerHTML = html;
+}
+function clearInspect(seg) {
+    delete selectedIn[seg];
+    const svg = document.querySelector(`svg[data-seg="${seg}"]`);
+    if (svg) { svg.querySelectorAll(".card-slot.selected").forEach(s => s.classList.remove("selected")); unlight(svg); }
+    const box = document.getElementById(`inspect-${seg}`);
+    if (box && box.dataset.intro) box.innerHTML = box.dataset.intro;
+}
+document.querySelectorAll(".link-inspector").forEach(box => { box.dataset.intro = box.innerHTML; });
+
 const hoverable = matchMedia("(hover: hover)").matches;
 document.querySelectorAll("svg[data-seg]").forEach(svg => {
     svg.querySelectorAll(".card-slot").forEach(slot => {
-        slot.addEventListener("mouseenter", () => { if (hoverable) lightUp(svg, slot); });
-        slot.addEventListener("mouseleave", () => { if (hoverable) svg.classList.remove("focus"); });
-        // A tap has no hover, so it keeps the card's lines lit until the details close.
-        // On a phone the details open as a bottom sheet, so bring the drawing up above it.
-        slot.addEventListener("click", () => {
-            if (hoverable) return;
-            lightUp(svg, slot);
-            if (matchMedia("(max-width: 640px)").matches) svg.scrollIntoView({ block: "start", behavior: "smooth" });
-        });
+        slot.addEventListener("mouseenter", () => { if (hoverable) lightUp(svg, slot.dataset.idx); });
+        slot.addEventListener("mouseleave", () => { if (hoverable) restore(svg); });
     });
 });
+
+// Aspect lines or element pairs, per drawing.
+document.querySelectorAll("[data-link-mode]").forEach(b => b.addEventListener("click", () => {
+    const seg = b.dataset.for, svg = document.querySelector(`svg[data-seg="${seg}"]`);
+    svg.classList.toggle("mode-pairs", b.dataset.linkMode === "pairs");
+    document.querySelectorAll(`[data-link-mode][data-for="${seg}"]`).forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+    restore(svg);
+}));
 
 // ---- Theme ----
 document.getElementById("themeToggle").addEventListener("click", () => {
@@ -100,7 +176,6 @@ document.getElementById("themeToggle").addEventListener("click", () => {
 // ---- Card detail panel ----
 const CARDS = JSON.parse(document.getElementById("cardDetails").textContent);
 const panel = document.getElementById("detailPanel");
-const esc = v => String(v).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
 
 function openCard(i) {
     const c = CARDS[i];
@@ -122,11 +197,23 @@ function openCard(i) {
 function closeCard() {
     panel.classList.remove("open");
     panel.setAttribute("aria-hidden", "true");
-    document.querySelectorAll("[data-card].selected").forEach(el => el.classList.remove("selected"));
-    if (!hoverable) document.querySelectorAll("svg.focus").forEach(o => o.classList.remove("focus"));
+    document.querySelectorAll("[data-card].selected").forEach(el => { if (!el.matches(".card-slot")) el.classList.remove("selected"); });
 }
 document.addEventListener("click", e => {
+    const pick = e.target.closest("[data-pick]"), more = e.target.closest("[data-more]"), clear = e.target.closest("[data-clear]");
+    if (pick) { inspect(pick.closest(".link-inspector").dataset.seg, Number(pick.dataset.pick)); return; }
+    if (more) { openCard(Number(more.dataset.more)); return; }
+    if (clear) { clearInspect(clear.dataset.clear); return; }
     const el = e.target.closest("[data-card]");
+    // A card in an operation drawing opens that operation's link inspector, below the drawing.
+    const slot = el && el.matches(".card-slot") && el.closest("svg[data-seg]");
+    if (slot && document.getElementById(`inspect-${slot.dataset.seg}`)) {
+        if (panel.classList.contains("open")) closeCard();
+        inspect(slot.dataset.seg, Number(el.dataset.idx));
+        const box = document.getElementById(`inspect-${slot.dataset.seg}`);
+        if (box.getBoundingClientRect().top > innerHeight - 120) box.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        return;
+    }
     if (el) openCard(Number(el.dataset.card));
     // A tap outside the open panel closes it (on a phone it covers the lower part of the screen).
     else if (panel.classList.contains("open") && !panel.contains(e.target)) closeCard();
@@ -134,7 +221,7 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeCard();
     const el = e.target.closest && e.target.closest("[data-card]");
-    if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openCard(Number(el.dataset.card)); }
+    if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); el.dispatchEvent(new MouseEvent("click", { bubbles: true })); }
 });
 document.getElementById("dClose").addEventListener("click", closeCard);
 
@@ -179,6 +266,9 @@ document.querySelectorAll("[data-svg-download]").forEach(btn => btn.addEventList
     const svg = document.querySelector(`svg[data-seg="${btn.dataset.svgDownload}"]`);
     const clone = svg.cloneNode(true);
     clone.classList.remove("focus");
+    clone.querySelectorAll(".unlinked, .selected, .lit").forEach(el => el.classList.remove("unlinked", "selected", "lit"));
+    // Keep only the links drawn now: aspect lines or element pairs.
+    clone.querySelectorAll(svg.classList.contains("mode-pairs") ? ".lines" : ".pair-links, .pair-badges").forEach(el => el.remove());
     // Standalone file: absolute image links and the current theme's colours baked in.
     clone.querySelectorAll("image").forEach(img => img.setAttribute("href", new URL(img.getAttribute("href"), location.href).href));
     clone.querySelectorAll(".is-hidden").forEach(el => el.remove());
@@ -188,7 +278,7 @@ document.querySelectorAll("[data-svg-download]").forEach(btn => btn.addEventList
     style.textContent = `text{fill:${v("--text")};font-family:sans-serif}.card-border{fill:none;stroke-width:2.5}
 .aspect-line{stroke-linecap:round}.aspect-line.unaspected{stroke-dasharray:5 5}.card-base{fill:${v("--card-base")}}
 .w-face{fill:${v("--svg-face")};stroke:${v("--svg-rule")}}.w-hole{fill:${v("--svg-hole")};stroke:${v("--svg-rule")}}
-.w-rule{fill:none;stroke:${v("--svg-rule")}}.w-sector{stroke:${v("--svg-sector")}}.badge{fill:${v("--badge")}}`;
+.w-rule{fill:none;stroke:${v("--svg-rule")}}.pair-link{fill:none;stroke-linecap:round}.pair-badge text{fill:#0d2617}.w-sector{stroke:${v("--svg-sector")}}.badge{fill:${v("--badge")}}`;
     // Paint the panel colour behind the drawing so the light labels stay readable in any viewer.
     const [vx, vy, vw, vh] = svg.getAttribute("viewBox").split(/[\s,]+/);
     const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
