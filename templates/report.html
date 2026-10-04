@@ -141,7 +141,45 @@
         .card-row:hover td, .card-row.selected td { background: var(--mark); }
         .table-wrap { overflow-x: auto; }
         .search { background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 999px; padding: 5px 12px; font-size: 0.85em; min-width: 200px; }
-        .svg-actions { position: absolute; top: 8px; right: 8px; }
+        .drawing-tools { display: flex; flex-wrap: wrap; gap: 6px 10px; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .drawing-tools > [data-svg-download] { margin-left: auto; }
+        .drawing .chip.mode[aria-pressed="false"] { opacity: 1; }
+        .drawing .chip.mode[aria-pressed="true"] { background: #0d2617; color: #ffe0a0; border-color: #0d2617; }
+        svg .pair-links, svg .pair-badges { display: none; }
+        svg.mode-pairs .pair-links, svg.mode-pairs .pair-badges { display: inline; }
+        svg.mode-pairs .lines { display: none; }
+        svg .pair-link { fill: none; stroke-linecap: round; transition: opacity 0.15s; }
+        svg .pair-badge text { fill: #0d2617; }
+        svg.focus .pair-link, svg.focus .pair-badge { opacity: 0.12; }
+        svg.focus .pair-link.lit, svg.focus .pair-badge.lit { opacity: 1; }
+        svg .card-slot.unlinked { opacity: 0.3; }
+        .how-links { font-size: 0.9em; line-height: 1.5; margin: 0 0 12px; }
+        .how-links h3 { margin: 0 0 4px; }
+        .how-links p { margin: 0 0 6px; max-width: 60em; }
+        .link-inspector { margin-top: 10px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 6px 6px 0; font-size: 0.88em; line-height: 1.45; }
+        .link-inspector p { margin: 0; }
+        @media (min-width: 1000px) {
+            /* Wide screens: the inspector sits beside the drawing, as on the start page. */
+            .op-view { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; align-items: start; }
+            .op-view .link-inspector { margin-top: 0; position: sticky; top: 76px; max-height: calc(100vh - 92px); overflow-y: auto; }
+        }
+        .li-head { display: flex; gap: 12px; align-items: flex-start; }
+        .li-head img, .li-head .noimg { width: 64px; height: 100px; object-fit: cover; border-radius: 4px; border: 2px solid; flex: none; }
+        .li-pos { color: var(--muted); font-size: 0.92em; }
+        .li-title { font-weight: 700; font-size: 1.05em; }
+        .link-inspector h4 { margin: 10px 0 4px; font-size: 0.95em; }
+        .link-inspector ul { list-style: none; margin: 0; padding: 0; }
+        .link-inspector li { padding: 5px 0; border-top: 1px solid var(--line); }
+        .link-inspector li button { background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: inherit; text-decoration: underline; cursor: pointer; text-align: left; }
+        .link-inspector .why { color: var(--muted); }
+        .link-inspector .key .score { margin-left: 6px; }
+        .link-inspector .key .score:first-child { margin-left: 0; }
+        .link-inspector ul.key { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+        .link-inspector ul.key li { border: none; padding: 0; }
+        .link-inspector .more { margin-top: 8px; }
+        .score { display: inline-block; min-width: 2.2em; text-align: center; border-radius: 4px; font-weight: 700; font-size: 0.9em; padding: 0 4px; margin-right: 4px; background: var(--code-bg); border: 1px solid var(--line); }
+        .score.pos { background: #57a77340; }
+        .score.neg { background: #e4572e40; }
         /* Card detail panel */
         .detail { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: var(--panel); border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(0,0,0,0.35); z-index: 20; overflow-y: auto; padding: 18px; transform: translateX(105%); transition: transform 0.2s; }
         .detail.open { transform: none; }
@@ -176,7 +214,6 @@
             /* Tables scroll sideways rather than squeezing every column to a word per line. */
             .table-wrap table { min-width: 540px; }
             .ops-table td:first-child { min-width: 11em; }
-            .svg-actions { position: static; text-align: right; margin-bottom: 6px; }
             .drawing { padding: 6px; }
             /* Card details: a bottom sheet, so the drawing and its lit aspects stay in view above it. */
             .detail { top: auto; left: 0; width: 100%; max-height: 55vh; border-left: none; border-top: 1px solid var(--line); border-radius: 14px 14px 0 0; box-shadow: 0 -8px 24px rgba(0,0,0,0.35); transform: translateY(105%); padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
@@ -198,7 +235,7 @@
             .drawing { --drawing-bg: #fff; --text: #000; --muted: #555; --svg-face: #fff; --svg-hole: #fff; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #eee; --badge: #fff; }
             :root h1, :root[data-theme="light"] h1 { color: #000; }
             body { padding: 0; }
-            .topbar, .filters, .svg-actions, .detail, .no-print { display: none !important; }
+            .topbar, .filters, .drawing-tools, .detail, .no-print { display: none !important; }
             details.section, .panel { break-inside: avoid-page; border-color: #ccc; }
             details.section > summary::before { display: none; }
         }
@@ -366,6 +403,13 @@
             <span class="muted">{{ seg.cards | length }} card{{ 's' if seg.cards | length != 1 }} · dignity {{ signed(seg.dignity.net) }} · <span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> aspects shown</span>
         </summary>
         <div class="body">
+            {% if seg.how %}
+            <div class="how-links">
+                <h3>How the cards are linked</h3>
+                {% for line in seg.how %}<p>{{ line }}</p>{% endfor %}
+            </div>
+            {% endif %}
+            <div class="op-view">
             <div class="drawing">
             {% if d.kind == 'row' %}
                 <div class="row-cards">
@@ -378,7 +422,15 @@
                 </div>
                 <p class="muted" style="font-size:0.85em">This spread has no geometric layout, so no aspects are drawn.</p>
             {% else %}
-                <div class="svg-actions"><button class="chip" type="button" data-svg-download="{{ seg.id }}">Download SVG</button></div>
+                <div class="drawing-tools">
+                    {% if d.pair_links %}
+                    <div class="group link-modes" role="group" aria-label="Which links to draw">
+                        <button type="button" class="chip mode" data-link-mode="aspects" data-for="{{ seg.id }}" aria-pressed="true">Aspect lines</button>
+                        <button type="button" class="chip mode" data-link-mode="pairs" data-for="{{ seg.id }}" aria-pressed="false">Element pairs</button>
+                    </div>
+                    {% endif %}
+                    <button class="chip" type="button" data-svg-download="{{ seg.id }}">Download SVG</button>
+                </div>
                 <svg viewBox="{{ d.viewbox }}" width="{{ d.width }}" data-seg="{{ seg.id }}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ seg.name }} layout">
                     <defs>
                         {% for c in d.slots %}<clipPath id="clip-{{ seg.id }}-{{ c.index }}"><rect x="{{ c.x }}" y="{{ c.y }}" width="{{ c.w }}" height="{{ c.h }}" rx="3"/></clipPath>{% endfor %}
@@ -404,6 +456,9 @@
                     </g>
                     {% endset %}
                     {{ lines_svg }}
+                    <g class="pair-links">
+                    {% for p in d.pair_links %}<path class="pair-link" data-a="{{ p.a }}" data-b="{{ p.b }}" d="{{ p.d }}" stroke="{{ p.color }}" stroke-width="{{ 5 if p.score == 2 else 3.5 if p.score < 0 else 2.5 }}" {{ 'stroke-dasharray="3 4"' | safe if p.score == 0 }}/>{% endfor %}
+                    </g>
 
                     {% for c in d.slots %}
                     <g class="card-slot" data-idx="{{ c.index }}" data-card="{{ c.gindex }}" data-search="{{ c.search }}" tabindex="0" role="button">
@@ -417,6 +472,9 @@
                         <rect class="card-border" x="{{ c.x }}" y="{{ c.y }}" width="{{ c.w }}" height="{{ c.h }}" rx="3" stroke="{{ c.color }}" {{ 'stroke-dasharray="4,3"' | safe if not c.dignified }}/>
                     </g>
                     {% endfor %}
+                    <g class="pair-badges" pointer-events="none">
+                    {% for p in d.pair_links %}<g class="pair-badge" data-a="{{ p.a }}" data-b="{{ p.b }}"><circle cx="{{ p.bx }}" cy="{{ p.by }}" r="{{ d.badge_r }}" fill="{{ p.color }}"/><text x="{{ p.bx }}" y="{{ p.by }}" font-size="{{ d.badge_r }}" font-weight="700" text-anchor="middle" dominant-baseline="central">{{ p.score_text }}</text></g>{% endfor %}
+                    </g>
                     <g class="badges" pointer-events="none">
                     {% for c in d.slots %}
                         <circle cx="{{ c.x + 2 }}" cy="{{ c.y + 2 }}" r="{{ 8 if c.w < 50 else 10 }}" class="badge" stroke="{{ c.color }}"/>
@@ -424,7 +482,21 @@
                     {% endfor %}
                     </g>
                 </svg>
-                <p class="muted" style="font-size:0.8em; margin:6px 0 0">Card borders show the element; a dashed border marks an ill-dignified card. <span class="hover-only">Hover</span><span class="touch-only">Tap</span> a card to light up its aspects.</p>
+                <p class="muted" style="font-size:0.8em; margin:6px 0 0">Card borders show the element; a dashed border marks an ill-dignified card. Tap a card to see everything it is linked to.</p>
+            {% endif %}
+            </div>
+            {% if seg.links.cards | length > 1 %}
+            <div class="link-inspector no-print" id="inspect-{{ seg.id }}" data-seg="{{ seg.id }}" aria-live="polite">
+                <p>Tap a card in the drawing to see what it is linked to and why. This operation has {{ seg.links.pairs | length }} element pair{{ 's' if seg.links.pairs | length != 1 }}{% if seg.links.aspects %} and {{ seg.links.aspects | length }} aspect link{{ 's' if seg.links.aspects | length != 1 }}{% endif %}.</p>
+                <h4>Element pairs</h4>
+                <p class="key"><span class="score pos">+2</span> same element <span class="score pos">+1</span> friendly <span class="score neg">−2</span> contrary <span class="score">0</span> Spirit</p>
+                {% if seg.links.aspects %}
+                {% set present = seg.aspect_counts.by_type | map(attribute='type') | list %}
+                <h4>Aspect lines</h4>
+                <ul class="key">{% for t in S.aspect_types if t.type in present %}<li><i class="dot" style="background:{{ t.color }}"></i>{{ t.type }} <span class="why">{{ t.key }}</span></li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <script type="application/json" id="links-{{ seg.id }}">{{ seg.links | tojson }}</script>
             {% endif %}
             </div>
 
