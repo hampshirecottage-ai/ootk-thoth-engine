@@ -44,7 +44,7 @@ document.querySelectorAll("[data-send-llm]").forEach(box => {
                 note.append(a, ". ");
             }
             if (link.filled) {
-                note.append(`${tab ? `Opened ${site.name}` : "The link has"} the prompt filled in.` +
+                note.append(`${tab ? `Opened ${site.name} with` : "The link has"} the prompt filled in.` +
                             (ok ? " It is on your clipboard too." : ""));
             } else if (ok) {
                 note.append(`Prompt copied. Paste it into ${site.name} (Ctrl+V, or ⌘V on a Mac).`);
