@@ -57,14 +57,14 @@
             {% endif %}
 
             <label for="topicInput">Question <span class="optional">(optional)</span></label>
-            <input type="text" name="topic" id="topicInput" placeholder="What would you like to look at?">
+            <input type="text" name="topic" id="topicInput" maxlength="2000" placeholder="What would you like to look at?">
 
             <details class="more" id="moreOptions">
                 <summary>More options <span class="more-sum" id="moreSummary"></span></summary>
                 {% if mode == "seed" %}
                 <label for="seedInput">Seed</label>
                 <div class="row">
-                    <input type="text" name="seed" id="seedInput" placeholder="blank = new seed" autocomplete="off">
+                    <input type="text" name="seed" id="seedInput" maxlength="64" placeholder="blank = new seed" autocomplete="off">
                     <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
                 </div>
                 <p class="hint">The same seed and settings always draw the same cards.</p>

@@ -189,22 +189,13 @@ applySettings(Object.assign(readStore(LAST_KEY, {}),
 // ---------- sample reading (start page only) ----------
 if ($("samplePrompt")) {
     $("copySample").addEventListener("click", e => {
-        const btn = e.currentTarget, label = btn.textContent;
-        if (!navigator.clipboard) return;
-        navigator.clipboard.writeText($("samplePrompt").textContent).then(() => {
-            btn.textContent = "Copied";
-            setTimeout(() => btn.textContent = label, 1200);
-        }, () => {});
+        ootkCopyButton(e.currentTarget, $("samplePrompt").textContent, $("samplePrompt"));
     });
     $("copySummary").addEventListener("click", e => {
-        const btn = e.currentTarget, label = btn.textContent;
-        if (!navigator.clipboard) return;
+        const btn = e.currentTarget;
         const paras = Array.from($("sampleSummary").querySelectorAll("p")).map(p => p.textContent.trim());
         const text = paras.join("\n\n") + "\n\n" + new URL(btn.dataset.link, location.href).href;
-        navigator.clipboard.writeText(text).then(() => {
-            btn.textContent = "Copied";
-            setTimeout(() => btn.textContent = label, 1200);
-        }, () => {});
+        ootkCopyButton(btn, text, $("sampleSummary"));
     });
     $("mechToggle").addEventListener("click", e => {
         const open = $("mechanics").hidden;

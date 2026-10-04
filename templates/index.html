@@ -240,6 +240,7 @@
 
     <script type="application/json" id="positionsData">{{ positions | tojson }}</script>
     {% if sample %}<script type="application/json" id="sampleData">{{ {"heap": sample.heap, "wheel": sample.wheel, "colors": element_colors} | tojson }}</script>{% endif %}
+    <script src="{{ static_url('js/copy.js') }}" defer></script>
     <script src="{{ static_url('js/index.js') }}" defer></script>
     <script src="{{ static_url('js/front-diagram.js') }}" defer></script>
 {% include "_site_footer.html" %}

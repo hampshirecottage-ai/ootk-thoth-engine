@@ -83,7 +83,7 @@
         </section>
 
         <nav class="daynav" aria-label="Other days">
-            <a href="/day/{{ previous }}">&larr; Previous day</a>
+            {% if previous %}<a href="/day/{{ previous }}">&larr; Previous day</a>{% endif %}
             {% if next %}<a href="/day/{{ next }}">Next day &rarr;</a>{% elif not is_today %}<a href="/day/{{ today }}">Today &rarr;</a>{% endif %}
         </nav>
 
@@ -104,11 +104,11 @@
             try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
         });
         document.getElementById("copyPrompt").addEventListener("click", (e) => {
-            const btn = e.currentTarget, text = document.getElementById("promptText").textContent;
-            const done = () => { const t = btn.textContent; btn.textContent = "Copied"; setTimeout(() => btn.textContent = t, 1200); };
-            if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, () => {});
+            const source = document.getElementById("promptText");
+            ootkCopyButton(e.currentTarget, source.textContent, source);
         });
     </script>
+    <script src="{{ static_url('js/copy.js') }}" defer></script>
     <script src="{{ static_url('js/send-to-llm.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>

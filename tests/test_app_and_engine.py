@@ -1159,3 +1159,101 @@ def test_sample_summary_states_facts_not_meanings():
 def test_start_page_sample_is_the_full_opening_of_the_key():
     assert app_module.SAMPLE_SETTINGS["spread_key"] == "12"
     assert app_module.SAMPLE_SETTINGS["significator"]
+
+
+# ---------- error handling: failures give a page, never a crash ----------
+
+HTML = {"Accept": "text/html"}
+
+
+def _db_down(*_args, **_kw):
+    raise app_module.psycopg.OperationalError("connection refused")
+
+
+def test_database_down_gives_a_retry_page_and_keeps_static_pages(client, monkeypatch):
+    monkeypatch.setattr(app_module, "get_db_connection", _db_down)
+    for path in ("/", "/pick", "/maps", "/day/2026-10-01", "/reading?seed=1&spread=3"):
+        r = client.get(path, headers=HTML)
+        assert r.status_code == 503, path
+        assert "isn&rsquo;t answering" in r.text or "isn’t answering" in r.text
+        assert "Try again" in r.text and r.headers["retry-after"] == "30"
+        assert "connection refused" not in r.text                  # no internals shown
+    r = client.post("/generate_report", headers=HTML, data={"spread_key": "3", "selected_cards": "A,B,C"})
+    assert r.status_code == 503
+    api = client.get("/maps")
+    assert api.status_code == 503 and "card database" in api.json()["detail"]
+    for path in ("/start", "/library", "/method"):
+        assert client.get(path).status_code == 200, path
+    examples = client.get("/examples")                               # listed, without card names
+    assert examples.status_code == 200 and "/reading?seed=777" in examples.text
+
+
+def test_connection_is_retried_once_after_a_quick_refusal(monkeypatch):
+    calls = []
+
+    def flaky(**kw):
+        calls.append(kw)
+        if len(calls) == 1:
+            raise app_module.psycopg.OperationalError("waking up")
+        return "conn"
+
+    monkeypatch.setattr(app_module.psycopg, "connect", flaky)
+    monkeypatch.setattr(app_module.time, "sleep", lambda s: None)
+    assert app_module.get_db_connection() == "conn" and len(calls) == 2
+    assert "connect_timeout" in calls[0]
+
+
+def test_outdated_database_is_a_page_not_a_server_exit(client, monkeypatch):
+    def outdated(conn, titles, system="thoth"):
+        raise db.DatabaseOutdated("column tc.french_number does not exist")
+
+    monkeypatch.setattr(app_module, "fetch_cards_correspondences", outdated)
+    r = client.get("/maps", headers=HTML)
+    assert r.status_code == 503 and "needs an update" in r.text
+
+
+def test_fetch_cards_raises_instead_of_exiting_on_a_missing_column():
+    class Cursor:
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def execute(self, *a):
+            raise db.psycopg.errors.UndefinedColumn()
+
+    class Conn:
+        def cursor(self): return Cursor()
+
+    with pytest.raises(db.DatabaseOutdated):
+        db.fetch_cards_correspondences(Conn(), ["The Fool"])
+
+
+def test_unexpected_errors_get_an_apology_page(client, monkeypatch):
+    def boom(*a, **kw):
+        raise RuntimeError("secret internals")
+
+    monkeypatch.setattr(app_module, "load_library", boom)
+    c = TestClient(app_module.app, raise_server_exceptions=False)
+    r = c.get("/library", headers=HTML)
+    assert r.status_code == 500 and "Something went wrong" in r.text
+    assert "secret internals" not in r.text and "Report a bug" in r.text
+
+
+def test_router_errors_and_incomplete_forms_render_pages(client):
+    r = client.get("/no-such-page", headers=HTML)
+    assert r.status_code == 404 and "Page not found" in r.text
+    assert client.get("/no-such-page").json() == {"detail": "Not Found"}     # API clients unchanged
+    r = client.post("/generate_report", headers=HTML, data={"topic": "x"})
+    assert r.status_code == 400 and "spread_key" in r.text and "Back to settings" in r.text
+    assert client.post("/generate_report", data={"topic": "x"}).status_code == 422
+
+
+def test_long_seed_and_topic_are_refused(seeded_client):
+    r = post(seeded_client, draw_mode="seed", seed="9" * 65, selected_cards="")
+    assert r.status_code == 400 and "at most 64" in r.json()["detail"]
+    r = post(seeded_client, topic="q" * 2001)
+    assert r.status_code == 400 and "at most 2000" in r.json()["detail"]
+    assert "count" not in seeded_client.saved
+
+
+def test_earliest_day_has_no_previous_link(seeded_client):
+    r = seeded_client.get("/day/0001-01-01")
+    assert r.status_code == 200 and "Previous day" not in r.text

@@ -28,11 +28,31 @@ document.querySelectorAll("[data-send-llm]").forEach(box => {
         const site = LLM_SITES[select.value];
         const text = document.getElementById(box.dataset.sendLlm).textContent;
         const link = llmLink(site, text);
-        if (navigator.clipboard) navigator.clipboard.writeText(text).catch(() => {});
-        // Open in the same click, before any await, so pop-up blockers allow it.
-        window.open(link.href, "_blank", "noopener");
-        note.textContent = link.filled
-            ? `Opened ${site.name} with the prompt filled in. It is on your clipboard too.`
-            : `Prompt copied. Paste it into ${site.name} (Ctrl+V, or ⌘V on a Mac).`;
+        const copied = ootkCopy(text);
+        // Open in the same click, before any await, so pop-up blockers allow it. Without
+        // "noopener" window.open tells us when a blocker stopped the tab; opener is cut by hand.
+        const tab = window.open(link.href, "_blank");
+        // Cross-origin-opener-policy may already have cut it, and then setting it throws.
+        if (tab) try { tab.opener = null; } catch (e) {}
+        copied.then(ok => {
+            note.textContent = "";
+            if (!tab) {
+                note.append("Your browser blocked the new tab. ");
+                const a = document.createElement("a");
+                a.href = link.href; a.target = "_blank"; a.rel = "noopener";
+                a.textContent = `Open ${site.name}`;
+                note.append(a, ". ");
+            }
+            if (link.filled) {
+                note.append(`${tab ? `Opened ${site.name} with` : "The link has"} the prompt filled in.` +
+                            (ok ? " It is on your clipboard too." : ""));
+            } else if (ok) {
+                note.append(`Prompt copied. Paste it into ${site.name} (Ctrl+V, or ⌘V on a Mac).`);
+            } else {
+                ootkSelect(document.getElementById(box.dataset.sendLlm));
+                note.append(`Your browser didn't allow copying, so the prompt is selected: press ` +
+                            `Ctrl+C (⌘C on a Mac), then paste it into ${site.name}.`);
+            }
+        });
     });
 });

@@ -2,20 +2,24 @@
 import base64
 import html
 import json
+import logging
 import os
 import re
 import secrets
 from collections import Counter
 import shlex
+import time
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlencode
 
 from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.exception_handlers import http_exception_handler
-from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, RedirectResponse, Response
+from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 import psycopg
 from psycopg.rows import dict_row
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
@@ -25,7 +29,7 @@ from ootk.analysis import (
 )
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, DEFAULT_MAPPING, MAPPING_SYSTEMS, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings, load_withheld,
+    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, fetch_all_cards, fetch_cards_correspondences, load_report_by_link, load_report_settings, load_withheld,
     save_spread_session,
 )
 from ootk.report import MAPPING_LABELS, build_analytical_prompt
@@ -40,12 +44,15 @@ VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
 VALID_DRAW_MODES = {"seed", "manual"}
 VALID_OUTPUT_FORMATS = {"visual", "markdown"}
+TOPIC_MAX = 2000
+SHARED_SEED_MAX = 64
 # Readings saved before 'thoth' existed stored 'golden_dawn' for what is now 'thoth' (the
 # swap was always applied). New readings carry this version, so old links keep their cards.
 MAPPING_VERSION = 2
 
 # No interactive API docs: the site has no API clients, and the docs page loads scripts from a CDN.
 app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None)
+log = logging.getLogger("ootk.web")
 
 static_dir = BASE_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
@@ -139,28 +146,95 @@ def site_url(request: Request) -> str:
     return url.rstrip("/")
 
 
-@app.exception_handler(HTTPException)
-async def form_error_page(request: Request, exc: HTTPException):
-    """A browser posting the form gets a readable page with a way back; API clients keep JSON."""
-    if "text/html" not in request.headers.get("accept", ""):
-        return await http_exception_handler(request, exc)
-    return HTMLResponse(status_code=exc.status_code, content=(
+def wants_html(request: Request) -> bool:
+    return "text/html" in request.headers.get("accept", "")
+
+
+def error_page(request: Request, status: int, heading: str, message: str, retry: bool = False,
+               headers: dict | None = None):
+    """A readable error page for browsers, with a way back (and a retry when the fault is
+    passing); API clients get the same message as JSON."""
+    if not wants_html(request):
+        return JSONResponse({"detail": message}, status_code=status, headers=headers)
+    retry_link = ('<a href="" onclick="location.reload(); return false;">Try again</a> '
+                  if retry else '')
+    return HTMLResponse(status_code=status, headers=headers, content=(
         '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        '<title>Reading not shown</title><style>'
+        '<meta name="robots" content="noindex">'
+        f'<title>{html.escape(heading)}</title><style>'
         'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
-        'background:#f5f4f8;color:#1d1b22;margin:0;padding:24px}'
-        '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}}'
-        'main{max-width:560px;margin:10vh auto}h1{color:#6b3fc4;font-size:1.3em}'
-        'a{display:inline-block;background:#6b3fc4;color:#fff;padding:10px 16px;'
+        'background:#2e8a56;color:#ffe0a0;margin:0;padding:24px}'
+        'main{max-width:560px;margin:10vh auto}h1{font-size:1.3em}'
+        'a{display:inline-block;background:#0d2617;color:#fff;padding:10px 16px;margin:0 6px 6px 0;'
         'border-radius:6px;text-decoration:none;font-weight:600}'
+        '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}a{background:#2e8a56}}'
         '.more{font-size:.9em}.more a.plain{background:none;color:inherit;padding:0;'
         'text-decoration:underline;font-weight:normal}</style></head><body><main>'
-        f'<h1>This reading can&rsquo;t be shown</h1><p>{html.escape(str(exc.detail))}</p>'
-        '<p><a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
+        f'<h1>{html.escape(heading)}</h1><p>{html.escape(message)}</p><p>{retry_link}'
+        '<a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
         '&larr; Back to settings</a></p>'
         f'<p class="more">Think this is a mistake? <a class="plain" href="{BUG_REPORT_URL}" '
         'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
+
+
+# Headings for errors the router raises itself (an unknown address, a wrong method).
+ROUTER_ERRORS = {404: ("Page not found", "There is no page at this address."),
+                 405: ("This page can’t be used that way",
+                       "This address doesn’t accept that kind of request.")}
+
+
+@app.exception_handler(StarletteHTTPException)
+async def form_error_page(request: Request, exc: StarletteHTTPException):
+    """A browser gets a readable page with a way back; API clients keep JSON."""
+    if not wants_html(request):
+        return await http_exception_handler(request, exc)
+    if not isinstance(exc, HTTPException) and exc.status_code in ROUTER_ERRORS:
+        heading, message = ROUTER_ERRORS[exc.status_code]
+        return error_page(request, exc.status_code, heading, message)
+    return error_page(request, exc.status_code, "This reading can’t be shown", str(exc.detail),
+                      headers=getattr(exc, "headers", None))
+
+
+@app.exception_handler(RequestValidationError)
+async def incomplete_form_page(request: Request, exc: RequestValidationError):
+    """A form or link missing a required field: a page saying which, not a JSON 422."""
+    if not wants_html(request):
+        return await request_validation_exception_handler(request, exc)
+    fields = sorted({str(e["loc"][-1]) for e in exc.errors() if e.get("loc")})
+    message = ("The form arrived incomplete" + (f" (missing or invalid: {', '.join(fields)})" if fields else "")
+               + ". Go back, check the settings and try again.")
+    return error_page(request, 400, "This reading can’t be shown", message)
+
+
+@app.exception_handler(psycopg.OperationalError)
+async def database_unreachable_page(request: Request, exc: psycopg.OperationalError):
+    """The database is down, asleep, out of connections or too slow: say so and offer a retry.
+    Pages that need no cards (Start here, Library, Method) keep working meanwhile."""
+    log.warning("database unreachable on %s: %s", request.url.path, exc)
+    return error_page(request, 503, "The card database isn’t answering",
+                      "The site is up, but it couldn’t reach its card database just now. This "
+                      "usually clears within a minute, so please try again. Start here, the Library "
+                      "and the Method pages work without it.", retry=True, headers={"Retry-After": "30"})
+
+
+@app.exception_handler(DatabaseOutdated)
+async def database_outdated_page(request: Request, exc: DatabaseOutdated):
+    log.error("database needs a migration: %s", exc)
+    return error_page(request, 503, "The card database needs an update",
+                      "The card tables are older than this version of the site, so readings can’t "
+                      "be built until the site owner runs the latest database migration.")
+
+
+@app.exception_handler(Exception)
+async def unexpected_error_page(request: Request, exc: Exception):
+    """Anything else: a plain apology instead of 'Internal Server Error'. The traceback still
+    reaches the server log (Starlette re-raises after this handler)."""
+    return error_page(request, 500, "Something went wrong on our side",
+                      "The page couldn’t be built because of an error in the site. Trying again "
+                      "may work; if it keeps happening, please report it.", retry=True)
+
+
 templates.env.globals.update(static_url=static_url, card_image_url=card_image_url, element_colors=ELEMENT_COLORS,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
@@ -169,7 +243,18 @@ templates.env.globals.update(static_url=static_url, card_image_url=card_image_ur
 
 
 def get_db_connection():
-    return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+    """A connection, tried twice: a hosted database that sleeps when idle (Neon) can refuse the
+    first attempt while it wakes. A second failure reaches database_unreachable_page."""
+    started = time.monotonic()
+    try:
+        return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+    except psycopg.OperationalError as e:
+        # A refusal comes back at once; a timeout has already used up the wait, so no retry.
+        if time.monotonic() - started > 3:
+            raise
+        log.warning("database connection failed, retrying once: %s", e)
+        time.sleep(1)
+        return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
 
 
 def new_seed() -> str:
@@ -541,9 +626,14 @@ def start_here(request: Request):
 
 @app.get("/examples", response_class=HTMLResponse)
 def examples_page(request: Request):
-    """Sample readings at fixed seeds, each opening its full report."""
-    with get_db_connection() as conn:
-        deck = fetch_all_cards(conn)
+    """Sample readings at fixed seeds, each opening its full report. Without the database the
+    page still lists them, just without naming the cards each seed draws."""
+    try:
+        with get_db_connection() as conn:
+            deck = fetch_all_cards(conn)
+    except psycopg.OperationalError as e:
+        log.warning("examples page without card names: %s", e)
+        deck = []
     return guide_page(request, "examples.html", examples=example_readings(deck))
 
 
@@ -618,6 +708,11 @@ def generate_report(
         raise HTTPException(status_code=400, detail=f"Unknown draw mode: {draw_mode!r}.")
     if output_format not in VALID_OUTPUT_FORMATS:
         raise HTTPException(status_code=400, detail=f"Unknown output format: {output_format!r}.")
+    if len(seed) > SHARED_SEED_MAX:
+        raise HTTPException(status_code=400, detail=f"A seed can be at most {SHARED_SEED_MAX} characters.")
+    if len(topic) > TOPIC_MAX:
+        raise HTTPException(status_code=400, detail=f"The question can be at most {TOPIC_MAX} characters; "
+                                                    f"this one has {len(topic)}.")
 
     selected_spread = SPREADS[spread_key]
     positions = spread_positions(spread_key)
@@ -686,7 +781,6 @@ def generate_report(
 
 # Short names accepted in shared links, e.g. ?system=gd.
 SYSTEM_ALIASES = {"gd": "golden_dawn", "fe": "french_egyptian"}
-SHARED_SEED_MAX = 64
 
 
 @app.get("/reading", response_class=HTMLResponse)
@@ -768,7 +862,7 @@ def card_of_the_day(request: Request, day: str):
             "image": card_image_url(title, "full"),
             "prompt": reading["analytical_prompt"],
             "reading_url": share_path(settings),
-            "previous": (when - timedelta(days=1)).isoformat(),
+            "previous": (when - timedelta(days=1)).isoformat() if when > date.min else None,
             "next": (when + timedelta(days=1)).isoformat() if when < today else None,
             "today": today.isoformat(),
         },

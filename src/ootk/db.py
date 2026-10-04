@@ -27,7 +27,10 @@ def load_db_config():
         "user": os.getenv("DB_USER", "postgres"),
         "password": os.getenv("DB_PASSWORD", ""),
         "host": os.getenv("DB_HOST", "localhost"),
-        "port": int(os.getenv("DB_PORT", "5432"))
+        "port": int(os.getenv("DB_PORT", "5432")),
+        # Seconds to wait for the server before giving up. Without it an unreachable host
+        # holds a web request for minutes (about 130 s) before the visitor sees anything.
+        "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "10")),
     }
     
     if CONFIG_PATH.exists():
@@ -35,7 +38,7 @@ def load_db_config():
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 json_data = json.load(f)
                 db_json = json_data.get("database", {})
-                for key in config:
+                for key in DB_ENV_VARS:
                     # config.json only fills a value when the matching env var is unset
                     if key in db_json and not os.getenv(DB_ENV_VARS[key]):
                         config[key] = db_json[key]
@@ -45,6 +48,11 @@ def load_db_config():
     return config
 
 DB_CONFIG = load_db_config()
+
+
+class DatabaseOutdated(RuntimeError):
+    """The database lacks a column this code reads: a migration has not been run yet.
+    Raised instead of exiting, so one request can't stop the web server."""
 
 def get_db_connection():
     try:
@@ -137,9 +145,9 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
             cur.execute(query, {"sys": system, "titles": list(titles)})
             rows = cur.fetchall()
     except psycopg.errors.UndefinedColumn as e:
-        print(f"[ERROR] {e.diag.message_primary}. The database predates the correspondence fixes: "
-              f"run psql -d <db> -f database/migrations/fix_correspondences.sql", file=sys.stderr)
-        sys.exit(1)
+        raise DatabaseOutdated(
+            f"{e.diag.message_primary}. The database predates the correspondence fixes: "
+            f"run psql -d <db> -f database/migrations/fix_correspondences.sql") from e
     stale = [r["title"] for r in rows if r["arcana_type"] == "Major" and not r["card_attribution"]]
     if stale:
         print(f"[WARN] {len(stale)} Major(s) have no thoth_cards.attribution, so their Attribution "
