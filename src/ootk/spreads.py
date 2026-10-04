@@ -52,11 +52,11 @@ SPREADS = {
         "positions": [
             "1. Saturn (Top Apex / Form, Constraints & Karma)",
             "2. Jupiter (Right Top / Expansion, Luck & Growth)",
-            "3. Mars (Right Bottom / Drive, Severity & Force)",
-            "4. Venus (Bottom Apex / Harmony, Affection & Value)",
+            "3. Mars (Left Top / Drive, Severity & Force)",
+            "4. Venus (Right Bottom / Harmony, Affection & Value)",
             "5. Mercury (Left Bottom / Intellect, Logic & Communication)",
-            "6. Sun (Left Top / Core Vitality, Identity & Spirit)",
-            "7. Moon (Center Core / Subconscious, Instinct & Foundation)"
+            "6. Sun (Center Core / Core Vitality, Identity & Spirit)",
+            "7. Moon (Bottom Apex / Subconscious, Instinct & Foundation)"
         ]
     },
     "7": {
@@ -140,7 +140,10 @@ SPREAD_DEFAULT_COORDINATES = {
     "3": [(-1.0, 0.0), (0.0, 0.0), (1.0, 0.0)],
     "4": [(0.0, 1.0), (1.0, 0.0), (0.0, -1.0), (-1.0, 0.0)],
     "5": [(0.0, 1.0), (1.0, 0.0), (-1.0, 0.0), (0.0, -1.0)],
-    "6": [(0.0, 1.0), (0.866, 0.5), (0.866, -0.5), (0.0, -1.0), (-0.866, -0.5), (-0.866, 0.5), (0.0, 0.0)],
+    # Golden Dawn hexagram, planets placed as on the Tree of Life: Saturn (Binah) at the top,
+    # Jupiter and Venus on the right, Mars and Mercury on the left, Moon (Yesod) at the
+    # bottom and the Sun (Tiphareth) in the centre.
+    "6": [(0.0, 1.0), (0.866, 0.5), (-0.866, 0.5), (0.866, -0.5), (-0.866, -0.5), (0.0, 0.0), (0.0, -1.0)],
     "10": [
         (1.0, 0.0), (0.866, 0.5), (0.5, 0.866), (0.0, 1.0),
         (-0.5, 0.866), (-0.866, 0.5), (-1.0, 0.0), (-0.866, -0.5),

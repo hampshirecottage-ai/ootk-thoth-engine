@@ -434,6 +434,19 @@ def test_spatial_hexagram_uses_real_angles():
     assert out[-1]["aspect"] == "Centre Node"              # last pair touches the centre card
 
 
+def test_hexagram_follows_the_golden_dawn_layout():
+    # Planets as on the Tree of Life: Saturn top, Jupiter/Venus right, Mars/Mercury left,
+    # Sun centre, Moon bottom.
+    where = {"Saturn": (0.0, 1.0), "Jupiter": (0.866, 0.5), "Mars": (-0.866, 0.5),
+             "Venus": (0.866, -0.5), "Mercury": (-0.866, -0.5), "Sun": (0.0, 0.0),
+             "Moon": (0.0, -1.0)}
+    labels = spreads.SPREADS["6"]["positions"]
+    coords = spreads.SPREAD_DEFAULT_COORDINATES["6"]
+    assert len(labels) == len(coords) == 7
+    for label, xy in zip(labels, coords):
+        assert xy == where[label.split()[1]], label
+
+
 def test_card_is_dignified():
     matrix = [{"score": 2, "from_index": 0, "to_index": 1},
               {"score": -2, "from_index": 1, "to_index": 2},
