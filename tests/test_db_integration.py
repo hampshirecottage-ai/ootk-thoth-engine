@@ -135,6 +135,29 @@ def test_trump_attribution_element_and_solid_come_from_the_card(conn, title, att
     assert card["platonic_solid"] == solid
 
 
+# Paul Case's Cube of Space (Sepher Yetzirah 4:3 and 5:2), keyed by the card under Golden Dawn,
+# where each trump sits on its own letter.
+CUBE_OF_SPACE = {
+    "0 - The Fool": "Vertical Axis (above to below)", "XII - The Hanged Man": "Horizontal Axis (east to west)",
+    "XX - The Aeon": "Longitudinal Axis (north to south)",
+    "I - The Magus": "Up (Zenith)", "II - The Priestess": "Down (Nadir)", "III - The Empress": "East",
+    "X - Fortune": "West", "XVI - The Tower": "North", "XIX - The Sun": "South",
+    "XXI - The Universe": "Center Core (Holy Temple)",
+    "IV - The Emperor": "North-East Edge", "V - The Hierophant": "South-East Edge",
+    "VI - The Lovers": "Upper-East Edge", "VII - The Chariot": "Lower-East Edge",
+    "XI - Lust": "Upper-North Edge", "IX - The Hermit": "Lower-North Edge",
+    "VIII - Adjustment": "North-West Edge", "XIII - Death": "South-West Edge",
+    "XIV - Art": "Upper-West Edge", "XV - The Devil": "Lower-West Edge",
+    "XVII - The Star": "Upper-South Edge", "XVIII - The Moon": "Lower-South Edge",
+}
+
+
+def test_every_trump_sits_on_its_cube_of_space_place(conn):
+    assert len(CUBE_OF_SPACE) == 22
+    for title, place in CUBE_OF_SPACE.items():
+        assert fetch(conn, title, "golden_dawn")["spatial_dimension"] == place, title
+
+
 def test_emperor_keeps_its_letters_cube_edge(conn):
     emperor = fetch(conn, "IV - The Emperor", "thoth")
     assert "Tzaddi" in emperor["hebrew_letter"] and emperor["spatial_dimension"] == "Upper-South Edge"
@@ -200,3 +223,12 @@ def test_withheld_lists_the_cards_left_out(conn):
     w = db.load_withheld(conn, deck, drawn)
     assert [r["title"] for r in w["cards"]] == [c["title"] for c in deck[:3]]
     assert w["deck_elements"] == {"Fire": 21, "Water": 19, "Air": 19, "Earth": 19, "Spirit": 0}
+
+
+def test_french_attribution_is_the_cards_own(conn):
+    # French rows give the card's own sign, planet or element ('Justice / Libra' for Libra);
+    # only the Fool reads differently ('Unnumbered / Primeval Spirit').
+    for title in majors(conn)[1:]:
+        gd = fetch(conn, title, "golden_dawn")["attribution"]
+        fr = fetch(conn, title, "french_egyptian")["attribution"]
+        assert gd in fr, (title, gd, fr)
