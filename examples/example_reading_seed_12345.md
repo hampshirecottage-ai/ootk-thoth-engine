@@ -55,7 +55,7 @@ The same command with the same database always draws the same cards. Everything 
 **Card Spatial Vectors:**
 - Pos 1 (Queen of Cups): Letter `ח (Cheth)` -> **Simple_Edge** [Lower-East Edge]
 - Pos 2 (V - The Hierophant): Letter `ו (Vau)` -> **Simple_Edge** [South-East Edge]
-- Pos 3 (5 of Disks - Worry): Letter `none - Sephira גְּבוּרָה (Geburah)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
+- Pos 3 (5 of Disks - Worry): Letter `none - Sephira גבורה (Geburah)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
 
 ---
 
@@ -66,6 +66,10 @@ The same command with the same database always draws the same cards. Everything 
 * **Octahedron          **: `0`
 * **Hexahedron (Cube)   **: `2`
 * **Unmapped            **: `0`
+
+**Solid properties** (fixed for each solid; section 6 names only the card's solid):
+* **Icosahedron**: Faces 20, Vertices 12 | Dual: `Dodecahedron` | Role: Receptive Matrix (Fluid Volume)
+* **Hexahedron (Cube)**: Faces 6, Vertices 8 | Dual: `Octahedron` | Role: Crystallized Vessel (Physical Boundary)
 
 ---
 
@@ -87,6 +91,8 @@ The same command with the same database always draws the same cards. Everything 
 
 ## 6. CARD-BY-CARD CORRESPONDENCE MATRIX
 
+Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
+
 ### Position 1: Past / Root Cause
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
@@ -94,8 +100,7 @@ The same command with the same database always draws the same cards. Everything 
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
-- **Platonic Topology**: `Icosahedron` (Faces: 20, Vertices: 12) | Dual: `Dodecahedron`
-- **Topological Role**: Receptive Matrix (Fluid Volume)
+- **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Amber
 
 ### Position 2: Present / Active Dynamics
@@ -105,19 +110,15 @@ The same command with the same database always draws the same cards. Everything 
 - **Attribution**: Taurus
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
-- **Platonic Topology**: `Hexahedron (Cube)` (Faces: 6, Vertices: 8) | Dual: `Octahedron`
-- **Topological Role**: Crystallized Vessel (Physical Boundary)
+- **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Red orange
 
 ### Position 3: Future / Manifest Result
 - **Card Drawn**: 5 of Disks - Worry
 - **Arcana/Suit**: Minor | Disks
-- **Path/Sephira**: Strength (גְּבוּרָה (Geburah))
+- **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Mercury in Taurus
-- **Sephira (both systems)**: `גְּבוּרָה (Geburah)`
-- **Spatial Dimension**: `Sephira_Point` (Nodal Sphere (Sephira))
-- **Platonic Topology**: `Hexahedron (Cube)` (Faces: 6, Vertices: 8) | Dual: `Octahedron`
-- **Topological Role**: Crystallized Vessel (Physical Boundary)
+- **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Orange
 
 ---

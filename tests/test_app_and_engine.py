@@ -688,6 +688,32 @@ def test_view_output_roundtrip_and_all_sections(tmp_path, monkeypatch):
         assert expected in out, expected
 
 
+def test_prompt_states_repeated_facts_once():
+    """The prompt keeps every value but says fixed facts once (shorter for the LLM)."""
+    minor = dict(fake_card("5 of Disks - Worry", "Disks", attribution="Mercury in Taurus"),
+                 path_or_sephira="Strength", hebrew_letter="גְּבוּרָה (Geburah)",
+                 gd_hebrew_letter="גְּבוּרָה (Geburah)", spatial_type=None, spatial_dimension=None)
+    major = fake_card("V - The Hierophant", None, arcana="Major", attribution="Taurus")
+    results = [{"position_number": i + 1, "position_name": f"Pos {i+1}", "card_data": c}
+               for i, c in enumerate([minor, major])]
+    counts = analysis.analyze_elemental_balance(results)
+    solids, topo, duals = analysis.analyze_platonic_topology(results)
+    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    heap = [{"pair": "Pos 1 <-> Pos 2", "distance": 0.5, "delta_angle": None, "aspect": "Heap Pair",
+             "description": "Neighbours in the deal", "score_modifier": 0}] * 2
+    prompt = report.build_analytical_prompt("Test", "גְּבוּרָה?", "", "1", results, counts, [], heap,
+                                            sdist, sdet, solids, topo, duals)
+    assert "**Query/Intent Topic:** גְּבוּרָה?" in prompt          # the querent's text is untouched
+    body = prompt.split("**Active Mapping System:**", 1)[1]
+    assert "גבורה (Geburah)" in body and "גְּבוּרָה" not in body  # points dropped, name kept
+    assert "Sephira (both systems)" not in prompt and "`Sephira_Point` (Nodal" not in prompt
+    assert prompt.count("Faces 4, Vertices 4 | Dual: `Tetrahedron` | Role: Node") == 1
+    assert prompt.count("- **Platonic Solid**: `Tetrahedron`") == 2
+    assert prompt.count("Heap Pair - Neighbours in the deal") == 1
+    assert prompt.count("* **Pos 1 <-> Pos 2**: Spatial Distance `0.5` units") == 2
+    assert "Comparative Hebrew Mapping" in prompt and "Spatial Dimension**: `Simple_Edge`" in prompt
+
+
 def test_view_output_recognises_sections_by_title_not_number():
     vo = load_view_output()
     assert vo.section_kind("## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n* x") == "dignity"

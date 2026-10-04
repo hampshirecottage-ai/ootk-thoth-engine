@@ -1,5 +1,6 @@
 """Builds the analytical report (Markdown prompt) and its HTML export."""
 import html
+import re
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import derive_primary_element, spirit_bearing_cards
@@ -11,6 +12,28 @@ MAPPING_LABELS = {
     "golden_dawn": "Golden Dawn / English System (Emperor on Heh, Star on Tzaddi)",
     "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
 }
+
+# Hebrew vowel points and cantillation marks. Every Hebrew name in the prompt carries its
+# transliteration, so dropping the points loses nothing and saves many tokens.
+_HEBREW_POINTS = re.compile("[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]")
+_SOLID_FIELDS = ("solid_faces", "solid_vertices", "dual_solid", "topological_role")
+_MINOR_SPATIAL = ("Sephira_Point", "Nodal Sphere (Sephira)")
+
+def strip_hebrew_points(text):
+    return _HEBREW_POINTS.sub("", text)
+
+def _solid_legend(spread_results):
+    """{solid: (faces, vertices, dual, role)} for solids whose cards all agree on those fields."""
+    legend, mixed = {}, set()
+    for item in spread_results:
+        data = item["card_data"]
+        solid = data.get("platonic_solid")
+        if not solid:
+            continue
+        props = tuple(data.get(f, "N/A") for f in _SOLID_FIELDS)
+        if legend.setdefault(solid, props) != props:
+            mixed.add(solid)
+    return {k: v for k, v in legend.items() if k not in mixed}
 
 def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None):
     total_cards = sum(element_counts.values()) or 1
@@ -24,7 +47,9 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 **PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}**Active Mapping System:** {mapping_label}
-
+"""
+    header_md = prompt_md
+    prompt_md = """
 ---
 
 ## 1. ELEMENTAL VECTOR DISTRIBUTION
@@ -55,6 +80,12 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     prompt_md += "\n---\n\n## 3. PLATONIC SOLID TOPOLOGY MATRIX\n"
     for solid, count in solid_counts.items():
         prompt_md += f"* **{solid:20s}**: `{count}`\n"
+
+    legend = _solid_legend(spread_results)
+    if legend:
+        prompt_md += "\n**Solid properties** (fixed for each solid; section 6 names only the card's solid):\n"
+        for solid, (faces, vertices, dual, role) in legend.items():
+            prompt_md += f"* **{solid}**: Faces {faces}, Vertices {vertices} | Dual: `{dual}` | Role: {role}\n"
 
     if dual_pairings:
         prompt_md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
@@ -95,15 +126,24 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
                     last_aspect = s["aspect"]
                 cards = f"{_signed(s['card_score'])} {s['card_relationship']}" if "card_score" in s else ""
                 prompt_md += f"* {s['pair']}" + (f" | cards: {cards}" if cards else "") + "\n"
+            elif s["delta_angle"] is None:
+                # Heap layouts: no angle, so every pair shares one aspect; state it once.
+                if s["aspect"] != last_aspect:
+                    prompt_md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
+                    last_aspect = s["aspect"]
+                prompt_md += f"* **{s['pair']}**: Spatial Distance `{s['distance']}` units\n"
             else:
                 prompt_md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
-                angle = "" if s["delta_angle"] is None else f" | Angular Delta: `{s['delta_angle']}°`"
-                prompt_md += f"  - Spatial Distance: `{s['distance']}` units{angle}\n"
+                prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
                 prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
     else:
         prompt_md += "* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.\n"
 
     prompt_md += "\n---\n\n## 6. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    if any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
+        prompt_md += ("Minor (pip) cards sit on the same Sephira in every mapping system and are nodal "
+                      "Sephira points on the Cube of Space, so their entries name the Sephira once "
+                      "and leave out the spatial dimension.\n\n")
 
     for item in spread_results:
         data = item["card_data"]
@@ -119,16 +159,23 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
         prompt_md += f"- **Path/Sephira**: {data['path_or_sephira']}{letter_str}\n"
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
-        if data['arcana_type'] == 'Minor':
-            prompt_md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
+        minor = data['arcana_type'] == 'Minor'
+        if minor:
+            if gd_letter != letter_val:
+                prompt_md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
         else:
             prompt_md += f"- **Comparative Hebrew Mapping**: Thoth: `{thoth_letter}` | Golden Dawn: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
         stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
-        if not stype and data['arcana_type'] == 'Minor':
-            stype, sdim = 'Sephira_Point', 'Nodal Sphere (Sephira)'
-        prompt_md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
-        prompt_md += f"- **Platonic Topology**: `{data.get('platonic_solid', 'N/A')}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
-        prompt_md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
+        if not stype and minor:
+            stype, sdim = _MINOR_SPATIAL
+        if not (minor and (stype, sdim) == _MINOR_SPATIAL):
+            prompt_md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
+        solid = data.get('platonic_solid', 'N/A')
+        if solid in legend:
+            prompt_md += f"- **Platonic Solid**: `{solid}`\n"
+        else:
+            prompt_md += f"- **Platonic Topology**: `{solid}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
+            prompt_md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
         prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
 
     prompt_md += f"""---
@@ -143,7 +190,8 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
 4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
 5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
 """
-    return prompt_md
+    # The header keeps the querent's own text exactly as typed.
+    return header_md + strip_hebrew_points(prompt_md)
 
 def _signed(n):
     return f"+{n}" if n > 0 else str(n)
