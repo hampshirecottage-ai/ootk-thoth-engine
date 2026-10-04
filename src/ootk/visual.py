@@ -73,20 +73,21 @@ def card_image_url(title, size="thumb"):
 
 # The art is the 1909 Rider-Waite-Smith deck (static/cards/CREDITS.md). These Thoth cards show
 # a Waite card under a different name, so the page says which one rather than look mislabelled.
-# Courts go by Golden Dawn rank: the Thoth Knight is the Waite King, the Prince the Waite Knight.
+# Courts match by picture: the Knight is the mounted Waite Knight, the Prince the Waite King.
 RWS_TRUMPS = {"VIII - Adjustment": "Justice", "XI - Lust": "Strength", "XIV - Art": "Temperance",
               "XX - The Aeon": "Judgement", "XXI - The Universe": "The World"}
-RWS_COURTS = {"Knight": "King", "Prince": "Knight", "Princess": "Page"}
+RWS_COURTS = {"Prince": "King", "Princess": "Page"}
 RWS_SUITS = {"Disks": "Pentacles"}
 
 
 def rws_art_name(title):
-    """The Rider-Waite-Smith card a renamed Thoth card is pictured with ('Knight of Wands' ->
-    'King of Wands'), or None when the picture carries the same name (Queens, pips, most trumps)."""
+    """The Rider-Waite-Smith card a renamed Thoth card is pictured with ('Prince of Wands' ->
+    'King of Wands'), or None when the picture carries the same name (Knights, Queens, pips,
+    most trumps)."""
     t = str(title)
     if t in RWS_TRUMPS:
         return RWS_TRUMPS[t]
-    m = re.fullmatch(r"(Knight|Prince|Princess) of (\w+)", t)
+    m = re.fullmatch(r"(Prince|Princess) of (\w+)", t)
     return f"{RWS_COURTS[m[1]]} of {RWS_SUITS.get(m[2], m[2])}" if m else None
 
 

@@ -4,7 +4,7 @@ Three checks, so a card can't quietly show the wrong art:
 - every title has its small, thumb and full WebP;
 - the Waite card each image was cut from (scripts/download_images.py) is the one the page
   names in its "Pictured: Rider-Waite-Smith ..." note, or carries the same name when there is none;
-- each image still looks like the picture checked by eye on 2026-10-04 (a 256-bit difference
+- each image still looks like the picture checked by eye on 2026-10-04 (courts matched by picture) (a 256-bit difference
   hash per card in card_art_fingerprints.json), in all three sizes.
 
 After deliberately replacing the art, look at every card, then refresh the fingerprints:
@@ -92,9 +92,10 @@ def test_art_note_names_the_waite_card_each_image_comes_from():
 
 def test_art_notes_cover_only_the_renamed_cards():
     noted = [t for t in TITLES if art_note(t)]
-    assert len(noted) == 17                     # 5 trumps + 12 Knights, Princes and Princesses
-    assert art_note("Knight of Wands") == "Pictured: Rider-Waite-Smith King of Wands"
-    assert art_note("Prince of Disks") == "Pictured: Rider-Waite-Smith Knight of Pentacles"
+    assert len(noted) == 13                     # 5 trumps + 8 Princes and Princesses
+    assert art_note("Prince of Wands") == "Pictured: Rider-Waite-Smith King of Wands"
+    assert art_note("Knight of Wands") == ""
+    assert art_note("Prince of Disks") == "Pictured: Rider-Waite-Smith King of Pentacles"
     assert art_note("Princess of Cups") == "Pictured: Rider-Waite-Smith Page of Cups"
     assert art_note("XI - Lust") == "Pictured: Rider-Waite-Smith Strength"
     assert art_note("VIII - Adjustment") == "Pictured: Rider-Waite-Smith Justice"

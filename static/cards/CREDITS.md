@@ -11,8 +11,9 @@ Source scans: restored scans of a 1909 "Pam-A" printing, taken from
 at a pinned commit. `scripts/download_images.py` fetches them, cuts away each card's numeral
 strip and title banner, and `scripts/optimize_images.py` builds these WebP copies.
 
-The cards are shown under their Thoth titles, using the Golden Dawn correspondences both
-decks share:
+The cards are shown under their Thoth titles. The trumps follow the Golden Dawn
+correspondences both decks share; the courts are matched by picture (the mounted Waite Knight
+for the Thoth Knight), not by Golden Dawn rank:
 
 | Thoth | Rider-Waite-Smith |
 |-------|-------------------|
@@ -21,9 +22,9 @@ decks share:
 | XIV Art | XIV Temperance |
 | XX The Aeon | XX Judgement |
 | XXI The Universe | XXI The World |
-| Knight | King |
+| Knight | Knight |
 | Queen | Queen |
-| Prince | Knight |
+| Prince | King |
 | Princess | Page |
 | Disks | Pentacles |
 
