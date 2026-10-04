@@ -196,6 +196,22 @@ if ($("samplePrompt")) {
             setTimeout(() => btn.textContent = label, 1200);
         }, () => {});
     });
+    $("copySummary").addEventListener("click", e => {
+        const btn = e.currentTarget, label = btn.textContent;
+        if (!navigator.clipboard) return;
+        const paras = Array.from($("sampleSummary").querySelectorAll("p")).map(p => p.textContent.trim());
+        const text = paras.join("\n\n") + "\n\n" + new URL(btn.dataset.link, location.href).href;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = "Copied";
+            setTimeout(() => btn.textContent = label, 1200);
+        }, () => {});
+    });
+    $("mechToggle").addEventListener("click", e => {
+        const open = $("mechanics").hidden;
+        $("mechanics").hidden = !open;
+        e.currentTarget.setAttribute("aria-expanded", open);
+        e.currentTarget.textContent = (open ? "Hide" : "Show") + " Hermetic / Cabbalistic mechanics";
+    });
     $("expandSample").addEventListener("click", e => {
         const open = $("samplePromptBox").classList.toggle("open");
         e.currentTarget.setAttribute("aria-expanded", open);
