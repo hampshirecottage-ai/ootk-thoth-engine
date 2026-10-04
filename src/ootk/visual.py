@@ -91,9 +91,9 @@ def rws_art_name(title):
 
 
 def art_note(title):
-    """'Art: Rider-Waite-Smith King of Wands', or '' when no note is needed."""
+    """'Pictured: Rider-Waite-Smith King of Wands', or '' when no note is needed."""
     name = rws_art_name(title)
-    return f"Art: Rider-Waite-Smith {name}" if name else ""
+    return f"Pictured: Rider-Waite-Smith {name}" if name else ""
 
 
 def card_srcset(title):

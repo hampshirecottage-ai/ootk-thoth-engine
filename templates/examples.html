@@ -22,7 +22,7 @@
             <ol class="ex-cards">
                 {% for c in ex.cards %}
                 {% set img = card_image_url(c.title, "thumb") %}
-                <li>{% if img %}<img src="{{ img }}" alt=""{% set art = art_note(c.title) %}{% if art %} title="{{ art }}"{% endif %} width="200" height="290" loading="lazy" decoding="async">{% endif %}{{ c.name }}{% if art %}<br><span class="art">{{ art | replace("Art: Rider-Waite-Smith ", "Art: RWS ") }}</span>{% endif %}</li>
+                <li>{% if img %}<img src="{{ img }}" alt=""{% set art = art_note(c.title) %}{% if art %} title="{{ art }}"{% endif %} width="200" height="290" loading="lazy" decoding="async">{% endif %}{{ c.name }}{% if art %}<br><span class="art">{{ art | replace("Pictured: Rider-Waite-Smith ", "Pictured: RWS ") }}</span>{% endif %}</li>
                 {% endfor %}
             </ol>
             {% endif %}
