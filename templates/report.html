@@ -25,17 +25,17 @@
         :root[data-theme="light"] {
             --bg: #2e8a56; --panel: #a7e2c0; --panel-2: #94d6b0; --line: #5fae84; --text: #000;
             --muted: #0f2e1b; --accent: #0d2617; --accent-2: #0d2617; --bad: #7a0d0d; --good: #0d2617;
-            --control: #4f9e74; --code-bg: #b9e9cd; --pre-text: #000; --filters-bg: rgba(46, 138, 86, 0.96);
+            --control: #4f9e74; --code-bg: #b9e9cd; --pre-text: #000; --filters-bg: #24704a;
             --svg-face: #3a9a63; --svg-hole: #4caa74; --svg-rule: #1c5535; --svg-sector: #24734a; --card-base: #24734a; --badge: #d4ecdc;
             --on-accent: #fff; --mark: rgba(255, 255, 255, 0.35);
             color-scheme: light;
         }
         ::placeholder { color: var(--muted); opacity: 0.75; }
-        :root[data-theme="light"] h1, :root[data-theme="light"] .filters { color: #ffe0a0; --muted: #ffe0a0; }
+        :root[data-theme="light"] .filters { color: #ffe0a0; --muted: #ffe0a0; }
         :root[data-theme="light"] .filters .search { --muted: #0f2e1b; }
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 24px; line-height: 1.5; }
-        main { max-width: 1200px; margin: 0 auto; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.5; }
+        main { max-width: var(--page-width); margin: 0 auto; }
         h1, h2, h3 { color: var(--accent); margin: 0 0 8px; }
         h1 { font-size: 1.6em; }
         h2 { font-size: 1.2em; }
@@ -43,7 +43,6 @@
         a { color: var(--accent-2); }
         .muted { color: var(--muted); }
         .save-failed { border-left: 4px solid var(--bad); }
-        .topbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
         .btn { display: inline-block; background: var(--accent); color: var(--on-accent); padding: 8px 14px; text-decoration: none; font-weight: 600; border-radius: 6px; border: 1px solid var(--accent); cursor: pointer; font-size: 0.9em; line-height: 1.5; }
         .btn.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); }
         .btn:hover { background: var(--accent-2); color: var(--on-accent); }
@@ -63,15 +62,34 @@
         .next-step .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px; }
         .next-step h3 { margin: 16px 0 0; font-size: 1em; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
-        .now-step p { margin: 6px 0 0; }
+        /* Banner, as on the start page: what the reading is on the left, the prompt actions on the right. */
+        .report-head { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 0 26px; align-items: start; }
+        .report-head .band-text { grid-column: 1; grid-row: 1; }
+        .report-head .band-more { grid-column: 1; grid-row: 2; }
+        .report-head .report-actions { grid-column: 2; grid-row: 1 / span 2; }
+        .report-head h1 { font-size: 1.6em; }
+        .band .panel p, .band .panel p a { color: var(--text); }
+        .band .panel .form-lede { color: var(--muted); }
+        .report-head .steps-done { margin: 14px 0 0; font-size: 0.95em; }
+        .report-head .left-out { font-size: 0.85em; opacity: 0.85; }
+        .report-head .now-question strong { color: var(--band-head); }
+        .report-actions { margin: 0; }
+        .report-actions h2 { font-size: 1.15em; }
+        .form-lede { margin: 0 0 12px; color: var(--muted); font-size: 0.9em; }
+        .report-actions .send-llm, .report-actions .send-llm-controls { display: flex; width: 100%; }
+        .report-actions .send-llm { flex-direction: column; }
+        .report-actions .send-llm .btn { flex: 1; padding: 11px 16px; font-size: 1em; }
+        .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .btn-small { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); padding: 6px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; font: inherit; }
+        .btn-small:hover { border-color: var(--accent); }
         .steps-done { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; font-size: 0.9em; counter-reset: step; }
-        .steps-done li { counter-increment: step; color: var(--muted); }
+        .steps-done li { counter-increment: step; opacity: 0.8; }
         .steps-done li::before { content: counter(step); display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; margin-right: 6px; border-radius: 50%; border: 1px solid currentColor; font-size: 0.85em; }
         .steps-done li.done::before { content: "✓"; }
-        .steps-done li.here { color: inherit; font-weight: 600; }
+        .steps-done li.here { opacity: 1; font-weight: 600; }
         .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; }
         .meta div span { display: block; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
-        .seed { font-family: "Fira Code", monospace; font-size: 1.3em; color: var(--accent-2); font-weight: 700; }
+        .seed { font-family: "JetBrains Mono", monospace; font-size: 1.3em; color: var(--accent-2); font-weight: 700; }
         .share-row { display: flex; gap: 8px; align-items: center; }
         .share-row code.cli { flex: 1; min-width: 0; margin-top: 6px; }
         code.cli { display: block; background: var(--code-bg); border: 1px solid var(--line); padding: 8px 10px; border-radius: 6px; font-size: 0.85em; overflow-x: auto; white-space: nowrap; margin-top: 6px; }
@@ -194,10 +212,14 @@
         .detail ul { padding-left: 18px; font-size: 0.85em; margin: 4px 0 12px; }
         .detail h3 { margin-top: 10px; color: var(--accent-2); font-size: 0.9em; }
         .aspect-row td:first-child { white-space: nowrap; }
-        pre { background: var(--code-bg); padding: 16px; border-radius: 8px; color: var(--pre-text); white-space: pre-wrap; font-size: 0.85em; font-family: "Fira Code", monospace; }
+        pre { background: var(--code-bg); padding: 16px; border-radius: 8px; color: var(--pre-text); white-space: pre-wrap; font-size: 0.85em; font-family: "JetBrains Mono", monospace; }
+        @media (max-width: 860px) {
+            .report-head { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+            .report-head .band-text, .report-head .band-more, .report-head .report-actions { grid-column: 1; grid-row: auto; }
+        }
         @media (max-width: 640px) {
             body { padding: 12px; }
-            h1 { font-size: 1.25em; }
+            .report-head h1 { font-size: 1.3em; }
             .panel, details.section > .body { padding: 14px; }
             details.section > .body { padding-top: 0; }
             details.section > summary { padding: 12px 14px; }
@@ -205,8 +227,7 @@
             details.section > summary h2 { font-size: 1.05em; }
             details.section > summary > .muted { grid-column: 2; font-size: 0.9em; }
             /* Toolbar: four controls fit one row; no sideways scroll, so the Save menu is not clipped. */
-            .topbar { gap: 6px; }
-            .topbar .btn { white-space: nowrap; padding: 8px 10px; }
+            .action-row .btn { white-space: nowrap; padding: 8px 10px; }
             .wide-only { display: none; }
             .filters { position: static; }
             /* 16px stops iOS Safari zooming the page when the search box is focused. */
@@ -235,9 +256,9 @@
         @media print {
             :root, :root[data-theme="light"] { --bg: #fff; --panel: #fff; --panel-2: #fff; --text: #000; --muted: #555; --line: #ccc; --code-bg: #fff; --pre-text: #000; --svg-face: #fff; --svg-hole: #fff; --card-base: #eee; --badge: #fff; }
             .drawing { --drawing-bg: #fff; --text: #000; --muted: #555; --svg-face: #fff; --svg-hole: #fff; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #eee; --badge: #fff; }
-            :root h1, :root[data-theme="light"] h1 { color: #000; }
+            .band { background: none; border: none; box-shadow: none; padding: 0; display: block; --band-text: #000; --band-head: #000; }
             body { padding: 0; }
-            .topbar, .filters, .drawing-tools, .detail, .no-print { display: none !important; }
+            .site-bar, .filters, .drawing-tools, .detail, .no-print { display: none !important; }
             details.section, .panel { break-inside: avoid-page; border-color: #ccc; }
             details.section > summary::before { display: none; }
         }
@@ -249,6 +270,7 @@
         .send-llm-note { display: block; font-size: 0.85em; margin-top: 6px; max-width: 32em; }
         .send-llm-note:empty { display: none; }
     </style>
+{% include "_brand_styles.html" %}
 {% include "_atlas_styles.html" %}
     <style>
         .detail .maps-mini { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 12px; }
@@ -259,44 +281,50 @@
     </style>
 </head>
 <body>
+{% include "_site_bar.html" %}
 <main>
     {% set S = view %}
     {% macro signed(n) %}<span class="{{ 'pos' if n > 0 else 'neg' if n < 0 else '' }}">{{ '+' if n > 0 }}{{ n }}</span>{% endmacro %}
 
-    <div class="topbar">
-        <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
-        {% with prompt_source = "promptText", llm_note_elsewhere = true %}{% include "_send_to_llm.html" %}{% endwith %}
-        <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
-        <details class="menu">
-            <summary class="btn secondary">Save &#9662;</summary>
-            <div class="menu-list">
-                <button type="button" onclick="window.print()">PDF (print)</button>
-                <button type="button" data-download-md>Markdown</button>
-                <button type="button" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>JSON</button>
+    <!-- ===== BANNER: WHAT THIS IS AND WHAT TO DO NOW ===== -->
+    <section class="band report-head" id="nowStep" aria-labelledby="pageTitle">
+        <div class="band-text">
+            <p class="chips"><span>{% if shared %}Shared reading{% else %}Your reading{% endif %}</span><span>{{ S.card_count }} card{{ 's' if S.card_count != 1 }}</span><span>{{ mapping_label.split(' (')[0] }}</span>{% if seed %}<span>Seed {{ seed }}</span>{% endif %}</p>
+            <h1 id="pageTitle">{{ spread_name }}</h1>
+            {% if topic %}<p class="tagline now-question">Your question: <strong>{{ topic }}</strong></p>{% endif %}
+        </div>
+        <div class="panel report-actions no-print">
+            <h2>Send the prompt to your AI</h2>
+            <p class="form-lede">Copy and open copies the prompt and opens your AI in a new tab. Paste it in there.</p>
+            {% with prompt_source = "promptText", llm_note_elsewhere = true %}{% include "_send_to_llm.html" %}{% endwith %}
+            <div class="action-row">
+                <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
+                <details class="menu">
+                    <summary class="btn secondary">Save &#9662;</summary>
+                    <div class="menu-list">
+                        <button type="button" onclick="window.print()">PDF (print)</button>
+                        <button type="button" data-download-md>Markdown</button>
+                        <button type="button" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>JSON</button>
+                    </div>
+                </details>
+                <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
             </div>
-        </details>
-        <button class="btn secondary" type="button" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
-    </div>
-
-    <h1>{% if shared %}Shared reading{% else %}Your reading{% endif %} · {{ spread_name }}</h1>
+        </div>
+        <div class="band-more">
+            <ol class="steps-done no-print" aria-label="Your progress">
+                <li class="done">Cards drawn</li>
+                <li class="here">Copy the prompt</li>
+                <li>Paste it into your AI</li>
+            </ol>
+            <p class="tagline no-print">Your AI writes the interpretation; this page only shows what the prompt contains. <a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
+            <p class="tagline left-out no-print">{% include "_llm_left_out.html" %}</p>
+        </div>
+    </section>
     {% if unsaved %}
     <p class="panel save-failed" id="saveFailed" role="alert"><strong>This reading couldn't be saved.</strong>
         It has no link of its own and won't come back if you leave or reload this page.
         {% if share_path %}The share link further down redraws the same cards.{% else %}Copy the prompt now if you want to keep it.{% endif %}</p>
     {% endif %}
-
-    <!-- ===== WHAT TO DO NOW ===== -->
-    <section class="panel now-step no-print" id="nowStep">
-        <ol class="steps-done" aria-label="Your progress">
-            <li class="done">Cards drawn</li>
-            <li class="here">Copy the prompt</li>
-            <li>Paste it into your AI</li>
-        </ol>
-        {% if topic %}<p class="now-question">Your question: <strong>{{ topic }}</strong></p>{% endif %}
-        <p>Press <strong>Copy and open</strong> above to copy the prompt and open your AI, then paste it in. Your AI writes the interpretation; this page only shows what the prompt contains. <a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
-        <p class="muted">{% include "_llm_left_out.html" %}</p>
-    </section>
-
 
     <!-- ===== SUMMARY FIRST ===== -->
     <section class="panel" id="summary">

@@ -14,14 +14,17 @@
         })();
     </script>
 {% include "_reading_styles.html" %}
+{% include "_brand_styles.html" %}
+    <style>
+        /* The board uses the whole width, so the bar and banner do too. */
+        :root { --page-width: none; }
+    </style>
 </head>
 <body class="manual">
-    <header class="top">
-        <div>
-            <h1><a href="/" class="home">LLM Tarot Reading</a></h1>
-            <p class="tagline">Choose a spread, then tap cards in the order you want them placed.</p>
-        </div>
-        <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
+{% include "_site_bar.html" %}
+    <header class="band page-head">
+        <h1>Pick by hand</h1>
+        <p class="tagline">Choose a spread, then tap cards in the order you want them placed.</p>
     </header>
 
     <form action="/generate_report" method="POST" id="readingForm" class="container">

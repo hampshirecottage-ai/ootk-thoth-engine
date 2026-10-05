@@ -2,8 +2,6 @@
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --panel-2: #2a2a2a; --panel-3: #252525; --line: #333; --text: #e0e0e0; --muted: #9a9a9a; --accent: #bb86fc; --accent-2: #03dac6; --control: #444; --hover: #382b47; --on-accent: #000; color-scheme: dark; }
         :root[data-theme="light"] { --bg: #2e8a56; --panel: #a7e2c0; --panel-2: #94d6b0; --panel-3: #b9e9cd; --line: #5fae84; --text: #000; --muted: #0f2e1b; --accent: #0d2617; --accent-2: #0d2617; --control: #4f9e74; --hover: #c4eed6; --on-accent: #fff; color-scheme: light; }
-        /* Text sitting straight on the green page background (not on a panel). */
-        :root[data-theme="light"] header.top h1, :root[data-theme="light"] header.top p, :root[data-theme="light"] header.top p a { color: #ffe0a0; }
         * { box-sizing: border-box; }
         ::placeholder { color: var(--muted); opacity: 0.75; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -57,12 +55,6 @@
         details.more[open] > summary { margin-bottom: 10px; }
         .more-sum { color: var(--muted); font-size: 0.92em; margin-left: 4px; }
         .count { color: var(--muted); font-size: 0.85em; }
-        /* Title and tagline centred; equal side columns keep them centred with the Theme button on the right. */
-        header.top { display: grid; grid-template-columns: minmax(40px, 1fr) minmax(0, 70ch) minmax(40px, 1fr); align-items: start; gap: 12px; margin-bottom: 14px; text-align: center; }
-        header.top > div { grid-column: 2; }
-        header.top #themeToggle { grid-column: 3; justify-self: end; }
-        header.top h1 { margin: 0; }
-        header.top h1 a.home { color: inherit; text-decoration: none; }
         @media (max-width: 640px) { .wide-only { display: none; } }
         .mode-link { font-size: 0.88em; margin: 12px 0 0; color: var(--muted); text-align: center; }
         .mode-link a { color: var(--accent); }
@@ -79,8 +71,6 @@
         }
         @media (max-width: 640px) {
             body { padding: 12px; }
-            header.top { gap: 8px; }
-            header.top h1 { font-size: 1.5em; }
             .tagline { font-size: 0.92em; }
             .panel { padding: 14px; }
             /* 16px stops iOS Safari zooming the page when a field is focused. */

@@ -435,7 +435,8 @@ def test_spread_picker_groups_every_spread_by_stage_and_starts_on_three_cards(cl
 def test_report_opens_on_the_next_step_not_the_settings(client):
     page = post(client).text
     assert page.index('id="nowStep"') < page.index('id="summary"') < page.index('id="readingDetails"')
-    assert "<h1>Your reading · " in page
+    assert "<span>Your reading</span>" in page and '<h1 id="pageTitle">Triad (Timeline &amp; Motion)</h1>' in page
+    assert page.index('class="site-bar"') < page.index('id="nowStep"')   # same OOTK bar as the start page
 
 
 def test_examples_link_shared_readings_and_draw_cards_with_a_full_deck(client, monkeypatch):
