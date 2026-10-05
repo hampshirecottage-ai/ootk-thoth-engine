@@ -14,10 +14,16 @@ if [ -z "$DB_HOST" ]; then
     createdb -h /tmp -U user my_tarot_db 2>/dev/null || true
 fi
 
+# PGCONNECT_TIMEOUT: without it psql waits forever on a database that doesn't answer, and the
+# web server below never opens its port, so the host gives up on the boot. The app itself
+# uses the same limit (DB_CONNECT_TIMEOUT) and shows a "database unreachable" page instead.
 export PGHOST="$DB_HOST" PGPORT="${DB_PORT:-5432}" PGUSER="${DB_USER:-postgres}" \
-       PGDATABASE="${DB_NAME:-my_tarot_db}" PGPASSWORD="$DB_PASSWORD"
+       PGDATABASE="${DB_NAME:-my_tarot_db}" PGPASSWORD="$DB_PASSWORD" \
+       PGCONNECT_TIMEOUT="${DB_CONNECT_TIMEOUT:-10}"
 
-if [ "$(psql -tAc "SELECT to_regclass('public.thoth_cards') IS NOT NULL")" != "t" ]; then
+if ! loaded="$(psql -tAc "SELECT to_regclass('public.thoth_cards') IS NOT NULL")"; then
+    echo "Database unreachable at boot; starting the web server anyway"
+elif [ "$loaded" != "t" ]; then
     echo "Loading database/schema.sql"
     psql -q -f database/schema.sql >/dev/null 2>"$HOME/schema-load.log" || true
     echo "Cards loaded: $(psql -tAc 'SELECT count(*) FROM thoth_cards')"
