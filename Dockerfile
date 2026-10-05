@@ -16,9 +16,9 @@ ENV HOME=/home/user \
     PGDATA=/home/user/pgdata
 WORKDIR /home/user/app
 
-COPY --chown=user pyproject.toml README.md ./
+COPY --chown=user pyproject.toml README.md requirements-lock.txt ./
 COPY --chown=user src ./src
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -c requirements-lock.txt -e .
 
 COPY --chown=user templates ./templates
 COPY --chown=user static/js ./static/js
