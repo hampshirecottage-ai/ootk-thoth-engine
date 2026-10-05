@@ -1174,7 +1174,10 @@ def test_report_view_draws_every_operation():
     segs = view["segments"]
     assert [s["drawing"]["kind"] for s in segs] == ["layout", "wheel", "wheel", "wheel"]
     assert [len(s["drawing"]["slots"]) for s in segs] == [15, 12, 12, 36]
-    assert sum(len(s["drawing"]["lines"]) for s in segs) == len(spatial) == view["aspects"]["total"]
+    assert len(spatial) == view["aspects"]["total"]
+    # A heap has no aspects, so Op 1 draws its element pairs and no aspect lines.
+    assert segs[0]["drawing"]["lines"] == [] and len(segs[0]["drawing"]["pair_links"]) == 8
+    assert sum(len(s["drawing"]["lines"]) for s in segs[1:]) == len(spatial) - len(segs[0]["aspects"])
     # Ring aspects: each of 36 decans has 1 opposition, 2 squares, 2 trines, 2 sextiles.
     assert len(segs[3]["aspects"]) == 36 * 7 // 2
     strong = {a["type"] for s in segs for a in s["aspects"] if a["strong"]}
@@ -1199,7 +1202,7 @@ def test_report_view_explains_and_lists_each_operations_links():
         links = seg["links"]
         # Every element pair and aspect is listed once, and drawn once in element-pair mode.
         assert len(links["pairs"]) == len(seg["dignity_rows"]) == len(seg["drawing"]["pair_links"])
-        assert len(links["aspects"]) == len(seg["aspects"])
+        assert len(links["aspects"]) == (0 if seg is segs[0] else len(seg["aspects"]))
         assert all(p["why"] for p in links["pairs"])
     # On a wheel each card has two neighbours and seven aspects; each aspect also gives the cards' score.
     decans = segs[3]["links"]
