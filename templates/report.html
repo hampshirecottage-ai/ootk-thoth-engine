@@ -80,6 +80,8 @@
         .report-actions .send-llm { flex-direction: column; }
         .report-actions .send-llm .btn { flex: 1; padding: 11px 16px; font-size: 1em; }
         .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .md-tip { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+        .md-tip p { margin: 0 0 10px; font-size: 0.9em; }
         .btn-small { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); padding: 6px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; font: inherit; }
         .btn-small:hover { border-color: var(--accent); }
         .steps-done { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; font-size: 0.9em; counter-reset: step; }
@@ -309,12 +311,16 @@
                 </details>
                 <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
             </div>
+            <div class="md-tip" id="mdTip">
+                <p><strong>Our tip: attach it as a file.</strong> Save the prompt as a Markdown file, then in your AI chat (Gemini, Claude, ChatGPT and others) press <strong>+</strong>, add the file and send. It is the easiest way to give a long reading to Gemini.</p>
+                <button class="btn secondary" type="button" data-download-md title="Download the prompt as ootk_report.md">Save prompt as Markdown (.md)</button>
+            </div>
         </div>
         <div class="band-more">
             <ol class="steps-done no-print" aria-label="Your progress">
                 <li class="done">Cards drawn</li>
                 <li class="here">Copy the prompt</li>
-                <li>Paste it into your AI</li>
+                <li>Paste or attach it in your AI</li>
             </ol>
             <p class="tagline no-print">Your AI writes the interpretation; this page only shows what the prompt contains. <a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
             <p class="tagline left-out no-print">{% include "_llm_left_out.html" %}</p>
