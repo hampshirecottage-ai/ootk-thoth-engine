@@ -16,8 +16,10 @@
         })();
     </script>
 {% include "_reading_styles.html" %}
+{% include "_brand_styles.html" %}
     <style>
-        .day { max-width: 760px; margin: 0 auto; }
+        :root { --page-width: 760px; }
+        .day { max-width: var(--page-width); margin: 0 auto; }
         .day-card { display: grid; grid-template-columns: minmax(160px, 260px) 1fr; gap: 20px; align-items: start; }
         .day-card img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
         .day-card .noimg { aspect-ratio: 11 / 19; border-radius: 8px; border: 1px dashed var(--control); display: flex; align-items: center; justify-content: center; color: var(--muted); }
@@ -52,12 +54,10 @@
     </style>
 </head>
 <body>
-    <header class="top">
-        <div>
-            <h1><a class="home" href="/">LLM Tarot Reading</a></h1>
-            <p class="tagline">Card of the day</p>
-        </div>
-        <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
+{% include "_site_bar.html" %}
+    <header class="band page-head">
+        <h1>Card of the day</h1>
+        <p class="tagline">The same card for everyone today, with its correspondences and a prompt for your AI.</p>
     </header>
 
     <main class="day">
