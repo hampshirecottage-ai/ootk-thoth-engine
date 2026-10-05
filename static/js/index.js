@@ -188,6 +188,10 @@ applySettings(Object.assign(readStore(LAST_KEY, {}),
 
 // ---------- sample reading (start page only) ----------
 if ($("samplePrompt")) {
+    // The sample starts folded away; a link to /#sample (e.g. from /start) opens it.
+    const openSampleFromHash = () => { if (location.hash === "#sample") $("sample").open = true; };
+    openSampleFromHash();
+    window.addEventListener("hashchange", openSampleFromHash);
     $("copySample").addEventListener("click", e => {
         ootkCopyButton(e.currentTarget, $("samplePrompt").textContent, $("samplePrompt"));
     });
