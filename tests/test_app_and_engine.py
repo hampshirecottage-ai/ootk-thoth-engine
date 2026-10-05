@@ -232,6 +232,20 @@ def test_security_headers(client, monkeypatch):
     assert client.get("/").headers["x-frame-options"] == "DENY"     # the password prompt too
 
 
+def test_head_answers_like_get(client, monkeypatch):
+    monkeypatch.delenv("APP_PASSWORD", raising=False)
+    for path in ["/", "/start", "/robots.txt", "/static/js/index.js"]:
+        got, head = client.get(path), client.head(path)
+        assert head.status_code == got.status_code == 200, path
+        assert head.content == b""
+        assert head.headers["content-type"] == got.headers["content-type"]
+        assert head.headers["x-content-type-options"] == "nosniff"
+    assert client.head("/no-such-page").status_code == 404
+    assert client.head("/today", follow_redirects=False).status_code == 307
+    monkeypatch.setenv("APP_PASSWORD", "s3cret")
+    assert client.head("/").status_code == 401                       # still behind the password
+
+
 def test_api_docs_are_off(client):
     for path in ["/docs", "/redoc", "/openapi.json"]:
         assert client.get(path).status_code == 404
