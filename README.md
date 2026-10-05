@@ -4,7 +4,7 @@
 
 **Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![The start page: the question "What does a complete 78-card Hermetic mapping actually look like?", the three steps, fact tiles for a sample reading (significator, cards placed, operations, seed), then the sample Opening of the Key with its heap drawn inside a triangle](docs/images/front.png)
+![The start page: the question "What would you like the cards to look at?", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Draw your reading" panel with its Draw my cards button, then the folded sample Opening of the Key](docs/images/front.png)
 
 
 A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
