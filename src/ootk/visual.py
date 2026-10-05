@@ -581,8 +581,10 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
     for number, (layout_key, start, end, name) in enumerate(
             spread_segments(spread_results, spread_key), start=1):
         seg_cards = [dict(c, index=c["index"] - start) for c in cards[start:end]]
-        seg_aspects = [_aspect_view(s, start) for s in spatial_matrix
-                       if start <= s["from_index"] < end]
+        # A heap's "Heap Pair" entries carry no aspect (its links are its element pairs), so
+        # they are left out of every aspect count, list and drawing.
+        seg_aspects = [] if layout_key in HEAP_LAYOUTS else [
+            _aspect_view(s, start) for s in spatial_matrix if start <= s["from_index"] < end]
         seg_dignity = [d for d in dignity_matrix if start <= d["from_index"] < end]
         seg_pairs = [{"a": d["from_index"] - start, "b": d["to_index"] - start, "score": d["score"]}
                      for d in seg_dignity]
@@ -591,10 +593,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             for i in (a["a"] + start, a["b"] + start):
                 aspects_by_card.setdefault(i, []).append(f"{a['label']} ({a['score_text']}): {a['pair']}")
         seg_elements = Counter(c["element"] for c in seg_cards)
-        # A heap's links are its element pairs; its "Heap Pair" entries carry no aspect, so
-        # drawing them as aspect lines would only hide the pairs under grey dots.
-        link_aspects = [] if layout_key in HEAP_LAYOUTS else seg_aspects
-        drawing = segment_drawing(layout_key, seg_cards, link_aspects, seg_pairs)
+        drawing = segment_drawing(layout_key, seg_cards, seg_aspects, seg_pairs)
         segments.append({
             "id": f"op{number}",
             "name": name or "Spread",
@@ -607,7 +606,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             "ill_dignified": [c for c in seg_cards if not c["dignified"]],
             "drawing": drawing,
             "how": link_explainer(layout_key, len(seg_cards), drawing["kind"] != "row"),
-            "links": link_view(layout_key, seg_cards, link_aspects, seg_pairs),
+            "links": link_view(layout_key, seg_cards, seg_aspects, seg_pairs),
         })
 
     element_rows = _element_rows(element_counts)

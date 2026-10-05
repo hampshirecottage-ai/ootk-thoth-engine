@@ -1271,10 +1271,11 @@ def test_report_view_draws_every_operation():
     segs = view["segments"]
     assert [s["drawing"]["kind"] for s in segs] == ["layout", "wheel", "wheel", "wheel"]
     assert [len(s["drawing"]["slots"]) for s in segs] == [15, 12, 12, 36]
-    assert len(spatial) == view["aspects"]["total"]
+    heap_pairs = 8      # Op 1's spatial entries are "Heap Pair" links, not aspects
+    assert len(spatial) - heap_pairs == view["aspects"]["total"]
     # A heap has no aspects, so Op 1 draws its element pairs and no aspect lines.
     assert segs[0]["drawing"]["lines"] == [] and len(segs[0]["drawing"]["pair_links"]) == 8
-    assert sum(len(s["drawing"]["lines"]) for s in segs[1:]) == len(spatial) - len(segs[0]["aspects"])
+    assert sum(len(s["drawing"]["lines"]) for s in segs[1:]) == len(spatial) - heap_pairs
     # Ring aspects: each of 36 decans has 1 opposition, 2 squares, 2 trines, 2 sextiles.
     assert len(segs[3]["aspects"]) == 36 * 7 // 2
     strong = {a["type"] for s in segs for a in s["aspects"] if a["strong"]}
@@ -1290,16 +1291,21 @@ def test_report_view_explains_and_lists_each_operations_links():
                for i, (p, c) in enumerate(zip(spreads.spread_positions("12"), cards))]
     dignity = analysis.calculate_elemental_dignities(results, "12")
     spatial = analysis.analyze_spatial_vectors(results, "12")
-    segs = visual.build_report_view("12", results, analysis.analyze_elemental_balance(results),
-                                    dignity, spatial, "x", "y")["segments"]
+    view = visual.build_report_view("12", results, analysis.analyze_elemental_balance(results),
+                                    dignity, spatial, "x", "y")
+    segs = view["segments"]
     assert "2 with 3" in segs[0]["how"][0]
+    # The heap's links carry no aspect, so no count, list or card panel calls them aspects.
+    assert segs[0]["aspects"] == [] and segs[0]["aspect_counts"]["total"] == 0
+    assert view["aspects"]["total"] == sum(len(s["aspects"]) for s in segs[1:])
+    assert not any("Heap Pair" in a for c in view["card_details"][:15] for a in c["aspects"])
     assert "4 houses apart is a trine (120\u00b0, +2)" in segs[1]["how"][2]
     assert "18 decans apart is an opposition (180\u00b0, -1)" in segs[3]["how"][2]
     for seg in segs:
         links = seg["links"]
         # Every element pair and aspect is listed once, and drawn once in element-pair mode.
         assert len(links["pairs"]) == len(seg["dignity_rows"]) == len(seg["drawing"]["pair_links"])
-        assert len(links["aspects"]) == (0 if seg is segs[0] else len(seg["aspects"]))
+        assert len(links["aspects"]) == len(seg["aspects"])
         assert all(p["why"] for p in links["pairs"])
     # On a wheel each card has two neighbours and seven aspects; each aspect also gives the cards' score.
     decans = segs[3]["links"]

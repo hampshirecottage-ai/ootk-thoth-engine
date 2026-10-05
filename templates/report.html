@@ -408,7 +408,7 @@
                 <td>{{ seg.cards | length }}</td>
                 <td>{% for e in seg.elements if e.count %}<span title="{{ e.element }}"><i class="dot" style="background:{{ e.color }}"></i>{{ e.count }}</span> {% endfor %}</td>
                 <td>{{ signed(seg.dignity.net) }}</td>
-                <td><span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> ({{ seg.aspect_counts.strong }} strong)</td>
+                <td>{% if seg.aspects %}<span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> ({{ seg.aspect_counts.strong }} strong){% else %}none{% endif %}</td>
             </tr>
             {% endfor %}
             </tbody>
@@ -445,7 +445,7 @@
     <details class="section" id="{{ seg.id }}" {{ 'open' if S.segments | length == 1 }}>
         <summary>
             <h2>{{ seg.name }}</h2>
-            <span class="muted">{{ seg.cards | length }} card{{ 's' if seg.cards | length != 1 }} · dignity {{ signed(seg.dignity.net) }} · <span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> aspects shown</span>
+            <span class="muted">{{ seg.cards | length }} card{{ 's' if seg.cards | length != 1 }} · dignity {{ signed(seg.dignity.net) }}{% if seg.aspects %} · <span data-count-for="{{ seg.id }}">{{ seg.aspect_counts.total }}</span> aspects shown{% endif %}</span>
         </summary>
         <div class="body">
             {% if seg.how %}
