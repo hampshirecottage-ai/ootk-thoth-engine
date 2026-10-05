@@ -275,6 +275,19 @@ def test_report_link_lookup_uses_its_index(conn):
     assert "idx_sessions_report_link" in plan
 
 
+def test_report_link_lookup_returns_when_the_reading_was_saved(conn):
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            cur.execute("INSERT INTO tarot_sessions (operation_type, report_settings) "
+                        "VALUES ('OOTK', %s) RETURNING session_id;",
+                        (db.Jsonb({"link": "L" * 22, "spread_key": "12"}),))
+            session_id = cur.fetchone()["session_id"]
+        found_id, settings = db.load_report_by_link(conn, "L" * 22)
+        assert found_id == session_id and settings["spread_key"] == "12"
+        assert settings["saved_at"].tzinfo is not None              # comparable with web.RESHUFFLE_SINCE
+        assert db.load_report_by_link(conn, "M" * 22) is None
+
+
 def test_testimonials_one_per_session_and_only_approved_shown(conn):
     with conn.transaction(force_rollback=True):
         with conn.cursor() as cur:

@@ -17,6 +17,9 @@ services:
         sync: false
       - key: DB_PASSWORD
         sync: false
+      # Encrypt the database connection and refuse a server that won't (Neon requires it).
+      - key: PGSSLMODE
+        value: require
       - key: APP_PASSWORD
         sync: false
       # Password for the unlinked /admin page (approving testimonials); leave empty to turn it off.

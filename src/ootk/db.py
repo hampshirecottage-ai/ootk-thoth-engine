@@ -202,17 +202,20 @@ def load_report_settings(conn, session_id):
 
 def load_report_by_link(conn, link):
     """(session_id, settings) of the web reading whose report link is `link`, or None.
+    settings["saved_at"] is when it was saved.
 
     Links are random tokens stored in report_settings, so a report can't be found by
     counting through session numbers."""
     try:
         with conn.transaction(), conn.cursor() as cur:
-            cur.execute("SELECT session_id, report_settings FROM tarot_sessions "
+            cur.execute("SELECT session_id, report_settings, created_at FROM tarot_sessions "
                         "WHERE report_settings->>'link' = %s;", (link,))
             row = cur.fetchone()
     except psycopg.errors.UndefinedColumn:
         return None
-    return (row["session_id"], row["report_settings"]) if row else None
+    if not row:
+        return None
+    return row["session_id"], dict(row["report_settings"], saved_at=row["created_at"])
 
 def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results,
                         dignity_matrix=None, report_settings=None):

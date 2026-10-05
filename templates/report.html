@@ -608,6 +608,11 @@
             })();
         </script>
         {% endif %}
+        {% if seed and not seed_redraws %}
+        <p class="muted" id="oldDraw" style="margin:12px 0 0">This reading was saved before 5 October 2026, when
+            each operation of the Opening of the Key began to reshuffle the deck. Its seed now draws
+            different cards, so there is no share link. This page&rsquo;s own address keeps these cards.</p>
+        {% endif %}
         {% if cli_command %}
         <details class="sub cli-box">
             <summary>Run it in the terminal</summary>

@@ -95,8 +95,10 @@ cd ootk-thoth-engine
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"     # the package, its `ootk` command, and test tools
+pip install -c requirements-lock.txt -e ".[dev]"     # the package, its `ootk` command, and test tools
 ```
+
+`requirements-lock.txt` holds the exact library versions the live site and CI use, so a new release of a dependency changes nothing until that file does.
 
 ### 2. Configure the database
 

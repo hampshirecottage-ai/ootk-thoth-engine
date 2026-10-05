@@ -2,6 +2,7 @@
 Needs: pip install -e ".[dev]"
 """
 import json
+import time
 from contextlib import nullcontext
 from pathlib import Path
 
@@ -883,6 +884,75 @@ def test_bad_share_links_are_400(seeded_client, query):
     assert seeded_client.get(f"/reading?{query}").status_code == 400
 
 
+def test_saved_ootk_reading_records_the_draw_version(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+             significator="Knight of Swords")
+    assert seeded_client.saved["report_settings"]["draw_version"] == app_module.DRAW_VERSION
+    assert "shareLink" in r.text and 'id="oldDraw"' not in r.text
+
+
+def test_ootk_reading_saved_before_the_reshuffle_has_no_share_link(seeded_client):
+    """Its seed now draws other cards for Ops 2-4, so the link would show a different reading."""
+    post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+         significator="Knight of Swords")
+    drawn = seeded_client.lookups[-1]
+    del seeded_client.saved["report_settings"]["draw_version"]
+    link = seeded_client.saved["report_settings"]["link"]
+    r = seeded_client.get(f"/report/{link}")
+    assert r.status_code == 200 and seeded_client.lookups[-1] == drawn   # its saved cards still show
+    assert "shareLink" not in r.text and "cliCommand" not in r.text and 'id="oldDraw"' in r.text
+    assert seeded_client.get(f"/report/{link}/json").status_code == 200
+
+
+def test_ootk_reading_saved_after_the_reshuffle_went_live_keeps_its_share_link(seeded_client, monkeypatch):
+    """Saved between PR #61 and readings recording their draw version: it already reshuffled."""
+    post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+         significator="Knight of Swords")
+    settings = seeded_client.saved["report_settings"]
+    del settings["draw_version"]
+    from datetime import timedelta
+    found = (99, dict(settings, saved_at=app_module.RESHUFFLE_SINCE + timedelta(minutes=5)))
+    monkeypatch.setattr(app_module, "load_report_by_link", lambda conn, link: (found[0], dict(found[1])))
+    r = seeded_client.get(f"/report/{settings['link']}")
+    assert "shareLink" in r.text and 'id="oldDraw"' not in r.text
+
+
+def test_older_single_operation_readings_keep_their_share_link(seeded_client):
+    post(seeded_client, spread_key="3", draw_mode="seed", seed="7")
+    del seeded_client.saved["report_settings"]["draw_version"]
+    r = seeded_client.get(f"/report/{seeded_client.saved['report_settings']['link']}")
+    assert "shareLink" in r.text and 'id="oldDraw"' not in r.text
+
+
+@pytest.mark.parametrize("field", ["topic", "seed", "significator", "selected_cards"])
+def test_nul_characters_are_refused_before_saving(client, field):
+    over = {field: "A\x00"} if field != "selected_cards" else {field: "A\x00,B,C"}
+    r = post(client, follow=False, **over)
+    assert r.status_code == 400 and "can't be saved" in r.json()["detail"]
+    assert "count" not in client.saved
+
+
+def test_only_reading_pages_take_a_reading_slot(client, monkeypatch):
+    """The thread pool isn't capped, so while every slot is taken (say, saves waiting on a slow
+    database) the site's other pages and static files keep coming."""
+    taken = []
+
+    class Slots:
+        async def __aenter__(self):
+            taken.append(1)
+
+        async def __aexit__(self, *exc):
+            return False
+
+    monkeypatch.setattr(app_module, "reading_slots", Slots())
+    for path in ["/start", "/static/js/copy.js", "/", "/pick"]:
+        assert client.get(path).status_code == 200, path
+    assert taken == []
+    assert post(client).status_code == 200 and len(taken) == 2       # the save, then its report
+    for path in ["/reading", "/report/x"]:
+        assert app_module.builds_a_reading(path)
+
+
 def test_hand_picked_report_has_no_share_link(client):
     r = post(client, draw_mode="manual")
     assert r.status_code == 200 and "shareLink" not in r.text
@@ -1101,10 +1171,22 @@ def test_wrong_admin_passwords_lock_the_visitor_out(client, monkeypatch):
 
 
 def test_front_page_survives_a_testimonial_database_error(client, monkeypatch):
+    calls = []
+
     def broken(conn):
+        calls.append(1)
         raise psycopg.OperationalError("down")
     monkeypatch.setattr(app_module, "approved_testimonials", broken)
     assert client.get("/").status_code == 200
+    # The failure is remembered: further visits don't wait on the database again.
+    assert client.get("/").status_code == 200 and len(calls) == 1
+    day, retry_at, pick = app_module._testimonial_cache["day"]
+    assert pick is None and retry_at - time.monotonic() <= app_module.TESTIMONIAL_RETRY_SECONDS
+
+
+def test_testimonial_with_a_nul_character_is_refused(client):
+    r = client.post("/testimonial", data={"body": "hi\x00there"})
+    assert r.status_code == 400 and client.testimonials == []
 
 
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):

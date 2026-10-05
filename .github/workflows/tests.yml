@@ -13,6 +13,29 @@ jobs:
   pytest:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # A throwaway PostgreSQL loaded from database/schema.sql, so the database tests (saving,
+    # report links, testimonials) run on every PR instead of being skipped.
+    services:
+      postgres:
+        image: postgres:16@sha256:1a6ab3f5345eb6dbe04a1349529caabdb0ab09293a09590fad07b2246bfa4b54
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ootk_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      OOTK_TEST_DB: "1"
+      DB_HOST: localhost
+      DB_PORT: "5432"
+      DB_NAME: ootk_test
+      DB_USER: postgres
+      DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -20,6 +43,12 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - run: python -m pip install -e ".[dev]"
-      # Database tests skip without DB_* settings, so no secrets are needed here.
+      - run: python -m pip install -c requirements-lock.txt -e ".[dev]"
+      - name: Load the schema
+        run: psql -v ON_ERROR_STOP=1 -q -f database/schema.sql
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          PGDATABASE: ootk_test
       - run: python -m pytest -q

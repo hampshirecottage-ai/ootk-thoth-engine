@@ -1,4 +1,5 @@
 """FastAPI web GUI: `uvicorn ootk.web:app`."""
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -11,11 +12,9 @@ import secrets
 from collections import Counter
 import shlex
 import time
-from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlencode
 
-import anyio.to_thread
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
@@ -42,7 +41,9 @@ from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk.rules import element_dignity
 from ootk import atlas
 from ootk import significator as significator_methods
-from ootk.shuffle import draw_spread, duplicate_in_operation, has_significator_position, resolve_significator
+from ootk.shuffle import (
+    draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
+)
 from ootk.spreads import SPREADS, spread_positions, spread_segments
 from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
@@ -62,23 +63,32 @@ REPORT_LINK = re.compile(r"[A-Za-z0-9_-]{16,64}")
 # Readings saved before 'thoth' existed stored 'golden_dawn' for what is now 'thoth' (the
 # swap was always applied). New readings carry this version, so old links keep their cards.
 MAPPING_VERSION = 2
+# Readings saved before draw version 2 dealt every operation of the Opening of the Key from one
+# shuffle; now each operation reshuffles (shuffle.operation_seed). Their saved cards still show,
+# but their seed would draw other cards, so their report offers no share link or command.
+DRAW_VERSION = 2
+# When the reshuffle went live (PR #61 merged). Readings saved after it but before readings
+# recorded their draw version already draw under it.
+RESHUFFLE_SINCE = datetime(2026, 10, 5, 3, 25, 44, tzinfo=timezone.utc)
 
-# Pages render in a thread pool, 40 threads by default. A full Opening of the Key report needs
-# about 10 MB while it renders, so 40 at once can pass the 512 MB of a small host, and the
-# memory isn't handed back afterwards. Python runs one render at a time anyway (the GIL), so a
-# smaller pool costs no throughput: extra requests wait their turn instead.
+# A full Opening of the Key report needs about 10 MB while it is built, rendered and
+# compressed, so 40 at once (the thread pool's size) could pass the 512 MB of a small host, and
+# the memory isn't handed back afterwards. Python runs one render at a time anyway (the GIL), so
+# at most WEB_THREADS readings are handled at once and the rest wait their turn, outside the
+# thread pool. The pool itself keeps its default size: static files are read in it too, and a
+# reading that waits on a slow database must not hold up the site's CSS, images and other pages.
 WEB_THREADS = int(os.getenv("WEB_THREADS", "8"))
+reading_slots = asyncio.Semaphore(WEB_THREADS)
 
 
-@asynccontextmanager
-async def lifespan(app):
-    anyio.to_thread.current_default_thread_limiter().total_tokens = WEB_THREADS
-    yield
+def builds_a_reading(path: str) -> bool:
+    """Paths that analyse and render a whole reading: drawing one, a share link, a saved
+    report, and their JSON downloads."""
+    return path == "/generate_report" or path.startswith(("/reading", "/report/"))
 
 
 # No interactive API docs: the site has no API clients, and the docs page loads scripts from a CDN.
-app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None,
-              lifespan=lifespan)
+app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None)
 log = logging.getLogger("ootk.web")
 
 
@@ -86,6 +96,24 @@ static_dir = BASE_DIR / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/static", CachedStaticFiles(directory=str(static_dir)), name="static")
 app.add_middleware(CompressionMiddleware)
+
+
+class ReadingSlots:
+    """One of the WEB_THREADS reading slots per reading page, held until the page (built,
+    rendered and compressed) has been handed on."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or not builds_a_reading(scope["path"]):
+            await self.app(scope, receive, send)
+            return
+        async with reading_slots:
+            await self.app(scope, receive, send)
+
+
+app.add_middleware(ReadingSlots)
 
 
 # Form posts are a few kilobytes at most (the question is capped at TOPIC_MAX characters), so
@@ -420,6 +448,15 @@ def check_lengths(**fields):
                                                         f"(at most {FIELD_MAX} characters).")
 
 
+def refuse_nul(**fields):
+    """400 for a NUL character, which PostgreSQL can't store in text: without this check the
+    reading or testimonial would fail to save. Only a hand-made request can send one."""
+    for name, value in fields.items():
+        if "\x00" in value:
+            raise HTTPException(status_code=400, detail=f"The {name.replace('_', ' ')} field contains "
+                                                        f"a character that can't be saved.")
+
+
 def new_seed() -> str:
     """A fresh six-digit seed, shown on the report so the reading can be repeated."""
     return str(secrets.randbelow(900000) + 100000)
@@ -640,6 +677,11 @@ def seeded_draw(deck, seed, spread_key, significator):
         raise HTTPException(status_code=503, detail="The card database is incomplete, so no cards "
                                                     "can be drawn. Please try again later.") from e
     return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
+
+
+def reshuffles(spread_key) -> bool:
+    """True for a spread dealt over several operations, each from its own shuffle."""
+    return len({operation_number(p) for p in spread_positions(spread_key)}) > 1
 
 
 def share_path(settings) -> str:
@@ -868,6 +910,7 @@ def generate_report(
     # --- Domain Input Validation ---
     check_lengths(spread_key=spread_key, significator=significator, framework=framework,
                   mapping_system=mapping_system, draw_mode=draw_mode, output_format=output_format)
+    refuse_nul(topic=topic, seed=seed, significator=significator, selected_cards=selected_cards)
     if len(selected_cards) > SELECTED_CARDS_MAX:
         raise HTTPException(status_code=400, detail="The list of cards is longer than a whole deck.")
     if spread_key not in SPREADS:
@@ -935,7 +978,8 @@ def generate_report(
             reading["spread_results"],
             reading["dignity_matrix"],
             report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label,
-                                 link=link, mapping_version=MAPPING_VERSION),
+                                 link=link, mapping_version=MAPPING_VERSION,
+                                 draw_version=DRAW_VERSION),
         )
         # An older database saves the reading without its settings; then there is no link.
         linked = bool(session_id) and (load_report_settings(conn, session_id) or {}).get("link") == link
@@ -1071,6 +1115,9 @@ SESSION_ID = re.compile(r"[A-Za-z0-9_-]{22}")
 SESSION_MAX_AGE = 365 * 24 * 3600
 # Approvals reach the front page within this many seconds, without a database query per visit.
 TESTIMONIAL_CACHE_SECONDS = 300
+# While the database is unreachable, the front page waits this long before trying it again.
+# Every other part of the page comes from memory, so it stays instant during an outage.
+TESTIMONIAL_RETRY_SECONDS = 60
 _testimonial_cache = {}
 # Clearing cookies starts a new session, so one address may send at most three an hour.
 testimonial_senders = FailedLogins(attempts=3, window=3600)
@@ -1103,16 +1150,17 @@ def testimonial_of_the_day():
     front page never fails because of it."""
     today = utc_today()
     cached = _testimonial_cache.get("day")
-    if cached and cached[0] == today and time.monotonic() - cached[1] < TESTIMONIAL_CACHE_SECONDS:
+    if cached and cached[0] == today and time.monotonic() < cached[1]:
         return cached[2]
     try:
         with get_db_connection() as conn:
             approved = approved_testimonials(conn)
     except psycopg.Error as e:
         log.warning("testimonials unavailable: %s", e)
+        _testimonial_cache["day"] = (today, time.monotonic() + TESTIMONIAL_RETRY_SECONDS, None)
         return None
     pick = approved[today.toordinal() % len(approved)] if approved else None
-    _testimonial_cache["day"] = (today, time.monotonic(), pick)
+    _testimonial_cache["day"] = (today, time.monotonic() + TESTIMONIAL_CACHE_SECONDS, pick)
     return pick
 
 
@@ -1146,6 +1194,8 @@ def send_testimonial(request: Request, body: str = Form(""), name: str = Form(""
     error = None
     if not body:
         error = "Please write a few words before sending."
+    elif "\x00" in body + name:
+        error = "The text contains a character that can't be saved. Please retype it."
     elif len(body) > TESTIMONIAL_MAX:
         error = f"Please keep it to {TESTIMONIAL_MAX} characters (this one has {len(body)})."
     elif len(name) > TESTIMONIAL_NAME_MAX:
@@ -1267,19 +1317,21 @@ NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was co
 @app.get("/report/{link}", response_class=HTMLResponse)
 def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
-    session_id, stored, reading = saved_reading_parts(link)
-    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json")
+    session_id, stored, reading, seed_redraws = saved_reading_parts(link)
+    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json",
+                         seed_redraws=seed_redraws)
 
 
 @app.get("/report/{link}/json")
 def saved_reading_json(link: str):
     """The report's JSON download for a saved reading."""
-    _, settings, reading = saved_reading_parts(link)
+    _, settings, reading, _ = saved_reading_parts(link)
     return reading_json_response(settings, reading)
 
 
 def saved_reading_parts(link):
-    """(session_id, settings, run_reading() result) for a saved report's link; 404 if unknown."""
+    """(session_id, settings, run_reading() result, whether its seed still draws its cards) for
+    a saved report's link; 404 if unknown."""
     if not REPORT_LINK.fullmatch(link):
         raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
     with get_db_connection() as conn:
@@ -1290,9 +1342,13 @@ def saved_reading_parts(link):
         stored.pop("link", None)
         if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
             stored["mapping_system"] = "thoth"
+        saved_at = stored.pop("saved_at", None)
+        seed_redraws = (stored.pop("draw_version", 1) >= DRAW_VERSION
+                        or not reshuffles(stored["spread_key"])
+                        or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
-    return session_id, stored, run_reading(stored, card_titles, significator_label)
+    return session_id, stored, run_reading(stored, card_titles, significator_label), seed_redraws
 
 
 # Which Major carries each sign, per mapping system, for the card panel's small maps. Reference
@@ -1391,12 +1447,16 @@ def reading_json_response(settings, r):
                              'attachment; filename="ootk_reading.json"'})
 
 
-def render_report(request, session_id, settings, r, shared=False, json_url=None, unsaved=False):
+def render_report(request, session_id, settings, r, shared=False, json_url=None, unsaved=False,
+                  seed_redraws=True):
     """The visual report for a reading from run_reading().
 
     A full Opening of the Key export is about 300 KB, so a report that has an address of its
-    own (json_url) fetches it from there on demand instead of carrying it in the page."""
+    own (json_url) fetches it from there on demand instead of carrying it in the page.
+    seed_redraws is False for a saved reading whose seed no longer draws its cards
+    (DRAW_VERSION): it then gets no share link or command."""
     spread_key, seed = settings["spread_key"], settings["seed"]
+    redraw = bool(seed) and seed_redraws
     mapping_system, framework = settings["mapping_system"], settings["framework"]
     view = report_view(settings, r)
     return templates.TemplateResponse(
@@ -1417,9 +1477,10 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "settings": settings,
             "shared": shared,
             "unsaved": unsaved,
-            "share_path": share_path(settings) if seed else "",
+            "share_path": share_path(settings) if redraw else "",
             "cli_command": cli_command(spread_key, seed, mapping_system, framework,
-                                       settings["significator"], settings["topic"]) if seed else "",
+                                       settings["significator"], settings["topic"]) if redraw else "",
+            "seed_redraws": seed_redraws,
             "spatial_details": r["spatial_details"],
             "spatial_dist": r["spatial_dist"],
             "solid_counts": r["solid_counts"],
