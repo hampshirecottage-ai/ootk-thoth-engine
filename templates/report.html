@@ -440,7 +440,7 @@
                 <p class="muted" style="font-size:0.85em">This spread has no geometric layout, so no aspects are drawn.</p>
             {% else %}
                 <div class="drawing-tools">
-                    {% if d.pair_links %}
+                    {% if d.pair_links and d.lines %}
                     <div class="group link-modes" role="group" aria-label="Which links to draw">
                         <button type="button" class="chip mode" data-link-mode="aspects" data-for="{{ seg.id }}" aria-pressed="true">Aspect lines</button>
                         <button type="button" class="chip mode" data-link-mode="pairs" data-for="{{ seg.id }}" aria-pressed="false">Element pairs</button>
@@ -448,7 +448,7 @@
                     {% endif %}
                     <button class="chip" type="button" data-svg-download="{{ seg.id }}">Download SVG</button>
                 </div>
-                <svg viewBox="{{ d.viewbox }}" width="{{ d.width }}" data-seg="{{ seg.id }}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ seg.name }} layout">
+                <svg viewBox="{{ d.viewbox }}" width="{{ d.width }}" data-seg="{{ seg.id }}"{% if d.pair_links and not d.lines %} class="mode-pairs"{% endif %} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{{ seg.name }} layout">
                     <defs>
                         {% for c in d.slots %}<clipPath id="clip-{{ seg.id }}-{{ c.index }}"><rect x="{{ c.x }}" y="{{ c.y }}" width="{{ c.w }}" height="{{ c.h }}" rx="3"/></clipPath>{% endfor %}
                     </defs>
