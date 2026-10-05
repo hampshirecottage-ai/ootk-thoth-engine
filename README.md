@@ -20,6 +20,7 @@ It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew
   - Operation 2: 12 astrological houses
   - Operation 3: 12 zodiacal signs
   - Operation 4: 36 decans, each labelled with its ruler, sign and pip (Decan 1: Mars in Aries (2 of Wands))
+  - Each operation reshuffles the whole deck (Operation 1 keeps the seed's own order), so the significator can fall in a house, sign or decan, and a card may appear in more than one operation
 - **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Cube of Space positions and King Scale colours follow the letter, so the swap moves the Emperor and the Star between the Aries and Aquarius edges.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
@@ -264,6 +265,7 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `fix_correspondence_audit.sql` | Six Cube of Space edges as Paul Case gives them, axis directions, French Magus and Priestess planets |
 | `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
 | `add_testimonials.sql` | Testimonials (without it the start page simply shows none); lists the approve queries |
+| `fix_hexagram_geometry.sql` | The `spread_position_geometry` table still holds the old hexagram; the engine doesn't read it, so this only tidies the table |
 
 The other files in `database/migrations/` built the early schema and are only kept for history.
 

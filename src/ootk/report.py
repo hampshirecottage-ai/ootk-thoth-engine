@@ -109,6 +109,12 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += ("\nOn the house, sign and decan wheels the aspect between two positions is "
                       "fixed by the layout and is the same in every reading; the `cards:` part "
                       "(the elemental dignity of the two cards drawn there) is this reading's.\n")
+    if any(s.get("pair_mode") == "consecutive" and s.get("delta_angle") is not None
+           and s.get("aspect") != "Centre Node"
+           for s in spatial_matrix or ()):
+        prompt_md += ("\nThe aspects below come from where the positions sit in the spread's layout, "
+                      "not from the cards, so they are the same in every reading of this spread. "
+                      "This reading's cards are scored in section 4.\n")
     if spatial_matrix:
         last_segment = None
         last_aspect = None

@@ -10,16 +10,17 @@ CREATE TABLE IF NOT EXISTS spread_position_geometry (
     polar_angle_deg FLOAT -- Angle in degrees (0 - 360) for circular/astrological layouts
 );
 
--- Seed Coordinates for Spread 6: Hexagram Layout (Macrocosm)
--- Center (0,0) with 6 surrounding vertices on a unit circle
+-- Seed Coordinates for Spread 6: Golden Dawn hexagram, planets as on the Tree of Life
+-- (the layout ootk.spreads draws): Saturn top, Jupiter and Venus right, Mars and Mercury
+-- left, Sun in the centre, Moon at the bottom.
 INSERT INTO spread_position_geometry (spread_key, position_index, position_name, pos_x, pos_y, polar_angle_deg) VALUES
 ('6', 1, 'Saturn (Top Apex)', 0.0, 1.0, 90.0),
 ('6', 2, 'Jupiter (Right Top)', 0.866, 0.5, 30.0),
-('6', 3, 'Mars (Right Bottom)', 0.866, -0.5, 330.0),
-('6', 4, 'Venus (Bottom Apex)', 0.0, -1.0, 270.0),
+('6', 3, 'Mars (Left Top)', -0.866, 0.5, 150.0),
+('6', 4, 'Venus (Right Bottom)', 0.866, -0.5, 330.0),
 ('6', 5, 'Mercury (Left Bottom)', -0.866, -0.5, 210.0),
-('6', 6, 'Sun (Left Top)', -0.866, 0.5, 150.0),
-('6', 7, 'Moon (Center Core)', 0.0, 0.0, 0.0);
+('6', 6, 'Sun (Center Core)', 0.0, 0.0, 0.0),
+('6', 7, 'Moon (Bottom Apex)', 0.0, -1.0, 270.0);
 
 -- Seed Coordinates for Spread 10: 12 Zodiacal Signs (Circle division by 30 deg)
 INSERT INTO spread_position_geometry (spread_key, position_index, position_name, pos_x, pos_y, polar_angle_deg) VALUES

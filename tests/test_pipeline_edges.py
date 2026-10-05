@@ -24,7 +24,7 @@ def test_dual_pairings_never_cross_an_operation_boundary():
     pairs = {d.split(":")[0] for d in duals}
     for last in (15, 27, 39):                    # the last card of operations 1, 2 and 3
         assert f"Positions {last} & {last + 1}" not in pairs
-    assert len(duals) == 75 - 4                  # every in-operation neighbour still pairs
+    assert len(duals) == 8 + 12 + 12 + 36        # the dignities' pairs: heap pairs, closed wheels
     # A single spread is one segment, as before.
     _, _, duals = analysis.analyze_platonic_topology(results[:3], "3")
     assert len(duals) == 2
