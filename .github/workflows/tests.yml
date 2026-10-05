@@ -14,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # A throwaway PostgreSQL loaded from database/schema.sql, so the database tests (saving,
-    # report links, testimonials) run on every PR instead of being skipped.
+    # report links, testimonials) run on every PR instead of being skipped. Keep the major
+    # version the same as the live Neon database (17.11 on 2026-10-05).
     services:
       postgres:
-        image: postgres:16@sha256:1a6ab3f5345eb6dbe04a1349529caabdb0ab09293a09590fad07b2246bfa4b54
+        image: postgres:17@sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f
         env:
           POSTGRES_USER: postgres
           POSTGRES_DB: ootk_test
