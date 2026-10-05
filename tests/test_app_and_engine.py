@@ -929,7 +929,7 @@ def sample_deck():
     return deck + [dict(fake_card("Queen of Cups", suit="Cups", arcana="Court"), card_id=77)]
 
 
-def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeypatch):
+def test_start_page_shows_the_settings_then_a_folded_sample_reading(client, monkeypatch):
     deck = sample_deck()
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
     page = client.get("/").text
@@ -937,7 +937,9 @@ def test_start_page_shows_the_sample_reading_before_the_settings(client, monkeyp
     expected, _ = app_module.seeded_draw(deck, s["seed"], s["spread_key"], s["significator"])
     assert len(expected) == 75 and all(title in page for title in expected)
     assert page.count('<details class="op">') == 4
-    assert page.index('id="sample"') < page.index('id="readingForm"')
+    assert page.index('id="readingForm"') < page.index('id="sample"')  # settings in the banner
+    assert '<details class="panel sample" id="sample">' in page        # sample starts folded
+    assert 'class="tiles"' not in page
     assert 'id="copySample"' in page and "HERMETIC ANALYTICAL REPORT" in page
     assert client.saved == {}                                   # the sample is never saved
     assert 'id="sample"' not in client.get("/pick").text
@@ -1101,8 +1103,9 @@ def test_front_page_survives_a_testimonial_database_error(client, monkeypatch):
 
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
-    assert "For tarot readers who use ChatGPT" in page
-    assert 'class="btn-cta" href="#readingForm"' in page
+    assert "For tarot readers who use Claude or another AI" in page
+    assert "ChatGPT" not in page
+    assert 'id="readingForm"' in page and 'class="btn-cta"' not in page
     assert f'href="{app_module.REPO_URL}"' in page
 
 

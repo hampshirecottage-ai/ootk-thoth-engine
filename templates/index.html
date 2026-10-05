@@ -28,7 +28,7 @@
         .brand { font-family: "Cinzel", serif; font-weight: 800; letter-spacing: 0.12em; color: var(--band-head); text-decoration: none; line-height: 1.15; }
         :root[data-theme="light"] .brand { color: #ffe0a0; }
         .brand small { display: block; font-family: "JetBrains Mono", monospace; font-weight: 400; letter-spacing: 0.04em; font-size: 0.7em; opacity: 0.85; }
-        .band { max-width: 1160px; margin: 0 auto 20px; box-sizing: border-box; background: var(--band-bg); border: 1px solid var(--band-line); border-radius: 14px; padding: 24px 26px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: center; box-shadow: 0 0 24px rgba(255, 224, 160, 0.12); }
+        .band { max-width: 1160px; margin: 0 auto 20px; box-sizing: border-box; background: var(--band-bg); border: 1px solid var(--band-line); border-radius: 14px; padding: 24px 26px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; box-shadow: 0 0 24px rgba(255, 224, 160, 0.12); }
         .band h1 { font-family: "Cinzel", serif; font-weight: 800; letter-spacing: 0.02em; color: var(--band-head); margin: 8px 0 0; font-size: 1.9em; line-height: 1.2; }
         .band p, .band p a, .band .steps li { color: var(--band-text); }
         .band .tagline { margin: 8px 0 0; max-width: 60ch; color: var(--band-text); }
@@ -37,12 +37,18 @@
         .band .steps, .band .hero-actions { justify-content: flex-start; }
         .band .steps span { background: var(--tile-bg); }
         .band .trust { font-family: "JetBrains Mono", monospace; }
-        .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-left: 1px solid var(--band-line); padding-left: 26px; }
-        .tile { background: var(--tile-bg); border-radius: 10px; padding: 10px 12px; text-align: center; }
-        .tile span { display: block; font-family: "JetBrains Mono", monospace; font-size: 0.72em; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-        .tile strong { display: block; margin-top: 2px; font-size: 0.95em; font-weight: 600; color: var(--text); }
-        .band .tiles-note { grid-column: 1 / -1; margin: 0; font-size: 0.8em; text-align: center; }
-        .band .tiles-note a { text-decoration: none; }
+        .band #readingForm { align-self: start; max-width: none; }
+        .band .settings { margin: 0; }
+        .band .settings p, .band .settings p a { color: var(--text); }
+        .band .settings .form-lede { color: var(--muted); }
+        /* The sample reading folds away under its heading; the arrow shows whether it is open. */
+        .sample-toggle { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
+        .sample-toggle::-webkit-details-marker { display: none; }
+        .sample-toggle::before { content: "\25B8"; font-size: 1.3em; line-height: 1; color: var(--accent-2); transition: transform 0.15s; }
+        details.sample[open] > .sample-toggle::before { transform: rotate(90deg); }
+        .sample-toggle h2 { margin: 0; }
+        details.sample[open] > .sample-toggle { margin-bottom: 10px; }
+        .sample-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
         .front { display: grid; grid-template-columns: minmax(0, 1160px); gap: 20px; justify-content: center; }
         #readingForm { width: 100%; max-width: 560px; justify-self: center; }
         .settings { position: static; }
@@ -70,8 +76,6 @@
         .trust { margin: 10px 0 0; color: var(--muted); font-size: 0.85em; }
         .trust a { color: inherit; }
         .hero-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; }
-        a.btn-cta { background: var(--accent); color: var(--on-accent); font-weight: 700; text-decoration: none; padding: 10px 20px; border-radius: 6px; }
-        a.btn-cta:hover { background: var(--accent-2); }
         .today-link { color: var(--accent); text-decoration: none; font-size: 0.92em; padding: 4px 0; }
         .today-link:hover { text-decoration: underline; }
         .testimonial { margin: 16px auto 0; max-width: 56ch; padding: 10px 0 0; border-top: 1px solid var(--line); }
@@ -140,7 +144,6 @@
         @media (max-width: 860px) {
             .band { grid-template-columns: minmax(0, 1fr); padding: 18px 16px; gap: 16px; }
             .band h1 { font-size: 1.4em; }
-            .tiles { border-left: none; padding-left: 0; border-top: 1px solid var(--band-line); padding-top: 16px; }
         }
         @media (max-width: 900px) { .sample-grid { grid-template-columns: minmax(0, 1fr); } .viz { position: static; } }
         @media (max-width: 640px) {
@@ -154,12 +157,12 @@
         <a class="brand" href="/">OOTK<small>Thoth engine</small></a>
         <button type="button" class="btn-small" id="themeToggle" title="Switch between dark and light" aria-label="Switch between dark and light">◐<span class="wide-only"> Theme</span></button>
     </header>
-    <!-- Banner: what it is, for whom and how on the left; the sample reading at a glance on the right. -->
+    <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
             <p class="chips"><span>LLM Tarot Reading</span><span>Thoth / Liber 777</span><span>Book T</span></p>
             <h1 id="pageTitle">What does a complete 78-card Hermetic mapping actually look&nbsp;like?</h1>
-            <p class="tagline">For tarot readers who use ChatGPT, Claude or another AI. OOTK draws a Thoth spread, looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, and writes the prompt. Your AI interprets it; OOTK does not.</p>
+            <p class="tagline">For tarot readers who use Claude or another AI. OOTK draws a Thoth spread, looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, and writes the prompt. Your AI interprets it; OOTK does not.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Draw a spread</li>
                 <li><span>2</span> Copy the prompt</li>
@@ -167,7 +170,6 @@
             </ol>
             <p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a> · Same seed, same cards · Book T and Liber 777 tables</p>
             <p class="hero-actions">
-                <a class="btn-cta" href="#readingForm">Discover your own path</a>
                 <a href="/start" class="today-link">New here? Start here &rarr;</a>
             </p>
             {% if show_testimonials %}
@@ -182,20 +184,17 @@
             {% endif %}
             {% endif %}
         </div>
-        <div class="tiles">
-            {% if sample %}
-            <div class="tile"><span>Significator</span><strong>{{ sample.significator }}</strong></div>
-            <div class="tile"><span>Cards placed</span><strong>{{ sample.card_count }} of 78</strong></div>
-            <div class="tile"><span>Operations</span><strong>4: heap, houses, signs, decans</strong></div>
-            <div class="tile"><span>Seed</span><strong>{{ sample.seed }} · same seed, same cards</strong></div>
-            <p class="tiles-note"><a href="#sample">The sample reading below, at a glance &darr;</a></p>
-            {% else %}
-            <div class="tile"><span>Deck</span><strong>78 Thoth cards</strong></div>
-            <div class="tile"><span>Tables</span><strong>Book T and Liber 777</strong></div>
-            <div class="tile"><span>Operations</span><strong>4: heap, houses, signs, decans</strong></div>
-            <div class="tile"><span>Draws</span><strong>Same seed, same cards</strong></div>
-            {% endif %}
-        </div>
+        <form action="/generate_report" method="POST" id="readingForm">
+            <!-- SETTINGS: everything that shapes a reading, in one place -->
+            <section class="panel settings" aria-label="Settings">
+                <h2>Discover your own path through the Cube of Space</h2>
+                <p class="form-lede">Your cards get the same tables and the same scoring. Your AI does the reading.</p>
+
+{% include "_settings_fields.html" %}
+                <button type="submit" class="btn-submit">Generate reading</button>
+                <p class="mode-link">Want to choose the cards? <a href="/pick" id="modeSwitch">Pick them by hand</a></p>
+            </section>
+        </form>
     </section>
 
     <div class="front{% if not sample %} no-sample{% endif %}">
@@ -203,8 +202,8 @@
         <!-- SAMPLE: a whole Opening of the Key, before any settings are asked for.
              Tier 1 (always shown): the diagram, a factual summary, the elements.
              Tiers 2 and 3 (behind the mechanics toggle): cube positions, each operation, the prompt. -->
-        <section class="panel sample" id="sample" aria-labelledby="sampleTitle">
-            <h2 id="sampleTitle">A sample Opening of the Key</h2>
+        <details class="panel sample" id="sample">
+            <summary class="sample-toggle"><h2 id="sampleTitle">A sample Opening of the Key</h2></summary>
             <p class="sample-meta">All four operations · {{ sample.card_count }} cards · seed {{ sample.seed }} · significator {{ sample.significator }}</p>
             <div class="sample-grid">
                 <div class="viz">
@@ -286,20 +285,8 @@
                     <p class="credit">Card art: Pamela Colman Smith (1909), public domain. <a href="/method#art">Why these pictures?</a></p>
                 </div>
             </div>
-        </section>
+        </details>
         {% endif %}
-
-        <form action="/generate_report" method="POST" id="readingForm">
-            <!-- SETTINGS: everything that shapes a reading, in one place -->
-            <section class="panel settings" aria-label="Settings">
-                <h2>Discover your own path through the Cube of Space</h2>
-                <p class="form-lede">Your cards get the same tables and the same scoring. Your AI does the reading.</p>
-
-{% include "_settings_fields.html" %}
-                <button type="submit" class="btn-submit">Generate reading</button>
-                <p class="mode-link">Want to choose the cards? <a href="/pick" id="modeSwitch">Pick them by hand</a></p>
-            </section>
-        </form>
     </div>
 
     <script type="application/json" id="positionsData">{{ positions | tojson }}</script>
