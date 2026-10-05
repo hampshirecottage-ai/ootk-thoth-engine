@@ -1105,7 +1105,7 @@ def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
     assert "For tarot readers who use Claude or another AI" in page
     assert "ChatGPT" not in page
-    assert 'class="btn-cta" href="#readingForm"' in page
+    assert 'id="readingForm"' in page and 'class="btn-cta"' not in page
     assert f'href="{app_module.REPO_URL}"' in page
 
 
