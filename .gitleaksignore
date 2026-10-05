@@ -1,4 +1,7 @@
-# The CI test database's throwaway password, in a commit on PR #63's branch before the
-# workflow switched to password-less (trust) auth. Not a real credential.
+# Findings gitleaks may flag that are not secrets. One fingerprint per line
+# (commit:file:rule:line), as printed in the secret-scan log.
+
+# PR #63's first commit gave the throwaway CI Postgres container the password "postgres";
+# a later commit removed it, but the scan reads every commit on every branch.
 125dc19a9ac95af6eb87ee3b45eceb46ad588f52:.github/workflows/tests.yml:password-assignment:38
 125dc19a9ac95af6eb87ee3b45eceb46ad588f52:.github/workflows/tests.yml:password-assignment:52

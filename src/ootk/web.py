@@ -221,6 +221,33 @@ async def security_headers(request: Request, call_next):
     return response
 
 
+class HeadAsGet:
+    """Answers HEAD like GET, without the body. FastAPI routes declared with @app.get refuse
+    HEAD with 405, so uptime monitors and link checkers that use HEAD saw every page as down.
+    Added last, so it wraps everything else: HEAD gets the same password check and headers."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope["method"] != "HEAD":
+            return await self.app(scope, receive, send)
+        sent_body = False
+
+        async def send_headers_only(message):
+            nonlocal sent_body
+            if message["type"] != "http.response.body":
+                return await send(message)
+            if not sent_body:
+                sent_body = True
+                await send({"type": "http.response.body", "body": b"", "more_body": False})
+
+        await self.app(dict(scope, method="GET"), receive, send_headers_only)
+
+
+app.add_middleware(HeadAsGet)
+
+
 def is_private_path(path: str) -> bool:
     return (path.startswith(("/report/", "/admin")) or path in ("/generate_report", "/testimonial"))
 
