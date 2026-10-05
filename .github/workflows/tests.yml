@@ -20,8 +20,9 @@ jobs:
         image: postgres:16@sha256:1a6ab3f5345eb6dbe04a1349529caabdb0ab09293a09590fad07b2246bfa4b54
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
           POSTGRES_DB: ootk_test
+          # A throwaway database on the runner, so no password at all.
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -35,7 +36,6 @@ jobs:
       DB_PORT: "5432"
       DB_NAME: ootk_test
       DB_USER: postgres
-      DB_PASSWORD: postgres
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -49,6 +49,5 @@ jobs:
         env:
           PGHOST: localhost
           PGUSER: postgres
-          PGPASSWORD: postgres
           PGDATABASE: ootk_test
       - run: python -m pytest -q

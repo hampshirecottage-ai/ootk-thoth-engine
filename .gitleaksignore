@@ -1,0 +1,4 @@
+# The CI test database's throwaway password, in a commit on PR #63's branch before the
+# workflow switched to password-less (trust) auth. Not a real credential.
+125dc19a9ac95af6eb87ee3b45eceb46ad588f52:.github/workflows/tests.yml:password-assignment:38
+125dc19a9ac95af6eb87ee3b45eceb46ad588f52:.github/workflows/tests.yml:password-assignment:52
