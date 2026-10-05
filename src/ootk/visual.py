@@ -286,7 +286,11 @@ def _layout_drawing(layout_key, cards, aspects, pairs=()):
     lines = [dict(a, x1=points[a["a"]][0], y1=points[a["a"]][1],
                   x2=points[a["b"]][0], y2=points[a["b"]][1]) for a in aspects]
     centre = (sum(x for x, _ in points) / len(points), sum(y for _, y in points) / len(points))
-    pair_links = [_pair_link(p, *_pair_curve(points[p["a"]], points[p["b"]], centre)) for p in pairs]
+    # A heap stacks the significator's two links (to 14 and 15) on one column of cards, so
+    # they bow out further to clear the cards between.
+    bulge = 0.5 if layout_key in HEAP_LAYOUTS else 0.22
+    pair_links = [_pair_link(p, *_pair_curve(points[p["a"]], points[p["b"]], centre, bulge))
+                  for p in pairs]
     return {
         "kind": "layout",
         "pair_links": pair_links,
@@ -587,7 +591,10 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             for i in (a["a"] + start, a["b"] + start):
                 aspects_by_card.setdefault(i, []).append(f"{a['label']} ({a['score_text']}): {a['pair']}")
         seg_elements = Counter(c["element"] for c in seg_cards)
-        drawing = segment_drawing(layout_key, seg_cards, seg_aspects, seg_pairs)
+        # A heap's links are its element pairs; its "Heap Pair" entries carry no aspect, so
+        # drawing them as aspect lines would only hide the pairs under grey dots.
+        link_aspects = [] if layout_key in HEAP_LAYOUTS else seg_aspects
+        drawing = segment_drawing(layout_key, seg_cards, link_aspects, seg_pairs)
         segments.append({
             "id": f"op{number}",
             "name": name or "Spread",
@@ -600,7 +607,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             "ill_dignified": [c for c in seg_cards if not c["dignified"]],
             "drawing": drawing,
             "how": link_explainer(layout_key, len(seg_cards), drawing["kind"] != "row"),
-            "links": link_view(layout_key, seg_cards, seg_aspects, seg_pairs),
+            "links": link_view(layout_key, seg_cards, link_aspects, seg_pairs),
         })
 
     element_rows = _element_rows(element_counts)
