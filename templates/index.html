@@ -37,7 +37,10 @@
         .band .steps, .band .hero-actions { justify-content: flex-start; }
         .band .steps span { background: var(--tile-bg); }
         .band .trust { font-family: "JetBrains Mono", monospace; }
-        .band #readingForm { align-self: start; max-width: none; }
+        .band-text { grid-column: 1; grid-row: 1; }
+        .band #readingForm { grid-column: 2; grid-row: 1 / span 2; align-self: start; max-width: none; }
+        .band-more { grid-column: 1; grid-row: 2; align-self: start; }
+        .band { row-gap: 0; grid-template-rows: auto 1fr; }
         .band .settings { margin: 0; }
         .band .settings p, .band .settings p a { color: var(--text); }
         .band .settings .form-lede { color: var(--muted); }
@@ -143,6 +146,8 @@
         .form-lede { margin: -6px 0 14px; color: var(--muted); font-size: 0.9em; }
         @media (max-width: 860px) {
             .band { grid-template-columns: minmax(0, 1fr); padding: 18px 16px; gap: 16px; }
+            .band-text, .band #readingForm, .band-more { grid-column: 1; grid-row: auto; }
+            .band { row-gap: 16px; }
             .band h1 { font-size: 1.4em; }
         }
         @media (max-width: 900px) { .sample-grid { grid-template-columns: minmax(0, 1fr); } .viz { position: static; } }
@@ -161,14 +166,28 @@
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
             <p class="chips"><span>LLM Tarot Reading</span><span>Thoth / Liber 777</span><span>Book T</span></p>
-            <h1 id="pageTitle">What does a complete 78-card Hermetic mapping actually look&nbsp;like?</h1>
+            <h1 id="pageTitle">What would you like the cards to look&nbsp;at?</h1>
             <p class="tagline">For tarot readers who use Claude or another AI. OOTK draws a Thoth spread, looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, and writes the prompt. Your AI interprets it; OOTK does not.</p>
             <ol class="steps" aria-label="How it works">
-                <li><span>1</span> Draw a spread</li>
+                <li><span>1</span> Draw your cards</li>
                 <li><span>2</span> Copy the prompt</li>
-                <li><span>3</span> Paste into your AI</li>
+                <li><span>3</span> Open it in your AI</li>
             </ol>
             <p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a> · Same seed, same cards · Book T and Liber 777 tables</p>
+        </div>
+        <form action="/generate_report" method="POST" id="readingForm">
+            <!-- SETTINGS: everything that shapes a reading, in one place -->
+            <section class="panel settings" aria-label="Settings">
+                <h2>Draw your reading</h2>
+                <p class="form-lede">Discover your own path through the Cube of Space. Your cards get the same tables and scoring as the sample; your AI does the reading.</p>
+
+{% include "_settings_fields.html" %}
+                <button type="submit" class="btn-submit">Draw my cards</button>
+                <p class="mode-link">Want to choose the cards? <a href="/pick" id="modeSwitch">Pick them by hand</a></p>
+            </section>
+        </form>
+        <!-- Below the settings on a phone, so the draw button shows on the first screen. -->
+        <div class="band-more">
             <p class="hero-actions">
                 <a href="/start" class="today-link">New here? Start here &rarr;</a>
             </p>
@@ -184,17 +203,6 @@
             {% endif %}
             {% endif %}
         </div>
-        <form action="/generate_report" method="POST" id="readingForm">
-            <!-- SETTINGS: everything that shapes a reading, in one place -->
-            <section class="panel settings" aria-label="Settings">
-                <h2>Discover your own path through the Cube of Space</h2>
-                <p class="form-lede">Your cards get the same tables and the same scoring. Your AI does the reading.</p>
-
-{% include "_settings_fields.html" %}
-                <button type="submit" class="btn-submit">Generate reading</button>
-                <p class="mode-link">Want to choose the cards? <a href="/pick" id="modeSwitch">Pick them by hand</a></p>
-            </section>
-        </form>
     </section>
 
     <div class="front{% if not sample %} no-sample{% endif %}">
