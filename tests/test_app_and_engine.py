@@ -464,8 +464,8 @@ def test_gui_dignities_stay_inside_each_operation(client):
     # Op boundaries for spread 12: 15 | 12 | 12 | 36 cards
     for last_of_op in (14, 26, 38):
         assert (last_of_op, last_of_op + 1) not in pairs
-    # Consecutive pairs inside each op, plus the closing pair of the three wheels.
-    assert len(pairs) == 75 - 4 + 3
+    # Op 1 scores its 8 heap pairs; each wheel its consecutive pairs plus the closing pair.
+    assert len(pairs) == 8 + 12 + 12 + 36
 
 
 def test_every_spread_position_count_matches(client):
@@ -542,9 +542,15 @@ def test_draw_spread_pins_significator_and_keeps_seed_order():
     positions = spreads.spread_positions("12")
     titles, pinned = shuffle.draw_spread(deck, "1568", positions, sig)
     assert pinned and titles[0] == "C10"
-    assert len(titles) == 75 and len(set(titles)) == 75          # no card drawn twice
+    assert len(titles) == 75
     rest = [c["title"] for c in shuffle.shuffle_deck(deck, "1568") if c["card_id"] != 10]
-    assert titles[1:] == rest[:74]                                # same order the CLI always drew
+    assert titles[1:15] == rest[:14]                              # Op 1: same order as before
+    # Each later operation reshuffles the whole deck: no card twice inside it, and the
+    # significator can fall there too.
+    for op, (start, end) in enumerate(((15, 27), (27, 39), (39, 75)), start=2):
+        again = [c["title"] for c in shuffle.shuffle_deck(deck, f"1568|op{op}")]
+        assert titles[start:end] == again[:end - start]
+    assert shuffle.duplicate_in_operation(positions, titles) is None
     # No significator position: nothing is pinned and the shuffled deck is dealt from the top.
     titles, pinned = shuffle.draw_spread(deck, "1568", spreads.spread_positions("3"), sig)
     assert not pinned
@@ -594,10 +600,10 @@ def test_op1_heap_pairs_take_no_aspect():
     # Pairs side by side in one heap (2-3, 4-5) used to read as a 0.8 deg Conjunction (+2).
     cards = [fake_card(f"C{i}") for i in range(15)]
     out = analysis.analyze_spatial_vectors(results_for(*cards), "8")
-    assert len(out) == 14
+    assert len(out) == 8                      # the heap's named pairs, as the dignities score them
     assert all(o["aspect"] == "Heap Pair" and o["aspect_name"] is None for o in out)
     assert all(o["score_modifier"] == 0 and o["delta_angle"] is None for o in out)
-    assert out[1]["distance"] == out[3]["distance"] == 0.5
+    assert out[0]["distance"] == out[1]["distance"] == 0.5
 
 
 def test_spatial_hexagram_uses_real_angles():
@@ -1186,7 +1192,7 @@ def test_report_view_explains_and_lists_each_operations_links():
     spatial = analysis.analyze_spatial_vectors(results, "12")
     segs = visual.build_report_view("12", results, analysis.analyze_elemental_balance(results),
                                     dignity, spatial, "x", "y")["segments"]
-    assert "1 with 2" in segs[0]["how"][0]
+    assert "2 with 3" in segs[0]["how"][0]
     assert "4 houses apart is a trine (120\u00b0, +2)" in segs[1]["how"][2]
     assert "18 decans apart is an opposition (180\u00b0, -1)" in segs[3]["how"][2]
     for seg in segs:
@@ -1310,7 +1316,7 @@ def major(title, attribution=""):
     (major("IV - The Emperor"), "Tetrahedron"),      # on Tzaddi, but still Aries
     (major("XVII - The Star"), "Octahedron"),        # on Heh, but still Aquarius
     (major("I - The Magus"), "Dodecahedron"),        # planetary
-    (major("XXI - The Universe"), "Hexahedron (Cube)"),
+    (major("XXI - The Universe"), "Dodecahedron"),   # Saturn, on the double letter Tav
 ])
 def test_solid_follows_the_card(card, solid):
     row = analysis.apply_card_solid(dict(card))
@@ -1337,7 +1343,7 @@ def test_wheels_close_their_circle_in_the_master_pipeline():
              for d in analysis.calculate_elemental_dignities(blank_results(75, positions), "12")}
     assert {(26, 15), (38, 27), (74, 39)} <= pairs        # 27<->16, 39<->28, 75<->40
     assert (14, 0) not in pairs                           # Op 1 is a heap, not a wheel
-    assert len(pairs) == 14 + 12 + 12 + 36
+    assert len(pairs) == 8 + 12 + 12 + 36
 
 
 @pytest.mark.parametrize("key,n", [("9", 12), ("10", 12), ("11", 36)])
@@ -1385,9 +1391,17 @@ def test_withheld_summary():
     assert analysis.withheld_summary(big, ["X0"]) is None          # too many left out to list
 
 
-def test_report_lists_withheld_cards(seeded_client):
+def test_seeded_ootk_has_no_withheld_section(seeded_client):
+    # Each operation reshuffles, so cards repeat across operations and the element counts are
+    # no longer the deck's minus a few left out.
     r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="",
              significator="Knight of Swords")
+    assert "### Withheld" not in r.text
+
+
+def test_report_lists_withheld_cards(seeded_client):
+    picked = [c["title"] for c in DECK[:75]]
+    r = post(seeded_client, spread_key="12", selected_cards=",".join(picked))
     drawn = set(seeded_client.lookups[-1])
     left = [c["title"] for c in DECK if c["title"] not in drawn]
     assert len(left) == 3
@@ -1696,3 +1710,68 @@ def test_error_messages_echo_at_most_40_characters(client):
     assert r.status_code == 404 and "9" * 41 not in r.text and "…" in r.json()["detail"]
     r = client.get("/reading", params={"seed": "1", "spread": "s" * 64})
     assert r.status_code == 400 and "s" * 41 not in r.text
+
+
+# ---------- logic consistency (2026-10-05 audit) ----------
+
+def _spread_parts(key, cards):
+    results = [{"position_number": i + 1, "position_name": p, "card_data": c}
+               for i, (p, c) in enumerate(zip(spreads.spread_positions(key), cards))]
+    dignity = analysis.calculate_elemental_dignities(results, key)
+    spatial = analysis.analyze_spatial_vectors(results, key)
+    return results, dignity, spatial
+
+
+@pytest.mark.parametrize("key,n", [("2", 2), ("4", 4), ("5", 4), ("6", 7), ("12", 75)])
+def test_headline_says_aspects_are_set_by_the_layout(key, n):
+    from ootk import visual
+    results, dignity, spatial = _spread_parts(key, [fake_card(f"C{i}") for i in range(n)])
+    head = visual.build_report_view(key, results, analysis.analyze_elemental_balance(results),
+                                    dignity, spatial, "x", "y")["headline"]
+    assert "same in every reading" in head[-1]
+    assert not any("outnumber" in line for line in head)
+
+
+def test_prompt_says_layout_aspects_are_fixed():
+    results, dignity, spatial = _spread_parts("6", [fake_card(f"C{i}") for i in range(7)])
+    counts = analysis.analyze_elemental_balance(results)
+    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, topo, duals = analysis.analyze_platonic_topology(results, "6")
+    prompt = report.build_analytical_prompt("Hexagram", "", "", "1", results, counts, dignity, spatial,
+                                            sdist, sdet, solids, topo, duals)
+    assert "same in every reading of this spread" in prompt
+
+
+def test_spreads_4_and_5_share_one_cross():
+    assert spreads.SPREAD_DEFAULT_COORDINATES["4"] == spreads.SPREAD_DEFAULT_COORDINATES["5"]
+
+
+def test_op1_scores_its_named_pairs_and_the_significator():
+    results, dignity, spatial = _spread_parts("8", [fake_card(f"C{i}") for i in range(15)])
+    pairs = [(d["from_index"], d["to_index"]) for d in dignity]
+    assert pairs == [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (0, 13), (0, 14)]
+    assert (2, 3) not in pairs                          # Left Pair B is not scored with Right Pair A
+    assert [(s["from_index"], s["to_index"]) for s in spatial] == pairs
+
+
+def test_tree_of_life_pairs_follow_the_paths():
+    results, dignity, _ = _spread_parts("7", [fake_card(f"C{i}") for i in range(10)])
+    pairs = {(d["from_index"], d["to_index"]) for d in dignity}
+    assert len(pairs) == 22
+    assert (2, 3) not in pairs                          # Binah and Chesed share no path
+    assert (0, 5) in pairs and (8, 9) in pairs          # Kether-Tiphareth, Yesod-Malkuth
+
+
+def test_wheel_dual_pairings_close_the_circle():
+    cards = [fake_card(f"C{i}") for i in range(12)]       # all Wands: Tetrahedron pairs
+    results = results_for(*cards)
+    _, _, duals = analysis.analyze_platonic_topology(results, "10")
+    assert len(duals) == 12 and duals[-1].startswith("Positions 12 & 1:")
+
+
+def test_manual_ootk_may_repeat_a_card_in_another_operation(client):
+    titles = [f"Card {i}" for i in range(15)] + [f"Card {i}" for i in range(60)]
+    assert post(client, spread_key="12", selected_cards=",".join(titles)).status_code == 200
+    twice_in_op = [f"Card {i}" for i in range(14)] + ["Card 0"] + [f"Card {i}" for i in range(60)]
+    r = post(client, spread_key="12", selected_cards=",".join(twice_in_op))
+    assert r.status_code == 400 and "twice in one operation" in r.text

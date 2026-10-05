@@ -4,7 +4,8 @@ import re
 
 from ootk.rules import aspect_label, element_dignity, find_aspect, separation
 from ootk.spreads import (
-    HEAP_LAYOUTS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments,
+    HEAP_LAYOUTS, HEAP_PAIRS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
+    TREE_LAYOUTS, spread_segments,
 )
 
 ELEMENT_WORDS = {"fire": "Fire", "water": "Water", "air": "Air", "earth": "Earth"}
@@ -37,7 +38,7 @@ MAJOR_ELEMENTS = {
 
 # Platonic solids. A card's solid follows the card's own element (the one Section 1 counts
 # and the dignities score), so the two never disagree: pips and courts take their suit's
-# solid, Majors their MAJOR_ELEMENTS element. The six planetary Majors keep the
+# solid, Majors their MAJOR_ELEMENTS element. The seven planetary Majors keep the
 # Dodecahedron. Spatial type and cube position stay with the Hebrew letter.
 PLATONIC_SOLIDS = {
     "Tetrahedron": {"solid_faces": 4, "solid_vertices": 4, "dual_solid": "Tetrahedron (Self-Dual)",
@@ -53,7 +54,11 @@ PLATONIC_SOLIDS = {
 }
 ELEMENT_SOLIDS = {"Fire": "Tetrahedron", "Water": "Icosahedron", "Air": "Octahedron",
                   "Earth": "Hexahedron (Cube)"}
-PLANETARY_MAJORS = {"The Magus", "The Priestess", "The Empress", "Fortune", "The Tower", "The Sun"}
+# The seven Majors on the seven double letters, one per classical planet. The Universe (Tav,
+# Saturn) is one of them: it also carries Earth, but Section 2 counts its letter as a double
+# letter, so its solid follows the planet too.
+PLANETARY_MAJORS = {"The Magus", "The Priestess", "The Empress", "Fortune", "The Tower", "The Sun",
+                    "The Universe"}
 
 def card_solid(card_data):
     """The card's Platonic solid name (see PLATONIC_SOLIDS), or None for an unknown card."""
@@ -102,20 +107,34 @@ def _closes_ring(layout_key, seg_len):
     coords = SPREAD_DEFAULT_COORDINATES.get(layout_key) or ()
     return layout_key in RING_LAYOUT_ASPECTS and seg_len == len(coords) and seg_len > 2
 
-def calculate_elemental_dignities(spread_results, spread_key=None):
-    """Pairwise dignity between neighbouring cards, never across an operation boundary.
+def segment_pairs(layout_key, seg_len):
+    """The neighbouring positions of one segment, as 0-based (a, b) pairs within it.
 
-    Neighbours are consecutive positions; on a full ring (houses, signs, decans) the last
-    position also neighbours the first (twelfth house <-> first house), closing the circle.
+    Dignities and dual pairings both use these, so the two never disagree on who neighbours
+    whom. Neighbours are consecutive positions, except:
+    - on a full ring (houses, signs, decans) the last position also neighbours the first
+      (twelfth house <-> first house), closing the circle;
+    - a heap (HEAP_PAIRS) pairs its named pairs instead of following deal order;
+    - a Tree of Life layout (TREE_LAYOUTS) pairs Sephiroth joined by a path.
     """
+    if layout_key in HEAP_PAIRS:
+        return [(a, b) for a, b in HEAP_PAIRS[layout_key] if b < seg_len]
+    if layout_key in TREE_LAYOUTS:
+        return [(a - 1, b - 1) for a, b in GD_PATH_ENDPOINTS.values() if b <= seg_len]
+    pairs = [(i, i + 1) for i in range(seg_len - 1)]
+    if _closes_ring(layout_key, seg_len):
+        pairs.append((seg_len - 1, 0))
+    return pairs
+
+def calculate_elemental_dignities(spread_results, spread_key=None):
+    """Pairwise dignity between neighbouring cards (see segment_pairs), never across an
+    operation boundary."""
     dignity_matrix = []
     if len(spread_results) < 2:
         return dignity_matrix
 
     for layout, seg_start, seg_end, seg_name in spread_segments(spread_results, spread_key):
-        pairs = [(i, i + 1) for i in range(seg_start, seg_end - 1)]
-        if _closes_ring(layout, seg_end - seg_start):
-            pairs.append((seg_end - 1, seg_start))
+        pairs = [(seg_start + a, seg_start + b) for a, b in segment_pairs(layout, seg_end - seg_start)]
         for i, j in pairs:
             c1 = spread_results[i]
             c2 = spread_results[j]
@@ -177,8 +196,8 @@ def analyze_spatial_vectors(spread_results, spread_key):
     Master pipelines are analysed one operation at a time against that operation's own layout,
     so no pair spans two operations. Ring layouts (see RING_LAYOUT_ASPECTS) are paired by
     exact aspect between any two positions; all other layouts pair consecutive positions.
-    Heap layouts (HEAP_LAYOUTS, Op 1) pair consecutive positions by distance only, with no
-    aspect: their drawing coordinates are not a wheel.
+    Heap layouts (HEAP_LAYOUTS, Op 1) link the same pairs as their dignities (HEAP_PAIRS), by
+    distance only, with no aspect: their drawing coordinates are not a wheel.
     Segments without a defined layout are skipped (no fake geometry). A position sitting on
     the centroid has no direction, so consecutive pairs involving it are reported as a
     centre/axis node.
@@ -249,16 +268,18 @@ def analyze_spatial_vectors(spread_results, spread_key):
             spatial_matrix.extend(t[3] for t in found)
             continue
 
-        for j in range(seg_len - 1):
-            item1, item2 = spread_results[seg_start + j], spread_results[seg_start + j + 1]
-            (x1, y1), (x2, y2) = coords[j], coords[j + 1]
+        links = (segment_pairs(layout_key, seg_len) if layout_key in HEAP_LAYOUTS
+                 else [(j, j + 1) for j in range(seg_len - 1)])
+        for j, k in links:
+            item1, item2 = spread_results[seg_start + j], spread_results[seg_start + k]
+            (x1, y1), (x2, y2) = coords[j], coords[k]
             dist = math.hypot(x2 - x1, y2 - y1)
 
-            a1, a2 = polar(coords[j]), polar(coords[j + 1])
+            a1, a2 = polar(coords[j]), polar(coords[k])
             if layout_key in HEAP_LAYOUTS:
                 delta_angle = None
                 aspect_name, aspect_desc, modifier = (
-                    "Heap Pair", "Neighbours in the deal; a heap has no angular relation", 0)
+                    "Heap Pair", "Paired in the heap; a heap has no angular relation", 0)
                 short = None
             elif a1 is None or a2 is None:
                 delta_angle = 0.0
@@ -282,7 +303,7 @@ def analyze_spatial_vectors(spread_results, spread_key):
                 "pair_mode": "consecutive",
                 "aspect_name": short,           # None for unaspected and centre-node pairs
                 "from_index": seg_start + j,
-                "to_index": seg_start + j + 1,
+                "to_index": seg_start + k,
             })
 
     return spatial_matrix
@@ -332,8 +353,8 @@ def analyze_hebrew_spatial_distribution(spread_results):
 def analyze_platonic_topology(spread_results, spread_key=None):
     """Solid counts, per-card topology and dual pairings between neighbouring cards.
 
-    Like the dignities, dual pairings never cross an operation boundary: in the master
-    pipeline the last card of one operation is not the neighbour of the next one's first.
+    Dual pairings use the same neighbours as the dignities (segment_pairs): they never cross an
+    operation boundary, and on a full wheel the last position neighbours the first.
     """
     solid_counts = {
         "Dodecahedron": 0,
@@ -367,13 +388,14 @@ def analyze_platonic_topology(spread_results, spread_key=None):
         })
 
     dual_pairings = []
-    neighbours = [i for _, start, end, _ in spread_segments(spread_results, spread_key)
-                  for i in range(start, end - 1)]
-    for i in neighbours:
+    neighbours = [(start + a, start + b)
+                  for layout, start, end, _ in spread_segments(spread_results, spread_key)
+                  for a, b in segment_pairs(layout, end - start)]
+    for i, j in neighbours:
         s1 = topology_details[i]["solid"]
-        s2 = topology_details[i+1]["solid"]
+        s2 = topology_details[j]["solid"]
         p1 = topology_details[i]["position"]
-        p2 = topology_details[i+1]["position"]
+        p2 = topology_details[j]["position"]
 
         if (s1 == "Hexahedron (Cube)" and s2 == "Octahedron") or (s1 == "Octahedron" and s2 == "Hexahedron (Cube)"):
             dual_pairings.append(f"Positions {p1} & {p2}: Earth/Air Inversion Dual (Cube <-> Octahedron)")
@@ -437,8 +459,8 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     No significant trend -> 3 Incarnational Life Path, the default lens.
 
     Framework 2 (Soul Formation) is never auto-selected: it has no reliable signature in a
-    draw. A mean-rank test would only measure the deck itself (a 75-card spread contains
-    almost the whole deck), so use --framework soul_formation to choose it.
+    draw. A mean-rank test would mostly measure the deck itself (a 75-card spread holds most
+    of it), so use --framework soul_formation to choose it.
     """
     if forced_framework != "auto":
         framework_names = {
@@ -501,6 +523,10 @@ def withheld_summary(deck_rows, drawn_titles):
     element}.
     """
     drawn = set(drawn_titles)
+    if len(drawn) != len(drawn_titles):
+        # A card fell in more than one operation (the master pipeline reshuffles for each), so
+        # the counts are no longer the deck's totals minus the cards left out.
+        return None
     left_out = [row for row in deck_rows if row["title"] not in drawn]
     if not left_out or len(left_out) > WITHHELD_MAX:
         return None

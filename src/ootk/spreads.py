@@ -138,7 +138,9 @@ SPREAD_DEFAULT_COORDINATES = {
     "1": [(0.0, 0.0)],
     "2": [(-0.5, 0.0), (0.5, 0.0)],
     "3": [(-1.0, 0.0), (0.0, 0.0), (1.0, 0.0)],
-    "4": [(0.0, 1.0), (1.0, 0.0), (0.0, -1.0), (-1.0, 0.0)],
+    # Spreads 4 and 5 both run Yod, Heh, Vav, Heh final, so they share one cross: Yod at the
+    # top, Heh on the right, Vav on the left, Heh final at the bottom.
+    "4": [(0.0, 1.0), (1.0, 0.0), (-1.0, 0.0), (0.0, -1.0)],
     "5": [(0.0, 1.0), (1.0, 0.0), (-1.0, 0.0), (0.0, -1.0)],
     # Golden Dawn hexagram, planets placed as on the Tree of Life: Saturn (Binah) at the top,
     # Jupiter and Venus on the right, Mars and Mercury on the left, Moon (Yesod) at the
@@ -194,6 +196,19 @@ RING_LAYOUT_ASPECTS = {
 # pairs side by side in one heap would read as a 0.8 deg "Conjunction" (+2). Pairs on these
 # layouts keep their distance but take no aspect and no modifier.
 HEAP_LAYOUTS = {"8"}   # OOTK Op 1
+
+# Which cards of a heap are scored together for elemental dignity (0-based, within the
+# operation). Op 1's positions are named in pairs (Left Pair A and B, ...), so each named pair
+# is scored as one; the significator is scored with the two single cards that answer it, the
+# Counter-Balance (14) and the Climax (15). Deal order alone would also join cards of
+# different groups (3 with 4, 5 with 6, ...).
+HEAP_PAIRS = {
+    "8": ((1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (0, 13), (0, 14)),
+}
+
+# Tree of Life layouts: positions are the ten Sephiroth in order, so cards are scored along
+# the 22 paths that join them (Binah and Chesed, 3 and 4, share no path).
+TREE_LAYOUTS = {"7"}
 
 OP_TAG = re.compile(r"^\[Op (\d+)\]")
 

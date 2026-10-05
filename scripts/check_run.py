@@ -15,15 +15,16 @@ from collections import Counter
 # Operation ranges for spread 12: Key (15), Houses (12), Zodiac (12), Decans (36).
 OPS = {1: (1, 15), 2: (16, 27), 3: (28, 39), 4: (40, 75)}
 EXPECTED_ASPECT_PAIRS = {2: 42, 3: 42, 4: 126}
-EXPECTED_OP1_PAIRS = 14
+# Op 1 scores its named pairs (2-3, 4-5, ... 12-13) and the significator with 14 and 15.
+OP1_PAIRS = [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13), (1, 14), (1, 15)]
 RING_ASPECTS = {"Opposition", "Square", "Trine", "Sextile"}
 
 # French/Egyptian rows for the 22 Majors (Levi/Papus letters; paths on the standard tree):
 # name -> (letter, path, attribution)
 FRENCH_MAJORS = {
     "The Fool": ("Shin", "Path 31 (Hod-Malkuth)", "Unnumbered / Primeval Spirit"),
-    "The Magus": ("Aleph", "Path 11 (Kether-Chokmah)", "Air / Magus Spirit"),
-    "The Priestess": ("Beth", "Path 12 (Kether-Binah)", "Mercury"),
+    "The Magus": ("Aleph", "Path 11 (Kether-Chokmah)", "Mercury"),
+    "The Priestess": ("Beth", "Path 12 (Kether-Binah)", "Moon"),
     "The Empress": ("Gimel", "Path 13 (Kether-Tiphareth)", "Venus"),
     "The Emperor": ("Daleth", "Path 14 (Chokmah-Binah)", "Aries"),
     "The Hierophant": ("Heh", "Path 15 (Chokmah-Tiphareth)", "Taurus"),
@@ -89,10 +90,14 @@ def main(path):
     check(pinned is not None, "significator pinned at Position 1",
           f"pinned: {pinned}" if pinned else "no 'Significator (pinned)' line found")
     check(bool(draws) and pinned == draws[0], "pinned card is Position 1")
-    check(len(set(draws)) == len(draws), "no card drawn twice",
-          ", ".join(c for c, n in Counter(draws).items() if n > 1))
+    # Each operation reshuffles the whole deck, so a card may repeat across operations but
+    # never inside one.
+    twice = [f"Op {n}: {c}" for n, (lo, hi) in OPS.items()
+             for c, k in Counter(draws[lo - 1:hi]).items() if k > 1]
+    check(not twice, "no card drawn twice within an operation", ", ".join(twice))
     if pinned:
-        check(draws.count(pinned) == 1, "significator appears exactly once", f"{draws.count(pinned)}x")
+        check(draws[:15].count(pinned) == 1, "significator appears once in Op 1",
+              f"{draws[:15].count(pinned)}x")
 
     # ---------- header ----------
     m = re.search(r"\*\*Significator:\*\* (.+)", text)
@@ -127,13 +132,16 @@ def main(path):
     check(len(re.findall(r"^\*\*Operation \d", s4, re.M)) == 4, "section 4 has 4 operation headings")
     pairs = [(int(a), int(b)) for a, b in
              re.findall(r"^\* \*\*Pos (\d+) \(.*\) <-> Pos (\d+) \(.*\)\*\*: `Score", s4, re.M)]
-    # Neighbours within each operation (14 + 11 + 11 + 35 = 71), plus the pair that closes
-    # each full ring (houses, signs, decans): 27<->16, 39<->28, 75<->40.
+    # Op 1's heap pairs (8), then neighbours within each wheel (11 + 11 + 35) plus the pair that
+    # closes each full ring (houses, signs, decans): 27<->16, 39<->28, 75<->40.
     ring_closures = {(hi, lo) for n, (lo, hi) in OPS.items() if n in EXPECTED_ASPECT_PAIRS}
-    check(len(pairs) == 74, "74 dignity pairs (71 neighbours + 3 ring closures)", f"found {len(pairs)}")
-    check(all(b == a + 1 or (a, b) in ring_closures for a, b in pairs),
-          "dignity pairs are neighbours or ring closures",
-          str([p for p in pairs if p[1] != p[0] + 1 and p not in ring_closures][:5]))
+    check(len(pairs) == 68, "68 dignity pairs (8 heap pairs + 57 neighbours + 3 ring closures)",
+          f"found {len(pairs)}")
+    check([p for p in pairs if op_of(p[0]) == 1] == OP1_PAIRS, "Op 1 scores its named pairs")
+    wheel = [p for p in pairs if op_of(p[0]) != 1]
+    check(all(b == a + 1 or (a, b) in ring_closures for a, b in wheel),
+          "wheel dignity pairs are neighbours or ring closures",
+          str([p for p in wheel if p[1] != p[0] + 1 and p not in ring_closures][:5]))
     crossing = [(a, b) for a, b in pairs if op_of(a) != op_of(b)]
     check(not crossing, "no dignity pair crosses an operation boundary", str(crossing[:5]))
 
@@ -149,9 +157,7 @@ def main(path):
     if 1 in seg_text:
         op1 = [(int(a), int(b)) for a, b in
                re.findall(r"^\* \*\*Pos (\d+) \(.*\) <-> Pos (\d+) \(.*\)\*\*:", seg_text[1], re.M)]
-        check(len(op1) == EXPECTED_OP1_PAIRS, f"Op 1 has {EXPECTED_OP1_PAIRS} consecutive spatial pairs",
-              f"found {len(op1)}")
-        check(all(b == a + 1 for a, b in op1), "Op 1 spatial pairs are consecutive")
+        check(op1 == OP1_PAIRS, f"Op 1 has its {len(OP1_PAIRS)} heap pairs", f"found {op1[:8]}")
     for n, expected in EXPECTED_ASPECT_PAIRS.items():
         t = seg_text.get(n, "")
         ring = [(int(a), int(b)) for a, b in

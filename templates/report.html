@@ -345,6 +345,7 @@
                 <div class="legend" style="margin-top:4px; font-size:0.8em">
                     {% for t in S.aspects.by_type %}<span><i class="dot" style="background:{{ t.color }}"></i>{{ t.type }} {{ t.count }}</span>{% endfor %}
                 </div>
+                <div class="muted" style="font-size:0.85em">Set by the layout: the same in every reading of this spread</div>
             </div>
             {% endif %}
             {% if S.dignity.pairs %}
@@ -532,7 +533,7 @@
             <details class="sub">
                 <summary>Aspects (<span data-count-for="{{ seg.id }}">{{ seg.aspects | length }}</span>)</summary>
                 {% set with_cards = seg.aspects[0].cards_text %}
-                {% if with_cards %}<p class="muted" style="font-size:0.85em">The aspect between two positions is fixed by the wheel and is the same in every reading; the Cards column (the dignity of the two cards drawn there) is this reading's.</p>{% endif %}
+                <p class="muted" style="font-size:0.85em">{% if with_cards %}The aspect between two positions is fixed by the wheel and is the same in every reading; the Cards column (the dignity of the two cards drawn there) is this reading's.{% else %}The aspect between two positions is fixed by the layout and is the same in every reading; this reading's cards are scored in the element pairs.{% endif %}</p>
                 <div class="table-wrap"><table>
                     <thead><tr><th>Aspect</th><th>Score</th><th>Pair</th>{% if with_cards %}<th>Cards</th>{% endif %}</tr></thead>
                     <tbody>

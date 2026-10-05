@@ -10,7 +10,9 @@ from ootk.db import (
     DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
 from ootk.report import build_analytical_prompt, generate_html_output
-from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
+from ootk.shuffle import (
+    draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
+)
 from ootk.significator import RANKS, SUITS, book_t_card
 from ootk.spreads import SPREADS, spread_positions
 
@@ -91,7 +93,7 @@ def run_spread_session():
                 print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
             print("\n--- MASTER PIPELINE ---")
-            print(f" [12] {SPREADS['12']['name']} (75 cards total)")
+            print(f" [12] {SPREADS['12']['name']} (75 cards total, reshuffled for each operation)")
 
             spread_choice = input("\nEnter spread number (1-12): ").strip()
             while spread_choice not in SPREADS:
@@ -148,10 +150,14 @@ def run_spread_session():
                         print("Invalid card selection. Type 'list' or try again.")
                         if user_input.lower() == 'list':
                             display_card_selection(cards)
-                    if selected_title in selected_titles:
-                        # One deck: a card can't fall twice (the web form refuses it too).
-                        print(f"{selected_title} is already at position "
-                              f"{selected_titles.index(selected_title) + 1}. Choose another card.")
+                    if selected_title and duplicate_in_operation(
+                            target_positions[:pos_idx], selected_titles + [selected_title]):
+                        # One deck per operation: a card can't fall twice in it (the web form
+                        # refuses it too). A master pipeline reshuffles for each operation.
+                        op = operation_number(position_name)
+                        earlier = next(i for i, (p, t) in enumerate(zip(target_positions, selected_titles), start=1)
+                                       if t == selected_title and operation_number(p) == op)
+                        print(f"{selected_title} is already at position {earlier}. Choose another card.")
                         selected_title = None
 
             selected_titles.append(selected_title)

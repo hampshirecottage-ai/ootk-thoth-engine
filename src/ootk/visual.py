@@ -13,7 +13,9 @@ from ootk.assets import static_url
 from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
-from ootk.spreads import HEAP_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, spread_segments
+from ootk.spreads import (
+    HEAP_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS, spread_segments,
+)
 
 ELEMENTS = ("Fire", "Water", "Air", "Earth", "Spirit")
 ELEMENT_COLORS = {
@@ -433,14 +435,11 @@ def _headline(element_rows, dignity, aspects):
         lines.append(f"Elemental dignities lean {lean}: net {dignity['net_text']} across "
                      f"{dignity['pairs']} neighbouring pairs ({dignity['contrary']} contrary).")
     if aspects["total"]:
-        if aspects["flowing"] > aspects["tense"]:
-            mood = "Flowing aspects outnumber tense ones"
-        elif aspects["tense"] > aspects["flowing"]:
-            mood = "Tense aspects outnumber flowing ones"
-        else:
-            mood = "Flowing and tense aspects are level"
-        lines.append(f"{mood} ({aspects['flowing']} to {aspects['tense']}); "
-                     f"{aspects['strong']} of {aspects['total']} aspects are strong.")
+        # Aspects come from where two positions sit in the layout, never from the cards, so
+        # their balance is the same in every reading of a spread and says nothing about this one.
+        n = aspects["total"]
+        lines.append(f"The {n} aspect line{'s' if n != 1 else ''} {'are' if n != 1 else 'is'} set by the "
+                     f"layout and {'are' if n != 1 else 'is'} the same in every reading of this spread.")
     return lines
 
 
@@ -500,8 +499,12 @@ def link_explainer(layout_key, n_cards, has_layout):
             f"every reading; what changes is which cards sit at the two ends.",
         ]
     if layout_key == "8":
-        first = (f"The {n_cards} cards are laid out in a heap around the significator and linked in the "
-                 f"order they were dealt: 1 with 2, 2 with 3, and so on to {n_cards - 1} with {n_cards}.")
+        first = (f"The {n_cards} cards are laid out in a heap around the significator. Each named pair "
+                 f"is linked (2 with 3, 4 with 5, and so on to 12 with 13), and the significator is "
+                 f"linked with the Counter-Balance (14) and the Climax (15).")
+    elif layout_key in TREE_LAYOUTS:
+        first = ("The cards sit on the ten Sephiroth and are linked along the paths of the Tree of "
+                 "Life: two cards are linked when a path joins their Sephiroth.")
     else:
         first = "The cards are linked in the order they were laid out: 1 with 2, 2 with 3, and so on."
     lines = [first, f"Each pair gets an element score. {SCORE_RULE}"]

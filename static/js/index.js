@@ -124,9 +124,18 @@ function updateSlots() {
     syncHiddenInput();
 }
 
+// The full Opening of the Key reshuffles for each operation, so a card may fall again in a
+// later operation but only once within the operation being filled.
+function opOf(pos) { const m = /^\[Op (\d+)\]/.exec(pos || ""); return m ? Number(m[1]) : 1; }
+function usedInCurrentOp() {
+    const positions = spreadPositions();
+    const op = opOf(positions[Math.min(activeCardList.length, positions.length - 1)]);
+    return activeCardList.filter((_, i) => opOf(positions[i]) === op);
+}
+
 function selectCard(cardTitle) {
     const positions = spreadPositions();
-    if (activeCardList.includes(cardTitle)) return;
+    if (usedInCurrentOp().includes(cardTitle)) return;
     if (activeCardList.length >= positions.length) { alert("All spread slots are filled."); return; }
     activeCardList.push(cardTitle);
     updateSlots();
@@ -136,7 +145,8 @@ function syncHiddenInput() {
     const positions = spreadPositions();
     $("selectedCardsInput").value = activeCardList.join(",");
     $("slotCount").textContent = `${activeCardList.length} / ${positions.length}`;
-    document.querySelectorAll(".card-item").forEach(el => el.classList.toggle("used", activeCardList.includes(el.dataset.title)));
+    const used = usedInCurrentOp();
+    document.querySelectorAll(".card-item").forEach(el => el.classList.toggle("used", used.includes(el.dataset.title)));
     $("pickCount").textContent = `${activeCardList.length} / ${positions.length}`;
     const n = activeCardList.length;
     $("pickLast").textContent = n ? `${activeCardList[n - 1]} → ${positions[n - 1]}` : "Tap cards in order";

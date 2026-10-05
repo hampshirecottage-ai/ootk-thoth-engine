@@ -42,7 +42,7 @@ from ootk.report import MAPPING_LABELS, build_analytical_prompt
 from ootk.rules import element_dignity
 from ootk import atlas
 from ootk import significator as significator_methods
-from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
+from ootk.shuffle import draw_spread, duplicate_in_operation, has_significator_position, resolve_significator
 from ootk.spreads import SPREADS, spread_positions, spread_segments
 from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
@@ -909,9 +909,10 @@ def generate_report(
                 detail=f"'{selected_spread['name']}' requires {len(positions)} cards; received {len(card_titles)}."
             )
 
-        lowered = [t.lower() for t in card_titles]
-        if len(set(lowered)) != len(lowered):
-            raise HTTPException(status_code=400, detail="Duplicate cards are not allowed in a single spread draw.")
+        twice = duplicate_in_operation(positions, card_titles)
+        if twice:
+            raise HTTPException(status_code=400, detail=f"{quoted(twice)} is drawn twice in one operation. "
+                                                        f"A card can fall only once per spread or operation.")
 
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,

@@ -331,11 +331,11 @@ COPY public.correspondences (key_scale, name, hebrew_letter, element_or_planet_o
 COPY public.spread_position_geometry (position_id, spread_key, position_index, position_name, pos_x, pos_y, pos_z, polar_angle_deg) FROM stdin;
 1	6	1	Saturn (Top Apex)	0	1	0	90
 2	6	2	Jupiter (Right Top)	0.866	0.5	0	30
-3	6	3	Mars (Right Bottom)	0.866	-0.5	0	330
-4	6	4	Venus (Bottom Apex)	0	-1	0	270
+3	6	3	Mars (Left Top)	-0.866	0.5	0	150
+4	6	4	Venus (Right Bottom)	0.866	-0.5	0	330
 5	6	5	Mercury (Left Bottom)	-0.866	-0.5	0	210
-6	6	6	Sun (Left Top)	-0.866	0.5	0	150
-7	6	7	Moon (Center Core)	0	0	0	0
+6	6	6	Sun (Center Core)	0	0	0	0
+7	6	7	Moon (Bottom Apex)	0	-1	0	270
 8	10	1	Aries	1	0	0	0
 9	10	2	Taurus	0.866	0.5	0	30
 10	10	3	Gemini	0.5	0.866	0	60
