@@ -7,6 +7,11 @@
         @font-face { font-family: "JetBrains Mono"; font-weight: 100 800; font-display: swap; src: url("{{ static_url('fonts/jetbrains-mono-latin.woff2') }}") format("woff2"); }
         body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         code, pre, kbd { font-family: "JetBrains Mono", ui-monospace, monospace; }
+        /* The OOTK emblem, faint and fixed behind every page. Set --emblem-opacity to 0 to hide it. */
+        :root { --emblem-opacity: 0.06; }
+        :root[data-theme="light"] { --emblem-opacity: 0.1; }
+        body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("{{ static_url('site/emblem.webp') }}") center 60% / min(92vmin, 760px) no-repeat; opacity: var(--emblem-opacity); mix-blend-mode: luminosity; }
+        @media print { body::before { display: none; } }
         /* Banner colours: a darker green band with cream text on the green theme, the panel colours on the dark one. */
         :root { --band-bg: var(--panel); --band-line: var(--line); --band-text: var(--text); --band-head: var(--accent); --tile-bg: var(--panel-2); --page-width: 1160px; }
         :root[data-theme="light"] { --band-bg: #24704a; --band-line: #5fae84; --band-text: #ffe0a0; --band-head: #ffe0a0; --tile-bg: var(--panel); }
