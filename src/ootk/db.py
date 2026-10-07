@@ -54,13 +54,13 @@ class DatabaseOutdated(RuntimeError):
     """The database lacks a column this code reads: a migration has not been run yet.
     Raised instead of exiting, so one request can't stop the web server."""
 
+class CardNotFound(LookupError):
+    """A card title with no thoth_cards row."""
+
 def get_db_connection():
-    try:
-        conn = psycopg.connect(**DB_CONFIG, row_factory=dict_row)
-        return conn
-    except Exception as e:
-        print(f"[ERROR] Database connection failed: {e}")
-        sys.exit(1)
+    """A connection for the CLI; a failure raises psycopg.OperationalError (cli.main prints it).
+    The web app uses its own, which retries once while a sleeping database wakes."""
+    return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
 
 def fetch_all_cards(conn):
     with conn.cursor() as cur:
@@ -148,11 +148,6 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
         raise DatabaseOutdated(
             f"{e.diag.message_primary}. The database predates the correspondence fixes: "
             f"run psql -d <db> -f database/migrations/fix_correspondences.sql") from e
-    stale = [r["title"] for r in rows if r["arcana_type"] == "Major" and not r["card_attribution"]]
-    if stale:
-        print(f"[WARN] {len(stale)} Major(s) have no thoth_cards.attribution, so their Attribution "
-              f"shows the letter's triplicity rulers: run psql -d <db> -f "
-              f"database/migrations/fix_trump_attributions.sql", file=sys.stderr)
     return {row["title"]: apply_card_solid(row) for row in rows}
 
 def fetch_card_correspondences(conn, title, system=DEFAULT_MAPPING):
@@ -169,7 +164,7 @@ def load_withheld(conn, deck, drawn_titles, system=DEFAULT_MAPPING):
 def load_cards_data(conn, titles, system):
     """fetch_cards_correspondences with guards; returns rows in the order of `titles`.
 
-    A title with no thoth_cards row aborts cleanly instead of crashing later on card_data['title'].
+    A title with no thoth_cards row raises CardNotFound instead of crashing later on card_data['title'].
     A card whose key_scale has no correspondences row is allowed through (its fields come back
     empty) but is flagged on stderr, so it never reaches the saved report unnoticed.
     Messages go to stderr so they don't land in a piped/saved report.
@@ -179,26 +174,12 @@ def load_cards_data(conn, titles, system):
     for title in titles:
         card_data = rows.get(title)
         if card_data is None:
-            print(f"[ERROR] No thoth_cards row found for '{title}'. Check the thoth_cards table.",
-                  file=sys.stderr)
-            sys.exit(1)
+            raise CardNotFound(f"No thoth_cards row found for '{title}'. Check the thoth_cards table.")
         if card_data.get("path_or_sephira") is None and card_data.get("king_scale_color") is None:
             print(f"[WARN] '{title}' (key_scale {card_data.get('key_scale')}) has no correspondences row; "
                   f"its path, attribution and geometry will be empty.", file=sys.stderr)
         loaded.append(card_data)
     return loaded
-
-def load_report_settings(conn, session_id):
-    """The settings and card titles a web reading was saved with, or None (CLI readings,
-    readings saved before the column existed, unknown ids)."""
-    try:
-        # A savepoint, so an older database's missing column never rolls back unsaved work.
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("SELECT report_settings FROM tarot_sessions WHERE session_id = %s;", (session_id,))
-            row = cur.fetchone()
-    except psycopg.errors.UndefinedColumn:
-        return None
-    return row["report_settings"] if row else None
 
 def load_report_by_link(conn, link):
     """(session_id, settings) of the web reading whose report link is `link`, or None.
@@ -206,47 +187,23 @@ def load_report_by_link(conn, link):
 
     Links are random tokens stored in report_settings, so a report can't be found by
     counting through session numbers."""
-    try:
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("SELECT session_id, report_settings, created_at FROM tarot_sessions "
-                        "WHERE report_settings->>'link' = %s;", (link,))
-            row = cur.fetchone()
-    except psycopg.errors.UndefinedColumn:
-        return None
+    with conn.cursor() as cur:
+        cur.execute("SELECT session_id, report_settings, created_at FROM tarot_sessions "
+                    "WHERE report_settings->>'link' = %s;", (link,))
+        row = cur.fetchone()
     if not row:
         return None
     return row["session_id"], dict(row["report_settings"], saved_at=row["created_at"])
 
 def save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results,
                         dignity_matrix=None, report_settings=None):
-    """Saves one reading. `report_settings` (web readings) lets /report/<link> rebuild the report;
-    a database without tarot_sessions.report_settings still saves the reading without it."""
-    if report_settings is not None:
-        try:
-            return _save_spread_session(conn, spread_name, query_prompt, notes, significator,
-                                        spread_results, dignity_matrix, report_settings)
-        except psycopg.errors.UndefinedColumn:
-            print("[WARN] tarot_sessions.report_settings is missing, so this report has no link: "
-                  "run psql -d <db> -f database/migrations/add_report_settings.sql", file=sys.stderr)
-    return _save_spread_session(conn, spread_name, query_prompt, notes, significator,
-                                spread_results, dignity_matrix, None)
-
-def _save_spread_session(conn, spread_name, query_prompt, notes, significator, spread_results,
-                         dignity_matrix, report_settings):
-    if report_settings is None:
-        insert_session_query = """
-        INSERT INTO tarot_sessions (operation_type, significator, notes)
-        VALUES (%s, %s, %s)
-        RETURNING session_id;
-        """
-        session_params = ()
-    else:
-        insert_session_query = """
-        INSERT INTO tarot_sessions (operation_type, significator, notes, report_settings)
-        VALUES (%s, %s, %s, %s)
-        RETURNING session_id;
-        """
-        session_params = (Jsonb(report_settings),)
+    """Saves one reading and returns its session id, or None when the database refused it.
+    `report_settings` (web readings) lets /report/<link> rebuild the report."""
+    insert_session_query = """
+    INSERT INTO tarot_sessions (operation_type, significator, notes, report_settings)
+    VALUES (%s, %s, %s, %s)
+    RETURNING session_id;
+    """
     insert_spread_query = """
     INSERT INTO spread_pulls (session_id, spread_name, pull_order)
     VALUES (%s, %s, %s)
@@ -262,7 +219,8 @@ def _save_spread_session(conn, spread_name, query_prompt, notes, significator, s
     try:
         with conn.transaction():
             with conn.cursor() as cur:
-                cur.execute(insert_session_query, ('OOTK', significator, full_notes) + session_params)
+                cur.execute(insert_session_query, ('OOTK', significator, full_notes,
+                                                   None if report_settings is None else Jsonb(report_settings)))
                 session_id = cur.fetchone()["session_id"]
                 
                 cur.execute(insert_spread_query, (session_id, spread_name, 1))
@@ -282,46 +240,33 @@ def _save_spread_session(conn, spread_name, query_prompt, notes, significator, s
                     
         print(f"\n[SUCCESS] Session #{session_id} (Spread #{spread_id}) and {len(spread_results)} card pulls recorded to {DB_CONFIG.get('dbname', 'the database')}.")
         return session_id
-    except psycopg.errors.UndefinedColumn:
-        raise                                   # save_spread_session retries without the column
     except Exception as e:
         print(f"\n[ERROR] Failed to record session to database: {e}")
         return None
 
 def save_testimonial(conn, session_id, name, body, user_agent=None, ip_hash=None):
     """Saves a visitor's testimonial, unapproved. Returns False when this session has already
-    sent one (testimonials.session_id is unique). A database without the table raises
-    DatabaseOutdated."""
-    try:
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("INSERT INTO testimonials (session_id, name, body, user_agent, ip_hash) "
-                        "VALUES (%s, %s, %s, %s, %s) ON CONFLICT (session_id) DO NOTHING "
-                        "RETURNING testimonial_id;",
-                        (session_id, name or None, body, user_agent or None, ip_hash))
-            return cur.fetchone() is not None
-    except psycopg.errors.UndefinedTable as e:
-        raise DatabaseOutdated("testimonials table is missing: run "
-                               "database/migrations/add_testimonials.sql") from e
+    sent one (testimonials.session_id is unique)."""
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO testimonials (session_id, name, body, user_agent, ip_hash) "
+                    "VALUES (%s, %s, %s, %s, %s) ON CONFLICT (session_id) DO NOTHING "
+                    "RETURNING testimonial_id;",
+                    (session_id, name or None, body, user_agent or None, ip_hash))
+        return cur.fetchone() is not None
 
 def session_has_testimonial(conn, session_id):
-    """Whether this session has already sent a testimonial (False without the table)."""
-    try:
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("SELECT 1 FROM testimonials WHERE session_id = %s;", (session_id,))
-            return cur.fetchone() is not None
-    except psycopg.errors.UndefinedTable:
-        return False
+    """Whether this session has already sent a testimonial."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1 FROM testimonials WHERE session_id = %s;", (session_id,))
+        return cur.fetchone() is not None
 
 def approved_testimonials(conn):
-    """[{name, body}] of approved testimonials, oldest first; [] without the table.
+    """[{name, body}] of approved testimonials, oldest first.
     Session details are never read here, so they can't reach a page."""
-    try:
-        with conn.transaction(), conn.cursor() as cur:
-            cur.execute("SELECT name, body FROM testimonials WHERE approved "
-                        "ORDER BY testimonial_id;")
-            return [dict(row) for row in cur.fetchall()]
-    except psycopg.errors.UndefinedTable:
-        return []
+    with conn.cursor() as cur:
+        cur.execute("SELECT name, body FROM testimonials WHERE approved "
+                    "ORDER BY testimonial_id;")
+        return [dict(row) for row in cur.fetchall()]
 
 def list_testimonials(conn):
     """Every testimonial for the admin page, waiting ones first, newest first. Session details

@@ -24,9 +24,8 @@ EXPECTED_TABLES = {
                     "french_number"],
     "correspondences": [
         "key_scale", "name", "hebrew_letter", "element_or_planet_or_sign", "king_scale_color",
-        "hebrew_letter_french", "spatial_type", "platonic_solid", "topological_role",
+        "hebrew_letter_french", "spatial_type",
     ],
-    "spread_position_geometry": ["spread_key", "position_index", "position_name", "pos_x", "pos_y", "pos_z"],
     "tarot_sessions": ["session_id", "created_at", "operation_type", "significator"],
     "spread_pulls": ["spread_id", "session_id", "spread_name", "pull_order"],
     "session_card_pulls": ["pull_id", "session_id", "spread_id", "card_id", "position_index"],
@@ -116,14 +115,6 @@ def audit(_args):
         else:
             ok("[Join] every card matches a correspondence row on key_scale")
 
-        # 6. Spread geometry present
-        cur.execute("SELECT COUNT(*) AS n, COUNT(DISTINCT spread_key) AS spreads FROM spread_position_geometry")
-        r = cur.fetchone()
-        if r["n"]:
-            ok(f"[Geometry] {r['n']} positions across {r['spreads']} spreads")
-        else:
-            bad("[Geometry] spread_position_geometry is empty")
-
     print(f"\nAudit completed: {failures} failure(s).")
     return 1 if failures else 0
 
@@ -164,7 +155,7 @@ def joins(args):
         cur.execute(f"""
             SELECT c.card_id, c.title, c.key_scale,
                    r.hebrew_letter, r.element_or_planet_or_sign, r.king_scale_color,
-                   r.spatial_type, r.platonic_solid, r.topological_role
+                   r.spatial_type
             FROM thoth_cards c
             LEFT JOIN correspondences r ON c.key_scale = r.key_scale
             {where}

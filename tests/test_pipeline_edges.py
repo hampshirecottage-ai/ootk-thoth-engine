@@ -2,9 +2,10 @@
 import sys
 from contextlib import nullcontext
 
+import psycopg
 import pytest
 
-from ootk import analysis, cli, shuffle, spreads
+from ootk import analysis, cli, db, shuffle, spreads
 
 
 def card(i, title=None, arcana="Minor", solid="Tetrahedron"):
@@ -141,3 +142,35 @@ def test_cli_short_deck_is_an_error(run_cli, monkeypatch):
     monkeypatch.setattr(cli, "fetch_all_cards", lambda conn: CLI_DECK[:5])
     code, _, err, saved = run_cli(["--spread", "9", "--seed", "1", "--topic", "t"])
     assert code == 1 and "needs 12" in err and not saved
+
+
+def test_cli_holds_no_connection_open_while_waiting_for_answers(run_cli, monkeypatch):
+    events = []
+
+    class Conn:
+        def __enter__(self):
+            events.append("open")
+            return self
+
+        def __exit__(self, *a):
+            events.append("close")
+            return False
+
+    monkeypatch.setattr(cli, "get_db_connection", Conn)
+    code, _, _, saved = run_cli(["--spread", "3", "--topic", "t"], ["", "1", "2", "3"])
+    assert code == 0 and saved["titles"] == ["Card 0", "Card 1", "Card 2"]
+    assert events == ["open", "close", "open", "close"]     # two short connections, not one
+
+
+def test_cli_unknown_card_and_unreachable_database_are_errors(run_cli, monkeypatch):
+    def missing(conn, titles, system):
+        raise db.CardNotFound("No thoth_cards row found for 'Card 0'.")
+    monkeypatch.setattr(cli, "load_cards_data", missing)
+    code, _, err, saved = run_cli(["--spread", "3", "--seed", "1", "--topic", "t"])
+    assert code == 1 and "No thoth_cards row found" in err and not saved
+
+    def refused():
+        raise psycopg.OperationalError("connection refused")
+    monkeypatch.setattr(cli, "get_db_connection", refused)
+    code, _, err, saved = run_cli(["--spread", "3", "--seed", "1", "--topic", "t"])
+    assert code == 1 and "Database connection failed: connection refused" in err
