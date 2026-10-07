@@ -263,15 +263,15 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | Migration | Needed when |
 |---|---|
 | `add_french_number.sql` | `thoth_cards.french_number` is missing |
-| `add_report_settings.sql` | Reports have no link of their own (readings still save without it) |
+| `add_report_settings.sql` | `tarot_sessions.report_settings` is missing (the site shows a "needs an update" page) |
 | `add_report_links.sql` | Readings saved before links were random; also lists every reading's address |
 | `fix_correspondences.sql` | `thoth_cards.attribution` is missing (the engine stops and says so) |
-| `fix_trump_attributions.sql` | Each Major's own sign, planet or element as its attribution, path 32 named 'Cross' (the engine warns on stderr) |
+| `fix_trump_attributions.sql` | Each Major's own sign, planet or element as its attribution, path 32 named 'Cross' |
 | `fix_court_paths.sql` | Queen of Wands and Prince of Swords on the same paths as the Emperor and the Star; four court descriptions |
 | `fix_correspondence_audit.sql` | Six Cube of Space edges as Paul Case gives them, axis directions, French Magus and Priestess planets |
 | `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
-| `add_testimonials.sql` | Testimonials (without it the start page simply shows none); lists the approve queries |
-| `fix_hexagram_geometry.sql` | The `spread_position_geometry` table still holds the old hexagram; the engine doesn't read it, so this only tidies the table |
+| `add_testimonials.sql` | Testimonials (without it the start page shows none and the testimonial pages ask for the update); lists the approve queries |
+| `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
 
 The other files in `database/migrations/` built the early schema and are only kept for history.
 

@@ -29,7 +29,7 @@ from ootk.analysis import WITHHELD_MAX, derive_primary_element, withheld_summary
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
-    list_testimonials, load_report_by_link, load_report_settings, save_spread_session, save_testimonial,
+    list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
     session_has_testimonial, set_testimonial_approved,
 )
 from ootk.lockout import FailedLogins
@@ -374,7 +374,11 @@ async def database_unreachable_page(request: Request, exc: psycopg.OperationalEr
 
 
 @app.exception_handler(DatabaseOutdated)
-async def database_outdated_page(request: Request, exc: DatabaseOutdated):
+@app.exception_handler(psycopg.errors.UndefinedTable)
+@app.exception_handler(psycopg.errors.UndefinedColumn)
+async def database_outdated_page(request: Request, exc: Exception):
+    """A table or column this code reads is missing: one page for every query, instead of a
+    fallback around each one."""
     log.error("database needs a migration: %s", exc)
     return error_page(request, 503, "The card database needs an update",
                       "The card tables are older than this version of the site, so readings can’t "
@@ -1004,8 +1008,7 @@ def generate_report(
                                  link=link, mapping_version=MAPPING_VERSION,
                                  draw_version=DRAW_VERSION),
         )
-        # An older database saves the reading without its settings; then there is no link.
-        linked = bool(session_id) and (load_report_settings(conn, session_id) or {}).get("link") == link
+        linked = bool(session_id)
 
     if output_format == "markdown":
         return PlainTextResponse(
@@ -1278,10 +1281,7 @@ def admin_home(request: Request):
     if not is_admin(request):
         return admin_page(request, signed_in=False)
     with get_db_connection() as conn:
-        try:
-            rows = list_testimonials(conn)
-        except psycopg.errors.UndefinedTable as e:
-            raise DatabaseOutdated("testimonials table is missing") from e
+        rows = list_testimonials(conn)
     return admin_page(request, signed_in=True, testimonials=rows,
                       waiting=sum(not t["approved"] for t in rows))
 

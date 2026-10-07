@@ -343,3 +343,24 @@ def test_command_line_and_web_give_the_same_prompt(monkeypatch, spread, signific
     deck = web.reference_deck()
     titles, label = web.seeded_draw(deck, "4242", spread, significator or "")
     assert web.run_reading(settings, titles, label, deck)["analytical_prompt"] == seen["r"]["analytical_prompt"]
+
+
+def test_command_line_reading_saves_without_report_settings(conn):
+    card = db.fetch_all_cards(conn)[0]
+    results = [{"card_data": card, "position_number": 1, "position_name": "Card"}]
+    session_id = db.save_spread_session(conn, "Single Card", "q", "n", card["title"], results)
+    with conn.cursor() as cur:
+        cur.execute("SELECT report_settings, notes FROM tarot_sessions WHERE session_id = %s", (session_id,))
+        row = cur.fetchone()
+        cur.execute("DELETE FROM tarot_sessions WHERE session_id = %s", (session_id,))
+    conn.commit()
+    assert row == {"report_settings": None, "notes": "Prompt: q | Notes: n"}
+
+
+def test_schema_has_no_stored_solids_or_unused_geometry(conn):
+    with conn.cursor() as cur:
+        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'correspondences'")
+        columns = {r["column_name"] for r in cur.fetchall()}
+        cur.execute("SELECT to_regclass('public.spread_position_geometry') AS t")
+        assert cur.fetchone()["t"] is None
+    assert not columns & {"platonic_solid", "solid_faces", "solid_vertices", "dual_solid", "topological_role"}

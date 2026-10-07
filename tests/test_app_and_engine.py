@@ -90,8 +90,6 @@ def client(monkeypatch):
         return 99
 
     monkeypatch.setattr(app_module, "save_spread_session", fake_save)
-    monkeypatch.setattr(app_module, "load_report_settings",
-                        lambda conn, sid: dict(saved["report_settings"]) if sid == 99 and saved else None)
     monkeypatch.setattr(app_module, "load_report_by_link",
                         lambda conn, link: (99, dict(saved["report_settings"]))
                         if saved and saved["report_settings"].get("link") == link else None)
@@ -1376,8 +1374,8 @@ def test_report_embeds_card_details_and_reading_json(client):
 
 
 def test_report_without_a_link_embeds_its_json(client, monkeypatch):
-    # An older database saves no settings, so the report has no address to fetch the JSON from.
-    monkeypatch.setattr(app_module, "load_report_settings", lambda conn, sid: None)
+    # An unsaved reading has no address to fetch the JSON from.
+    monkeypatch.setattr(app_module, "save_spread_session", lambda *a, **k: None)
     r = post(client, topic="Love & War <3")
     assert r.status_code == 200 and "data-json-url" not in r.text
     blob = r.text.split('<script type="application/json" id="readingData">')[1].split("</script>")[0]
@@ -1902,3 +1900,14 @@ def test_method_and_maps_show_the_cube_of_space_and_its_dual(client):
     assert "polyhedral dual inversions" in method
     maps = client.get("/maps", headers={"Accept": "text/html"}).text
     assert 'id="mapDual"' in maps and "Dual inversions" in maps
+
+
+def test_missing_table_or_column_gives_the_update_page(client, monkeypatch):
+    # One handler covers every query, so no query needs its own fallback for an old database.
+    for error in (app_module.psycopg.errors.UndefinedTable, app_module.psycopg.errors.UndefinedColumn):
+        def outdated(*a, error=error, **k):
+            raise error("relation does not exist")
+        monkeypatch.setattr(app_module, "reference_deck", outdated)
+        r = client.get("/maps", headers=HTML)
+        assert r.status_code == 503 and "needs an update" in r.text
+        assert "relation does not exist" not in r.text

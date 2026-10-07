@@ -2,8 +2,10 @@
 import argparse
 import sys
 
+import psycopg
+
 from ootk.db import (
-    DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
+    CardNotFound, DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
 from ootk.report import analyze_reading, generate_html_output
 from ootk.shuffle import (
@@ -63,101 +65,104 @@ def run_spread_session():
         raise CliError(f"Unknown spread {args.spread!r}. Use a number from 1 to {len(SPREADS)}.")
     args.spread = args.spread.strip() if args.spread else None
 
+    # Two short connections, not one held open while the questions below wait for answers:
+    # a hosted database (Neon) can drop a connection that sits idle, and the save would fail.
     with get_db_connection() as conn:
         cards = fetch_all_cards(conn)
-        card_lookup = {str(idx): card["title"] for idx, card in enumerate(cards, start=1)}
-        card_titles_set = {card["title"].lower(): card["title"] for card in cards}
+    card_lookup = {str(idx): card["title"] for idx, card in enumerate(cards, start=1)}
+    card_titles_set = {card["title"].lower(): card["title"] for card in cards}
 
-        print("==================================================")
-        print("       THOTH TAROT & LIBER 777 ENGINE           ")
-        print("==================================================")
+    print("==================================================")
+    print("       THOTH TAROT & LIBER 777 ENGINE           ")
+    print("==================================================")
 
-        if args.spread:
-            spread_choice = args.spread
-        else:
-            print("Select a spread layout:\n")
-            print("--- CORE & PROGRESSIVE SPREADS ---")
-            for key in ["1", "2", "3", "4", "5"]:
-                print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
-                
-            print("\n--- HERMETIC & MACROCOSMIC LAYOUTS ---")
-            for key in ["6", "7"]:
-                print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
-
-            print("\n--- OPENING OF THE KEY (OOTK) OPERATIONS ---")
-            for key in ["8", "9", "10", "11"]:
-                print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
-
-            print("\n--- MASTER PIPELINE ---")
-            print(f" [12] {SPREADS['12']['name']} (75 cards total, reshuffled for each operation)")
-
-            spread_choice = input("\nEnter spread number (1-12): ").strip()
-            while spread_choice not in SPREADS:
-                spread_choice = input("Invalid spread. Enter a number from 1 to 12: ").strip()
-
-        selected_spread = SPREADS[spread_choice]
-        print(f"\n---> Selected Spread: {selected_spread['name']}\n")
-
-        query_prompt = args.topic if args.topic else (input("Enter Query / Intent Prompt (optional, press ENTER to skip): ").strip() or None)
-        session_notes = f"PRNG Seed: {args.seed}" if args.seed else (input("Enter Session Notes (optional, press ENTER to skip): ").strip() or None)
-        significator = args.significator
-
-        spread_results = []
-
-        target_positions = spread_positions(spread_choice)
-
-        if not significator and has_significator_position(target_positions):
-            significator = ask_significator()
-        sig_card = resolve_significator(cards, significator)
-        if significator and sig_card is None:
-            raise CliError(f"Significator '{significator}' not found in thoth_cards.")
-
-        # Only pin when the spread actually has a significator position (first position).
-        pin_significator = bool(sig_card) and has_significator_position(target_positions)
-        # Same draw as the web GUI for the same seed (see ootk.shuffle.draw_spread).
-        try:
-            seeded_titles = draw_spread(cards, args.seed, target_positions, sig_card)[0] if args.seed else None
-        except ValueError as e:
-            raise CliError(str(e)) from e
-        significator_label = (
-            sig_card["title"] if pin_significator
-            else "None (spread has no significator position)"
-        )
-
-        selected_titles = []
-        for pos_idx, position_name in enumerate(target_positions, start=1):
-            print(f"\n[Position {pos_idx}: {position_name}]")
+    if args.spread:
+        spread_choice = args.spread
+    else:
+        print("Select a spread layout:\n")
+        print("--- CORE & PROGRESSIVE SPREADS ---")
+        for key in ["1", "2", "3", "4", "5"]:
+            print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
             
-            if pin_significator and pos_idx == 1:
-                selected_title = sig_card["title"]
-                print(f"--> Significator (pinned): {selected_title}")
-            elif seeded_titles:
-                selected_title = seeded_titles[pos_idx - 1]
-                print(f"--> PRNG Auto-Drawn: {selected_title}")
-            else:
-                selected_title = None
-                while not selected_title:
-                    user_input = input("Enter card index number (or type full name): ").strip()
-                    if user_input in card_lookup:
-                        selected_title = card_lookup[user_input]
-                    elif user_input.lower() in card_titles_set:
-                        selected_title = card_titles_set[user_input.lower()]
-                    else:
-                        print("Invalid card selection. Type 'list' or try again.")
-                        if user_input.lower() == 'list':
-                            display_card_selection(cards)
-                    if selected_title and duplicate_in_operation(
-                            target_positions[:pos_idx], selected_titles + [selected_title]):
-                        # One deck per operation: a card can't fall twice in it (the web form
-                        # refuses it too). A master pipeline reshuffles for each operation.
-                        op = operation_number(position_name)
-                        earlier = next(i for i, (p, t) in enumerate(zip(target_positions, selected_titles), start=1)
-                                       if t == selected_title and operation_number(p) == op)
-                        print(f"{selected_title} is already at position {earlier}. Choose another card.")
-                        selected_title = None
+        print("\n--- HERMETIC & MACROCOSMIC LAYOUTS ---")
+        for key in ["6", "7"]:
+            print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
-            selected_titles.append(selected_title)
+        print("\n--- OPENING OF THE KEY (OOTK) OPERATIONS ---")
+        for key in ["8", "9", "10", "11"]:
+            print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
+        print("\n--- MASTER PIPELINE ---")
+        print(f" [12] {SPREADS['12']['name']} (75 cards total, reshuffled for each operation)")
+
+        spread_choice = input("\nEnter spread number (1-12): ").strip()
+        while spread_choice not in SPREADS:
+            spread_choice = input("Invalid spread. Enter a number from 1 to 12: ").strip()
+
+    selected_spread = SPREADS[spread_choice]
+    print(f"\n---> Selected Spread: {selected_spread['name']}\n")
+
+    query_prompt = args.topic if args.topic else (input("Enter Query / Intent Prompt (optional, press ENTER to skip): ").strip() or None)
+    session_notes = f"PRNG Seed: {args.seed}" if args.seed else (input("Enter Session Notes (optional, press ENTER to skip): ").strip() or None)
+    significator = args.significator
+
+    spread_results = []
+
+    target_positions = spread_positions(spread_choice)
+
+    if not significator and has_significator_position(target_positions):
+        significator = ask_significator()
+    sig_card = resolve_significator(cards, significator)
+    if significator and sig_card is None:
+        raise CliError(f"Significator '{significator}' not found in thoth_cards.")
+
+    # Only pin when the spread actually has a significator position (first position).
+    pin_significator = bool(sig_card) and has_significator_position(target_positions)
+    # Same draw as the web GUI for the same seed (see ootk.shuffle.draw_spread).
+    try:
+        seeded_titles = draw_spread(cards, args.seed, target_positions, sig_card)[0] if args.seed else None
+    except ValueError as e:
+        raise CliError(str(e)) from e
+    significator_label = (
+        sig_card["title"] if pin_significator
+        else "None (spread has no significator position)"
+    )
+
+    selected_titles = []
+    for pos_idx, position_name in enumerate(target_positions, start=1):
+        print(f"\n[Position {pos_idx}: {position_name}]")
+        
+        if pin_significator and pos_idx == 1:
+            selected_title = sig_card["title"]
+            print(f"--> Significator (pinned): {selected_title}")
+        elif seeded_titles:
+            selected_title = seeded_titles[pos_idx - 1]
+            print(f"--> PRNG Auto-Drawn: {selected_title}")
+        else:
+            selected_title = None
+            while not selected_title:
+                user_input = input("Enter card index number (or type full name): ").strip()
+                if user_input in card_lookup:
+                    selected_title = card_lookup[user_input]
+                elif user_input.lower() in card_titles_set:
+                    selected_title = card_titles_set[user_input.lower()]
+                else:
+                    print("Invalid card selection. Type 'list' or try again.")
+                    if user_input.lower() == 'list':
+                        display_card_selection(cards)
+                if selected_title and duplicate_in_operation(
+                        target_positions[:pos_idx], selected_titles + [selected_title]):
+                    # One deck per operation: a card can't fall twice in it (the web form
+                    # refuses it too). A master pipeline reshuffles for each operation.
+                    op = operation_number(position_name)
+                    earlier = next(i for i, (p, t) in enumerate(zip(target_positions, selected_titles), start=1)
+                                   if t == selected_title and operation_number(p) == op)
+                    print(f"{selected_title} is already at position {earlier}. Choose another card.")
+                    selected_title = None
+
+        selected_titles.append(selected_title)
+
+    with get_db_connection() as conn:
         # One query for the whole draw instead of one per position.
         for pos_idx, (position_name, card_data) in enumerate(
                 zip(target_positions, load_cards_data(conn, selected_titles, args.mapping)), start=1):
@@ -185,8 +190,11 @@ def run_spread_session():
 def main():
     try:
         run_spread_session()
-    except (CliError, DatabaseOutdated) as e:
+    except (CliError, CardNotFound, DatabaseOutdated) as e:
         print(f"[ERROR] {e}", file=sys.stderr)
+        sys.exit(1)
+    except psycopg.OperationalError as e:
+        print(f"[ERROR] Database connection failed: {e}", file=sys.stderr)
         sys.exit(1)
     except EOFError:
         print("\n[ERROR] Input ended before the reading was complete. To run without prompts, "
