@@ -21,15 +21,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 import psycopg
-from psycopg.rows import dict_row
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import WITHHELD_MAX, derive_primary_element, withheld_summary
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
-    list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
+    DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
+    connect, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
     session_has_testimonial, set_testimonial_approved,
 )
 from ootk.lockout import FailedLogins
@@ -406,14 +405,14 @@ def get_db_connection():
     first attempt while it wakes. A second failure reaches database_unreachable_page."""
     started = time.monotonic()
     try:
-        return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+        return connect()
     except psycopg.OperationalError as e:
         # A refusal comes back at once; a timeout has already used up the wait, so no retry.
         if time.monotonic() - started > 3:
             raise
         log.warning("database connection failed, retrying once: %s", e)
         time.sleep(1)
-        return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+        return connect()
 
 
 # thoth_cards and correspondences are reference data that change only with a migration, so the

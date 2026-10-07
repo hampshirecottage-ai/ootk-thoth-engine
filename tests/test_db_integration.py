@@ -364,3 +364,20 @@ def test_schema_has_no_stored_solids_or_unused_geometry(conn):
         cur.execute("SELECT to_regclass('public.spread_position_geometry') AS t")
         assert cur.fetchone()["t"] is None
     assert not columns & {"platonic_solid", "solid_faces", "solid_vertices", "dual_solid", "topological_role"}
+
+
+def test_a_save_blocked_by_a_lock_gives_up(conn, monkeypatch):
+    """A save waiting on a lock (a migration holds one while it runs) fails after
+    DB_QUERY_TIMEOUT instead of holding a reading slot until the lock is released."""
+    import time
+    monkeypatch.setattr(db, "DB_QUERY_TIMEOUT", 1)
+    card = db.fetch_all_cards(conn)[0]
+    results = [{"card_data": card, "position_number": 1, "position_name": "Card"}]
+    with db.get_db_connection() as locker:
+        locker.execute("LOCK TABLE tarot_sessions IN ACCESS EXCLUSIVE MODE")
+        with db.get_db_connection() as saver:
+            started = time.monotonic()
+            session_id = db.save_spread_session(saver, "Single Card", "q", "n", card["title"], results)
+            waited = time.monotonic() - started
+        locker.rollback()
+    assert session_id is None and waited < 5

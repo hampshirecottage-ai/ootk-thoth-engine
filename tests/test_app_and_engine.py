@@ -1725,19 +1725,42 @@ def test_database_down_gives_a_retry_page_and_keeps_static_pages(client, monkeyp
     assert examples.status_code == 200 and "/reading?seed=777" in examples.text
 
 
+class FakeConn:
+    autocommit = False
+
+    def __init__(self):
+        self.executed = []
+
+    def execute(self, sql):
+        self.executed.append((sql, self.autocommit))
+
+
 def test_connection_is_retried_once_after_a_quick_refusal(monkeypatch):
     calls = []
+    conn = FakeConn()
 
     def flaky(**kw):
         calls.append(kw)
         if len(calls) == 1:
             raise app_module.psycopg.OperationalError("waking up")
-        return "conn"
+        return conn
 
     monkeypatch.setattr(app_module.psycopg, "connect", flaky)
     monkeypatch.setattr(app_module.time, "sleep", lambda s: None)
-    assert app_module.get_db_connection() == "conn" and len(calls) == 2
+    assert app_module.get_db_connection() is conn and len(calls) == 2
     assert "connect_timeout" in calls[0]
+
+
+def test_every_connection_has_a_query_time_limit(monkeypatch):
+    """A database that stalls after connecting must not hold a reading slot indefinitely: each
+    session gets statement_timeout (set outside a transaction, so it lasts), and the TCP
+    settings drop a connection that has gone silent."""
+    conn = FakeConn()
+    monkeypatch.setattr(db.psycopg, "connect", lambda **kw: conn)
+    assert db.connect() is conn and conn.autocommit is False
+    assert conn.executed == [(f"SET statement_timeout = {db.DB_QUERY_TIMEOUT * 1000}", True)]
+    assert db.DB_CONFIG["tcp_user_timeout"] == db.DB_QUERY_TIMEOUT * 1000
+    assert db.DB_CONFIG["keepalives"] == 1
 
 
 def test_outdated_database_is_a_page_not_a_server_exit(client, monkeypatch):

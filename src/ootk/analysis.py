@@ -1,4 +1,5 @@
 """Analysis of a drawn spread: elements, dignities, geometry, topology and macro framework."""
+import functools
 import math
 import re
 
@@ -84,21 +85,29 @@ def derive_primary_element(card_data):
     attribution, then the title. Whole-word matching, so 'chair' never reads as 'air'."""
     if not card_data:
         return "Spirit"
-    suit = str(card_data.get("suit") or "").lower()
+    return _primary_element(card_data.get("suit"), card_data.get("arcana_type"),
+                            card_data.get("title"), card_data.get("attribution"))
+
+_ELEMENT_LOOKUP = {**ELEMENT_WORDS, **ZODIAC_ELEMENTS, **PLANET_ELEMENTS}
+
+# A reading asks for the same card's element many times (balance, every dignity pair, every
+# wheel aspect, the report's card panels), and the deck has 78 cards, so the answers are kept.
+@functools.lru_cache(maxsize=1024)
+def _primary_element(suit, arcana_type, title, attribution):
+    suit = str(suit or "").lower()
     for word, elem in SUIT_ELEMENTS.items():
         if word.rstrip("s") in suit:
             return elem
 
-    if card_data.get("arcana_type") == "Major":
-        name = major_name(card_data)
+    if arcana_type == "Major":
+        name = major_name({"title": title})
         if name in MAJOR_ELEMENTS:
             return MAJOR_ELEMENTS[name]
 
-    lookup = {**ELEMENT_WORDS, **ZODIAC_ELEMENTS, **PLANET_ELEMENTS}
-    for field in ("attribution", "title"):
-        for token in re.findall(r"[a-z]+", str(card_data.get(field) or "").lower()):
-            if token in lookup:
-                return lookup[token]
+    for text in (attribution, title):
+        for token in re.findall(r"[a-z]+", str(text or "").lower()):
+            if token in _ELEMENT_LOOKUP:
+                return _ELEMENT_LOOKUP[token]
     return "Spirit"
 
 def _closes_ring(layout_key, seg_len):
@@ -178,7 +187,10 @@ def spirit_bearing_cards(spread_results):
 
 def calculate_spatial_aspect(angle_deg):
     """Aspect between two positions of a drawn layout, with the wide 'layout' orbs."""
-    aspect = find_aspect(angle_deg, "layout")
+    return _layout_aspect(angle_deg, find_aspect(angle_deg, "layout"))
+
+def _layout_aspect(angle_deg, aspect):
+    """(label, nature, score) for `aspect`, the find_aspect result for `angle_deg`."""
     if aspect is None:
         return f"Minor / Unaspected ({separation(angle_deg):.1f}°)", "Asymmetric Vector Transition", 0
     return aspect_label(aspect), aspect.nature, aspect.score
@@ -189,6 +201,35 @@ def _ring_aspect(delta_deg, allowed):
     if aspect is None:
         return None
     return aspect.name, aspect_label(aspect), aspect.nature, aspect.score
+
+_RING_ORDER = {r[0]: i for i, r in enumerate(RING_ASPECTS)}
+
+@functools.lru_cache(maxsize=None)
+def _ring_pairs(layout_key, seg_len):
+    """The aspected position pairs of a ring layout's first `seg_len` positions, in report
+    order: (a, b, distance, delta_angle, short, name, description, modifier). They depend only
+    on the layout, so they are worked out once per process rather than once per reading."""
+    coords = SPREAD_DEFAULT_COORDINATES[layout_key][:seg_len]
+    cx = sum(x for x, _ in coords) / len(coords)
+    cy = sum(y for _, y in coords) / len(coords)
+    angles = [None if math.hypot(x - cx, y - cy) < 1e-9 else math.degrees(math.atan2(y - cy, x - cx)) % 360
+              for x, y in coords]
+    allowed = RING_LAYOUT_ASPECTS[layout_key]
+    found = []
+    for a in range(seg_len):
+        for b in range(a + 1, seg_len):
+            if angles[a] is None or angles[b] is None:
+                continue
+            delta = abs(angles[a] - angles[b])
+            hit = _ring_aspect(delta, allowed)
+            if not hit:
+                continue
+            short, name, desc, modifier = hit
+            (xa, ya), (xb, yb) = coords[a], coords[b]
+            found.append((_RING_ORDER[short], a, b, round(math.hypot(xb - xa, yb - ya), 3),
+                          round(min(delta % 360, 360 - delta % 360), 1), short, name, desc, modifier))
+    found.sort(key=lambda t: (t[0], t[1], t[2]))
+    return tuple(t[1:] for t in found)
 
 def analyze_spatial_vectors(spread_results, spread_key):
     """Spatial relations per layout segment, measured around each layout's centroid.
@@ -226,46 +267,28 @@ def analyze_spatial_vectors(spread_results, spread_key):
             return (f"Pos {item1['position_number']} ({item1['card_data']['title']}) "
                     f"<-> Pos {item2['position_number']} ({item2['card_data']['title']})")
 
-        allowed = RING_LAYOUT_ASPECTS.get(layout_key)
-        if allowed is not None:
-            found = []
-            for a in range(seg_len):
-                for b in range(a + 1, seg_len):
-                    ang_a, ang_b = polar(coords[a]), polar(coords[b])
-                    if ang_a is None or ang_b is None:
-                        continue
-                    delta = abs(ang_a - ang_b)
-                    hit = _ring_aspect(delta, allowed)
-                    if not hit:
-                        continue
-                    short, name, desc, modifier = hit
-                    (xa, ya), (xb, yb) = coords[a], coords[b]
-                    # The aspect is fixed by the two positions; the cards in them are what
-                    # changes between readings, so each pair also carries their dignity.
-                    card_a = spread_results[seg_start + a]["card_data"]
-                    card_b = spread_results[seg_start + b]["card_data"]
-                    card_score, card_rel = element_dignity(derive_primary_element(card_a),
-                                                           derive_primary_element(card_b))
-                    found.append((
-                        [r[0] for r in RING_ASPECTS].index(short), a, b,
-                        {
-                            "pair": pair_label(spread_results[seg_start + a], spread_results[seg_start + b]),
-                            "distance": round(math.hypot(xb - xa, yb - ya), 3),
-                            "delta_angle": round(min(delta % 360, 360 - delta % 360), 1),
-                            "aspect": name,
-                            "description": desc,
-                            "score_modifier": modifier,
-                            "segment_name": seg_name,
-                            "pair_mode": "aspect",
-                            "aspect_name": short,
-                            "card_score": card_score,
-                            "card_relationship": card_rel,
-                            "from_index": seg_start + a,
-                            "to_index": seg_start + b,
-                        },
-                    ))
-            found.sort(key=lambda t: (t[0], t[1], t[2]))
-            spatial_matrix.extend(t[3] for t in found)
+        if layout_key in RING_LAYOUT_ASPECTS:
+            # The aspect is fixed by the two positions; the cards in them are what changes
+            # between readings, so each pair also carries their dignity.
+            for a, b, distance, delta_angle, short, name, desc, modifier in _ring_pairs(layout_key, seg_len):
+                card_score, card_rel = element_dignity(
+                    derive_primary_element(spread_results[seg_start + a]["card_data"]),
+                    derive_primary_element(spread_results[seg_start + b]["card_data"]))
+                spatial_matrix.append({
+                    "pair": pair_label(spread_results[seg_start + a], spread_results[seg_start + b]),
+                    "distance": distance,
+                    "delta_angle": delta_angle,
+                    "aspect": name,
+                    "description": desc,
+                    "score_modifier": modifier,
+                    "segment_name": seg_name,
+                    "pair_mode": "aspect",
+                    "aspect_name": short,
+                    "card_score": card_score,
+                    "card_relationship": card_rel,
+                    "from_index": seg_start + a,
+                    "to_index": seg_start + b,
+                })
             continue
 
         links = (segment_pairs(layout_key, seg_len) if layout_key in HEAP_LAYOUTS
@@ -288,8 +311,8 @@ def analyze_spatial_vectors(spread_results, spread_key):
                 short = None
             else:
                 delta_angle = abs(a1 - a2)
-                aspect_name, aspect_desc, modifier = calculate_spatial_aspect(delta_angle)
                 hit = find_aspect(delta_angle, "layout")
+                aspect_name, aspect_desc, modifier = _layout_aspect(delta_angle, hit)
                 short = hit.name if hit else None
 
             spatial_matrix.append({
