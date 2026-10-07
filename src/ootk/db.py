@@ -39,6 +39,11 @@ def env_int(name, default, minimum=1, maximum=None):
         return default
     return value
 
+# Seconds one query may run, including any wait for a lock (a migration holds one while it runs).
+# Every query here takes milliseconds; without a limit a stuck save holds one of the web app's
+# reading slots indefinitely, and a few of them stop every reading page.
+DB_QUERY_TIMEOUT = env_int("DB_QUERY_TIMEOUT", 15)
+
 def load_db_config():
     """Loads database credentials from config/config.json with environment variable overrides."""
     config = {
@@ -50,6 +55,12 @@ def load_db_config():
         # Seconds to wait for the server before giving up. Without it an unreachable host
         # holds a web request for minutes (about 130 s) before the visitor sees anything.
         "connect_timeout": env_int("DB_CONNECT_TIMEOUT", 10),
+        # A database that goes silent after connecting (a dropped route, a host suspended
+        # mid-query) would otherwise hold the request for about 15 minutes, until the operating
+        # system gives up. Unacknowledged data fails after DB_QUERY_TIMEOUT seconds; an idle
+        # wait for a reply is probed every 5 s and fails after two unanswered probes.
+        "tcp_user_timeout": DB_QUERY_TIMEOUT * 1000,
+        "keepalives": 1, "keepalives_idle": 5, "keepalives_interval": 5, "keepalives_count": 2,
     }
     
     if CONFIG_PATH.exists():
@@ -76,10 +87,24 @@ class DatabaseOutdated(RuntimeError):
 class CardNotFound(LookupError):
     """A card title with no thoth_cards row."""
 
+def connect():
+    """A connection whose queries give up after DB_QUERY_TIMEOUT seconds with
+    psycopg.errors.QueryCanceled (an OperationalError). Set per session rather than through the
+    `options` startup parameter, which connection poolers refuse."""
+    conn = psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+    try:
+        conn.autocommit = True          # so the setting lasts for the session, outside any transaction
+        conn.execute(f"SET statement_timeout = {DB_QUERY_TIMEOUT * 1000}")
+        conn.autocommit = False
+    except BaseException:
+        conn.close()
+        raise
+    return conn
+
 def get_db_connection():
     """A connection for the CLI; a failure raises psycopg.OperationalError (cli.main prints it).
     The web app uses its own, which retries once while a sleeping database wakes."""
-    return psycopg.connect(**DB_CONFIG, row_factory=dict_row)
+    return connect()
 
 def fetch_all_cards(conn):
     with conn.cursor() as cur:
