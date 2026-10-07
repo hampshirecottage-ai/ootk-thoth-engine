@@ -20,6 +20,25 @@ DB_ENV_VARS = {
     "host": "DB_HOST", "port": "DB_PORT",
 }
 
+def env_int(name, default, minimum=1, maximum=None):
+    """An integer setting from the environment. Unset or blank gives `default`; a value that
+    isn't a whole number in range is reported on stderr and replaced by `default`, so one
+    mistyped setting can't stop the app from starting (or, for WEB_THREADS=0 or
+    DB_CONNECT_TIMEOUT=0, make it wait forever)."""
+    raw = (os.getenv(name) or "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        value = None
+    if value is None or value < minimum or (maximum is not None and value > maximum):
+        limits = f"{minimum} or more" if maximum is None else f"{minimum} to {maximum}"
+        print(f"[WARN] {name}={raw!r} is not a whole number from {limits}; using {default}.",
+              file=sys.stderr)
+        return default
+    return value
+
 def load_db_config():
     """Loads database credentials from config/config.json with environment variable overrides."""
     config = {
@@ -27,10 +46,10 @@ def load_db_config():
         "user": os.getenv("DB_USER", "postgres"),
         "password": os.getenv("DB_PASSWORD", ""),
         "host": os.getenv("DB_HOST", "localhost"),
-        "port": int(os.getenv("DB_PORT", "5432")),
+        "port": env_int("DB_PORT", 5432, maximum=65535),
         # Seconds to wait for the server before giving up. Without it an unreachable host
         # holds a web request for minutes (about 130 s) before the visitor sees anything.
-        "connect_timeout": int(os.getenv("DB_CONNECT_TIMEOUT", "10")),
+        "connect_timeout": env_int("DB_CONNECT_TIMEOUT", 10),
     }
     
     if CONFIG_PATH.exists():

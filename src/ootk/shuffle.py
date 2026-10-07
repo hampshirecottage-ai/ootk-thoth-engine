@@ -3,7 +3,6 @@
 Same seed -> same deck, regardless of whether the seed is given as int or str.
 """
 import hashlib
-import json
 import random
 import re
 
@@ -103,19 +102,3 @@ def duplicate_in_operation(positions, titles):
             return title
         seen.add(key)
     return None
-
-
-def main():
-    suits = ["Wands", "Cups", "Swords", "Disks"]
-    ranks = ["Ace", "2", "3", "4", "5", "6", "7", "8", "9", "10",
-             "Knight", "Queen", "Prince", "Princess"]
-    deck = [f"Major {i}" for i in range(22)] + [f"{r} of {s}" for s in suits for r in ranks]
-
-    seed = 42
-    print(f"--- Shuffle Simulation (Seed: {seed}) ---")
-    print("Top 5 Cards Dealt:")
-    print(json.dumps(shuffle_deck(deck, seed)[:5], indent=2))
-
-
-if __name__ == "__main__":
-    main()

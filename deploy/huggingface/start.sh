@@ -14,12 +14,19 @@ if [ -z "$DB_HOST" ]; then
     createdb -h /tmp -U user my_tarot_db 2>/dev/null || true
 fi
 
+# A blank, non-numeric or zero DB_CONNECT_TIMEOUT falls back to 10, as in the app (db.env_int):
+# 0 would mean wait forever.
+case "$DB_CONNECT_TIMEOUT" in
+    ''|*[!0-9]*) connect_timeout=10 ;;
+    *) connect_timeout=$DB_CONNECT_TIMEOUT; [ "$connect_timeout" -ge 1 ] || connect_timeout=10 ;;
+esac
+
 # PGCONNECT_TIMEOUT: without it psql waits forever on a database that doesn't answer, and the
 # web server below never opens its port, so the host gives up on the boot. The app itself
 # uses the same limit (DB_CONNECT_TIMEOUT) and shows a "database unreachable" page instead.
 export PGHOST="$DB_HOST" PGPORT="${DB_PORT:-5432}" PGUSER="${DB_USER:-postgres}" \
        PGDATABASE="${DB_NAME:-my_tarot_db}" PGPASSWORD="$DB_PASSWORD" \
-       PGCONNECT_TIMEOUT="${DB_CONNECT_TIMEOUT:-10}"
+       PGCONNECT_TIMEOUT="$connect_timeout"
 
 if ! loaded="$(psql -tAc "SELECT to_regclass('public.thoth_cards') IS NOT NULL")"; then
     echo "Database unreachable at boot; starting the web server anyway"

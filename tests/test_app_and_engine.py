@@ -689,6 +689,28 @@ def test_html_export_escapes_user_text(tmp_path, monkeypatch):
     assert "&lt;script&gt;" in text
 
 
+def test_html_export_declares_utf8(tmp_path, monkeypatch):
+    """The prompt carries Hebrew letters and degree signs: without a charset a browser
+    opening the file may guess another encoding and garble them."""
+    _, html_path = build_report(tmp_path, monkeypatch)
+    assert '<meta charset="utf-8">' in html_path.read_text(encoding="utf-8")
+
+
+def test_unsaved_html_exports_dont_overwrite_each_other(tmp_path, monkeypatch):
+    monkeypatch.setattr(report, "BASE_DIR", tmp_path)
+    times = iter(["20261007-050000", "20261007-050001"])
+
+    class FakeNow:
+        def __format__(self, spec):
+            return next(times)
+
+    monkeypatch.setattr(report, "datetime", type("dt", (), {"now": staticmethod(FakeNow)}))
+    report.generate_html_output(None, "Triad", "", "one")
+    report.generate_html_output(None, "Triad", "", "two")
+    names = sorted(p.name for p in (tmp_path / "output").iterdir())
+    assert names == ["ootk_output_unsaved_20261007-050000.html", "ootk_output_unsaved_20261007-050001.html"]
+
+
 def test_view_output_roundtrip_and_all_sections(tmp_path, monkeypatch):
     import io
     from rich.console import Console
@@ -858,6 +880,25 @@ def test_blank_seed_gets_a_new_seed_shown_on_the_report(seeded_client):
 
 def test_seed_mode_unknown_significator_is_400(seeded_client):
     assert post(seeded_client, draw_mode="seed", seed="1", significator="Nobody").status_code == 400
+
+
+def test_waite_significator_name_gets_a_hint(seeded_client):
+    """The card art prints Waite names, so 'King of Swords' (the Thoth Knight) is what
+    people may type: the error names the card to use."""
+    r = post(seeded_client, follow=False, draw_mode="seed", seed="1", significator="King of Swords")
+    assert r.status_code == 400
+    assert "in this deck it is the Knight of Swords" in r.json()["detail"]
+
+
+def test_art_name_hint():
+    from ootk.visual import art_name_hint
+    titles = ["Princess of Swords", "Princess of Disks", "Knight of Wands", "XI - Lust", "Queen of Cups"]
+    assert art_name_hint("page of swords", titles).endswith("in this deck it is the Princess of Swords.")
+    assert "Princess of Disks" in art_name_hint("Page of Pentacles", titles)
+    assert "Knight of Wands" in art_name_hint("King of Wands", titles)
+    assert "XI - Lust" in art_name_hint("Strength", titles)
+    assert art_name_hint("Queen of Cups", titles) == ""      # same name in both decks
+    assert art_name_hint("Nobody", titles) == "" and art_name_hint("", titles) == ""
 
 
 def test_seed_mode_needs_a_significator_only_where_the_spread_has_one(seeded_client):
@@ -1911,3 +1952,32 @@ def test_missing_table_or_column_gives_the_update_page(client, monkeypatch):
         r = client.get("/maps", headers=HTML)
         assert r.status_code == 503 and "needs an update" in r.text
         assert "relation does not exist" not in r.text
+
+
+# ---------- numeric settings ----------
+
+@pytest.mark.parametrize("raw, expected", [
+    (None, 8), ("", 8), ("  ", 8), ("4", 4), (" 4 ", 4),
+    ("0", 8), ("-2", 8), ("abc", 8), ("2.5", 8),
+])
+def test_env_int_falls_back_on_unusable_values(monkeypatch, capsys, raw, expected):
+    """A blank or mistyped number setting must not stop the app starting, and WEB_THREADS=0
+    or DB_CONNECT_TIMEOUT=0 must not make it wait forever."""
+    if raw is None:
+        monkeypatch.delenv("OOTK_TEST_SETTING", raising=False)
+    else:
+        monkeypatch.setenv("OOTK_TEST_SETTING", raw)
+    assert db.env_int("OOTK_TEST_SETTING", 8) == expected
+    warned = "[WARN] OOTK_TEST_SETTING" in capsys.readouterr().err
+    assert warned == (raw is not None and raw.strip() not in ("", "4"))
+
+
+def test_env_int_upper_bound(monkeypatch):
+    monkeypatch.setenv("OOTK_TEST_PORT", "70000")
+    assert db.env_int("OOTK_TEST_PORT", 5432, maximum=65535) == 5432
+    monkeypatch.setenv("OOTK_TEST_PORT", "6543")
+    assert db.env_int("OOTK_TEST_PORT", 5432, maximum=65535) == 6543
+
+
+def test_shuffle_has_no_demo_entry_point():
+    assert not hasattr(shuffle, "main")
