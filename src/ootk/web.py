@@ -25,11 +25,7 @@ from psycopg.rows import dict_row
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ootk import PROJECT_ROOT as BASE_DIR
-from ootk.analysis import (
-    WITHHELD_MAX, analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
-    analyze_spatial_vectors, calculate_elemental_dignities, derive_primary_element,
-    evaluate_macro_framework, withheld_summary,
-)
+from ootk.analysis import WITHHELD_MAX, derive_primary_element, withheld_summary
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
@@ -37,7 +33,7 @@ from ootk.db import (
     session_has_testimonial, set_testimonial_approved,
 )
 from ootk.lockout import FailedLogins
-from ootk.report import MAPPING_LABELS, build_analytical_prompt
+from ootk.report import MAPPING_LABELS, analyze_reading
 from ootk.rules import element_dignity
 from ootk import atlas
 from ootk import significator as significator_methods
@@ -1411,45 +1407,17 @@ def run_reading(settings, card_titles, significator_label, deck=None):
             "card_data": card_data
         })
 
-    element_counts = analyze_elemental_balance(spread_results)
-    dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
-    spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
-    spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
-    solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_key)
-    macro_framework, framework_basis = evaluate_macro_framework(spread_results,
-                                                                forced_framework=settings["framework"])
     deck = deck or reference_deck()
     withheld = withheld_cards(deck, card_titles, mapping_system)
-    sign_carriers = load_sign_carriers(deck, mapping_system)
-
-    analytical_prompt = build_analytical_prompt(
-        spread_name=selected_spread["name"],
-        query_prompt=settings["topic"],
-        significator=significator_label,
-        seed_val=settings["seed"] or "Graphical Selection",
-        spread_results=spread_results,
-        element_counts=element_counts,
-        dignity_matrix=dignity_matrix,
-        spatial_matrix=spatial_matrix,
-        spatial_dist=spatial_dist,
-        spatial_details=spatial_details,
-        solid_counts=solid_counts,
-        topology_details=topology_details,
-        dual_pairings=dual_pairings,
-        macro_framework=macro_framework,
-        mapping_system=mapping_system,
-        framework_basis=framework_basis,
-        withheld=withheld,
+    reading = analyze_reading(
+        selected_spread["name"], spread_key, settings["topic"], significator_label,
+        settings["seed"] or "Graphical Selection", spread_results,
+        framework=settings["framework"], mapping_system=mapping_system, withheld=withheld,
     )
     return {
         "spread_name": selected_spread["name"], "significator_label": significator_label,
-        "spread_results": spread_results, "element_counts": element_counts,
-        "dignity_matrix": dignity_matrix, "spatial_matrix": spatial_matrix,
-        "spatial_dist": spatial_dist, "spatial_details": spatial_details,
-        "solid_counts": solid_counts, "topology_details": topology_details,
-        "dual_pairings": dual_pairings, "macro_framework": macro_framework,
-        "framework_basis": framework_basis, "withheld": withheld,
-        "analytical_prompt": analytical_prompt, "sign_carriers": sign_carriers,
+        "spread_results": spread_results, "withheld": withheld,
+        "sign_carriers": load_sign_carriers(deck, mapping_system), **reading,
     }
 
 

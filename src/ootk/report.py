@@ -3,7 +3,11 @@ import html
 import re
 
 from ootk import PROJECT_ROOT as BASE_DIR
-from ootk.analysis import derive_primary_element, spirit_bearing_cards
+from ootk.analysis import (
+    analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
+    analyze_spatial_vectors, calculate_elemental_dignities, derive_primary_element,
+    evaluate_macro_framework, spirit_bearing_cards,
+)
 
 # The report header and the web form both name the systems from here, so the label always
 # says which way the Tzaddi/Heh swap goes (see db.fetch_cards_correspondences).
@@ -34,6 +38,31 @@ def _solid_legend(spread_results):
         if legend.setdefault(solid, props) != props:
             mixed.add(solid)
     return {k: v for k, v in legend.items() if k not in mixed}
+
+def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
+                    framework="auto", mapping_system="thoth", withheld=None):
+    """Every analysis of a drawn spread, then its prompt. The command line and the web site both
+    call this, so the same draw always gives the same prompt from either."""
+    element_counts = analyze_elemental_balance(spread_results)
+    dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
+    spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
+    spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
+    solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_key)
+    macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
+    analytical_prompt = build_analytical_prompt(
+        spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
+        dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts,
+        topology_details, dual_pairings, macro_framework, mapping_system=mapping_system,
+        framework_basis=framework_basis, withheld=withheld,
+    )
+    return {
+        "element_counts": element_counts, "dignity_matrix": dignity_matrix,
+        "spatial_matrix": spatial_matrix, "spatial_dist": spatial_dist,
+        "spatial_details": spatial_details, "solid_counts": solid_counts,
+        "topology_details": topology_details, "dual_pairings": dual_pairings,
+        "macro_framework": macro_framework, "framework_basis": framework_basis,
+        "analytical_prompt": analytical_prompt,
+    }
 
 def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None):
     total_cards = sum(element_counts.values()) or 1

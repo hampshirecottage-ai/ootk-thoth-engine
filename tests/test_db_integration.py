@@ -315,3 +315,31 @@ def test_admin_testimonial_queries(conn):
         assert [r["body"] for r in db.list_testimonials(conn)] == ["Two.", "One."]   # waiting first
         db.delete_testimonial(conn, rows[0]["testimonial_id"])
         assert [r["body"] for r in db.list_testimonials(conn)] == ["One."]
+
+
+@pytest.mark.parametrize("spread, significator, mapping, framework", [
+    ("3", None, "thoth", "auto"),
+    ("7", None, "golden_dawn", "life_path"),
+    ("12", "Queen of Cups", "thoth", "auto"),
+    ("12", "Prince of Swords", "french_egyptian", "post_mortem"),
+])
+def test_command_line_and_web_give_the_same_prompt(monkeypatch, spread, significator, mapping, framework):
+    """Both entry points go through report.analyze_reading, so one seed gives one prompt."""
+    from ootk import cli, web
+
+    seen = {}
+    real = cli.analyze_reading
+    monkeypatch.setattr(cli, "analyze_reading", lambda *a, **k: seen.setdefault("r", real(*a, **k)))
+    monkeypatch.setattr(cli, "save_spread_session", lambda *a, **k: None)
+    argv = ["ootk", "--spread", spread, "--seed", "4242", "--topic", "parity check",
+            "--mapping", mapping, "--framework", framework]
+    if significator:
+        argv += ["--significator", significator]
+    monkeypatch.setattr("sys.argv", argv)
+    cli.run_spread_session()
+
+    settings = {"spread_key": spread, "seed": "4242", "topic": "parity check", "significator": significator or "",
+                "framework": framework, "mapping_system": mapping}
+    deck = web.reference_deck()
+    titles, label = web.seeded_draw(deck, "4242", spread, significator or "")
+    assert web.run_reading(settings, titles, label, deck)["analytical_prompt"] == seen["r"]["analytical_prompt"]
