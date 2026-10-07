@@ -403,6 +403,14 @@
         </div>
         {% endif %}
 
+        {% if S.own_place %}
+        <h3 style="margin-top:18px">Cards on their own place</h3>
+        <p class="muted" style="margin-top:0">A pip on its own decan, a card on its own sign, or in its natural house (the house of its sign, Aries = 1st), with the exact chance of that many at random.</p>
+        <ul class="own-place">
+            {% for c in S.own_place %}<li><strong>{{ c.label }}:</strong> {{ c.sentence }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+
         {% if S.segments | length > 1 %}
         <h3 style="margin-top:18px">Operations</h3>
         <div class="table-wrap"><table class="ops-table">

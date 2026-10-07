@@ -5,10 +5,12 @@ from datetime import datetime
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
-    analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
-    analyze_spatial_vectors, calculate_elemental_dignities, derive_primary_element,
-    evaluate_macro_framework, spirit_bearing_cards,
+    SUIT_ELEMENTS, analyze_elemental_balance, analyze_hebrew_spatial_distribution,
+    analyze_platonic_topology, analyze_spatial_vectors, calculate_elemental_dignities, card_home,
+    derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
+    spirit_bearing_cards,
 )
+from ootk.spreads import ZODIAC_SIGNS
 
 # The report header and the web form both name the systems from here, so the label always
 # says which way the Tzaddi/Heh swap goes (see db.fetch_cards_correspondences).
@@ -50,11 +52,12 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
     spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
     solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_key)
     macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
+    own_place = own_place_check(spread_results, spread_key)
     analytical_prompt = build_analytical_prompt(
         spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
         dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts,
         topology_details, dual_pairings, macro_framework, mapping_system=mapping_system,
-        framework_basis=framework_basis, withheld=withheld,
+        framework_basis=framework_basis, withheld=withheld, own_place=own_place,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -62,10 +65,10 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         "spatial_details": spatial_details, "solid_counts": solid_counts,
         "topology_details": topology_details, "dual_pairings": dual_pairings,
         "macro_framework": macro_framework, "framework_basis": framework_basis,
-        "analytical_prompt": analytical_prompt,
+        "own_place": own_place, "analytical_prompt": analytical_prompt,
     }
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None):
     total_cards = sum(element_counts.values()) or 1
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
@@ -79,7 +82,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 **Significator:** {significator}
 **PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
-{framework_basis_line}**Active Mapping System:** {mapping_label}
+{framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
 """
     header_md = prompt_md
     prompt_md = """
@@ -196,7 +199,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         prompt_md += f"### Position {item['position_number']}: {item['position_name']}\n"
         prompt_md += f"- **Card Drawn**: {data['title']}\n"
         prompt_md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
-        prompt_md += f"- **Path/Sephira**: {data['path_or_sephira']}{letter_str}\n"
+        prompt_md += f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
         prompt_md += f"- **Attribution**: {data['attribution']}\n"
         minor = data['arcana_type'] == 'Minor'
         if minor:
@@ -232,6 +235,28 @@ Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spre
     # The header keeps the querent's own text exactly as typed.
     prompt_md += f"\n{end_marker}\n"
     return header_md + strip_hebrew_points(prompt_md)
+
+OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a "
+                   "Knight, Queen or Prince by the sign that gives it its letter) or its natural "
+                   "house (the house of that sign, Aries = 1st). The chance is exact for a random "
+                   "deal from the 78 cards.")
+
+def own_place_markdown(own_place):
+    if not own_place:
+        return ""
+    lines = "".join(f"  * {c['label']}: {own_place_sentence(c)}\n" for c in own_place)
+    return f"**Own-Place Check:** {OWN_PLACE_INTRO}\n{lines}"
+
+def _path_label(data):
+    """A court has no place of its own on the Tree: it takes its Hebrew letter through its
+    zodiac sign (a Princess through her element), and section 6 says so."""
+    if data.get("arcana_type") != "Court":
+        return "Path/Sephira"
+    sign, _ = card_home(data)
+    if sign is not None:
+        return f"Letter via Sign ({ZODIAC_SIGNS[sign]})"
+    element = SUIT_ELEMENTS.get(str(data.get("suit") or "").lower())
+    return f"Letter via Element ({element})" if element else "Path/Sephira"
 
 def _positions(n):
     return f"{n} position{'s' if n != 1 else ''}"

@@ -1557,7 +1557,83 @@ def test_report_lists_withheld_cards(seeded_client):
 def test_framework_basis_explains_n():
     _name, basis = analysis.evaluate_macro_framework(
         [{"position_number": i, "position_name": "", "card_data": fake_card(f"C{i}")} for i in range(10)])
-    assert "n=10 cards with a place on the Tree" in basis
+    assert "n=10 cards with a Sephira or path of their own" in basis
+    assert "through its zodiac sign" in basis and "not through a position on the Tree" in basis
+    assert "courts have none" not in basis
+
+
+def test_court_letter_is_labelled_as_coming_through_its_sign():
+    knight = fake_card("Knight of Swords", suit="Swords", arcana="Court",
+                       attribution="Fire of Air - 20° Taurus to 20° Gemini")
+    princess = fake_card("Princess of Disks", suit="Disks", arcana="Court",
+                         attribution="Earth of Earth - Aries, Taurus, Gemini quadrant")
+    assert report._path_label(knight) == "Letter via Sign (Gemini)"
+    assert report._path_label(princess) == "Letter via Element (Earth)"
+    assert report._path_label(fake_card("2 of Wands")) == "Path/Sephira"
+
+
+def _wheel(spread_key, cards):
+    positions = spreads.spread_positions(spread_key)
+    return [{"position_number": i, "position_name": p, "card_data": c}
+            for i, (p, c) in enumerate(zip(positions, cards), start=1)]
+
+
+def test_card_home_reads_book_t_attributions():
+    assert analysis.card_home(fake_card("2 of Wands - Dominion", attribution="Mars in Aries")) == (0, {0})
+    assert analysis.card_home(fake_card("10 of Cups - Satiety", suit="Cups",
+                                        attribution="Mars in Pisces")) == (11, {35})
+    assert analysis.card_home(fake_card("XIII - Death", arcana="Major", attribution="Scorpio")) == (7, set())
+    assert analysis.card_home(fake_card("X - Fortune", arcana="Major", attribution="Jupiter")) == (None, set())
+    assert analysis.card_home(fake_card("Ace of Wands", attribution="Root of the Powers of Fire")) == (None, set())
+    # Under French/Egyptian the shown attribution changes, but the card's own one is used.
+    emperor = dict(fake_card("IV - The Emperor", arcana="Major", attribution="Jupiter"),
+                   card_attribution="Aries")
+    assert analysis.card_home(emperor) == (0, set())
+
+
+def test_own_place_distribution_is_exact():
+    for kind, n, expected in (("decan", 36, 36 / 78), ("sign", 12, 12 * 5 / 78), ("house", 12, 12 * 5 / 78)):
+        dist = analysis.own_place_distribution(kind, n)
+        assert sum(dist) == pytest.approx(1.0)
+        assert sum(j * p for j, p in enumerate(dist)) == pytest.approx(expected)
+    # Brute force on a small deck: 4 cards, 2 places, cards 0 and 1 at home on place 0 and 1.
+    assert analysis._rook_numbers([frozenset({0}), frozenset({1}), frozenset({0, 1})]) == [1, 4, 3]
+
+
+def test_own_decan_cards_are_flagged_with_their_chance():
+    blank = [fake_card(f"Filler {i}", attribution="Fire") for i in range(36)]
+    cards = list(blank)
+    cards[0] = fake_card("2 of Wands - Dominion", attribution="Mars in Aries")       # Decan 1, own
+    cards[12] = fake_card("5 of Wands - Strife", attribution="Saturn in Leo")        # Decan 13, own
+    cards[35] = fake_card("10 of Cups - Satiety", suit="Cups", attribution="Mars in Pisces")  # own
+    cards[1] = fake_card("4 of Wands - Completion", attribution="Venus in Aries")    # Decan 2, not own
+    [check] = analysis.own_place_check(_wheel("11", cards), "11")
+    assert [h["position"] for h in check["hits"]] == [1, 13, 36]
+    assert check["count"] == 3 and check["expected"] == pytest.approx(36 / 78)
+    assert check["chance"] == pytest.approx(sum(analysis.own_place_distribution("decan", 36)[3:]))
+    assert check["unusual"] and check["z"] > 1.64
+    text = analysis.own_place_sentence(check)
+    assert "3 of 36 cards on their own decan" in text and "Pos 1 (2 of Wands - Dominion)" in text
+    assert "3 or more happens in 1.1% of random draws" in text
+
+
+def test_own_sign_and_natural_house_checks():
+    cards = [fake_card(f"Filler {i}", attribution="Fire") for i in range(12)]
+    cards[7] = fake_card("XIII - Death", arcana="Major", attribution="Scorpio")
+    cards[2] = fake_card("Knight of Swords", suit="Swords", arcana="Court",
+                         attribution="Fire of Air - 20° Taurus to 20° Gemini")
+    for key, noun in (("10", "own sign"), ("9", "natural house")):
+        [check] = analysis.own_place_check(_wheel(key, cards), key)
+        assert check["count"] == 2 and check["noun"].endswith(noun)
+    assert analysis.own_place_check(_wheel("3", cards[:3]), "3") == []      # not a wheel
+
+
+def test_ootk_prompt_and_report_show_the_own_place_check(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+             significator="Knight of Swords", output_format="markdown")
+    for op in ("Op 2 (houses)", "Op 3 (signs)", "Op 4 (decans)"):
+        assert op in r.text
+    assert "**Own-Place Check:**" in r.text
 
 
 def test_headline_names_ties_and_absent_elements():
