@@ -8,7 +8,9 @@ import math
 import re
 from collections import Counter
 
-from ootk.analysis import card_is_dignified, derive_primary_element, dual_pairs, spirit_bearing_cards
+from ootk.analysis import (
+    card_is_dignified, derive_primary_element, dual_pairs, own_place_sentence, spirit_bearing_cards,
+)
 from ootk.assets import static_url
 from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
@@ -593,7 +595,7 @@ def link_view(layout_key, cards, aspects, pairs):
 
 
 def build_report_view(spread_key, spread_results, element_counts, dignity_matrix, spatial_matrix,
-                      macro_framework, framework_basis, sign_carriers=None):
+                      macro_framework, framework_basis, sign_carriers=None, own_place=None):
     """Everything report.html needs beyond the raw prompt: summary first, then segments."""
     cards = [_card_view(item, i, dignity_matrix) for i, item in enumerate(spread_results)]
     all_aspects = []
@@ -640,6 +642,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "headline": _headline(element_rows, dignity, aspects),
         "framework": macro_framework,
         "framework_basis": framework_basis,
+        "own_place": [dict(c, sentence=own_place_sentence(c)) for c in own_place or ()],
         "elements": element_rows,
         "spirit_secondary": spirit_bearing_cards(spread_results),
         "dignity": dignity,

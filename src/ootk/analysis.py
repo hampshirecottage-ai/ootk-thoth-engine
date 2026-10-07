@@ -464,8 +464,9 @@ def card_sephirothic_rank(card_data):
     (whole-word matches, averaged so name order doesn't matter). That covers the French
     rows. Golden Dawn rows name a Sephira or path only in English ('Wisdom', 'Ox'), so
     Majors and Minors otherwise fall back to their key_scale: 1-10 is the Sephira itself,
-    11-32 is the mean of the path's two endpoints. Courts have no Sephira or path of
-    their own, so they get None.
+    11-32 is the mean of the path's two endpoints. A court has no Sephira or path of its own:
+    it takes a Hebrew letter through its zodiac sign (or a Princess through her element), so it
+    gets None.
     """
     data = card_data or {}
     text = str(data.get("path_or_sephira") or "").lower()
@@ -533,7 +534,9 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     r = sxy / math.sqrt(sxx * syy) if sxx > 0 and syy > 0 else 0.0
     z = r * math.sqrt(n)
     stats = (f"r={r:+.2f}, z={z:+.2f} (needs |z| >= {FRAMEWORK_TREND_Z}), n={n} cards with a "
-             f"place on the Tree (Majors and pips; courts have none)")
+             f"Sephira or path of their own (Majors and pips; courts are left out: a court takes its "
+             f"Hebrew letter through its zodiac sign, a Princess through her element, not through "
+             f"a position on the Tree)")
 
     if z >= FRAMEWORK_TREND_Z:
         return ("1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)",
@@ -542,6 +545,155 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
         return ("4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)",
                 f"auto: rank falls toward Kether across the draw - {stats}")
     return default_name, f"auto: no significant Sephirothic trend, default lens - {stats}"
+
+# Own-place check. On the house, sign and decan wheels a card can land on its own place: a pip
+# on its own decan, a sign Trump on its own sign, a card in the house of its sign (Aries the
+# 1st house ... Pisces the 12th). Each wheel draws from the whole 78-card deck, so the chance of
+# that happening at random is exact and the same in every reading.
+OWN_PLACE_LAYOUTS = {"9": "house", "10": "sign", "11": "decan"}
+OWN_PLACE_NOUNS = {"house": "in their natural house", "sign": "on their own sign",
+                   "decan": "on their own decan"}
+OWN_PLACE_UNUSUAL = 0.05     # one-sided; the framework trend's z >= 1.64 is the same 5% each way
+DECK_SIZE = 78
+_SIGNS = ("aries", "taurus", "gemini", "cancer", "leo", "virgo", "libra", "scorpio",
+          "sagittarius", "capricorn", "aquarius", "pisces")
+_PIP = re.compile(r"\bin (\w+)\s*$", re.I)
+_SPAN = re.compile(r"20°?\s*([a-z]+) to 20°?\s*([a-z]+)", re.I)
+_PIP_NUMBER = re.compile(r"^(\d+) of ", re.I)
+
+def card_home(card_data):
+    """(sign index 0-11 or None, frozenset of decan indices 0-35) a card counts as its own.
+
+    Book T, read from the card's own attribution (the same in every mapping system):
+    - pip 2-10 ('Mars in Aries'): its decan and that decan's sign (2-4 are a sign's first,
+      second and third decan, 5-7 and 8-10 likewise);
+    - Knight, Queen or Prince ('20° Scorpio to 20° Sagittarius'): the sign it holds two of
+      its three decans in, the sign that gives it its Hebrew letter. No decan: a decan's own
+      card is its pip, the one its position label names;
+    - Trump with a zodiac sign: that sign (it has no decan).
+    Aces, Princesses and planet or element Trumps have no sign or decan of their own.
+    """
+    data = card_data or {}
+    attribution = str(data.get("card_attribution") or data.get("attribution") or "").strip()
+    arcana = data.get("arcana_type")
+    if arcana == "Major":
+        sign = attribution.lower()
+        return (_SIGNS.index(sign) if sign in _SIGNS else None), frozenset()
+    if arcana == "Minor":
+        m, n = _PIP.search(attribution), _PIP_NUMBER.match(str(data.get("title") or ""))
+        if m and n and m.group(1).lower() in _SIGNS and 2 <= int(n.group(1)) <= 10:
+            sign = _SIGNS.index(m.group(1).lower())
+            return sign, frozenset({sign * 3 + (int(n.group(1)) - 2) % 3})
+    if arcana == "Court":
+        m = _SPAN.search(attribution)
+        if m and m.group(1).lower() in _SIGNS and m.group(2).lower() in _SIGNS:
+            sign = _SIGNS.index(m.group(2).lower())
+            return sign, frozenset()
+    return None, frozenset()
+
+def own_places(card_data, kind):
+    """Positions (0-based on the wheel) that are this card's own on a 'house', 'sign' or 'decan' wheel."""
+    sign, decans = card_home(card_data)
+    if kind == "decan":
+        return decans
+    return frozenset() if sign is None else frozenset({sign})
+
+def _deck_homes(kind):
+    """Own places of every card of the 78 that has one: on the decan wheel the 36 pips; on the
+    sign and house wheels also the 12 sign Trumps and the 12 Knights, Queens and Princes.
+    tests/test_db_integration checks this against the cards in the database."""
+    if kind == "decan":
+        return [frozenset({d}) for d in range(36)]
+    return ([frozenset({s}) for s in range(12)]                                  # sign Trumps
+            + [frozenset({d // 3}) for d in range(36)]                           # pips
+            + [frozenset({(k + 1) % 12}) for k in range(12)])                    # courts
+
+def _rook_numbers(homes):
+    """r[k]: ways to put k different cards each on a different one of its own places."""
+    groups = []                                   # cards that share places are counted together
+    for h in homes:
+        joined = [g for g in groups if any(h & other for other in g)]
+        for g in joined:
+            groups.remove(g)
+        groups.append([h] + [other for g in joined for other in g])
+
+    def count(cards, used):
+        if not cards:
+            return [1]
+        rest = count(cards[1:], used)
+        out = list(rest)
+        for place in cards[0] - used:
+            for k, ways in enumerate(count(cards[1:], used | {place})):
+                if k + 1 >= len(out):
+                    out.append(0)
+                out[k + 1] += ways
+        return out
+
+    total = [1]
+    for g in groups:
+        part = count(g, frozenset())
+        product = [0] * (len(total) + len(part) - 1)
+        for i, a in enumerate(total):
+            for j, b in enumerate(part):
+                product[i + j] += a * b
+        total = product
+    return total
+
+@functools.lru_cache(maxsize=None)
+def own_place_distribution(kind, positions, deck_size=DECK_SIZE):
+    """Exact chance of exactly j own-place cards, j = 0..positions, when `positions` cards are
+    dealt at random from the whole deck onto a full wheel (inclusion-exclusion over rook numbers)."""
+    rooks = _rook_numbers(_deck_homes(kind))
+    falling = lambda n, k: math.perm(n, k)
+    total = falling(deck_size, positions)
+    exact = []
+    for j in range(positions + 1):
+        ways = sum((-1) ** (k - j) * math.comb(k, j) * rooks[k] * falling(deck_size - k, positions - k)
+                   for k in range(j, min(len(rooks), positions + 1)))
+        exact.append(ways / total)
+    return tuple(exact)
+
+def own_place_check(spread_results, spread_key):
+    """One entry per full house, sign or decan wheel in the draw: the cards on their own place
+    and how unusual that count is. Empty for every other spread."""
+    checks = []
+    for layout_key, start, end, name in spread_segments(spread_results, spread_key):
+        kind = OWN_PLACE_LAYOUTS.get(layout_key)
+        n = end - start
+        if not kind or n != (36 if kind == "decan" else 12):
+            continue
+        hits = []
+        for place, item in enumerate(spread_results[start:end]):
+            if place in own_places(item.get("card_data"), kind):
+                label = re.sub(r"^\[Op \d+\]\s*", "", item["position_name"])
+                hits.append({"position": item["position_number"], "title": item["card_data"]["title"],
+                             "place": label.split(" (")[0] if kind == "decan" else label})
+        dist = own_place_distribution(kind, n)
+        mean = sum(j * p for j, p in enumerate(dist))
+        sd = math.sqrt(sum((j - mean) ** 2 * p for j, p in enumerate(dist)))
+        count = len(hits)
+        chance = sum(dist[count:])
+        op = re.match(r"Operation (\d+)", name or "")
+        checks.append({
+            "label": f"Op {op.group(1)} ({kind}s)" if op else f"{kind.capitalize()}s",
+            "kind": kind, "noun": OWN_PLACE_NOUNS[kind], "positions": n, "hits": hits,
+            "count": count, "expected": mean, "z": (count - mean) / sd if sd else 0.0,
+            "chance": chance, "unusual": count > 0 and chance <= OWN_PLACE_UNUSUAL,
+        })
+    return checks
+
+def own_place_sentence(check):
+    """'3 of 36 cards on their own decan: Pos 41 (2 of Wands - Dominion), ... - expected 0.46 at
+    random, z=+...; 3 or more happens in 1.1% of random draws (about 1 in 88)'."""
+    c = check
+    stats = f"expected {c['expected']:.2f} at random, z={c['z']:+.2f}"
+    if not c["count"]:
+        return f"none of {c['positions']} cards {c['noun']} - {stats}"
+    cards = ", ".join(f"Pos {h['position']} ({h['title']})" for h in c["hits"])
+    odds = f"about 1 in {round(1 / c['chance']):,}" if c["chance"] > 0 else "never"
+    flag = " - unusual (5% or less)" if c["unusual"] else ""
+    return (f"{c['count']} of {c['positions']} cards {c['noun']}: {cards} - {stats}; "
+            f"{c['count']} or more happens in {c['chance']:.1%} of random draws ({odds}){flag}")
 
 # A draw that leaves out only a few cards is defined as much by those cards as by the ones
 # drawn: dealing 75 of 78 forces the element counts to the deck's totals minus the three left

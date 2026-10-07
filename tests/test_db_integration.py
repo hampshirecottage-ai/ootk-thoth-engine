@@ -217,6 +217,22 @@ def test_decan_labels_match_the_pip_attributions(conn):
         assert fetch(conn, card["title"], "golden_dawn")["attribution"] == decan, label
 
 
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])
+def test_own_place_chance_uses_the_real_decks_own_places(conn, system):
+    """The exact chance assumes 36 pips (one per decan) and, per sign, a Trump, three pips and a
+    Knight, Queen or Prince. The database's cards must give exactly those places."""
+    from collections import Counter
+    titles = [c["title"] for c in db.fetch_all_cards(conn)]
+    rows = db.fetch_cards_correspondences(conn, titles, system=system).values()
+    for kind in ("decan", "sign", "house"):
+        places = Counter(analysis.own_places(r, kind) for r in rows)
+        del places[frozenset()]
+        assert places == Counter(analysis._deck_homes(kind)), kind
+    pip = analysis.own_places(fetch(conn, "2 of Wands - Dominion", system), "decan")
+    assert pip == {0}                                             # Decan 1: Mars in Aries
+    assert analysis.card_home(fetch(conn, "Knight of Swords", system))[0] == 2    # Gemini, Zain
+
+
 def test_withheld_lists_the_cards_left_out(conn):
     deck = db.fetch_all_cards(conn)
     drawn = [c["title"] for c in deck][3:]

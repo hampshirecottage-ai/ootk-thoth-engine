@@ -509,6 +509,7 @@ def reading_export(spread_name, settings, significator, framework, framework_bas
         "significator": significator,
         "framework": framework,
         "framework_basis": framework_basis,
+        "own_place": view.get("own_place", []),
         "element_counts": element_counts,
         "cards": [
             dict(item["card_data"], position_number=item["position_number"],
@@ -1424,7 +1425,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
 def report_view(settings, r):
     return build_report_view(settings["spread_key"], r["spread_results"], r["element_counts"],
                              r["dignity_matrix"], r["spatial_matrix"], r["macro_framework"],
-                             r["framework_basis"], r.get("sign_carriers"))
+                             r["framework_basis"], r.get("sign_carriers"), r.get("own_place"))
 
 
 def export_reading(settings, r, view):
