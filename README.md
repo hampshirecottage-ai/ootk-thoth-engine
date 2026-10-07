@@ -2,6 +2,8 @@
 
 **OOTK is a neutral instruction set for an LLM to interpret a tarot reading.** It draws a Thoth spread from a seed you can repeat, works out its elemental dignities, aspects and Liber 777 correspondences (up to the full Opening of the Key), and writes them up as a prompt you paste into an LLM. It does not interpret the cards itself.
 
+**Its strengths are objective analysis and clear conceptual models.** Every dignity, aspect and correspondence is looked up from the Book T and Liber 777 tables and scored the same way each time, and the heap, the wheel of houses and signs, and the Cube of Space show where each card sits and how the cards link. The meaning is left to the LLM.
+
 **Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
 ![The start page: the question "What would you like the cards to look at?", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Draw your reading" panel with its Draw my cards button, then the folded sample Opening of the Key](docs/images/front.png)
@@ -215,7 +217,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 
 `/?spread=N` opens the start page with that spread chosen.
 
-- **The form.** Spread, question and Generate reading. Seed, mapping system and framework sit under **More options**. The page remembers your last settings in your browser, and they carry over to `/pick` ("Pick them by hand").
+- **The form.** Spread, question and Draw my cards. Seed, mapping system and framework sit under **More options**. The page remembers your last settings in your browser, and they carry over to `/pick` ("Pick them by hand").
 - **Significator.** Spreads 8 and 12 start with a significator, and the box only appears for those. Choose it one of three ways: **Describe** (Book T: rank from age and gender, suit from colouring or temperament, giving one of the 16 court cards), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
 - **Seeds.** Leave the seed blank to get a new one. A seeded report shows the seed, a share link and the matching `ootk` command (under "Run it in the terminal"), and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
 - **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
