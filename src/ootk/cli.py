@@ -2,14 +2,10 @@
 import argparse
 import sys
 
-from ootk.analysis import (
-    analyze_elemental_balance, analyze_hebrew_spatial_distribution, analyze_platonic_topology,
-    analyze_spatial_vectors, calculate_elemental_dignities, evaluate_macro_framework,
-)
 from ootk.db import (
     DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
-from ootk.report import build_analytical_prompt, generate_html_output
+from ootk.report import analyze_reading, generate_html_output
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
 )
@@ -171,25 +167,16 @@ def run_spread_session():
                 "card_data": card_data
             })
 
-        element_counts = analyze_elemental_balance(spread_results)
-        dignity_matrix = calculate_elemental_dignities(spread_results, spread_choice)
-        spatial_matrix = analyze_spatial_vectors(spread_results, spread_choice)
-        spatial_dist, spatial_details = analyze_hebrew_spatial_distribution(spread_results)
-        solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_choice)
-        macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=args.framework)
         withheld = load_withheld(conn, cards, selected_titles, args.mapping)
-
-        analytical_prompt = build_analytical_prompt(
-            selected_spread["name"], query_prompt, significator_label, args.seed,
-            spread_results, element_counts, dignity_matrix, spatial_matrix, 
-            spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings,
-            macro_framework, mapping_system=args.mapping, framework_basis=framework_basis,
-            withheld=withheld,
+        reading = analyze_reading(
+            selected_spread["name"], spread_choice, query_prompt, significator_label, args.seed,
+            spread_results, framework=args.framework, mapping_system=args.mapping, withheld=withheld,
         )
+        analytical_prompt = reading["analytical_prompt"]
 
         print("\n" + analytical_prompt)
 
-        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator_label, spread_results, dignity_matrix)
+        session_id = save_spread_session(conn, selected_spread["name"], query_prompt, session_notes, significator_label, spread_results, reading["dignity_matrix"])
 
         if args.html:
             generate_html_output(session_id, selected_spread["name"], query_prompt, analytical_prompt)
