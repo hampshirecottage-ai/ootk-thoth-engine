@@ -30,6 +30,17 @@ def test_dual_pairings_never_cross_an_operation_boundary():
     assert len(duals) == 2
 
 
+def test_dual_pairs_name_the_cards_and_match_the_report_lines():
+    solids = ["Hexahedron (Cube)", "Octahedron", "Icosahedron", "Dodecahedron", "Tetrahedron", "Tetrahedron",
+              "Icosahedron", "Icosahedron"]
+    results = [{"position_number": i + 1, "position_name": f"P{i}", "card_data": card(i, solid=s)}
+               for i, s in enumerate(solids)]
+    pairs = analysis.dual_pairs(results)               # one row: each card and the next
+    assert [(i, j) for i, j, _ in pairs] == [(0, 1), (2, 3), (4, 5)]   # two Icosahedra are not duals
+    _, _, lines = analysis.analyze_platonic_topology(results)
+    assert lines == [f"Positions {i + 1} & {j + 1}: {label}" for i, j, label in pairs]
+
+
 # ---------- drawing from a short deck ----------
 
 def test_draw_refuses_a_deck_too_small_for_the_spread():

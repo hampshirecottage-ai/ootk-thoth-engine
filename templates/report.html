@@ -599,7 +599,8 @@
         <div class="body">
             <p>Mother axes {{ spatial_dist.Mother_Axis }} · Double directions {{ spatial_dist.Double_Direction }} · Simple edges {{ spatial_dist.Simple_Edge }} · Sephiroth {{ spatial_dist.Sephira_Point }}</p>
             <p>{% for solid, n in solid_counts.items() %}{{ solid }} {{ n }}{{ ' · ' if not loop.last }}{% endfor %}</p>
-            {% if dual_pairings %}<ul>{% for dp in dual_pairings %}<li>{{ dp }}</li>{% endfor %}</ul>{% endif %}
+            {% if dual_pairings %}<p>Dual inversions: neighbouring cards whose solids are each other's duals (Cube and Octahedron, Dodecahedron and Icosahedron, or two Tetrahedra). <a href="/maps">Card maps</a> draws the Cube of Space with its dual octahedron.</p>
+            <ul>{% for dp in dual_pairings %}<li>{{ dp }}</li>{% endfor %}</ul>{% endif %}
             <div class="table-wrap"><table>
                 <thead><tr><th>#</th><th>Card</th><th>Letter</th><th>Spatial type</th><th>Solid</th><th>Role</th></tr></thead>
                 <tbody>

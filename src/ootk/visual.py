@@ -8,7 +8,7 @@ import math
 import re
 from collections import Counter
 
-from ootk.analysis import card_is_dignified, derive_primary_element, spirit_bearing_cards
+from ootk.analysis import card_is_dignified, derive_primary_element, dual_pairs, spirit_bearing_cards
 from ootk.assets import static_url
 from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
@@ -218,10 +218,18 @@ DETAIL_FIELDS = (
 )
 
 
-def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix, sign_carriers=None):
+def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix, sign_carriers=None,
+                 duals=()):
     """Per-card data for the click-to-open detail panel, indexed like spread_results. Each card
     carries its atlas (ootk.atlas) for the small maps; `sign_carriers` places a pip through its
-    sign's Major and may be left out."""
+    sign's Major and may be left out. `duals` are analysis.dual_pairs."""
+    def other(j):
+        return f"Pos {spread_results[j]['position_number']} ({spread_results[j]['card_data']['title']})"
+    duals_by_card = {}
+    for i, j, label in duals:
+        name = label.split(" (")[-1].rstrip(")").replace(" <-> ", " \u21c4 ")
+        duals_by_card.setdefault(i, []).append(f"{name} with {other(j)}")
+        duals_by_card.setdefault(j, []).append(f"{name} with {other(i)}")
     out = []
     for item, card in zip(spread_results, cards):
         data = item["card_data"]
@@ -236,6 +244,7 @@ def card_details(spread_results, cards, all_aspects_by_card, dignity_matrix, sig
             "aspects": all_aspects_by_card.get(i, []),
             "dignities": [f"{_signed(d['score'])} {d['relationship']}: {d['pair']}"
                           for d in dignity_matrix if i in (d["from_index"], d["to_index"])],
+            "duals": duals_by_card.get(i, []),
             "atlas": card_atlas(data, sign_carriers or {}),
         })
     return out
@@ -627,7 +636,8 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "card_count": len(cards),
         "key_cards": key_cards,
         "segments": segments,
-        "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix, sign_carriers),
+        "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix, sign_carriers,
+                                     dual_pairs(spread_results, spread_key)),
         "aspect_types": [{"type": t, "color": ASPECT_COLORS[t], "strong": is_strong(
             next((a.score for a in ASPECTS if a.name == t), 0)),
             "key": (f"{ASPECTS_BY_NAME[t].angle:g}\u00b0, {_signed(ASPECTS_BY_NAME[t].score)}"

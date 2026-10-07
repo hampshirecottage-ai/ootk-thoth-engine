@@ -350,6 +350,31 @@ def analyze_hebrew_spatial_distribution(spread_results):
 
     return distribution, spatial_details
 
+# The three dual pairs: put a corner at the centre of each face of one solid and the corners
+# make the other. The tetrahedron is its own dual.
+DUAL_LABELS = {
+    frozenset(["Hexahedron (Cube)", "Octahedron"]): "Earth/Air Inversion Dual (Cube <-> Octahedron)",
+    frozenset(["Dodecahedron", "Icosahedron"]): "Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)",
+    frozenset(["Tetrahedron"]): "Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)",
+}
+
+
+def dual_pairs(spread_results, spread_key=None):
+    """(i, j, label) for neighbouring cards whose solids are each other's duals.
+
+    Neighbours are the dignities' (segment_pairs): never across an operation boundary, and on
+    a full wheel the last position neighbours the first."""
+    out = []
+    for layout, start, end, _ in spread_segments(spread_results, spread_key):
+        for a, b in segment_pairs(layout, end - start):
+            i, j = start + a, start + b
+            label = DUAL_LABELS.get(frozenset([spread_results[i]["card_data"].get("platonic_solid"),
+                                               spread_results[j]["card_data"].get("platonic_solid")]))
+            if label:
+                out.append((i, j, label))
+    return out
+
+
 def analyze_platonic_topology(spread_results, spread_key=None):
     """Solid counts, per-card topology and dual pairings between neighbouring cards.
 
@@ -387,23 +412,8 @@ def analyze_platonic_topology(spread_results, spread_key=None):
             "role": role
         })
 
-    dual_pairings = []
-    neighbours = [(start + a, start + b)
-                  for layout, start, end, _ in spread_segments(spread_results, spread_key)
-                  for a, b in segment_pairs(layout, end - start)]
-    for i, j in neighbours:
-        s1 = topology_details[i]["solid"]
-        s2 = topology_details[j]["solid"]
-        p1 = topology_details[i]["position"]
-        p2 = topology_details[j]["position"]
-
-        if (s1 == "Hexahedron (Cube)" and s2 == "Octahedron") or (s1 == "Octahedron" and s2 == "Hexahedron (Cube)"):
-            dual_pairings.append(f"Positions {p1} & {p2}: Earth/Air Inversion Dual (Cube <-> Octahedron)")
-        elif (s1 == "Dodecahedron" and s2 == "Icosahedron") or (s1 == "Icosahedron" and s2 == "Dodecahedron"):
-            dual_pairings.append(f"Positions {p1} & {p2}: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)")
-        elif s1 == "Tetrahedron" and s2 == "Tetrahedron":
-            dual_pairings.append(f"Positions {p1} & {p2}: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)")
-
+    dual_pairings = [f"Positions {topology_details[i]['position']} & {topology_details[j]['position']}: {label}"
+                     for i, j, label in dual_pairs(spread_results, spread_key)]
     return solid_counts, topology_details, dual_pairings
 
 # Auto-detection of the macro framework looks at where the whole draw sits on the Tree of Life,

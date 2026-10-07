@@ -13,6 +13,8 @@ A Hermetic tarot calculation and analytical engine built around the 78-card Thot
 
 It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew letter and path attributions, Platonic solid dual inversions, and decanic zodiacal aspects. Draws are deterministic: the same seed always gives the same deck order.
 
+Rather than treating the Hebrew alphabet as an abstract list or the Platonic solids as isolated geometry, it places both in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://ootk.onrender.com/method#space) explains both and [/maps](https://ootk.onrender.com/maps) draws them.
+
 ---
 
 ## Features
@@ -207,7 +209,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/examples` | Example readings with fixed seeds |
 | `/library` | Glossary and further reading (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
-| `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and the elements |
+| `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
 | `/history` | History of the decks, with archival photos and their credits |
 | `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
 | `/testimonial` | Send a testimonial (one per visitor session); the start page shows one approved testimonial a day |

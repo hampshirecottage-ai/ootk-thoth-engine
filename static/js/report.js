@@ -184,6 +184,8 @@ function maps(c) {
     if (!a || !A) return "";
     const fig = (title, svg, note) => `<figure>${svg}<figcaption><b>${title}</b>${esc(note || "Not placed in this system.")}</figcaption></figure>`;
     const solid = a.solid ? `${a.solid.name}: ${a.solid.faces} faces, ${a.solid.vertices} vertices, ${a.solid.edges} edges.` : "";
+    const other = a.solid && A.dualOf(a.solid.name);
+    const dual = other ? (other === a.solid.name ? `The ${other} is its own dual.` : `The ${A.solidName(a.solid.name)}'s dual is the ${A.solidName(other)}.`) : "";
     const system = ["thoth", "golden_dawn", "french_egyptian"].find(k => k === panel.dataset.system) || "thoth";
     const href = `/maps?card=${encodeURIComponent(a.title)}&system=${system}`;
     return `<h3>Where it sits</h3><div class="maps-mini">` +
@@ -191,6 +193,7 @@ function maps(c) {
         fig("Cube of Space", A.cube(a, null, { compact: true }), a.cube.note) +
         fig("Zodiac and decans", A.ring(a, null, { compact: true }), a.zodiac.note) +
         fig("Platonic solid", A.solid(a, null, { compact: true }), solid) +
+        fig("Dual inversion", A.dual(a, null, { compact: true }), dual) +
         `</div><p style="margin:0 0 12px;font-size:0.85em"><a href="${esc(href)}">Open the card maps</a></p>`;
 }
 
@@ -207,7 +210,7 @@ function openCard(i) {
     const list = (title, items) => items.length
         ? `<h3>${title} (${items.length})</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
     const art = c.art ? `<p class="art-note">${esc(c.art)}</p>` : "";
-    document.getElementById("dBody").innerHTML = img + art + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities);
+    document.getElementById("dBody").innerHTML = img + art + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities) + list("Dual inversions", c.duals || []);
     document.querySelectorAll("[data-card]").forEach(el => el.classList.toggle("selected", el.dataset.card === String(i)));
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");
