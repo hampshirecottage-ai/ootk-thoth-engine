@@ -1881,3 +1881,24 @@ def test_manual_ootk_may_repeat_a_card_in_another_operation(client):
     twice_in_op = [f"Card {i}" for i in range(14)] + ["Card 0"] + [f"Card {i}" for i in range(60)]
     r = post(client, spread_key="12", selected_cards=",".join(twice_in_op))
     assert r.status_code == 400 and "twice in one operation" in r.text
+
+
+def test_card_panel_lists_each_cards_dual_inversions():
+    from ootk import visual
+    cards = [fake_card(f"C{i}") for i in range(3)]          # three Tetrahedra: each neighbour is a dual
+    cards[2] = dict(cards[2], platonic_solid="Icosahedron")
+    results = [{"position_number": i + 1, "position_name": f"P{i}", "card_data": c} for i, c in enumerate(cards)]
+    dignity = analysis.calculate_elemental_dignities(results, "3")
+    view = visual.build_report_view("3", results, analysis.analyze_elemental_balance(results), dignity,
+                                    analysis.analyze_spatial_vectors(results, "3"), "x", "y")
+    duals = [d["duals"] for d in view["card_details"]]
+    assert duals == [["Tetrahedron ⇄ Tetrahedron with Pos 2 (C1)"],
+                     ["Tetrahedron ⇄ Tetrahedron with Pos 1 (C0)"], []]
+
+
+def test_method_and_maps_show_the_cube_of_space_and_its_dual(client):
+    method = client.get("/method").text
+    assert 'id="space"' in method and "Cube of Space from the Sefer Yetzirah" in method
+    assert "polyhedral dual inversions" in method
+    maps = client.get("/maps", headers={"Accept": "text/html"}).text
+    assert 'id="mapDual"' in maps and "Dual inversions" in maps

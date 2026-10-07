@@ -1,5 +1,5 @@
 // Card maps: draws where a card sits on the Tree of Life, the Cube of Space, the zodiac's
-// decans, the five Platonic solids and the elemental grid. The data comes from ootk.atlas
+// decans, the five Platonic solids, their dual pairs and the elemental grid. The data comes from ootk.atlas
 // (one card's atlas, and optionally the whole deck for labels and tap targets). Every
 // drawing returns an SVG or HTML string. Positions only: nothing here interprets a card.
 (function () {
@@ -189,8 +189,10 @@
         return out;
     };
 
-    function solidSvg(name, size, on, spin = 0.5) {
-        const pts = SOLIDS[name];
+    // `flip` draws the solid turned inside out (every corner through the centre): the
+    // tetrahedron's dual is the same solid pointing the other way.
+    function solidSvg(name, size, on, spin = 0.5, flip = false) {
+        const pts = flip ? SOLIDS[name].map(p => p.map(v => -v)) : SOLIDS[name];
         const r = Math.max(...pts.map(p => Math.hypot(...p)));
         const ay = spin, ax = 0.42;
         const rot = ([x, y, z]) => {
@@ -225,6 +227,78 @@
         return s + `</svg>`;
     }
 
+    // ---------- Dual inversions ----------
+    // Put a corner at the centre of each face of a solid and the corners make its dual. The
+    // Cube of Space's dual is an octahedron whose six corners are the centres of its six faces:
+    // the six directions the Sefer Yetzirah gives to six double letters.
+    const DUALS = [["Hexahedron (Cube)", "Octahedron"], ["Dodecahedron", "Icosahedron"], ["Tetrahedron", "Tetrahedron"]];
+    const DIRECTIONS = ["Up (Zenith)", "Down (Nadir)", "East", "West", "North", "South"];
+    const dualOf = name => { const d = DUALS.find(p => p.includes(name)); return d ? (d[0] === name ? d[1] : d[0]) : null; };
+    const pairLabel = (a, b) => a === b ? `${a}, its own dual` : `${SOLID_SHORT[a] || a} \u21c4 ${SOLID_SHORT[b] || b}`;
+
+    function pairSvg(a, b, size, on) {
+        const gap = size * 0.5;
+        return `<g transform="translate(${f1(-size / 2 - gap / 2)},0)">${solidSvg(a, size, on, 0.5)}</g>` +
+            `<text class="a-text" dy="0.35em">\u21c4</text>` +
+            `<g transform="translate(${f1(size / 2 + gap / 2)},0)">${solidSvg(b, size, on, 0.5, a === b)}</g>`;
+    }
+
+    function dual(sel, deck, opts = {}) {
+        const name = sel && sel.solid ? sel.solid.name : null;
+        if (opts.compact) {
+            const W = 200, H = 110, other = name && dualOf(name);
+            let s = `<svg class="atlas-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Dual inversion${other ? ": " + esc(pairLabel(name, other)) : ""}">`;
+            if (other) s += `<g transform="translate(${W / 2},${H / 2})">${pairSvg(name, other, 70, true)}</g>`;
+            return s + `</svg>`;
+        }
+        const S = 100, top = 150, W = 440;
+        const iso = ([x, y, z]) => {
+            const xr = x * Math.cos(YAW) - z * Math.sin(YAW), zr = x * Math.sin(YAW) + z * Math.cos(YAW);
+            return [f1(W / 2 + xr * S), f1(top - (y * Math.cos(TILT) - zr * Math.sin(TILT)) * S),
+                    zr * Math.cos(TILT) + y * Math.sin(TILT)];   // last: nearness to the viewer
+        };
+        const place = sel && sel.cube.place;
+        const cubeOn = name === "Hexahedron (Cube)", octaOn = name === "Octahedron";
+        let s = `<svg class="atlas-svg" viewBox="0 0 ${W} ${top + 290}" role="img" aria-label="Dual inversions: the Cube of Space and its dual octahedron, then the three dual pairs">`;
+        const corners = [];
+        [-1, 1].forEach(x => [-1, 1].forEach(y => [-1, 1].forEach(z => corners.push([x, y, z]))));
+        corners.forEach((a, i) => corners.forEach((b, j) => {
+            if (j > i && a.filter((v, q) => v !== b[q]).length === 1) {
+                const [x1, y1] = iso(a), [x2, y2] = iso(b);
+                s += `<line class="a-frame${cubeOn ? " on" : ""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+            }
+        }));
+        // the octahedron: each face centre joins the four that are not opposite it
+        const centres = DIRECTIONS.map(d => PLACES[d]);
+        s += `<g class="a-octa${octaOn ? " on" : ""}">`;
+        centres.forEach((a, i) => centres.forEach((b, j) => {
+            if (j > i && a.some((v, q) => v !== -b[q])) {
+                const p = iso(a), q = iso(b);
+                s += `<line class="${(p[2] + q[2]) / 2 < -0.01 ? "back" : "front"}" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}"/>`;
+            }
+        }));
+        s += `</g>`;
+        // the six directions (and the centre both solids share), with their letters
+        const letterAt = pl => { const i = deck ? deck.cards.findIndex(c => c.kind === "Major" && c.cube.place === pl) : -1; return i < 0 ? null : i; };
+        [...DIRECTIONS, "Center Core (Holy Temple)"].forEach(pl => {
+            const [x, y] = iso(PLACES[pl]), i = letterAt(pl), c = i === null ? null : deck.cards[i];
+            const on = pl === place, centre = pl.startsWith("Center");
+            s += `<g class="a-node${on ? " on" : ""}${centre ? "" : " face"}"${c ? pick(i, pl) : ""} transform="translate(${x},${y})">${tip(c ? `${pl}: ${c.letter} · ${c.short}` : pl)}<circle r="${c ? 11 : 4}"/>${c ? `<text dy="0.35em">${esc(hebrew(c.letter))}</text>` : ""}</g>`;
+        });
+        s += `<text class="a-small a-muted" x="${W / 2}" y="${top + 178}">Cube of Space (grey) and its dual octahedron, cornered on the six faces</text>`;
+        // the three dual pairs
+        const step = W / 3, y = top + 230;
+        DUALS.forEach(([a, b], i) => {
+            const on = name && (a === name || b === name), x = step * i + step / 2;
+            const count = n => deck ? deck.cards.filter(c => c.solid && c.solid.name === n).length : null;
+            const counts = deck ? (a === b ? ` · ${count(a)}` : ` · ${count(a)} and ${count(b)}`) : "";
+            s += `<g transform="translate(${f1(x)},${y})">${tip(`${pairLabel(a, b)}: ${SOLID_ELEMENT[a]}${a === b ? "" : " and " + SOLID_ELEMENT[b]}`)}${pairSvg(a, b, 50, on)}` +
+                `<text class="a-small" y="38">${esc(pairLabel(a, b))}</text>` +
+                `<text class="a-small a-muted" y="50">${SOLID_ELEMENT[a]}${a === b ? "" : " \u21c4 " + SOLID_ELEMENT[b]}${counts}</text></g>`;
+        });
+        return s + `</svg>`;
+    }
+
     // ---------- Elemental grid: suit (row) by rank (column) ----------
     const ELEMENTS = ["Fire", "Water", "Air", "Earth"];
     const SUITS = { Fire: "Wands", Water: "Cups", Air: "Swords", Earth: "Disks" };
@@ -248,5 +322,6 @@
         return s + `</tbody></table>`;
     }
 
-    window.Atlas = { tree, cube, ring, solid, grid, esc };
+    const solidName = n => SOLID_SHORT[n] || n;
+    window.Atlas = { tree, cube, ring, solid, dual, dualOf, solidName, grid, esc };
 })();
