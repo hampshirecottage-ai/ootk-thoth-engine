@@ -94,6 +94,18 @@ def rws_art_name(title):
     return f"{RWS_COURTS[m[1]]} of {RWS_SUITS.get(m[2], m[2])}" if m else None
 
 
+def art_name_hint(name, titles):
+    """' "Page of Swords" is the name printed on the card art; in this deck it is the Princess
+    of Swords.' when `name` is the Waite name of one of `titles`, else ''. For a title that
+    wasn't found: the picture shows the Waite name, so that is what people may type."""
+    wanted = (name or "").strip().lower()
+    for t in titles:
+        art = rws_art_name(t)
+        if art and art.lower() == wanted:
+            return f"{art!r} is the name printed on the card art; in this deck it is the {t}."
+    return ""
+
+
 def art_note(title):
     """'Pictured: Rider-Waite-Smith King of Wands', or '' when no note is needed."""
     name = rws_art_name(title)

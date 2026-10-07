@@ -13,6 +13,7 @@ from ootk.shuffle import (
 )
 from ootk.significator import RANKS, SUITS, book_t_card
 from ootk.spreads import SPREADS, spread_positions
+from ootk.visual import art_name_hint
 
 class CliError(Exception):
     """A problem with the command line or the answers given; printed without a traceback."""
@@ -114,7 +115,9 @@ def run_spread_session():
         significator = ask_significator()
     sig_card = resolve_significator(cards, significator)
     if significator and sig_card is None:
-        raise CliError(f"Significator '{significator}' not found in thoth_cards.")
+        raise CliError(" ".join(filter(None, [
+            f"Significator '{significator}' not found in thoth_cards.",
+            art_name_hint(significator, [c["title"] for c in cards])])))
 
     # Only pin when the spread actually has a significator position (first position).
     pin_significator = bool(sig_card) and has_significator_position(target_positions)

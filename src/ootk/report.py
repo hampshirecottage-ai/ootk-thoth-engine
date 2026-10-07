@@ -1,6 +1,7 @@
 """Builds the analytical report (Markdown prompt) and its HTML export."""
 import html
 import re
+from datetime import datetime
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
@@ -265,7 +266,10 @@ def withheld_markdown(withheld):
 def generate_html_output(session_id, spread_name, query_prompt, analytical_prompt):
     output_dir = BASE_DIR / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
-    filename = output_dir / f"ootk_output_{session_id or 'latest'}.html"
+    # A reading the database didn't save has no session number: a timestamp keeps it from
+    # overwriting the previous unsaved one.
+    name = session_id or f"unsaved_{datetime.now():%Y%m%d-%H%M%S}"
+    filename = output_dir / f"ootk_output_{name}.html"
     
     html_analysis = html.escape(analytical_prompt, quote=False)
     safe_spread_name = html.escape(spread_name)
@@ -274,6 +278,7 @@ def generate_html_output(session_id, spread_name, query_prompt, analytical_promp
     html_content = f"""<!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Spread Report - {safe_spread_name}</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: #121212; color: #e0e0e0; padding: 30px; line-height: 1.6; }}

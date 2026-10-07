@@ -28,7 +28,7 @@ from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import WITHHELD_MAX, derive_primary_element, withheld_summary
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
+    DB_CONFIG, DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
     list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
     session_has_testimonial, set_testimonial_approved,
 )
@@ -41,7 +41,7 @@ from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
 )
 from ootk.spreads import SPREADS, spread_positions, spread_segments
-from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
+from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_name_hint, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -73,7 +73,7 @@ RESHUFFLE_SINCE = datetime(2026, 10, 5, 3, 25, 44, tzinfo=timezone.utc)
 # at most WEB_THREADS readings are handled at once and the rest wait their turn, outside the
 # thread pool. The pool itself keeps its default size: static files are read in it too, and a
 # reading that waits on a slow database must not hold up the site's CSS, images and other pages.
-WEB_THREADS = int(os.getenv("WEB_THREADS", "8"))
+WEB_THREADS = env_int("WEB_THREADS", 8)
 reading_slots = asyncio.Semaphore(WEB_THREADS)
 
 
@@ -689,10 +689,11 @@ def seeded_draw(deck, seed, spread_key, significator):
     positions = spread_positions(spread_key)
     sig_card = resolve_significator(deck, significator)
     if significator and sig_card is None:
+        hint = art_name_hint(significator, [c["title"] for c in deck])
         raise HTTPException(status_code=400,
                             detail=f"Significator {quoted(significator)} was not found in the deck. "
-                                   f"Pick a title from the list, e.g. 'Queen of Cups' "
-                                   f"or 'Princess of Disks'.")
+                                   + (hint or "Pick a title from the list, e.g. 'Queen of Cups' "
+                                              "or 'Princess of Disks'."))
     if sig_card is None and has_significator_position(positions):
         raise HTTPException(status_code=400,
                             detail=f"{SPREADS[spread_key]['name']} needs a significator. "

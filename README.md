@@ -134,6 +134,8 @@ Everything else is optional:
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
 | `PGSSLMODE` | Standard PostgreSQL setting; set `require` for a hosted database such as Neon | libpq default |
 
+`DB_PORT`, `DB_CONNECT_TIMEOUT` and `WEB_THREADS` must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
+
 ### 3. Create the database
 
 ```bash
