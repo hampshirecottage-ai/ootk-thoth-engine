@@ -8,7 +8,6 @@
 
 ![The start page: the question "What would you like the cards to look at?", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Draw your reading" panel with its Draw my cards button, then the folded sample Opening of the Key](docs/images/front.png)
 
-
 A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
 
 It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew letter and path attributions, Platonic solid dual inversions, and decanic zodiacal aspects. Draws are deterministic: the same seed always gives the same deck order.
@@ -28,7 +27,7 @@ Rather than treating the Hebrew alphabet as an abstract list or the Platonic sol
 - **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Cube of Space positions and King Scale colours follow the letter, so the swap moves the Emperor and the Star between the Aries and Aquarius edges.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
-- **PostgreSQL persistence** of sessions, spreads and card pulls.
+- **PostgreSQL persistence** of sessions, spreads, card pulls and testimonials.
 - **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`, live at [ootk.onrender.com](https://ootk.onrender.com)), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
 
 ---
@@ -43,7 +42,7 @@ ootk-thoth-engine/
 │   ├── web.py              # FastAPI web GUI: `uvicorn ootk.web:app`
 │   ├── spreads.py          # Spread definitions, layout coordinates, operation segments
 │   ├── analysis.py         # Elements, dignities, geometry, topology, macro framework
-│   ├── report.py           # Analytical report (Markdown prompt) and HTML export
+│   ├── report.py           # analyze_reading (the one pipeline the CLI and web share), the prompt and HTML export
 │   ├── db.py               # DB settings, card lookups, saving sessions
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
 │   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
@@ -276,8 +275,6 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `add_testimonials.sql` | Testimonials (without it the start page shows none and the testimonial pages ask for the update); lists the approve queries |
 | `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
 
-The other files in `database/migrations/` built the early schema and are only kept for history.
-
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 
 ### Testimonials
@@ -334,13 +331,13 @@ The repository holds only the engine and reference data. Your own readings stay 
 | Table | Purpose |
 |---|---|
 | `thoth_cards` | The 78 cards (title, arcana, suit, rank, key scale, description) |
-| `correspondences` | Hebrew letter, path/sephira, element/planet/sign, colour scale, Platonic solid and spatial data, for each mapping scheme |
-| `spread_position_geometry` | 3D/polar coordinates for each spread position |
-| `tarot_sessions` | One row per reading (operation, significator, notes) |
+| `correspondences` | Hebrew letter, path/sephira, element/planet/sign, King Scale colour, Cube of Space place, and the French/Egyptian letters and paths |
+| `tarot_sessions` | One row per reading (operation, significator, notes, and `report_settings` with the report link) |
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |
+| `testimonials` | Testimonials sent from `/testimonial`, unapproved until approved at `/admin` |
 
-Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`.
+Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`. Platonic solids, duals and layout coordinates are not stored: the engine works them out from each card's element and from `spreads.py`.
 
 ---
 
