@@ -51,7 +51,7 @@ ootk-thoth-engine/
 │   ├── assets.py           # Static files: versioned URLs, cache headers, compression
 │   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
 │   ├── lockout.py          # Locks out repeated wrong passwords (APP_PASSWORD, ADMIN_PASSWORD)
-│   └── library.json        # Glossary and further reading for the /library page
+│   └── library.json        # Glossary (/library) and further reading (/history)
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
 │   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
@@ -208,7 +208,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
 | `/start` | Start here: a five-step path for newcomers and which spreads to learn in what order |
 | `/examples` | Example readings with fixed seeds |
-| `/library` | Glossary and further reading (edit `src/ootk/library.json`), plus every spread |
+| `/library` | Glossary (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
 | `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
 | `/history` | History of the decks, with archival photos and their credits |
