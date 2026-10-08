@@ -20,7 +20,7 @@ from psycopg.rows import dict_row
 from ootk.db import DB_CONFIG
 
 EXPECTED_TABLES = {
-    "thoth_cards": ["card_id", "title", "arcana_type", "suit", "number_or_rank", "key_scale", "description",
+    "thoth_cards": ["card_id", "title", "arcana_type", "suit", "number_or_rank", "key_scale",
                     "french_number"],
     "correspondences": [
         "key_scale", "name", "hebrew_letter", "element_or_planet_or_sign", "king_scale_color",

@@ -1,5 +1,4 @@
 """Database access: connection settings, card lookups and saving sessions."""
-import json
 import os
 import sys
 
@@ -8,17 +7,9 @@ from dotenv import load_dotenv
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
-from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import apply_card_solid, card_is_dignified, WITHHELD_MAX, withheld_summary
 
 load_dotenv()
-
-CONFIG_PATH = BASE_DIR / "config" / "config.json"
-
-DB_ENV_VARS = {
-    "dbname": "DB_NAME", "user": "DB_USER", "password": "DB_PASSWORD",
-    "host": "DB_HOST", "port": "DB_PORT",
-}
 
 def env_int(name, default, minimum=1, maximum=None):
     """An integer setting from the environment. Unset or blank gives `default`; a value that
@@ -45,8 +36,8 @@ def env_int(name, default, minimum=1, maximum=None):
 DB_QUERY_TIMEOUT = env_int("DB_QUERY_TIMEOUT", 15)
 
 def load_db_config():
-    """Loads database credentials from config/config.json with environment variable overrides."""
-    config = {
+    """Database connection settings from the environment (or .env), with local defaults."""
+    return {
         "dbname": os.getenv("DB_NAME", "my_tarot_db"),
         "user": os.getenv("DB_USER", "postgres"),
         "password": os.getenv("DB_PASSWORD", ""),
@@ -62,20 +53,6 @@ def load_db_config():
         "tcp_user_timeout": DB_QUERY_TIMEOUT * 1000,
         "keepalives": 1, "keepalives_idle": 5, "keepalives_interval": 5, "keepalives_count": 2,
     }
-    
-    if CONFIG_PATH.exists():
-        try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-                json_data = json.load(f)
-                db_json = json_data.get("database", {})
-                for key in DB_ENV_VARS:
-                    # config.json only fills a value when the matching env var is unset
-                    if key in db_json and not os.getenv(DB_ENV_VARS[key]):
-                        config[key] = db_json[key]
-        except Exception as e:
-            print(f"[WARN] Failed to read {CONFIG_PATH}: {e}")
-            
-    return config
 
 DB_CONFIG = load_db_config()
 
@@ -154,7 +131,6 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
         tc.arcana_type,
         tc.suit,
         tc.number_or_rank,
-        tc.description,
         ks.key_scale,
         CASE WHEN %(sys)s = 'french_egyptian' AND cf.path_or_sephira_french IS NOT NULL
              THEN cf.path_or_sephira_french ELSE c.name END AS path_or_sephira,

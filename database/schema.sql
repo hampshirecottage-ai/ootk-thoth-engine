@@ -437,13 +437,6 @@ ALTER TABLE ONLY public.thoth_cards
 
 
 --
--- Name: idx_cards_key_scale; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_cards_key_scale ON public.thoth_cards USING btree (key_scale);
-
-
---
 -- Name: idx_sessions_report_link; Type: INDEX; Schema: public; Owner: -
 --
 

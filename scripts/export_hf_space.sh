@@ -11,7 +11,7 @@ mkdir -p "$DEST/static" "$DEST/database" "$DEST/deploy/huggingface"
 cp Dockerfile .dockerignore pyproject.toml "$DEST/"
 cp deploy/huggingface/README.md "$DEST/README.md"
 cp deploy/huggingface/start.sh "$DEST/deploy/huggingface/"
-cp -R src templates config "$DEST/"
+cp -R src templates "$DEST/"
 cp -R static/js static/cards static/site static/history static/fonts "$DEST/static/"
 cp database/schema.sql "$DEST/database/"
 find "$DEST" -name __pycache__ -prune -exec rm -rf {} +

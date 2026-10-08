@@ -26,7 +26,6 @@ COPY --chown=user static/cards ./static/cards
 COPY --chown=user static/site ./static/site
 COPY --chown=user static/history ./static/history
 COPY --chown=user static/fonts ./static/fonts
-COPY --chown=user config ./config
 COPY --chown=user database/schema.sql ./database/schema.sql
 COPY --chown=user deploy/huggingface/start.sh ./start.sh
 

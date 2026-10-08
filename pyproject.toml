@@ -17,12 +17,13 @@ dependencies = [
     "psycopg[binary]",
     "python-dotenv",
     "python-multipart",
-    "rich",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "httpx", "pillow"]
+dev = ["pytest", "httpx", "pillow", "rich"]
 images = ["pillow"]
+# scripts/view_output.py only; the web app and CLI don't use it, so the server doesn't install it.
+viewer = ["rich"]
 
 [project.scripts]
 ootk = "ootk.cli:main"
