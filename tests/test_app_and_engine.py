@@ -816,6 +816,32 @@ def test_spirit_bearing_cards():
     assert analysis.spirit_bearing_cards(results) == [(1, "0 - The Fool"), (2, "XX - The Aeon")]
 
 
+def _elements_section(cards):
+    results = [{"position_number": i + 1, "position_name": f"Pos {i+1}", "card_data": c}
+               for i, c in enumerate(cards)]
+    counts = analysis.analyze_elemental_balance(results)
+    solids, topo, duals = analysis.analyze_platonic_topology(results)
+    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    prompt = report.build_analytical_prompt("Test", "", "", "1", results, counts, [], [],
+                                            sdist, sdet, solids, topo, duals)
+    return counts, prompt.split("## 1. ELEMENTAL VECTOR DISTRIBUTION", 1)[1].split("---", 1)[0]
+
+
+def test_empty_spirit_row_is_hidden_but_secondary_spirit_still_named():
+    from ootk.visual import _element_rows
+    fool = dict(fake_card("0 - The Fool", None, arcana="Major", attribution="Air"), hebrew_letter="Shin (ש)")
+    sun = dict(fake_card("XIX - The Sun", None, arcana="Major", attribution="Sun"), hebrew_letter="Resh (ר)")
+    counts, section = _elements_section([fool, sun])
+    assert counts["Spirit"] == 0                       # every card counts under one of the four
+    assert "(0.0%)" in section                         # empty four-element rows still show
+    assert "Spirit**:" in section and "secondary quality only, on 1: Pos 1 (0 - The Fool)" in section
+    assert "Spirit**: " not in section.replace("Spirit**: secondary", "")
+    _counts, plain = _elements_section([sun])
+    assert "Spirit" not in plain
+    assert [r["element"] for r in _element_rows(counts)] == ["Fire", "Water", "Air", "Earth"]
+    assert _element_rows({"Fire": 1, "Spirit": 1})[-1]["element"] == "Spirit"   # an unplaced card still shows
+
+
 def test_minor_spatial_letter_is_labelled_as_sephira():
     card = {"title": "6 of Disks - Success", "arcana_type": "Minor", "suit": "Disks",
             "hebrew_letter": "תִּפְאֶרֶת (Tiphareth)", "path_or_sephira": "Beauty"}
