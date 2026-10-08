@@ -416,6 +416,13 @@ def test_history_page_credits_every_photo_and_links_from_start_here(client):
         assert name in credits, name                                    # and credited
 
 
+def test_history_page_describes_the_drawing_ceremony(client):
+    page = client.get("/history").text
+    assert 'id="ceremony"' in page and "The card drawing ceremony" in page
+    assert "I H V H" in page.replace("&nbsp;", " ")                    # Book T's four packs
+    assert 'href="/pick"' in page                                        # hand-drawn alternative
+
+
 def test_start_here_links_preselect_each_spread(client):
     page = client.get("/start").text
     for key in app_module.SPREADS:
