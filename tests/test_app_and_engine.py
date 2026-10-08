@@ -423,6 +423,14 @@ def test_history_page_describes_the_drawing_ceremony(client):
     assert 'href="/pick"' in page                                        # hand-drawn alternative
 
 
+def test_further_reading_lives_on_history_not_library(client):
+    history, library = client.get("/history").text, client.get("/library").text
+    assert "Further reading" in history and 'id="readingTitle"' in history
+    for r in app_module.load_library()["reading"]:
+        assert r["url"] in history and r["url"] not in library
+    assert 'href="/history#readingTitle"' in library                    # library points to it
+
+
 def test_start_here_links_preselect_each_spread(client):
     page = client.get("/start").text
     for key in app_module.SPREADS:

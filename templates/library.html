@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Library" %}
-{% set page_description = "Plain-English meanings of the terms in a Thoth tarot report: elemental dignities, decans, Liber 777, the Opening of the Key and more, with every spread and further reading." %}
-{% set tagline = "What the words in a report mean, every spread, and where to read more." %}
+{% set page_description = "Plain-English meanings of the terms in a Thoth tarot report: elemental dignities, decans, Liber 777, the Opening of the Key and more, plus every spread." %}
+{% set tagline = "What the words in a report mean, and every spread." %}
 {% set active = "/library" %}
 {% block head %}
     <style>
@@ -14,8 +14,6 @@
         details.spread { border-top: 1px solid var(--line); padding: 8px 0; }
         details.spread summary { cursor: pointer; }
         details.spread ol { margin: 6px 0 4px; padding-left: 24px; font-size: 0.9em; columns: 2 260px; }
-        ul.reading { padding-left: 20px; margin: 0; }
-        ul.reading li { margin: 6px 0; }
     </style>
 {% endblock %}
 {% block content %}
@@ -44,13 +42,5 @@
             {% endfor %}
         </section>
 
-        <section class="panel" aria-labelledby="readingTitle">
-            <h2 id="readingTitle">Further reading</h2>
-            <ul class="reading">
-                {% for r in library.reading %}
-                <li><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% if r.by %} <span class="muted">({{ r.by }})</span>{% endif %}. {{ r.note }}</li>
-                {% endfor %}
-            </ul>
-            <p class="note">Missing a term or a good source? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a> and the library grows.</p>
-        </section>
+        <p class="note">Missing a term? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a> and the library grows. Books and background on the decks are in <a href="/history#readingTitle">Further reading</a> on the History page.</p>
 {% endblock %}

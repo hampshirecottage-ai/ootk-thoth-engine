@@ -1,6 +1,6 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "History of the decks" %}
-{% set page_description = "Where the Thoth and Rider-Waite-Smith tarot decks came from: Renaissance card games, the Golden Dawn, Pamela Colman Smith and A. E. Waite, Aleister Crowley and Lady Frieda Harris, with archival photographs." %}
+{% set page_description = "Where the Thoth and Rider-Waite-Smith tarot decks came from: Renaissance card games, the Golden Dawn, Pamela Colman Smith and A. E. Waite, Aleister Crowley and Lady Frieda Harris, with archival photographs and further reading." %}
 {% set tagline = "Where the cards come from, from Renaissance Milan to Crowley and Harris." %}
 {% set active = "/history" %}
 {% macro photo(file, alt, caption, credit, source, licence) -%}
@@ -22,6 +22,8 @@
         ol.rite li { margin-bottom: 6px; }
         blockquote.invocation { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 6px 6px 0; font-style: italic; }
         table.rite-map { border-collapse: collapse; margin: 8px 0; font-size: 0.92em; width: 100%; }
+        ul.reading { padding-left: 20px; margin: 0; }
+        ul.reading li { margin: 6px 0; }
         table.rite-map th, table.rite-map td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; vertical-align: top; }
     </style>
 {% endblock %}
@@ -93,6 +95,16 @@
 {{ photo("harris-c1900.webp", "Portrait photograph of a young Frieda Harris", "Frieda Harris (1877&ndash;1962) as a young woman, about 1900", "Photographer unknown", "https://commons.wikimedia.org/wiki/File:Lady_Frieda_Harris.jpg", "Public domain") }}
             </div>
             <p>Neither lived to see it printed. Crowley died in 1947 and Harris in 1962; the deck was first published in 1969, and the better-known edition followed in 1977. Harris&rsquo;s paintings are still under copyright, which is why this site shows Smith&rsquo;s cards in their place. <a href="/method#art">About the card art</a> explains how each Thoth card is matched to its Waite counterpart and why some names differ.</p>
+        </section>
+
+        <section class="panel" aria-labelledby="readingTitle">
+            <h2 id="readingTitle">Further reading</h2>
+            <ul class="reading">
+                {% for r in library.reading %}
+                <li><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% if r.by %} <span class="muted">({{ r.by }})</span>{% endif %}. {{ r.note }}</li>
+                {% endfor %}
+            </ul>
+            <p class="note">Know a good source? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a>.</p>
         </section>
 
         <p class="note">Pictures are from Wikimedia Commons: five are out of copyright and the Marseille card photo is shared under CC&nbsp;BY-SA&nbsp;4.0. Each caption links to its source page. Full credits are in <a href="https://github.com/hampshirecottage-ai/ootk-thoth-engine/blob/main/static/history/CREDITS.md" target="_blank" rel="noopener">static/history/CREDITS.md</a>.</p>

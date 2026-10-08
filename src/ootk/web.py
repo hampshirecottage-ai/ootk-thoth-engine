@@ -856,8 +856,8 @@ LIBRARY_FILE = BASE_DIR / "src" / "ootk" / "library.json"
 
 
 def load_library():
-    """The resource library: a glossary and further reading, kept in library.json so a new
-    entry is one edit. Read on each request, so an edit shows without a restart."""
+    """The resource library: a glossary (on /library) and further reading (on /history), kept
+    in library.json so a new entry is one edit. Read on each request, so an edit shows without a restart."""
     with open(LIBRARY_FILE, encoding="utf-8") as f:
         library = json.load(f)
     library["terms"].sort(key=lambda t: t["term"].lower())
@@ -878,8 +878,9 @@ def start_here(request: Request):
 
 @app.get("/history", response_class=HTMLResponse)
 def history_page(request: Request):
-    """Where the decks come from, with archival photographs (static/history)."""
-    return guide_page(request, "history.html")
+    """Where the decks come from, with archival photographs (static/history) and further
+    reading from library.json."""
+    return guide_page(request, "history.html", library=load_library())
 
 
 @app.get("/examples", response_class=HTMLResponse)
@@ -896,7 +897,7 @@ def examples_page(request: Request):
 
 @app.get("/library", response_class=HTMLResponse)
 def library_page(request: Request):
-    """Glossary, every spread and further reading."""
+    """Glossary and every spread."""
     return guide_page(request, "library.html", library=load_library(),
                       positions={key: spread_positions(key) for key in SPREADS})
 
