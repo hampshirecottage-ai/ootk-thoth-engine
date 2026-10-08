@@ -18,6 +18,11 @@
         figure.photo .credit { color: var(--muted); font-size: 0.88em; }
         .era { color: var(--muted); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 2px; }
         @media (max-width: 420px) { figure.photo { width: calc(50% - 8px); } }
+        ol.rite { padding-left: 1.3em; }
+        ol.rite li { margin-bottom: 6px; }
+        blockquote.invocation { margin: 10px 0; padding: 8px 14px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 6px 6px 0; font-style: italic; }
+        table.rite-map { border-collapse: collapse; margin: 8px 0; font-size: 0.92em; width: 100%; }
+        table.rite-map th, table.rite-map td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; vertical-align: top; }
     </style>
 {% endblock %}
 {% block content %}
@@ -36,6 +41,33 @@
             <p class="era">1888 to 1900</p>
             <h2 id="gdTitle">The Golden Dawn</h2>
             <p>The Hermetic Order of the Golden Dawn, founded in London in 1888, built L&eacute;vi&rsquo;s idea into a complete system. Its members linked every card to a Hebrew letter, a path on the Tree of Life, a planet, a sign or a decan, and taught it in a manuscript called <em>Book&nbsp;T</em>. That system, with Crowley&rsquo;s tables in <em>Liber&nbsp;777</em> (1909), is what this site calculates with. Both decks below were made by former members, so they share it.</p>
+        </section>
+
+        <section class="panel" id="ceremony" aria-labelledby="ceremonyTitle">
+            <p class="era">1890s, printed 1912</p>
+            <h2 id="ceremonyTitle">The card drawing ceremony</h2>
+            <p>Book&nbsp;T also set out how a reading was to be drawn, in a method later called the <em>Opening of the Key</em>. It was taught inside the Order and kept secret until Crowley printed it in <em>The Equinox</em> (volume&nbsp;I, number&nbsp;8, 1912) as &ldquo;A Description of the Cards of the Tarot&rdquo;. Israel Regardie printed the Order&rsquo;s papers again in <em>The Golden Dawn</em> (1937&ndash;40), and Crowley repeated the method in <em>The Book of Thoth</em> (1944). In outline:</p>
+            <ol class="rite">
+                <li><strong>Choose a significator.</strong> A court card stands for the person asking, picked from how they look: rank from age and sex, suit from hair and colouring.</li>
+                <li><strong>Invoke.</strong> The diviner holds the pack and calls on the angel set over divination:
+                    <blockquote class="invocation">I invoke thee, I.A.O., that thou wilt send H.R.U., the great Angel that is set over the operations of this Secret Wisdom, to lay his hand invisibly on these consecrated cards of art, that thereby we may obtain true knowledge of hidden things, to the glory of thine ineffable Name. Amen.</blockquote></li>
+                <li><strong>Shuffle and cut.</strong> The person asking shuffles the whole pack while thinking of the question, and the pack is cut.</li>
+                <li><strong>First operation: four packs.</strong> The pack is cut in two and each half cut again, giving four packs laid out for the four letters of the divine name, I&nbsp;H&nbsp;V&nbsp;H: Yod for work and business (Wands), Heh for love and pleasure (Cups), Vau for trouble and loss (Swords), Heh final for money and goods (Disks). The pack holding the significator shows which of these the matter really turns on.</li>
+                <li><strong>Count and pair.</strong> That pack is spread in a ring. Starting at the significator, the diviner counts round in the direction the figure faces, by fixed values (court cards 4, Princesses 7, Aces 11, small cards their number, trumps 3, 9 or 12 by their attribution), reading each card landed on. Then the cards either side of the significator are paired off, working outwards.</li>
+                <li><strong>Four more operations.</strong> The pack is shuffled again for each one: dealt into twelve packs for the astrological houses, twelve for the signs, then thirty-six cards in a ring for the decans, and lastly ten packs on the Tree of Life. Each is read by the same counting and pairing.</li>
+            </ol>
+            <h3>How the draw on this site compares</h3>
+            <table class="rite-map">
+                <tr><th>Ceremony</th><th>On this site</th></tr>
+                <tr><td>Significator</td><td>Chosen on the draw form, by the Book&nbsp;T description or by birthday. It is placed first in the 15-card heap and the full Opening of the Key.</td></tr>
+                <tr><td>Invocation</td><td>None. The site is a calculator and takes no ritual step.</td></tr>
+                <tr><td>Shuffle and cut</td><td>One software shuffle from your seed; there is no separate cut. The same seed always gives the same order.</td></tr>
+                <tr><td>Four packs</td><td>Not used. Operation 1 here is a 15-card heap, a variant of the first operation.</td></tr>
+                <tr><td>Houses, signs, decans</td><td>Operations 2 to 4, each with its own reshuffle, as in Book&nbsp;T. One card is dealt to each house, sign or decan rather than a pack to each.</td></tr>
+                <tr><td>Tree of Life</td><td>A separate ten-card spread, not part of the full Opening of the Key here.</td></tr>
+                <tr><td>Counting and pairing</td><td>No counting. Neighbouring cards are paired and scored by elemental dignity.</td></tr>
+            </table>
+            <p class="note">If you would rather draw by hand, with your own deck and any ceremony you like, <a href="/pick">Pick by hand</a> lets you enter the cards in the order they fell. <a href="/method">Method and limits</a> describes the site&rsquo;s draw in full.</p>
         </section>
 
         <section class="panel" aria-labelledby="rwsTitle">
