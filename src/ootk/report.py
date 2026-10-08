@@ -90,15 +90,21 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 
 ## 1. ELEMENTAL VECTOR DISTRIBUTION
 """
+    secondary = spirit_bearing_cards(spread_results)
     for elem, count in element_counts.items():
+        if elem == "Spirit" and not count:
+            # Every card counts under one of the four elements, so Spirit is only ever a
+            # secondary quality: name those cards instead of printing an empty 0% row.
+            if secondary:
+                cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
+                prompt_md += f"* **Spirit**: secondary quality only, on {len(secondary)}: {cards}\n"
+            continue
         pct = (count / total_cards) * 100
         bar = "█" * int(count * 2)
         line = f"* **{elem:6s}**: {bar} {count} ({pct:.1f}%)"
-        if elem == "Spirit":
-            secondary = spirit_bearing_cards(spread_results)
-            if secondary:
-                cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
-                line += f" | secondary on {len(secondary)}: {cards}"
+        if elem == "Spirit" and secondary:
+            cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
+            line += f" | secondary on {len(secondary)}: {cards}"
         prompt_md += line + "\n"
 
     if withheld:

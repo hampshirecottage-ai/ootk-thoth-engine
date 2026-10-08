@@ -427,9 +427,11 @@ def _aspect_counts(aspects):
 
 
 def _element_rows(counts):
+    """One row per element. Spirit only shows when a card had no element to count under:
+    every card in the deck has one of the four, so a Spirit row would always read 0."""
     total = sum(counts.values()) or 1
     return [{"element": e, "count": counts.get(e, 0), "pct": round(100 * counts.get(e, 0) / total, 1),
-             "color": ELEMENT_COLORS[e]} for e in ELEMENTS]
+             "color": ELEMENT_COLORS[e]} for e in ELEMENTS if e != "Spirit" or counts.get(e, 0)]
 
 
 def _and(names):

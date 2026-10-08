@@ -120,7 +120,7 @@ def main(path):
     for e, c in re.findall(r"\* \*\*(\w+)\s*\*\*:[^\d\n]*(\d+) \(", sections[1]):
         elems[e] = int(c)
     check(sum(elems.values()) == 75, "element counts sum to 75", str(elems))
-    check(elems.get("Spirit", -1) == 0, "Spirit bucket is empty (no unparsed Majors)",
+    check(elems.get("Spirit", 0) == 0, "Spirit bucket is empty (no unparsed Majors)",
           f"Spirit = {elems.get('Spirit')}")
 
     # ---------- section 2: spatial type totals ----------
