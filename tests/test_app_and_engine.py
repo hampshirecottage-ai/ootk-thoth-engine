@@ -1110,6 +1110,7 @@ def test_start_page_shows_the_settings_then_a_folded_sample_reading(client, monk
     assert '<details class="panel sample" id="sample">' in page        # sample starts folded
     assert 'class="tiles"' not in page
     assert 'id="copySample"' in page and 'data-src="/sample/prompt"' in page
+    assert 'id="copySummary"' not in page and 'id="trySeed"' not in page   # trimmed 2026-10-08
     assert "HERMETIC ANALYTICAL REPORT" not in page              # the prompt loads when opened
     prompt = client.get("/sample/prompt")
     assert prompt.status_code == 200 and prompt.headers["content-type"].startswith("text/plain")
@@ -1289,10 +1290,10 @@ def test_testimonial_with_a_nul_character_is_refused(client):
 
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
-    assert "For tarot readers who use Claude or another AI" in page
-    assert "ChatGPT" not in page
+    assert "Your AI interprets it; OOTK does not." in page
+    assert "ChatGPT" not in page and "For tarot readers" not in page
     assert 'id="readingForm"' in page and 'class="btn-cta"' not in page
-    assert "Draw my cards" in page and "<h2>Draw your reading</h2>" in page
+    assert "Draw my cards" in page and "<h2>Ask your question</h2>" in page
     assert page.index('id="readingForm"') < page.index('href="/start"')  # draw button first on a phone
     assert f'href="{app_module.REPO_URL}"' in page
 

@@ -226,12 +226,6 @@ if ($("samplePrompt")) {
             if (text) ootkCopyButton(btn, text, $("samplePrompt"));
         });
     });
-    $("copySummary").addEventListener("click", e => {
-        const btn = e.currentTarget;
-        const paras = Array.from($("sampleSummary").querySelectorAll("p")).map(p => p.textContent.trim());
-        const text = paras.join("\n\n") + "\n\n" + new URL(btn.dataset.link, location.href).href;
-        ootkCopyButton(btn, text, $("sampleSummary"));
-    });
     $("mechToggle").addEventListener("click", e => {
         const open = $("mechanics").hidden;
         $("mechanics").hidden = !open;

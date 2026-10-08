@@ -27,7 +27,6 @@
         .band { row-gap: 0; grid-template-rows: auto 1fr; }
         .band .settings { margin: 0; }
         .band .settings p, .band .settings p a { color: var(--text); }
-        .band .settings .form-lede { color: var(--muted); }
         /* The sample reading folds away under its heading; the arrow shows whether it is open. */
         .sample-toggle { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
         .sample-toggle::-webkit-details-marker { display: none; }
@@ -54,8 +53,6 @@
         .prompt-box.open::after { display: none; }
         .prompt-box pre { margin: 0; padding: 12px; font-size: 0.78em; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
         .sample-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-        .seed-try { margin-top: 14px; max-width: 320px; }
-        .seed-try input, .seed-try button { margin-bottom: 0; }
         /* The five first-screen answers: what (h1), who (tagline), how (steps), why trust (trust), next step (hero-actions). */
         .steps { list-style: none; padding: 0; margin: 12px 0 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 18px; font-size: 0.95em; }
         .steps li { display: flex; align-items: center; gap: 6px; }
@@ -128,7 +125,6 @@
         .op-table th, .op-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
         .op-table th { color: var(--muted); font-weight: 600; }
         .op-table td:last-child { white-space: nowrap; }
-        .form-lede { margin: -6px 0 14px; color: var(--muted); font-size: 0.9em; }
         @media (max-width: 860px) {
             .band { grid-template-columns: minmax(0, 1fr); gap: 16px; }
             .band-text, .band #readingForm, .band-more { grid-column: 1; grid-row: auto; }
@@ -148,19 +144,18 @@
         <div class="band-text">
             <p class="chips"><span>LLM Tarot Reading</span><span>Thoth / Liber 777</span><span>Book T</span></p>
             <h1 id="pageTitle">What would you like the cards to look&nbsp;at?</h1>
-            <p class="tagline">For tarot readers who use Claude or another AI. OOTK draws a Thoth spread, looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, and writes the prompt. Your AI interprets it; OOTK does not.</p>
+            <p class="tagline">OOTK draws a Thoth spread, looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, and writes the prompt. Your AI interprets it; OOTK does not.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Draw your cards</li>
                 <li><span>2</span> Copy the prompt</li>
                 <li><span>3</span> Open it in your AI</li>
             </ol>
-            <p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a> · Same seed, same cards · Book T and Liber 777 tables</p>
+            <p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a></p>
         </div>
         <form action="/generate_report" method="POST" id="readingForm">
             <!-- SETTINGS: everything that shapes a reading, in one place -->
             <section class="panel settings" aria-label="Settings">
-                <h2>Draw your reading</h2>
-                <p class="form-lede">Discover your own path through the Cube of Space. Your cards get the same tables and scoring as the sample; your AI does the reading.</p>
+                <h2>Ask your question</h2>
 
 {% include "_settings_fields.html" %}
                 <button type="submit" class="btn-submit">Draw my cards</button>
@@ -169,7 +164,7 @@
         </form>
         <!-- Below the settings on a phone, so the draw button shows on the first screen. -->
         <div class="band-more">
-            <p class="strengths"><strong>Its strengths are objective analysis and clear conceptual models.</strong> Every card is scored from the same published tables the same way each time, and the heap, wheel and cube show where each card sits and how the cards connect.</p>
+            <p class="strengths"><strong>Its strengths are objective analysis and clear conceptual models.</strong></p>
             <p class="hero-actions">
                 <a href="/start" class="today-link">New here? Start here &rarr;</a>
             </p>
@@ -260,18 +255,8 @@
 
                     <div class="sample-actions">
                         <button type="button" class="btn-small" id="copySample">Copy prompt</button>
-                        <button type="button" class="btn-small" id="copySummary" data-link="{{ sample.url }}">Copy summary</button>
                         <a class="btn-small" href="{{ sample.url }}">Full report</a>
                     </div>
-                    <form class="seed-try" action="/reading" method="GET">
-                        <label for="trySeed">Try another seed</label>
-                        <div class="row">
-                            <input id="trySeed" name="seed" placeholder="e.g. 777" maxlength="64" required>
-                            <input type="hidden" name="spread" value="12">
-                            <input type="hidden" name="significator" value="{{ sample.significator }}">
-                            <button type="submit" class="btn-small">Draw</button>
-                        </div>
-                    </form>
                     <p class="credit">Card art: Pamela Colman Smith (1909), public domain. <a href="/method#art">Why these pictures?</a></p>
                 </div>
             </div>
