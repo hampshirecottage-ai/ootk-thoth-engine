@@ -63,7 +63,6 @@ ootk-thoth-engine/
 ├── database/
 │   ├── schema.sql          # Full dump: schema, all migrations, and reference data
 │   └── migrations/         # Only needed for DBs created before the current schema
-├── config/                 # config.json (DB name/host/port defaults)
 ├── templates/              # Jinja2 templates for the web GUI and reports
 ├── static/images/          # Full-size card scans (not in git; see below)
 ├── static/cards/           # WebP card images served by the web GUI
@@ -119,7 +118,7 @@ DB_HOST=localhost
 DB_PORT=5432
 ```
 
-Environment variables take priority over the `database` block in `config/config.json`, which only supplies `dbname`, `host` and `port` defaults. Keep usernames and passwords in `.env`.
+Unset values fall back to `my_tarot_db`, `postgres`, `localhost` and `5432`. Keep usernames and passwords in `.env`, never in a tracked file.
 
 Everything else is optional:
 
@@ -186,7 +185,7 @@ ootk \
 | `--framework` | `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem` | `auto` |
 | `--html` | Write an HTML report to `output/` | off |
 
-View the latest saved report in the terminal:
+View the latest saved report in the terminal (needs `rich`: `pip install -e ".[viewer]"`, already part of `[dev]`):
 
 ```bash
 python scripts/view_output.py            # latest report in output/

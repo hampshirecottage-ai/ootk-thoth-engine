@@ -45,7 +45,6 @@ from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_name_hint, art_note, b
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
 VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
 VALID_DRAW_MODES = {"seed", "manual"}
-VALID_OUTPUT_FORMATS = {"visual", "markdown"}
 TOPIC_MAX = 2000
 SHARED_SEED_MAX = 64
 # Every other field is a short name (a spread key, a system, a card title); the card list is at
@@ -499,12 +498,22 @@ def cli_command(spread_key, seed, mapping_system, framework, significator, topic
     return " ".join(shlex.quote(p) for p in parts)
 
 
+def export_card(card_data):
+    """A card's row for the JSON download. The row's `attributions` holds every Liber 777 column
+    of its path (plants, perfumes, gods and some 30 more, about 1.3 KB a card) that nothing in a
+    reading uses; only its King Scale hex colour is kept."""
+    row = {k: v for k, v in card_data.items() if k != "attributions"}
+    row["king_scale_hex"] = (card_data.get("attributions") or {}).get("king_scale_hex")
+    return row
+
+
 def reading_export(spread_name, settings, significator, framework, framework_basis,
                    element_counts, spread_results, view, dignity_matrix, spatial_matrix,
                    withheld=None):
     """The whole reading as plain JSON data, for the report's JSON download."""
     reading = {
         "spread": spread_name,
+        # output_format: readings saved before 2026-10-08 still carry the old toggle's value.
         "settings": {k: v for k, v in settings.items() if k not in ("output_format", "selected_cards")},
         "significator": significator,
         "framework": framework,
@@ -512,7 +521,7 @@ def reading_export(spread_name, settings, significator, framework, framework_bas
         "own_place": view.get("own_place", []),
         "element_counts": element_counts,
         "cards": [
-            dict(item["card_data"], position_number=item["position_number"],
+            dict(export_card(item["card_data"]), position_number=item["position_number"],
                  position_name=item["position_name"], primary_element=card["element"],
                  dignified=card["dignified"])
             for item, card in zip(spread_results, view["card_details"])
@@ -532,7 +541,6 @@ def reading_export(spread_name, settings, significator, framework, framework_bas
 SAMPLE_SETTINGS = {
     "spread_key": "12", "seed": "12345", "topic": "", "significator": "Queen of Cups",
     "framework": "auto", "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed",
-    "output_format": "visual",
 }
 _sample_cache = {}
 
@@ -755,6 +763,7 @@ def robots_txt(request: Request):
             "Disallow: /report/\n"
             "Disallow: /generate_report\n"
             "Disallow: /reading\n"
+            "Disallow: /sample/\n"
             f"\nSitemap: {site_url(request)}/sitemap.xml\n")
 
 
@@ -783,6 +792,16 @@ def main_gui(request: Request):
     return settings_page(request, "index.html", "seed")
 
 
+@app.get("/sample/prompt", response_class=PlainTextResponse)
+def sample_prompt():
+    """The start page sample's whole AI prompt (about 72 KB), fetched when the folded sample is
+    opened rather than sent with every visit to the start page."""
+    sample = sample_reading(reference_deck())
+    if sample is None:
+        raise HTTPException(status_code=404, detail="The sample reading isn't available.")
+    return PlainTextResponse(sample["prompt"], headers={"Cache-Control": "public, max-age=3600"})
+
+
 @app.get("/pick", response_class=HTMLResponse)
 def pick_gui(request: Request):
     """Pick by hand: the same settings plus the spread board and card catalog."""
@@ -808,7 +827,7 @@ EXAMPLES = [
      "shows": "One card on each Sephira. The report draws the cards on the Tree of Life."},
     {"spread_key": "9", "seed": "918851", "title": "Twelve cards",
      "shows": "The Second Operation of the Opening of the Key: the twelve houses drawn as a "
-              "wheel. This is the reading in the README screenshot."},
+              "wheel."},
 ]
 _examples_cache = {}
 
@@ -917,14 +936,11 @@ def generate_report(
     selected_cards: str = Form(""),
     draw_mode: str = Form("manual"),
     seed: str = Form(""),
-    output_format: str = Form("visual"),
 ):
     """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
 
     draw_mode 'seed' draws the cards from `seed` exactly as `ootk --seed` does (a blank seed
     gets a fresh one); 'manual' uses the comma-separated `selected_cards`.
-    output_format 'visual' renders the summary-first report; 'markdown' returns the
-    analytical prompt as a .md download.
     """
     topic = topic.strip()
     significator = significator.strip()
@@ -933,11 +949,10 @@ def generate_report(
     mapping_system = mapping_system.strip()
     draw_mode = draw_mode.strip()
     seed = seed.strip()
-    output_format = output_format.strip()
 
     # --- Domain Input Validation ---
     check_lengths(spread_key=spread_key, significator=significator, framework=framework,
-                  mapping_system=mapping_system, draw_mode=draw_mode, output_format=output_format)
+                  mapping_system=mapping_system, draw_mode=draw_mode)
     refuse_nul(topic=topic, seed=seed, significator=significator, selected_cards=selected_cards)
     if len(selected_cards) > SELECTED_CARDS_MAX:
         raise HTTPException(status_code=400, detail="The list of cards is longer than a whole deck.")
@@ -949,8 +964,6 @@ def generate_report(
         raise HTTPException(status_code=400, detail=f"Unknown framework: {quoted(framework)}.")
     if draw_mode not in VALID_DRAW_MODES:
         raise HTTPException(status_code=400, detail=f"Unknown draw mode: {quoted(draw_mode)}.")
-    if output_format not in VALID_OUTPUT_FORMATS:
-        raise HTTPException(status_code=400, detail=f"Unknown output format: {quoted(output_format)}.")
     if len(seed) > SHARED_SEED_MAX:
         raise HTTPException(status_code=400, detail=f"A seed can be at most {SHARED_SEED_MAX} characters.")
     if len(topic) > TOPIC_MAX:
@@ -988,7 +1001,7 @@ def generate_report(
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-        "seed": seed, "output_format": "visual",
+        "seed": seed,
         "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
     }
     reading = run_reading(settings, card_titles, significator_label, deck)
@@ -1011,12 +1024,6 @@ def generate_report(
         )
         linked = bool(session_id)
 
-    if output_format == "markdown":
-        return PlainTextResponse(
-            reading["analytical_prompt"],
-            media_type="text/markdown; charset=utf-8",
-            headers={"Content-Disposition": 'attachment; filename="ootk_report.md"'},
-        )
     if linked:
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
         return RedirectResponse(f"/report/{link}", status_code=303)
@@ -1070,8 +1077,7 @@ def shared_reading_parts(seed, spread, system, framework, significator):
         raise HTTPException(status_code=400, detail=f"Unknown framework: {quoted(framework)}.")
     settings = {
         "spread_key": spread, "topic": "", "significator": significator, "framework": framework,
-        "mapping_system": system, "draw_mode": "seed", "seed": seed, "output_format": "visual",
-        "selected_cards": "",
+        "mapping_system": system, "draw_mode": "seed", "seed": seed, "selected_cards": "",
     }
     deck = reference_deck()
     card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
@@ -1105,7 +1111,7 @@ def card_of_the_day(request: Request, day: str):
     settings = {
         "spread_key": "1", "topic": "", "significator": "", "framework": "auto",
         "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "seed": day,
-        "output_format": "visual", "selected_cards": "",
+        "selected_cards": "",
     }
     deck = reference_deck()
     card_titles, significator_label = seeded_draw(deck, day, "1", "")

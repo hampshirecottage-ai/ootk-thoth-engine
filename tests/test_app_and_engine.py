@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient
 def fake_card(title, suit="Wands", arcana="Minor", attribution="Fire"):
     return {
         "card_id": 1, "title": title, "arcana_type": arcana, "suit": suit,
-        "number_or_rank": "2", "description": "", "key_scale": 1,
+        "number_or_rank": "2", "key_scale": 1,
         "path_or_sephira": "Chokmah", "hebrew_letter": "Yod",
         "gd_hebrew_letter": "Yod", "french_hebrew_letter": "Yod",
         "attribution": attribution, "element": attribution,
@@ -580,15 +580,13 @@ def test_draw_spread_pins_significator_and_keeps_seed_order():
 
 # ---------- engine: fixed bugs (regression tests) ----------
 
-def test_env_overrides_config_dbname(tmp_path, monkeypatch):
-    cfg = tmp_path / "config.json"
-    cfg.write_text(json.dumps({"database": {"dbname": "fromjson", "host": "jsonhost"}}))
-    monkeypatch.setattr(db, "CONFIG_PATH", cfg)
+def test_db_config_reads_env_and_falls_back_to_local_defaults(monkeypatch):
     monkeypatch.setenv("DB_NAME", "fromenv")
-    monkeypatch.delenv("DB_HOST", raising=False)
+    for name in ("DB_HOST", "DB_PORT", "DB_USER"):
+        monkeypatch.delenv(name, raising=False)
     out = db.load_db_config()
-    assert out["dbname"] == "fromenv"      # env wins
-    assert out["host"] == "jsonhost"       # json fills what env leaves unset
+    assert out["dbname"] == "fromenv"
+    assert (out["host"], out["port"], out["user"]) == ("localhost", 5432, "postgres")
 
 
 @pytest.mark.parametrize("card,expected", [
@@ -1103,7 +1101,12 @@ def test_start_page_shows_the_settings_then_a_folded_sample_reading(client, monk
     assert page.index('id="readingForm"') < page.index('id="sample"')  # settings in the banner
     assert '<details class="panel sample" id="sample">' in page        # sample starts folded
     assert 'class="tiles"' not in page
-    assert 'id="copySample"' in page and "HERMETIC ANALYTICAL REPORT" in page
+    assert 'id="copySample"' in page and 'data-src="/sample/prompt"' in page
+    assert "HERMETIC ANALYTICAL REPORT" not in page              # the prompt loads when opened
+    prompt = client.get("/sample/prompt")
+    assert prompt.status_code == 200 and prompt.headers["content-type"].startswith("text/plain")
+    assert prompt.text.startswith("# HERMETIC ANALYTICAL REPORT")
+    assert prompt.text.rstrip().endswith("END OF OOTK PROMPT (75 positions)")
     assert client.saved == {}                                   # the sample is never saved
     assert 'id="sample"' not in client.get("/pick").text
 
@@ -1289,19 +1292,12 @@ def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
 def test_start_page_without_a_full_deck_skips_the_sample(client):
     page = client.get("/").text
     assert page.count('id="sample"') == 0 and 'id="readingForm"' in page
+    assert client.get("/sample/prompt").status_code == 404
 
 
-@pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"output_format": "pdf"}])
+@pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"mapping_system": "nonsense"}])
 def test_bad_settings_return_400(client, over):
     assert post(client, **over).status_code == 400
-
-
-def test_markdown_output_is_a_download(client):
-    r = post(client, output_format="markdown")
-    assert r.status_code == 200
-    assert r.headers["content-type"].startswith("text/markdown")
-    assert "attachment" in r.headers["content-disposition"]
-    assert r.text.startswith("# HERMETIC ANALYTICAL REPORT")
 
 
 def test_report_leads_with_summary_and_collapses_operations(client):
@@ -1445,6 +1441,15 @@ def test_report_embeds_card_details_and_reading_json(client):
     assert reading["settings"]["topic"] == "Love & War <3" and "session_id" not in reading
     assert len(reading["cards"]) == 3 and reading["cards"][0]["primary_element"] == "Fire"
     assert client.get("/report/nope/json").status_code == 404
+
+
+def test_json_export_keeps_only_the_king_scale_colour_of_the_777_columns():
+    card = dict(fake_card("A"), attributions={"king_scale_hex": "#FF0000", "perfumes": "Musk",
+                                              "plants": "Oak"})
+    row = app_module.export_card(card)
+    assert "attributions" not in row and row["king_scale_hex"] == "#FF0000"
+    assert row["title"] == "A" and "attributions" in card          # the shared row is untouched
+    assert app_module.export_card(fake_card("B"))["king_scale_hex"] is None
 
 
 def test_report_without_a_link_embeds_its_json(client, monkeypatch):
@@ -1663,7 +1668,7 @@ def test_own_sign_and_natural_house_checks():
 
 def test_ootk_prompt_and_report_show_the_own_place_check(seeded_client):
     r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
-             significator="Knight of Swords", output_format="markdown")
+             significator="Knight of Swords")
     for op in ("Op 2 (houses)", "Op 3 (signs)", "Op 4 (decans)"):
         assert op in r.text
     assert "**Own-Place Check:**" in r.text
@@ -1943,8 +1948,6 @@ def test_report_shows_no_session_number(client):
     post(client, follow=False)
     page = client.get(f"/report/{client.saved['report_settings']['link']}")
     assert "session #" not in page.text and '"session_id"' not in page.text
-    r = post(client, output_format="markdown")
-    assert r.headers["content-disposition"] == 'attachment; filename="ootk_report.md"'
 
 
 def test_malformed_report_links_never_reach_the_database(client, monkeypatch):
