@@ -1291,7 +1291,7 @@ def test_testimonial_with_a_nul_character_is_refused(client):
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
     assert "Your AI interprets it; OOTK does not." in page
-    assert "We map the cards. Your AI reads&nbsp;them." in page
+    assert "We map the cards.<br>Your AI reads&nbsp;them." in page
     assert "ChatGPT" not in page and "For tarot readers" not in page
     assert 'id="readingForm"' in page and 'class="btn-cta"' not in page
     assert "Draw my cards" in page and "<h2>Ask your question</h2>" in page
