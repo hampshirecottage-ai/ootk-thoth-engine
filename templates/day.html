@@ -51,6 +51,9 @@
         .send-llm-note:empty { display: none; }
         .send-llm-left-out { display: block; font-size: 0.8em; margin-top: 4px; max-width: 32em; }
         .muted { color: var(--muted); }
+        .sky h2 { font-size: 1.2em; margin: 0 0 10px; }
+        .sky dl.facts { margin-bottom: 0; }
+        .sky .why { margin-top: 12px; }
     </style>
 </head>
 <body>
@@ -82,6 +85,18 @@
                     <a class="btn secondary" href="{{ reading_url }}">Full report</a>
                 </div>
             </div>
+        </section>
+
+        <section class="panel sky" aria-labelledby="skyHead">
+            <h2 id="skyHead">The sky {{ 'today' if is_today else 'that day' }}</h2>
+            <dl class="facts">
+            {% for body in ("sun", "moon") %}{% set p = sky[body] %}
+                <dt>{{ body | capitalize }}</dt>
+                <dd>{{ p.degree }}° {{ p.sign }}, decan {{ p.decan }}{% if body == "moon" %} · {{ sky.phase | lower }}, {{ sky.lit }}% lit{% endif %}
+                    {% set cards = [p.pip, p.trump, p.court] | select | list %}{% if cards %}<br><span class="muted">{{ cards | join(" · ") }}</span>{% endif %}</dd>
+            {% endfor %}
+            </dl>
+            <p class="why">At noon UTC, from 0° Aries at the spring equinox. The cards are the decan's small card, the sign's Trump and the court whose thirty degrees hold that point, as Book T gives them.</p>
         </section>
 
         <nav class="daynav" aria-label="Other days">

@@ -397,3 +397,18 @@ def test_a_save_blocked_by_a_lock_gives_up(conn, monkeypatch):
             waited = time.monotonic() - started
         locker.rollback()
     assert session_id is None and waited < 5
+
+
+def test_every_degree_of_the_zodiac_has_its_three_sky_cards(conn):
+    """The /day page's sky box: each half degree has a decan card, a sign Trump and a court
+    (Knight, Queen or Prince), and between them they use all 36 pips, 12 Trumps and 12 courts."""
+    from ootk import sky
+    titles = [c["title"] for c in db.fetch_all_cards(conn)]
+    rows = list(db.fetch_cards_correspondences(conn, titles).values())
+    seen = {"pip": set(), "trump": set(), "court": set()}
+    for k in range(720):
+        p = sky.place(k / 2, rows)
+        for key in seen:
+            assert p[key], (k / 2, key)
+            seen[key].add(p[key])
+    assert [len(seen[k]) for k in ("pip", "trump", "court")] == [36, 12, 12]
