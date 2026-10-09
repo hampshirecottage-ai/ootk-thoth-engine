@@ -1,14 +1,6 @@
 {# The sample Opening of the Key on /start: a heap -> wheel -> cube diagram, a factual summary,
    and the mechanics and prompt behind a toggle. Needs `sample` from web.sample_reading(). -#}
 <style>
-    /* The sample reading folds away under its heading; the arrow shows whether it is open. */
-    .sample-toggle { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
-    .sample-toggle::-webkit-details-marker { display: none; }
-    .sample-toggle::before { content: "\25B8"; font-size: 1.3em; line-height: 1; color: var(--accent-2); transition: transform 0.15s; }
-    details.sample[open] > .sample-toggle::before { transform: rotate(90deg); }
-    .sample-toggle h2 { margin: 0; }
-    details.sample[open] > .sample-toggle { margin-bottom: 10px; }
-    .sample-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
     .muted { color: var(--muted); }
     .sample h3 { font-size: 0.95em; color: var(--accent-2); margin: 18px 0 8px; }
     .sample-meta { color: var(--muted); font-size: 0.88em; margin: -6px 0 12px; }
@@ -83,8 +75,8 @@
     .guide .sample-grid { grid-template-columns: minmax(0, 1fr); }
     .guide .viz { position: static; }
 </style>
-    <details class="panel sample" id="sample">
-        <summary class="sample-toggle"><h2 id="sampleTitle">A sample Opening of the Key</h2></summary>
+    <details class="panel fold sample" id="sample">
+        <summary class="fold-toggle"><h2 id="sampleTitle">A sample Opening of the Key</h2></summary>
         <p class="sample-meta">All four operations · {{ sample.card_count }} cards · seed {{ sample.seed }} · significator {{ sample.significator }}</p>
         <div class="sample-grid">
             <div class="viz">
