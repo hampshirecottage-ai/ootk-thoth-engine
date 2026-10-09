@@ -16,7 +16,7 @@
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
-        /* Start page: a whole sample Opening of the Key, then the settings. */
+        /* Start page: what OOTK is beside the settings. */
         .band { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; }
         .band .steps, .band .hero-actions { justify-content: flex-start; }
         .band .steps span { background: var(--tile-bg); }
@@ -27,32 +27,8 @@
         .band { row-gap: 0; grid-template-rows: auto 1fr; }
         .band .settings { margin: 0; }
         .band .settings p, .band .settings p a { color: var(--text); }
-        /* The sample reading folds away under its heading; the arrow shows whether it is open. */
-        .sample-toggle { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
-        .sample-toggle::-webkit-details-marker { display: none; }
-        .sample-toggle::before { content: "\25B8"; font-size: 1.3em; line-height: 1; color: var(--accent-2); transition: transform 0.15s; }
-        details.sample[open] > .sample-toggle::before { transform: rotate(90deg); }
-        .sample-toggle h2 { margin: 0; }
-        details.sample[open] > .sample-toggle { margin-bottom: 10px; }
-        .sample-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
-        .front { display: grid; grid-template-columns: minmax(0, 1160px); gap: 20px; justify-content: center; }
         #readingForm { width: 100%; max-width: 560px; justify-self: center; }
         .settings { position: static; }
-        .muted { color: var(--muted); }
-        .sample h3 { font-size: 0.95em; color: var(--accent-2); margin: 18px 0 8px; }
-        .sample-meta { color: var(--muted); font-size: 0.88em; margin: -6px 0 12px; }
-        .sample-grid { display: grid; grid-template-columns: minmax(0, 520px) minmax(0, 1fr); gap: 8px 32px; align-items: start; }
-        .viz { position: sticky; top: 12px; }
-        .score { display: inline-block; min-width: 2.2em; text-align: center; border-radius: 4px; font-weight: 700; font-size: 0.9em; padding: 0 4px; }
-        .score.pos { background: #57a77333; color: var(--text); }
-        .score.neg { background: #e4572e33; color: var(--text); }
-        .score.zero { background: var(--panel-2); }
-        .prompt-box { position: relative; max-height: 220px; overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: var(--panel-3); }
-        .prompt-box::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 70px; background: linear-gradient(transparent, var(--panel-3)); pointer-events: none; }
-        .prompt-box.open { max-height: 70vh; overflow: auto; }
-        .prompt-box.open::after { display: none; }
-        .prompt-box pre { margin: 0; padding: 12px; font-size: 0.78em; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
-        .sample-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
         /* The five first-screen answers: what (h1), who (tagline), how (steps), why trust (trust), next step (hero-actions). */
         .steps { list-style: none; padding: 0; margin: 12px 0 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 18px; font-size: 0.95em; }
         .steps li { display: flex; align-items: center; gap: 6px; }
@@ -71,69 +47,13 @@
         :root[data-theme="light"] .testimonial { border-top-color: rgba(255, 224, 160, 0.4); }
         .band .testimonial { margin: 16px 0 0; border-top-color: var(--band-line); }
         .band .testimonial blockquote, .band .testimonial-label { color: var(--band-text); }
-        a.btn-small { text-decoration: none; display: inline-block; }
-        .link-btn { background: none; border: none; padding: 6px 0; color: var(--accent); cursor: pointer; text-decoration: underline; font-size: 0.9em; }
-        /* Diagram: the same fifteen markers move between the heap, the wheel and the cube. */
-        .viz svg { display: block; width: 100%; height: auto; max-height: 460px; overflow: visible; margin-top: 8px; }
-        .journey-tabs { display: flex; border: 1px solid var(--control); border-radius: 6px; overflow: hidden; }
-        .journey-tabs button { flex: 1; background: var(--panel-2); color: var(--text); border: none; padding: 9px 4px; cursor: pointer; font-size: 0.92em; }
-        .journey-tabs button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 700; }
-        .journey-caption { margin: 8px 0 0; font-size: 0.9em; line-height: 1.5; }
-        .journey-hint { margin: 6px 0 0; color: var(--muted); font-size: 0.8em; }
-        .inspector { display: flex; gap: 12px; align-items: flex-start; margin: 6px 0 0; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--panel-3); border-radius: 0 6px 6px 0; font-size: 0.88em; line-height: 1.45; }
-        .inspector img { width: 64px; height: auto; border-radius: 4px; border: 1px solid var(--line); }
-        .inspector .ins-pos { color: var(--muted); font-size: 0.92em; }
-        .inspector .ins-title { font-weight: 700; font-size: 1.05em; }
-        .inspector .ins-scores { margin-top: 4px; }
-        .viz .guide { opacity: 0; transition: opacity 0.6s; }
-        .viz .guide.on { opacity: 1; }
-        .viz .guide:not(.on) { pointer-events: none; }
-        .viz .frame { fill: none; stroke: var(--line); stroke-width: 1.5; }
-        .viz .frame.axis { stroke-dasharray: 5 5; }
-        .viz .double circle { fill: var(--panel-3); stroke: var(--line); }
-        .viz .double text, .viz .node text { fill: var(--text); font-size: 14px; font-weight: 700; pointer-events: none; }
-        .viz .double.marked circle { stroke: var(--accent); stroke-width: 3; }
-        .viz .node, .viz .double { cursor: pointer; }
-        .viz .node { transition: transform 1s cubic-bezier(0.6, 0, 0.3, 1), opacity 0.4s; }
-        .viz .node rect { fill: var(--panel-2); stroke: var(--control); stroke-width: 1.5; }
-        .viz .node .band { stroke: none; }
-        .viz .node.faint, .viz .node.dim { opacity: 0.25; }
-        .viz .node.marked rect.body { stroke: var(--accent); stroke-width: 3; }
-        .viz .node.active rect.body { stroke: var(--accent); stroke-width: 3.5; }
-        .viz .node:focus-visible rect.body { stroke-width: 3.5; }
-        @media (prefers-reduced-motion: reduce) { .viz .node, .viz .guide { transition: none; } }
-        /* Tier 1: the summary and the element breakdown (each bar picks out its cards). */
-        .summary p { margin: 0 0 12px; line-height: 1.55; }
-        .elements { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px 10px; margin: 4px 0 0; }
-        .el { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name n" "bar bar"; align-items: center; gap: 4px 8px; font: inherit; font-size: 0.88em; color: var(--text); background: var(--panel-2); border: 1px solid var(--control); border-radius: 6px; padding: 6px 8px; cursor: pointer; }
-        .el[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-        .el-name { text-align: left; }
-        .el-bar { grid-area: bar; height: 8px; border-radius: 4px; background: var(--panel-3); overflow: hidden; }
-        .el-bar span { display: block; height: 100%; }
-        .el-n { font-weight: 700; min-width: 1.4em; text-align: right; }
-        .mech-toggle { margin-top: 16px; }
-        /* Tiers 2 and 3: cube positions and the operations. */
-        .dot { display: inline-block; width: 0.7em; height: 0.7em; border-radius: 50%; margin-right: 5px; vertical-align: baseline; }
-        .cube-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; font-size: 0.86em; line-height: 1.45; }
-        .cube-list li { background: var(--panel-3); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
-        details.op { border: 1px solid var(--line); border-radius: 6px; background: var(--panel-3); margin-bottom: 8px; }
-        details.op summary { cursor: pointer; padding: 9px 10px; }
-        details.op[open] summary { border-bottom: 1px solid var(--line); }
-        .op-scores, .op-aspects { margin: 8px 10px; font-size: 0.86em; }
-        .op-table { overflow-x: auto; margin: 0 10px 8px; }
-        .op-table table { border-collapse: collapse; width: 100%; font-size: 0.82em; }
-        .op-table th, .op-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
-        .op-table th { color: var(--muted); font-weight: 600; }
-        .op-table td:last-child { white-space: nowrap; }
         @media (max-width: 860px) {
             .band { grid-template-columns: minmax(0, 1fr); gap: 16px; }
             .band-text, .band #readingForm, .band-more { grid-column: 1; grid-row: auto; }
             .band { row-gap: 16px; }
         }
-        @media (max-width: 900px) { .sample-grid { grid-template-columns: minmax(0, 1fr); } .viz { position: static; } }
         @media (max-width: 640px) {
             .steps { font-size: 0.85em; gap: 6px 10px; }
-            .elements { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
     </style>
 </head>
@@ -182,93 +102,9 @@
         </div>
     </section>
 
-    <div class="front{% if not sample %} no-sample{% endif %}">
-        {% if sample %}
-        <!-- SAMPLE: a whole Opening of the Key, before any settings are asked for.
-             Tier 1 (always shown): the diagram, a factual summary, the elements.
-             Tiers 2 and 3 (behind the mechanics toggle): cube positions, each operation, the prompt. -->
-        <details class="panel sample" id="sample">
-            <summary class="sample-toggle"><h2 id="sampleTitle">A sample Opening of the Key</h2></summary>
-            <p class="sample-meta">All four operations · {{ sample.card_count }} cards · seed {{ sample.seed }} · significator {{ sample.significator }}</p>
-            <div class="sample-grid">
-                <div class="viz">
-                    <div class="journey-tabs" role="group" aria-label="Layout">
-                        <button type="button" data-journey="heap" aria-pressed="true">1 · Heap</button>
-                        <button type="button" data-journey="wheel" aria-pressed="false">2 · Wheel</button>
-                        <button type="button" data-journey="cube" aria-pressed="false">3 · Cube</button>
-                    </div>
-                    <svg id="journeySvg" viewBox="-250 -250 500 500" role="img" aria-labelledby="journeyCaption"></svg>
-                    <div class="inspector" id="journeyDetail" aria-live="polite" hidden></div>
-                    <p class="journey-caption" id="journeyCaption" aria-live="polite"></p>
-                    <p class="journey-hint">Tap a card to see it. Tap an element to pick out its cards.</p>
-                </div>
-
-                <div class="story">
-                    <div class="summary" id="sampleSummary">
-                        {% for para in sample.summary %}<p>{{ para }}</p>{% endfor %}
-                    </div>
-                    <div class="elements" role="group" aria-label="Cards by element. Tap one to pick out its cards in the drawing.">
-                        {% for e in sample.elements %}
-                        <button type="button" class="el" data-element="{{ e.name }}" aria-pressed="false"><span class="el-name">{{ e.name }}</span><span class="el-n">{{ e.count }}</span><span class="el-bar"><span style="width: {{ e.pct }}%; background: {{ element_colors[e.name] }}"></span></span></button>
-                        {% endfor %}
-                    </div>
-
-                    <button type="button" class="btn-small mech-toggle" id="mechToggle" aria-controls="mechanics" aria-expanded="false">Show Hermetic / Cabbalistic mechanics</button>
-                    <div id="mechanics" hidden>
-                        {% if sample.cube %}
-                        <h3>The heap on the Cube of Space</h3>
-                        <ul class="cube-list">
-                            {% for c in sample.cube %}
-                            <li><span class="dot" style="background: {{ element_colors[c.element] }}"></span><strong>{{ c.short }}</strong> <span class="muted">heap {{ c.n }}</span><br><span class="muted">{{ c.place }} · {{ c.place_type | replace("_", " ") }} · {{ c.letter }}</span></li>
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-
-                        <h3>The four operations</h3>
-                        {% for op in sample.ops %}
-                        <details class="op">
-                            <summary><strong>{{ loop.index }} · {{ op.name }}</strong> <span class="muted">{{ op.cards | length }} cards · dignities net {{ '%+d' % op.dignity.net }}</span></summary>
-                            <p class="op-scores">
-                                <span class="score pos">{{ op.dignity.same }}</span> same element
-                                <span class="score pos">{{ op.dignity.friendly }}</span> friendly
-                                <span class="score neg">{{ op.dignity.contrary }}</span> contrary
-                            </p>
-                            <div class="op-table"><table>
-                                <thead><tr><th>#</th><th>Position</th><th>Card</th><th>Element</th><th>Attribution</th><th>Dignities</th></tr></thead>
-                                <tbody>
-                                {% for c in op.cards %}
-                                <tr><td>{{ c.n }}</td><td>{{ c.position }}</td><td>{{ c.short }}</td><td><span class="dot" style="background: {{ element_colors[c.element] }}"></span>{{ c.element }}</td><td>{{ c.attribution }}</td>
-                                    <td>{% for d in c.dignities %}<span class="score {{ 'pos' if d.score > 0 else ('neg' if d.score < 0 else 'zero') }}" title="with {{ d.with }}">{{ '%+d' % d.score }}</span> {% endfor %}</td></tr>
-                                {% endfor %}
-                                </tbody>
-                            </table></div>
-                            {% if op.aspects.by_type %}<p class="muted op-aspects">Aspects, set by the layout and the same in every reading: {% for a, n in op.aspects.by_type %}{{ a }} {{ n }}{{ ", " if not loop.last }}{% endfor %}.</p>{% endif %}
-                        </details>
-                        {% endfor %}
-
-                        <h3>The prompt your AI gets</h3>
-                        <div class="prompt-box" id="samplePromptBox">
-                            <pre id="samplePrompt" data-src="/sample/prompt" aria-busy="true">Loading the prompt…</pre>
-                        </div>
-                        <button type="button" class="link-btn" id="expandSample" aria-controls="samplePromptBox" aria-expanded="false">Show the whole prompt</button>
-                    </div>
-
-                    <div class="sample-actions">
-                        <button type="button" class="btn-small" id="copySample">Copy prompt</button>
-                        <a class="btn-small" href="{{ sample.url }}">Full report</a>
-                    </div>
-                    <p class="credit">Card art: Pamela Colman Smith (1909), public domain. <a href="/method#art">Why these pictures?</a></p>
-                </div>
-            </div>
-        </details>
-        {% endif %}
-    </div>
-
     <script type="application/json" id="positionsData">{{ positions | tojson }}</script>
-    {% if sample %}<script type="application/json" id="sampleData">{{ {"heap": sample.heap, "wheel": sample.wheel, "colors": element_colors} | tojson }}</script>{% endif %}
     <script src="{{ static_url('js/copy.js') }}" defer></script>
     <script src="{{ static_url('js/index.js') }}" defer></script>
-    <script src="{{ static_url('js/front-diagram.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>

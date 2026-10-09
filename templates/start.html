@@ -35,8 +35,8 @@
             <ol class="path">
                 <li>
                     <h3>See what you get</h3>
-                    <p>A reading here is not an interpretation. It is a list of cards, their correspondences and how they interact, written as a prompt for your AI. The start page shows a whole Opening of the Key as a sample.</p>
-                    <div class="actions"><a class="btn secondary" href="/#sample">See the sample</a> <a class="btn secondary" href="/examples">More examples</a></div>
+                    <p>A reading here is not an interpretation. It is a list of cards, their correspondences and how they interact, written as a prompt for your AI. The sample below is a whole Opening of the Key.</p>
+                    <div class="actions">{% if sample %}<a class="btn secondary" href="#sample">See the sample</a> {% endif %}<a class="btn secondary" href="/examples">More examples</a></div>
                 </li>
                 <li>
                     <h3>Start with one card</h3>
@@ -59,6 +59,10 @@
                 </li>
             </ol>
         </section>
+
+        {% if sample %}
+{% include "_sample_reading.html" %}
+        {% endif %}
 
         <section class="panel" aria-labelledby="stagesTitle">
             <h2 id="stagesTitle">Learning stages</h2>
