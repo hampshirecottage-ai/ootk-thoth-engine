@@ -6,7 +6,7 @@
 
 **Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![The start page: the headline "Navigate with Tarot. Your AI interprets the cards.", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Ask your question" panel with its Draw my cards button](docs/images/front.png)
+![The start page: the headline "Navigate with Tarot.", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Ask your question" panel with its Draw my cards button](docs/images/front.png)
 
 A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
 
