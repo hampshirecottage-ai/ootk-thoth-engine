@@ -35,6 +35,7 @@ from ootk.lockout import FailedLogins
 from ootk.report import MAPPING_LABELS, analyze_reading
 from ootk.rules import element_dignity
 from ootk import atlas
+from ootk import sky
 from ootk import significator as significator_methods
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
@@ -1119,6 +1120,8 @@ def card_of_the_day(request: Request, day: str):
         "selected_cards": "",
     }
     deck = reference_deck()
+    sky_rows = reference_rows(DEFAULT_MAPPING)
+    todays_sky = sky.todays_sky(when, [sky_rows[c["title"]] for c in deck if c["title"] in sky_rows])
     card_titles, significator_label = seeded_draw(deck, day, "1", "")
     reading = run_reading(settings, card_titles, significator_label, deck)
     card = reading["spread_results"][0]["card_data"]
@@ -1137,6 +1140,7 @@ def card_of_the_day(request: Request, day: str):
             "previous": (when - timedelta(days=1)).isoformat() if when > date.min else None,
             "next": (when + timedelta(days=1)).isoformat() if when < today else None,
             "today": today.isoformat(),
+            "sky": todays_sky,
         },
     )
 

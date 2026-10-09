@@ -1066,6 +1066,7 @@ def test_card_of_the_day_is_the_top_card_of_the_date_seeded_deck(seeded_client, 
     assert seeded_client.lookups[-1] == [top] and f"<h2>{top}</h2>" in r.text
     assert 'href="/day/2026-10-02"' in r.text and "Next day" not in r.text
     assert "/reading?seed=2026-10-03&amp;spread=1&amp;system=thoth" in r.text
+    assert "The sky today" in r.text and "10° Libra, decan 2" in r.text   # the Sun at noon UTC
     assert seeded_client.get("/day/2026-09-30").status_code == 200
     assert "Next day" in seeded_client.get("/day/2026-09-30").text
 
