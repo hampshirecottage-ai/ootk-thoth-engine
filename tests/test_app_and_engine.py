@@ -1098,15 +1098,18 @@ def sample_deck():
     return deck + [dict(fake_card("Queen of Cups", suit="Cups", arcana="Court"), card_id=77)]
 
 
-def test_start_page_shows_the_settings_then_a_folded_sample_reading(client, monkeypatch):
+def test_start_here_shows_a_folded_sample_reading_and_the_front_page_does_not(client, monkeypatch):
     deck = sample_deck()
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
-    page = client.get("/").text
+    front = client.get("/").text
+    assert 'id="sample"' not in front and "sample-diagram.js" not in front   # moved 2026-10-09
+    page = client.get("/start").text
     s = app_module.SAMPLE_SETTINGS
     expected, _ = app_module.seeded_draw(deck, s["seed"], s["spread_key"], s["significator"])
     assert len(expected) == 75 and all(title in page for title in expected)
     assert page.count('<details class="op">') == 4
-    assert page.index('id="readingForm"') < page.index('id="sample"')  # settings in the banner
+    assert page.index('id="pathTitle"') < page.index('id="sample"') < page.index('id="stagesTitle"')
+    assert 'href="#sample"' in page and "sample-diagram.js" in page
     assert '<details class="panel sample" id="sample">' in page        # sample starts folded
     assert 'class="tiles"' not in page
     assert 'id="copySample"' in page and 'data-src="/sample/prompt"' in page
@@ -1120,10 +1123,10 @@ def test_start_page_shows_the_settings_then_a_folded_sample_reading(client, monk
     assert 'id="sample"' not in client.get("/pick").text
 
 
-def test_start_page_links_the_sample_report_and_no_longer_the_card_of_the_day(client, monkeypatch):
+def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_report(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
-    page = client.get("/").text
-    assert "Today&rsquo;s card" not in page                   # replaced by the testimonial
+    assert "Today&rsquo;s card" not in client.get("/").text   # replaced by the testimonial
+    page = client.get("/start").text
     link = "/reading?seed=12345&spread=12&system=thoth&significator=Queen+of+Cups"
     assert f'href="{link.replace("&", "&amp;")}"' in page
     assert client.get(link).status_code == 200
@@ -1299,9 +1302,9 @@ def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     assert f'href="{app_module.REPO_URL}"' in page
 
 
-def test_start_page_without_a_full_deck_skips_the_sample(client):
-    page = client.get("/").text
-    assert page.count('id="sample"') == 0 and 'id="readingForm"' in page
+def test_start_here_without_a_full_deck_skips_the_sample(client):
+    page = client.get("/start").text
+    assert page.count('id="sample"') == 0 and 'href="#sample"' not in page and 'id="pathTitle"' in page
     assert client.get("/sample/prompt").status_code == 404
 
 

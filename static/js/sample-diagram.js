@@ -1,4 +1,4 @@
-// Start page diagram of the sample Opening of the Key: the 15-card heap of Op 1, the twelve
+// /start diagram of the sample Opening of the Key: the 15-card heap of Op 1, the twelve
 // signs of Op 3, and the Cube of Space. The same fifteen markers move between the three
 // layouts: twelve become the signs (wheel segments, then cube edges) and three the mother
 // letters (cube axes). Each marker shows the sample card at that place, coloured by element;

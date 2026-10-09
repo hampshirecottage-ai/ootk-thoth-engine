@@ -633,7 +633,7 @@ def sample_summary(r, settings):
 
 
 def sample_view(r, settings):
-    """Everything the start page shows of the sample: the summary, the heap and wheel for the
+    """Everything /start shows of the sample: the summary, the heap and wheel for the
     diagram, the element breakdown, the cube positions and one summary per operation."""
     items = r["spread_results"]
     segments = spread_segments(items, settings["spread_key"])
@@ -673,7 +673,7 @@ def sample_view(r, settings):
 
 
 def sample_reading(deck):
-    """The start page's sample: drawn and analysed once per process, then reused. None when
+    """The /start sample: drawn and analysed once per process, then reused. None when
     the deck can't produce it (an empty or partial database), so the page still renders."""
     if "sample" in _sample_cache:
         return _sample_cache["sample"]
@@ -735,7 +735,6 @@ def share_path(settings) -> str:
 def settings_page(request: Request, name: str, mode: str):
     """Sync endpoint body: FastAPI executes in threadpool to prevent blocking the event loop."""
     cards = reference_deck()
-    sample = sample_reading(cards) if mode == "seed" else None
     testimonial = testimonial_of_the_day() if mode == "seed" else None
     return templates.TemplateResponse(
         request=request,
@@ -743,7 +742,6 @@ def settings_page(request: Request, name: str, mode: str):
         context={
             "cards": cards,
             "mode": mode,
-            "sample": sample,
             "testimonial": testimonial,
             "show_testimonials": mode == "seed",
             "spreads": SPREADS,
@@ -786,7 +784,7 @@ def favicon():
 
 @app.get("/", response_class=HTMLResponse)
 def main_gui(request: Request):
-    """Start page: a sample reading and the settings. '/?seed=...' opens that shared reading."""
+    """Start page: the settings. '/?seed=...' opens that shared reading."""
     if request.query_params.get("seed"):
         return RedirectResponse(f"/reading?{request.url.query}", status_code=307)
     return settings_page(request, "index.html", "seed")
@@ -794,8 +792,8 @@ def main_gui(request: Request):
 
 @app.get("/sample/prompt", response_class=PlainTextResponse)
 def sample_prompt():
-    """The start page sample's whole AI prompt (about 72 KB), fetched when the folded sample is
-    opened rather than sent with every visit to the start page."""
+    """The /start sample's whole AI prompt (about 72 KB), fetched when the folded sample is
+    opened rather than sent with every visit to /start."""
     sample = sample_reading(reference_deck())
     if sample is None:
         raise HTTPException(status_code=404, detail="The sample reading isn't available.")
@@ -834,7 +832,7 @@ _examples_cache = {}
 
 def example_readings(deck):
     """EXAMPLES with their links and, when the full deck is loaded, the cards each seed draws.
-    Drawn once per process, like the start page's sample."""
+    Drawn once per process, like the /start sample."""
     if "examples" in _examples_cache:
         return _examples_cache["examples"]
     full_deck = len(deck) == 78
@@ -871,8 +869,14 @@ def guide_page(request: Request, name: str, **context):
 
 @app.get("/start", response_class=HTMLResponse)
 def start_here(request: Request):
-    """Start here: a path for newcomers, then the spreads grouped into learning stages."""
-    return guide_page(request, "start.html",
+    """Start here: a path for newcomers, the sample Opening of the Key, then the spreads grouped
+    into learning stages. Without the database the page still shows, just without the sample."""
+    try:
+        sample = sample_reading(reference_deck())
+    except psycopg.OperationalError as e:
+        log.warning("Start here without the sample: %s", e)
+        sample = None
+    return guide_page(request, "start.html", sample=sample,
                       sizes={key: len(spread_positions(key)) for key in SPREADS})
 
 
