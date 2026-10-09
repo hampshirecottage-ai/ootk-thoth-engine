@@ -8,11 +8,7 @@
 
 ![The start page: the headline "Navigate with Tarot.", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Ask your question" panel with its Draw my cards button](docs/images/front.png)
 
-A Hermetic tarot calculation and analytical engine built around the 78-card Thoth deck, Liber 777 correspondences, and Tree of Life spatial/Platonic geometry.
-
-It automates the Opening of the Key (OOTK) pipeline: elemental dignities, Hebrew letter and path attributions, Platonic solid dual inversions, and decanic zodiacal aspects. Draws are deterministic: the same seed always gives the same deck order.
-
-Rather than treating the Hebrew alphabet as an abstract list or the Platonic solids as isolated geometry, it places both in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://ootk.onrender.com/method#space) explains both and [/maps](https://ootk.onrender.com/maps) draws them.
+It places the Hebrew letters and the Platonic solids in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://ootk.onrender.com/method#space) explains both and [/maps](https://ootk.onrender.com/maps) draws them.
 
 ---
 
@@ -28,7 +24,7 @@ Rather than treating the Hebrew alphabet as an abstract list or the Platonic sol
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
 - **PostgreSQL persistence** of sessions, spreads, card pulls and testimonials.
-- **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`, live at [ootk.onrender.com](https://ootk.onrender.com)), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
+- **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
 
 ---
 
@@ -206,12 +202,12 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 |---|---|
 | `/` | Start page: the banner, the form and the testimonial of the day |
 | `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
-| `/start` | Start here: a five-step path for newcomers, a sample Opening of the Key (heap, wheel and Cube of Space) and which spreads to learn in what order |
+| `/start` | Start here, in folded sections: what OOTK does best, your first reading step by step, a sample Opening of the Key, learning stages, and where the cards come from |
 | `/examples` | Example readings with fixed seeds |
 | `/library` | Glossary (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
 | `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
-| `/history` | History of the decks, with archival photos and their credits |
+| `/history` | History of the decks, with archival photos, their credits and further reading |
 | `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
 | `/testimonial` | Send a testimonial (one per visitor session); the start page shows one approved testimonial a day |
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
@@ -228,11 +224,8 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Summary first.** Then come a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
 - **Drawings.** Operation 1 is drawn as the 15-card heap inside a triangle (its cards are compared by element only: side-by-side cards in a heap take no astrological aspect), houses and signs as 12-segment wheels (the houses with each house's meaning), and decans as a 36-segment ring, with card images. Switch between **Aspect lines** and **Element pairs**. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **How the cards are linked.** Each operation explains in plain words which cards are compared. Tap a card in a drawing to see its element pairs and aspects, each with its score and reason, in an inspector beside the drawing (below it on phones); tap a partner to jump to it.
-- **Aspect filters.** Show only strong aspects (Conjunction, Trine and Square, score ±2) or pick types under **Types**; shift-click a type to show only that one. Filters apply to the drawings and the tables together.
 - **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, small maps of where it sits (as on `/maps`), and every aspect and dignity it takes part in. Escape closes it.
-- **Search.** The search box in the filter bar matches card titles, positions, letters, elements and attributions. It dims non-matching cards in the drawings, hides non-matching table rows, and opens the operations that have matches.
 - **Save.** The **Save** menu prints or saves a PDF with every section expanded, downloads the prompt as Markdown, or the whole reading as JSON. Each drawing also downloads as an SVG (card images link back to the running server).
-- **Theme and phones.** The default theme is green; a dark/light toggle (it follows the system setting until you choose) is remembered per browser. Pages collapse to one column on narrow screens.
 
 ### Docker, Render and Hugging Face Spaces
 
@@ -247,7 +240,7 @@ The local database lives inside the container and starts empty on every run. To 
 
 Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link.
 
-On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [ootk.onrender.com](https://ootk.onrender.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked. Free services sleep after 15 idle minutes, so the first page afterwards takes about a minute.
+On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [ootk.onrender.com](https://ootk.onrender.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked.
 
 Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start, pick and guide pages and the card of the day; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap, and `/reading` share links are disallowed in `robots.txt`. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
 
@@ -329,7 +322,7 @@ The repository holds only the engine and reference data. Your own readings stay 
 
 | Table | Purpose |
 |---|---|
-| `thoth_cards` | The 78 cards (title, arcana, suit, rank, key scale, description) |
+| `thoth_cards` | The 78 cards (title, arcana, suit, rank, key scale, attribution) |
 | `correspondences` | Hebrew letter, path/sephira, element/planet/sign, King Scale colour, Cube of Space place, and the French/Egyptian letters and paths |
 | `tarot_sessions` | One row per reading (operation, significator, notes, and `report_settings` with the report link) |
 | `spread_pulls` | Spreads within a session |

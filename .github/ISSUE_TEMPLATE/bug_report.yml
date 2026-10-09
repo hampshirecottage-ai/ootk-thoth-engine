@@ -21,8 +21,8 @@ body:
       label: Steps to reproduce
       description: The spread and options you chose, and what you clicked. A seed helps if you're happy to share it.
       placeholder: |
-        1. Choose the 12-house spread
-        2. Click Generate
+        1. Choose the Second Operation (12 houses) spread
+        2. Click Draw my cards
         3. ...
     validations:
       required: true
@@ -30,7 +30,7 @@ body:
     id: page
     attributes:
       label: Page or command
-      description: Where it happened, for example the settings page, a report page, or `ootk --spread 12`.
+      description: Where it happened, for example the start page, a report page, or `ootk --spread 12`.
   - type: input
     id: browser
     attributes:

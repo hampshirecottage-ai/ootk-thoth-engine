@@ -44,7 +44,6 @@ The same command with the same database always draws the same cards. Everything 
 * **Water **: ██ 1 (33.3%)
 * **Air   **:  0 (0.0%)
 * **Earth **: ████ 2 (66.7%)
-* **Spirit**:  0 (0.0%)
 
 ---
 
@@ -98,7 +97,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 ### Position 1: Past / Root Cause
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
-- **Path/Sephira**: Fence (ח (Cheth))
+- **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
