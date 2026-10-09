@@ -1110,7 +1110,7 @@ def test_start_here_shows_a_folded_sample_reading_and_the_front_page_does_not(cl
     assert page.count('<details class="op">') == 4
     assert page.index('id="pathTitle"') < page.index('id="sample"') < page.index('id="stagesTitle"')
     assert 'href="#sample"' in page and "sample-diagram.js" in page
-    assert '<details class="panel sample" id="sample">' in page        # sample starts folded
+    assert '<details class="panel fold sample" id="sample">' in page   # sample starts folded
     assert 'class="tiles"' not in page
     assert 'id="copySample"' in page and 'data-src="/sample/prompt"' in page
     assert 'id="copySummary"' not in page and 'id="trySeed"' not in page   # trimmed 2026-10-08
@@ -1121,6 +1121,16 @@ def test_start_here_shows_a_folded_sample_reading_and_the_front_page_does_not(cl
     assert prompt.text.rstrip().endswith("END OF OOTK PROMPT (75 positions)")
     assert client.saved == {}                                   # the sample is never saved
     assert 'id="sample"' not in client.get("/pick").text
+
+
+def test_start_here_sections_fold_with_only_the_first_reading_open(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
+    page = client.get("/start").text
+    assert "<section" not in page.split("<main", 1)[1].split("</main>", 1)[0]
+    for sid in ("strengthsTitle", "stagesTitle", "historyTitle"):
+        assert f'<details class="panel fold">\n            <summary class="fold-toggle"><h2 id="{sid}">' in page
+    assert '<details class="panel fold" open>\n            <summary class="fold-toggle"><h2 id="pathTitle">' in page
+    assert "js/fold.js" in page                                 # opens a section named in the link
 
 
 def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_report(client, monkeypatch):

@@ -5,6 +5,14 @@
 {% set active = "/start" %}
 {% block head %}
     <style>
+        /* Each section folds away under its heading, like the sample; the arrow shows whether it is open. */
+        .fold-toggle { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
+        .fold-toggle::-webkit-details-marker { display: none; }
+        .fold-toggle::before { content: "\25B8"; font-size: 1.3em; line-height: 1; color: var(--accent-2); transition: transform 0.15s; }
+        details.fold[open] > .fold-toggle::before { transform: rotate(90deg); }
+        .fold-toggle h2 { margin: 0; }
+        details.fold[open] > .fold-toggle { margin-bottom: 10px; }
+        .fold-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
         ol.path { list-style: none; counter-reset: step; padding: 0; margin: 0; }
         ol.path > li { counter-increment: step; position: relative; padding: 0 0 18px 44px; }
         ol.path > li:last-child { padding-bottom: 0; }
@@ -18,20 +26,21 @@
         .stage ul { margin: 6px 0 8px; padding-left: 20px; }
         .stage li { margin: 2px 0; }
     </style>
+    <script src="{{ static_url('js/fold.js') }}" defer></script>
 {% endblock %}
 {% block content %}
-        <section class="panel" aria-labelledby="strengthsTitle">
-            <h2 id="strengthsTitle">What OOTK does best</h2>
+        <details class="panel fold">
+            <summary class="fold-toggle"><h2 id="strengthsTitle">What OOTK does best</h2></summary>
             <p>Its strengths are objective analysis and clear conceptual models.</p>
             <ul>
                 <li><strong>Objective analysis.</strong> Each card's dignities, aspects and correspondences come from the Book&nbsp;T and Liber&nbsp;777 tables and are scored the same way every time, so the same seed always gives the same figures.</li>
                 <li><strong>Clear conceptual models.</strong> The heap, the wheel of houses and signs, and the Cube of Space show where each card sits and how the cards link.</li>
             </ul>
             <p>The meaning is left to your AI.</p>
-        </section>
+        </details>
 
-        <section class="panel" aria-labelledby="pathTitle">
-            <h2 id="pathTitle">Your first reading, step by step</h2>
+        <details class="panel fold" open>
+            <summary class="fold-toggle"><h2 id="pathTitle">Your first reading, step by step</h2></summary>
             <ol class="path">
                 <li>
                     <h3>See what you get</h3>
@@ -58,14 +67,14 @@
                     <div class="actions"><a class="btn secondary" href="/library">Library</a> <a class="btn secondary" href="/method">Method and limits</a></div>
                 </li>
             </ol>
-        </section>
+        </details>
 
         {% if sample %}
 {% include "_sample_reading.html" %}
         {% endif %}
 
-        <section class="panel" aria-labelledby="stagesTitle">
-            <h2 id="stagesTitle">Learning stages</h2>
+        <details class="panel fold">
+            <summary class="fold-toggle"><h2 id="stagesTitle">Learning stages</h2></summary>
             <p class="muted">The twelve spreads, grouped from first steps to the full Opening of the Key. Each stage adds one new idea.</p>
             <div class="stages">
                 {% for level, name, keys, learn in spread_stages %}
@@ -82,11 +91,11 @@
                 {% endfor %}
             </div>
             <p class="note">Each link opens the start page with that spread chosen.</p>
-        </section>
+        </details>
 
-        <section class="panel" aria-labelledby="historyTitle">
-            <h2 id="historyTitle">Where the cards come from</h2>
+        <details class="panel fold">
+            <summary class="fold-toggle"><h2 id="historyTitle">Where the cards come from</h2></summary>
             <p>Tarot began as a card game in 1440s Italy. Its occult meanings came much later, from the Golden Dawn in 1880s London, whose former members made both decks used here: A.&nbsp;E. Waite and Pamela Colman Smith in 1909, and Aleister Crowley and Lady Frieda Harris between 1938 and 1943.</p>
             <div class="actions"><a class="btn secondary" href="/history">History of the decks, with archival photos</a></div>
-        </section>
+        </details>
 {% endblock %}

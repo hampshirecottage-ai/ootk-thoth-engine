@@ -1,9 +1,5 @@
 // The sample Opening of the Key on /start (templates/_sample_reading.html).
 const $ = id => document.getElementById(id);
-// The sample starts folded away; a link to /start#sample opens it.
-const openSampleFromHash = () => { if (location.hash === "#sample") $("sample").open = true; };
-openSampleFromHash();
-window.addEventListener("hashchange", openSampleFromHash);
 // The prompt is about 72 KB, so it is fetched when the sample is first opened rather than
 // sent with every visit to /start.
 let samplePrompt = null;
