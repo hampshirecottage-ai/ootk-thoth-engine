@@ -4,11 +4,11 @@
 
 **Its strengths are objective analysis and clear conceptual models.** Every dignity, aspect and correspondence is looked up from the Book T and Liber 777 tables and scored the same way each time, and the heap, the wheel of houses and signs, and the Cube of Space show where each card sits and how the cards link. The meaning is left to the LLM.
 
-**Try it online: [ootk.onrender.com](https://ootk.onrender.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
+**Try it online: [tarotthoth.com](https://tarotthoth.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
 ![The start page: the headline "Navigate with Tarot.", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Ask your question" panel with its Draw my cards button](docs/images/front.png)
 
-It places the Hebrew letters and the Platonic solids in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://ootk.onrender.com/method#space) explains both and [/maps](https://ootk.onrender.com/maps) draws them.
+It places the Hebrew letters and the Platonic solids in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://tarotthoth.com/method#space) explains both and [/maps](https://tarotthoth.com/maps) draws them.
 
 ---
 
@@ -240,7 +240,7 @@ The local database lives inside the container and starts empty on every run. To 
 
 Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link.
 
-On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [ootk.onrender.com](https://ootk.onrender.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked.
+On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [tarotthoth.com](https://tarotthoth.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked.
 
 Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start, pick and guide pages and the card of the day; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap, and `/reading` share links are disallowed in `robots.txt`. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
 

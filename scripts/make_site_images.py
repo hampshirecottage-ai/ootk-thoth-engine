@@ -25,7 +25,7 @@ PREVIEW_CARDS = ["i---the-magus.webp", "xvii---the-star.webp", "xix---the-sun.we
 TITLE = "LLM Tarot Reading"
 SUBTITLE = ("Golden Dawn dignities, decans and Liber 777 correspondences, "
             "calculated for your LLM to interpret.")
-FOOTER = "ootk.onrender.com · free and open source"
+FOOTER = "tarotthoth.com · free and open source"
 
 
 def font(names, size):
