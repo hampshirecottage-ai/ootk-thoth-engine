@@ -391,6 +391,46 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
         assert client.get(f"/static/{name}").status_code == 200
 
 
+def test_card_pages_list_every_card_and_are_in_the_sitemap(client, monkeypatch):
+    monkeypatch.setenv("SITE_URL", "https://example.org")
+    deck = [{"title": t} for t in ("0 - The Fool", "XIX - The Sun", "2 of Wands - Dominion", "Knight of Swords")]
+    monkeypatch.setattr(app_module, "reference_deck", lambda: deck)
+    rows = {"0 - The Fool": fake_card("0 - The Fool", suit=None, arcana="Major", attribution="Air"),
+            "XIX - The Sun": fake_card("XIX - The Sun", suit=None, arcana="Major", attribution="Sun"),
+            "2 of Wands - Dominion": fake_card("2 of Wands - Dominion"),
+            "Knight of Swords": fake_card("Knight of Swords", suit="Swords", arcana="Court")}
+    monkeypatch.setattr(app_module, "reference_rows", lambda system: rows)
+    assert [app_module.card_page_slug(c["title"]) for c in deck] == [
+        "the-fool", "the-sun", "2-of-wands", "knight-of-swords"]
+    index = client.get("/cards")
+    assert index.status_code == 200
+    sitemap = client.get("/sitemap.xml").text
+    assert "<loc>https://example.org/cards</loc>" in sitemap
+    for slug in ("the-fool", "the-sun", "2-of-wands", "knight-of-swords"):
+        assert f'href="/card/{slug}"' in index.text
+        assert f"<loc>https://example.org/card/{slug}</loc>" in sitemap
+        page = client.get(f"/card/{slug}")
+        assert page.status_code == 200 and "in the Thoth Tarot</h1>" in page.text
+        assert f'<link rel="canonical" href="https://example.org/card/{slug}">' in page.text
+    sun = client.get("/card/the-sun").text
+    assert 'href="/card/the-fool">&larr; The Fool' in sun and 'href="/card/2-of-wands">2 of Wands &rarr;' in sun
+    assert client.get("/card/the-moon", headers={"accept": "text/html"}).status_code == 404
+
+
+def test_sitemap_survives_the_database_being_down(client, monkeypatch):
+    def down():
+        raise app_module.psycopg.OperationalError("asleep")
+    monkeypatch.setattr(app_module, "reference_deck", down)
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200 and "/card/" not in sitemap.text and "/cards</loc>" in sitemap.text
+
+
+def test_start_page_describes_the_app_to_search_engines(client):
+    page = client.get("/").text
+    data = json.loads(page.split('<script type="application/ld+json">')[1].split("</script>")[0])
+    assert data["@type"] == "WebApplication" and data["offers"]["price"] == "0"
+
+
 def test_google_site_verification_file(client):
     page = client.get("/google2b71e1d47428ebc8.html")
     assert page.status_code == 200

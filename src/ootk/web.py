@@ -820,7 +820,11 @@ def robots_txt(request: Request):
 @app.get("/sitemap.xml")
 def sitemap_xml(request: Request):
     base = site_url(request)
-    pages = PUBLIC_PAGES + [f"/day/{utc_today().isoformat()}"]
+    pages = PUBLIC_PAGES + [f"/day/{utc_today().isoformat()}", "/cards"]
+    try:
+        pages += [f"/card/{c['slug']}" for c in card_pages()]
+    except psycopg.OperationalError as e:      # the sitemap still lists the other pages
+        log.warning("sitemap without card pages: %s", e)
     urls = "".join(f"<url><loc>{html.escape(base + path)}</loc></url>" for path in pages)
     return Response('<?xml version="1.0" encoding="UTF-8"?>'
                     f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>',
@@ -998,6 +1002,37 @@ def landing_page(request: Request, slug: str):
     if page is None:
         raise HTTPException(status_code=404, detail="There is no page at this address.")
     return guide_page(request, "landing.html", page=page)
+
+
+# ---------- card pages: one per card, for people who search card by card ----------
+
+def card_page_slug(title) -> str:
+    """'XIX - The Sun' -> 'the-sun'; '2 of Wands - Dominion' -> '2-of-wands'."""
+    return re.sub(r"[^a-z0-9]+", "-", short_card_name(title).lower()).strip("-")
+
+
+def card_pages():
+    """Every card's atlas entry under the default mapping, in deck order, with its slug."""
+    rows = reference_rows(DEFAULT_MAPPING)
+    deck_map = atlas.deck_atlas([rows[c["title"]] for c in reference_deck() if c["title"] in rows])
+    return [dict(c, slug=card_page_slug(c["title"])) for c in deck_map["cards"]]
+
+
+@app.get("/cards", response_class=HTMLResponse)
+def cards_page(request: Request):
+    """All 78 cards, each linking to its own page."""
+    return guide_page(request, "cards.html", cards=card_pages())
+
+
+@app.get("/card/{slug}", response_class=HTMLResponse)
+def card_page(request: Request, slug: str):
+    """One card's correspondences and where it sits in each system, as plain sentences."""
+    cards = card_pages()
+    i = next((i for i, c in enumerate(cards) if c["slug"] == slug), None)
+    if i is None:
+        raise HTTPException(status_code=404, detail="There is no card at this address.")
+    return guide_page(request, "card.html", card=cards[i], prev=cards[i - 1],
+                      next=cards[(i + 1) % len(cards)])
 
 
 @app.post("/generate_report", response_class=HTMLResponse)
