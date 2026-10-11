@@ -391,6 +391,12 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
         assert client.get(f"/static/{name}").status_code == 200
 
 
+def test_google_site_verification_file(client):
+    page = client.get("/google2b71e1d47428ebc8.html")
+    assert page.status_code == 200
+    assert page.text == "google-site-verification: google2b71e1d47428ebc8.html"
+
+
 def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
     for path, heading in [("/start", "Your first reading, step by step"), ("/history", "The Golden Dawn"),

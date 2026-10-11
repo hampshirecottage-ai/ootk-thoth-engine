@@ -827,6 +827,15 @@ def sitemap_xml(request: Request):
                     media_type="application/xml")
 
 
+# Google Search Console's ownership check: it fetches this file and expects exactly this line.
+GOOGLE_SITE_VERIFICATION = "google2b71e1d47428ebc8"
+
+
+@app.get(f"/{GOOGLE_SITE_VERIFICATION}.html", response_class=PlainTextResponse, include_in_schema=False)
+def google_site_verification():
+    return f"google-site-verification: {GOOGLE_SITE_VERIFICATION}.html"
+
+
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     """Browsers and crawlers ask for /favicon.ico whatever the page links to."""
