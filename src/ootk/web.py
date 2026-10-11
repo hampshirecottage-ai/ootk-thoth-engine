@@ -13,7 +13,7 @@ from collections import Counter
 import shlex
 import time
 from datetime import date, datetime, timedelta, timezone
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 from fastapi import FastAPI, Form, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
@@ -214,6 +214,22 @@ async def security_headers(request: Request, call_next):
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
+
+
+@app.middleware("http")
+async def redirect_to_own_domain(request: Request, call_next):
+    """Once SITE_URL names the site's own domain, a GET or HEAD on the old *.onrender.com
+    address moves permanently there, so old links and search listings follow. Other hosts
+    (localhost, the domain itself) and form posts are left alone."""
+    site = urlsplit(os.getenv("SITE_URL") or "")
+    host = request.url.hostname or ""
+    if (site.hostname and host.endswith(".onrender.com") and host != site.hostname
+            and request.method in ("GET", "HEAD")):
+        target = f"{site.scheme}://{site.netloc}{request.url.path}"
+        if request.url.query:
+            target += "?" + request.url.query
+        return RedirectResponse(target, status_code=301)
+    return await call_next(request)
 
 
 class HeadAsGet:
