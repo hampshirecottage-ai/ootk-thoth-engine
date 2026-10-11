@@ -1,0 +1,21 @@
+{% extends "_guide_base.html" %}
+{% set page_title = page.title %}
+{% set page_description = page.description %}
+{% set tagline = page.tagline %}
+{% set active = "" %}
+{% block content %}
+        <section class="panel">
+            <p>{{ page.intro }}</p>
+            <ol>
+                <li><strong>Draw your cards.</strong> Ask your question and pick a spread. The seed makes the draw repeatable.</li>
+                <li><strong>Copy the prompt.</strong> The report lists every card&rsquo;s correspondences, dignities and aspects, written up for an AI.</li>
+                <li><strong>Open it in your AI.</strong> Paste it into ChatGPT, Claude, Gemini or another model, which writes the interpretation.</li>
+            </ol>
+            <p class="muted">Free, with no sign-up. OOTK does not interpret the cards itself; it gives your AI the facts to work from.</p>
+            <div class="actions">
+                <a class="btn" href="/?spread={{ page.spread }}#readingForm">Draw my cards</a>
+                <a class="btn secondary" href="/examples">See example readings</a>
+                <a class="btn secondary" href="/start">Start here</a>
+            </div>
+        </section>
+{% endblock %}
