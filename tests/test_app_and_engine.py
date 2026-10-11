@@ -431,6 +431,20 @@ def test_start_page_describes_the_app_to_search_engines(client):
     assert data["@type"] == "WebApplication" and data["offers"]["price"] == "0"
 
 
+def test_old_render_address_moves_to_the_own_domain(client, monkeypatch):
+    old = "https://ootk.onrender.com"
+    monkeypatch.delenv("SITE_URL", raising=False)
+    assert client.get(f"{old}/robots.txt", follow_redirects=False).status_code == 200  # no SITE_URL yet
+    monkeypatch.setenv("SITE_URL", "https://tarotthoth.com")
+    r = client.get(f"{old}/tarot/ai-tarot-reading?x=1", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "https://tarotthoth.com/tarot/ai-tarot-reading?x=1"
+    assert client.head(f"{old}/", follow_redirects=False).status_code == 301
+    assert client.get("https://tarotthoth.com/robots.txt").status_code == 200   # the domain itself
+    assert client.get("/robots.txt").status_code == 200                         # local and tests
+    monkeypatch.setenv("SITE_URL", "https://ootk.onrender.com")                  # pointing at itself
+    assert client.get(f"{old}/robots.txt", follow_redirects=False).status_code == 200
+
+
 def test_google_site_verification_file(client):
     page = client.get("/google2b71e1d47428ebc8.html")
     assert page.status_code == 200
