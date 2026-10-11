@@ -1,0 +1,29 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Thoth Tarot Cards" %}
+{% set page_description = "All 78 Thoth tarot cards with their Golden Dawn attributions, Hebrew letters, decans and Liber 777 correspondences." %}
+{% set tagline = "All 78 cards, each with its correspondences and place in each system." %}
+{% set active = "" %}
+{% block head %}
+    <style>
+        .deck { list-style: none; padding: 0; margin: 8px 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+        .deck li { font-size: 0.8em; line-height: 1.25; text-align: center; }
+        .deck a { color: var(--text); text-decoration: none; display: block; }
+        .deck a:hover { text-decoration: underline; }
+        .deck img { width: 100%; height: auto; border-radius: 5px; border: 1px solid var(--line); display: block; margin-bottom: 4px; }
+        .deck .attr { color: var(--muted); display: block; }
+    </style>
+{% endblock %}
+{% block content %}
+        {% for group, test in [("Major Arcana", "Major"), ("Wands", "Wands"), ("Cups", "Cups"), ("Swords", "Swords"), ("Disks", "Disks")] %}
+        <section class="panel" aria-labelledby="g{{ loop.index }}">
+            <h2 id="g{{ loop.index }}">{{ group }}</h2>
+            <ul class="deck">
+                {% for c in cards if (c.kind == "Major") == (test == "Major") and (test == "Major" or c.short.endswith(test)) %}
+                {% set img = card_image_url(c.title, "thumb") %}
+                <li><a href="/card/{{ c.slug }}">{% if img %}<img src="{{ img }}" alt="" width="200" height="333" loading="lazy" decoding="async">{% endif %}{{ c.short }}{% if c.attribution %}<span class="attr">{{ c.attribution }}</span>{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endfor %}
+        <p class="note" style="text-align:center">Card art: Pamela Colman Smith (1909), public domain. <a href="/method#art">Why these pictures?</a></p>
+{% endblock %}

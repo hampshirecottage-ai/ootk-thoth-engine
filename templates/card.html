@@ -1,0 +1,62 @@
+{% extends "_guide_base.html" %}
+{% set page_title = card.short ~ " in the Thoth Tarot" %}
+{% set facts = [card.attribution, card.element ~ " element" if card.element, "Hebrew letter " ~ card.letter if card.letter] | select | join(", ") %}
+{% set page_description = card.title ~ ": " ~ facts ~ ". Its Golden Dawn and Liber 777 correspondences and where it sits on the Tree of Life, the zodiac and the Cube of Space." %}
+{% set tagline = card.title %}
+{% set active = "" %}
+{% block head %}
+    <style>
+        .card-top { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 18px; align-items: start; }
+        .card-top img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }
+        .card-top .art { color: var(--muted); font-size: 0.8em; margin: 4px 0 0; }
+        dl.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; margin: 0; }
+        dl.facts dt { color: var(--muted); }
+        dl.facts dd { margin: 0; }
+        .swatch { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 3px; border: 1px solid var(--line); vertical-align: -1px; margin-right: 4px; }
+        .card-nav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        @media (max-width: 560px) { .card-top { grid-template-columns: 120px minmax(0, 1fr); gap: 12px; } }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel" aria-labelledby="factsTitle">
+            <div class="card-top">
+                <div>
+                    {% set img = card_image_url(card.title, "full") %}
+                    {% if img %}<img src="{{ img }}" alt="{{ card.short }}" width="440" height="733" decoding="async">{% endif %}
+                    {% set art = art_note(card.title) %}{% if art %}<p class="art">{{ art }}</p>{% endif %}
+                </div>
+                <div>
+                    <h2 id="factsTitle">Correspondences</h2>
+                    <dl class="facts">
+                        <dt>Arcana</dt><dd>{{ card.kind }}</dd>
+                        {% if card.attribution %}<dt>Attribution</dt><dd>{{ card.attribution }}</dd>{% endif %}
+                        {% if card.element %}<dt>Element</dt><dd>{{ card.element }}</dd>{% endif %}
+                        {% if card.letter %}<dt>Hebrew letter</dt><dd>{{ card.letter }}</dd>{% endif %}
+                        {% if card.colour_name %}<dt>King Scale colour</dt><dd>{% if card.colour %}<span class="swatch" style="background:{{ card.colour }}"></span>{% endif %}{{ card.colour_name }}</dd>{% endif %}
+                        {% if card.solid %}<dt>Platonic solid</dt><dd>{{ card.solid.name }}</dd>{% endif %}
+                    </dl>
+                </div>
+            </div>
+        </section>
+        <section class="panel" aria-labelledby="placesTitle">
+            <h2 id="placesTitle">Where it sits</h2>
+            <dl class="facts">
+                {% for label, note in [("Tree of Life", card.tree.note), ("Zodiac", card.zodiac.note), ("Cube of Space", card.cube.note), ("Elements", card.grid.note), ("Solid", card.solid.note if card.solid else "")] %}
+                {% if note %}<dt>{{ label }}</dt><dd>{{ note }}</dd>{% endif %}
+                {% endfor %}
+            </dl>
+            <p class="note">These are the Golden Dawn and Liber 777 attributions under the Thoth mapping. OOTK leaves the card&rsquo;s meaning to your AI. <a href="/maps?card={{ card.short | urlencode }}">See it on the card maps</a>.</p>
+        </section>
+        <section class="panel">
+            <h2>Read it in a spread</h2>
+            <p>Draw a reading and OOTK works out this card&rsquo;s dignities with its neighbours, then writes everything into one prompt for ChatGPT, Claude, Gemini or any other AI. Free, with no sign-up.</p>
+            <div class="actions">
+                <a class="btn" href="/?spread=3#readingForm">Draw my cards</a>
+                <a class="btn secondary" href="/cards">All 78 cards</a>
+            </div>
+        </section>
+        <nav class="card-nav" aria-label="Other cards">
+            <a class="btn secondary" href="/card/{{ prev.slug }}">&larr; {{ prev.short }}</a>
+            <a class="btn secondary" href="/card/{{ next.slug }}">{{ next.short }} &rarr;</a>
+        </nav>
+{% endblock %}

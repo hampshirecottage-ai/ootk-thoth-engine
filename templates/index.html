@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% include "_head_meta.html" %}
     <title>LLM Tarot Reading · OOTK Thoth Engine</title>
+    {# Tells search engines this is a free web app, for a richer search result. -#}
+    <script type="application/ld+json">
+    {{ {"@context": "https://schema.org", "@type": "WebApplication", "name": "OOTK Thoth Engine",
+        "alternateName": "LLM Tarot Reading", "url": site_url(request) ~ "/",
+        "description": site_description, "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Any", "isAccessibleForFree": true,
+        "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}} | tojson }}
+    </script>
     <script>
         // Saved choice first, otherwise the light (beige) theme.
         (function () {
