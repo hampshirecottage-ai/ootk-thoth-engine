@@ -403,6 +403,20 @@ def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     assert 'href="/start"' in client.get("/").text                       # start page links in
 
 
+def test_landing_pages_match_their_keywords_and_are_listed(client, monkeypatch):
+    monkeypatch.setenv("SITE_URL", "https://example.org")
+    sitemap = client.get("/sitemap.xml").text
+    for slug, page in app_module.LANDING_PAGES.items():
+        html = client.get(f"/tarot/{slug}")
+        assert html.status_code == 200 and f"<h1>{page['title']}</h1>" in html.text
+        assert f'href="/?spread={page["spread"]}#readingForm"' in html.text   # Draw opens its spread
+        assert page["spread"] in app_module.SPREADS
+        assert f'<link rel="canonical" href="https://example.org/tarot/{slug}">' in html.text
+        assert f"<loc>https://example.org/tarot/{slug}</loc>" in sitemap
+    assert client.get("/tarot/<script>").status_code == 404                # nothing is echoed back
+    assert client.get("/tarot/free-tarot", headers={"accept": "text/html"}).status_code == 404
+
+
 def test_history_page_credits_every_photo_and_links_from_start_here(client):
     assert 'href="/history"' in client.get("/start").text
     page = client.get("/history").text
