@@ -11,88 +11,7 @@
 
 ---
 
-## 1. ELEMENTAL VECTOR DISTRIBUTION
-* **Fire  **: ████████ 4 (26.7%)
-* **Water **: ██████ 3 (20.0%)
-* **Air   **: ████████████ 6 (40.0%)
-* **Earth **: ████ 2 (13.3%)
-
----
-
-## 2. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)
-* **3 Mother Axes (Core Planes)**: `0`
-* **7 Double Directions (Cardinal Faces)**: `2`
-* **12 Simple Edges (Polyhedral Boundaries)**: `5`
-* **Nodal Sephiroth Spheres**: `8`
-
-**Card Spatial Vectors:**
-- Pos 1 (Queen of Cups): Letter `ח (Cheth)` -> **Simple_Edge** [Lower-East Edge]
-- Pos 2 (Prince of Swords): Letter `ה (Hé)` -> **Simple_Edge** [North-East Edge]
-- Pos 3 (4 of Swords - Truce): Letter `none - Sephira חסד (Chesed)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 4 (7 of Cups - Debauch): Letter `none - Sephira נצח (Netzach)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 5 (V - The Hierophant): Letter `ו (Vau)` -> **Simple_Edge** [South-East Edge]
-- Pos 6 (XI - Lust): Letter `ט (Teth)` -> **Simple_Edge** [Upper-North Edge]
-- Pos 7 (2 of Wands - Dominion): Letter `none - Sephira חכמה (Chokmah)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 8 (Knight of Cups): Letter `ק (Qoph)` -> **Simple_Edge** [Lower-South Edge]
-- Pos 9 (2 of Swords - Peace): Letter `none - Sephira חכמה (Chokmah)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 10 (7 of Swords - Futility): Letter `none - Sephira נצח (Netzach)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 11 (10 of Wands - Oppression): Letter `none - Sephira מלכות (Malkuth)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 12 (3 of Disks - Works): Letter `none - Sephira בינה (Binah)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 13 (XVI - The Tower): Letter `פ (Pé)` -> **Double_Direction** [North]
-- Pos 14 (3 of Swords - Sorrow): Letter `none - Sephira בינה (Binah)` -> **Sephira_Point** [Nodal Sphere (Sephira)]
-- Pos 15 (I - The Magus): Letter `ב (Beth)` -> **Double_Direction** [Up (Zenith)]
-
----
-
-## 3. PLATONIC SOLID TOPOLOGY MATRIX
-* **Dodecahedron        **: `2`
-* **Tetrahedron         **: `3`
-* **Icosahedron         **: `3`
-* **Octahedron          **: `5`
-* **Hexahedron (Cube)   **: `2`
-* **Unmapped            **: `0`
-
-**Solid properties** (fixed for each solid; section 6 names only the card's solid):
-* **Icosahedron**: Faces 20, Vertices 12 | Dual: `Dodecahedron` | Role: Receptive Matrix (Fluid Volume)
-* **Octahedron**: Faces 8, Vertices 6 | Dual: `Hexahedron (Cube)` | Role: Dynamic Axis (Mediating Air)
-* **Hexahedron (Cube)**: Faces 6, Vertices 8 | Dual: `Octahedron` | Role: Crystallized Vessel (Physical Boundary)
-* **Tetrahedron**: Faces 4, Vertices 4 | Dual: `Tetrahedron (Self-Dual)` | Role: Primary Ignis Vector (Expansion)
-* **Dodecahedron**: Faces 12, Vertices 20 | Dual: `Icosahedron` | Role: Planetary Celestial Face
-
-**Topological Dual Pairings / Polyhedral Inversions:**
-* Positions 6 & 7: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
-* Positions 1 & 15: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
-
----
-
-## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
-* **Pos 2 (Prince of Swords) <-> Pos 3 (4 of Swords - Truce)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 4 (7 of Cups - Debauch) <-> Pos 5 (V - The Hierophant)**: `Score: +1` | Friendly (Water + Earth)
-* **Pos 6 (XI - Lust) <-> Pos 7 (2 of Wands - Dominion)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 8 (Knight of Cups) <-> Pos 9 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 10 (7 of Swords - Futility) <-> Pos 11 (10 of Wands - Oppression)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 12 (3 of Disks - Works) <-> Pos 13 (XVI - The Tower)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 1 (Queen of Cups) <-> Pos 14 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 1 (Queen of Cups) <-> Pos 15 (I - The Magus)**: `Score: +1` | Friendly (Water + Air)
-
----
-
-## 5. SPATIAL & GEOMETRIC VECTOR ANALYSIS
-
-_Heap Pair - Paired in the heap; a heap has no angular relation [Modifier: `0`]_
-
-* **Pos 2 (Prince of Swords) <-> Pos 3 (4 of Swords - Truce)**: Spatial Distance `0.5` units
-* **Pos 4 (7 of Cups - Debauch) <-> Pos 5 (V - The Hierophant)**: Spatial Distance `0.5` units
-* **Pos 6 (XI - Lust) <-> Pos 7 (2 of Wands - Dominion)**: Spatial Distance `0.5` units
-* **Pos 8 (Knight of Cups) <-> Pos 9 (2 of Swords - Peace)**: Spatial Distance `0.5` units
-* **Pos 10 (7 of Swords - Futility) <-> Pos 11 (10 of Wands - Oppression)**: Spatial Distance `0.5` units
-* **Pos 12 (3 of Disks - Works) <-> Pos 13 (XVI - The Tower)**: Spatial Distance `0.5` units
-* **Pos 1 (Queen of Cups) <-> Pos 14 (3 of Swords - Sorrow)**: Spatial Distance `0.75` units
-* **Pos 1 (Queen of Cups) <-> Pos 15 (I - The Magus)**: Spatial Distance `3.0` units
-
----
-
-## 6. CARD-BY-CARD CORRESPONDENCE MATRIX
+## 1. CARD-BY-CARD CORRESPONDENCE MATRIX
 
 Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
 
@@ -230,16 +149,77 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Dodecahedron`
 - **King Scale Color**: Yellow
 
+
+---
+
+## 2. ELEMENTAL VECTOR DISTRIBUTION
+* **Fire  **: ████████ 4 (26.7%)
+* **Water **: ██████ 3 (20.0%)
+* **Air   **: ████████████ 6 (40.0%)
+* **Earth **: ████ 2 (13.3%)
+
+---
+
+## 3. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)
+* **3 Mother Axes (Core Planes)**: `0`
+* **7 Double Directions (Cardinal Faces)**: `2`
+* **12 Simple Edges (Polyhedral Boundaries)**: `5`
+* **Nodal Sephiroth Spheres**: `8`
+
+Section 1 gives each card's letter and spatial type.
+
+---
+
+## 4. PLATONIC SOLID TOPOLOGY MATRIX
+* **Dodecahedron        **: `2`
+* **Tetrahedron         **: `3`
+* **Icosahedron         **: `3`
+* **Octahedron          **: `5`
+* **Hexahedron (Cube)   **: `2`
+
+**Solid properties** (fixed for each solid; section 1 names only the card's solid):
+* **Icosahedron**: Faces 20, Vertices 12 | Dual: `Dodecahedron` | Role: Receptive Matrix (Fluid Volume)
+* **Octahedron**: Faces 8, Vertices 6 | Dual: `Hexahedron (Cube)` | Role: Dynamic Axis (Mediating Air)
+* **Hexahedron (Cube)**: Faces 6, Vertices 8 | Dual: `Octahedron` | Role: Crystallized Vessel (Physical Boundary)
+* **Tetrahedron**: Faces 4, Vertices 4 | Dual: `Tetrahedron (Self-Dual)` | Role: Primary Ignis Vector (Expansion)
+* **Dodecahedron**: Faces 12, Vertices 20 | Dual: `Icosahedron` | Role: Planetary Celestial Face
+
+**Topological Dual Pairings / Polyhedral Inversions:**
+* Positions 6 & 7: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
+* Positions 1 & 15: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
+
+---
+
+## 5. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
+* **Pos 2 (Prince of Swords) <-> Pos 3 (4 of Swords - Truce)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 4 (7 of Cups - Debauch) <-> Pos 5 (V - The Hierophant)**: `Score: +1` | Friendly (Water + Earth)
+* **Pos 6 (XI - Lust) <-> Pos 7 (2 of Wands - Dominion)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 8 (Knight of Cups) <-> Pos 9 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 10 (7 of Swords - Futility) <-> Pos 11 (10 of Wands - Oppression)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 12 (3 of Disks - Works) <-> Pos 13 (XVI - The Tower)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 1 (Queen of Cups) <-> Pos 14 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 1 (Queen of Cups) <-> Pos 15 (I - The Magus)**: `Score: +1` | Friendly (Water + Air)
+
+---
+
+## 6. SPATIAL & GEOMETRIC VECTOR ANALYSIS
+
+* A heap is not a wheel: its cards make no angles. Its named pairs are scored in section 5.
+
 ---
 
 ## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
-Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
+Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 
-1. **Active System Context (Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)):** Analyze how the cards function under the `thoth` mapping.
-2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
-3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
-4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
+1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header.
+2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
+3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
+4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Dodecahedron, Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5). Section 4 lists the neighbouring cards whose solids are duals (polyhedral inversions).
 5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
+
+**How to read the numbers:**
+* `Score` in section 5 is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other).
+* Section 2 counts each card once, under its primary element.
 
 END OF OOTK PROMPT (15 positions)

@@ -18,6 +18,11 @@ EXPECTED_ASPECT_PAIRS = {2: 42, 3: 42, 4: 126}
 # Op 1 scores its named pairs (2-3, 4-5, ... 12-13) and the significator with 14 and 15.
 OP1_PAIRS = [(2, 3), (4, 5), (6, 7), (8, 9), (10, 11), (12, 13), (1, 14), (1, 15)]
 RING_ASPECTS = {"Opposition", "Square", "Trine", "Sextile"}
+SECTION_TITLES = {
+    "cards": "CARD-BY-CARD", "elements": "ELEMENTAL VECTOR", "hebrew": "HEBREW LETTER SPATIAL",
+    "platonic": "PLATONIC SOLID", "dignity": "PAIRWISE ELEMENTAL DIGNITY",
+    "spatial": "SPATIAL & GEOMETRIC", "instructions": "SYNTHESIS & INTERPRETATION",
+}
 
 # French/Egyptian rows for the 22 Majors (Levi/Papus letters; paths on the standard tree):
 # name -> (letter, path, attribution)
@@ -108,28 +113,33 @@ def main(path):
     check(bool(m), "framework basis line present", m.group(1)[:90] if m else "no '**Framework Basis:**' line")
 
     # ---------- split sections ----------
-    parts = re.split(r"\n## (\d)\. ", text)
-    sections = {int(parts[i]): parts[i + 1] for i in range(1, len(parts) - 1, 2)}
-    for n in range(1, 8):
-        check(n in sections, f"section {n} present")
-    if not all(n in sections for n in (1, 2, 4, 5, 6)):
+    # Sections are found by their heading, so the checks don't depend on the prompt's order.
+    parts = re.split(r"\n## \d\. ", text)
+    sections = {}
+    for body in parts[1:]:
+        kind = next((k for k, title in SECTION_TITLES.items() if body.startswith(title)), None)
+        if kind:
+            sections[kind] = body
+    for kind in SECTION_TITLES:
+        check(kind in sections, f"{kind} section present")
+    if not all(k in sections for k in ("elements", "hebrew", "dignity", "spatial", "cards")):
         return
 
-    # ---------- section 1: elements ----------
+    # ---------- elements ----------
     elems = {}
-    for e, c in re.findall(r"\* \*\*(\w+)\s*\*\*:[^\d\n]*(\d+) \(", sections[1]):
+    for e, c in re.findall(r"\* \*\*(\w+)\s*\*\*:[^\d\n]*(\d+) \(", sections["elements"]):
         elems[e] = int(c)
     check(sum(elems.values()) == 75, "element counts sum to 75", str(elems))
     check(elems.get("Spirit", 0) == 0, "Spirit bucket is empty (no unparsed Majors)",
           f"Spirit = {elems.get('Spirit')}")
 
-    # ---------- section 2: spatial type totals ----------
-    totals = [int(x) for x in re.findall(r": `(\d+)`", sections[2])[:4]]
+    # ---------- spatial type totals ----------
+    totals = [int(x) for x in re.findall(r": `(\d+)`", sections["hebrew"])[:4]]
     check(len(totals) == 4 and sum(totals) == 75, "spatial type totals sum to 75", str(totals))
 
-    # ---------- section 4: dignity ----------
-    s4 = sections[4]
-    check(len(re.findall(r"^\*\*Operation \d", s4, re.M)) == 4, "section 4 has 4 operation headings")
+    # ---------- dignity ----------
+    s4 = sections["dignity"]
+    check(len(re.findall(r"^\*\*Operation \d", s4, re.M)) == 4, "dignity section has 4 operation headings")
     pairs = [(int(a), int(b)) for a, b in
              re.findall(r"^\* \*\*Pos (\d+) \(.*\) <-> Pos (\d+) \(.*\)\*\*: `Score", s4, re.M)]
     # Op 1's heap pairs (8), then neighbours within each wheel (11 + 11 + 35) plus the pair that
@@ -145,19 +155,18 @@ def main(path):
     crossing = [(a, b) for a, b in pairs if op_of(a) != op_of(b)]
     check(not crossing, "no dignity pair crosses an operation boundary", str(crossing[:5]))
 
-    # ---------- section 5: spatial ----------
-    s5 = sections[5]
-    check("No spatial layout" not in s5, "section 5 is populated")
+    # ---------- spatial ----------
+    s5 = sections["spatial"]
+    check("No spatial layout" not in s5, "spatial section is populated")
     seg_text = {}
     segs = re.split(r"^\*\*Operation (\d):[^\n]*\*\*\n", s5, flags=re.M)
     for i in range(1, len(segs) - 1, 2):
         seg_text[int(segs[i])] = segs[i + 1]
-    check(sorted(seg_text) == [1, 2, 3, 4], "section 5 has 4 operation headings", str(sorted(seg_text)))
+    check(sorted(seg_text) == [1, 2, 3, 4], "spatial section has 4 operation headings", str(sorted(seg_text)))
 
     if 1 in seg_text:
-        op1 = [(int(a), int(b)) for a, b in
-               re.findall(r"^\* \*\*Pos (\d+) \(.*\) <-> Pos (\d+) \(.*\)\*\*:", seg_text[1], re.M)]
-        check(op1 == OP1_PAIRS, f"Op 1 has its {len(OP1_PAIRS)} heap pairs", f"found {op1[:8]}")
+        check("A heap is not a wheel" in seg_text[1] and "Spatial Distance" not in seg_text[1],
+              "Op 1 says once that a heap has no angles")
     for n, expected in EXPECTED_ASPECT_PAIRS.items():
         t = seg_text.get(n, "")
         ring = [(int(a), int(b)) for a, b in
@@ -168,16 +177,16 @@ def main(path):
         groups = set(re.findall(r"^_(\w+) \(", t, re.M))
         check(groups == RING_ASPECTS, f"Op {n} has all four aspect groups", str(sorted(groups)))
 
-    # ---------- section 6: per-card French mapping ----------
-    blocks = re.split(r"^### Position (\d+): ", sections[6], flags=re.M)
+    # ---------- per-card French mapping ----------
+    blocks = re.split(r"^### Position (\d+): ", sections["cards"], flags=re.M)
     cards = {}
     for i in range(1, len(blocks) - 1, 2):
         cards[int(blocks[i])] = blocks[i + 1]
-    check(len(cards) == 75, "75 card blocks in section 6", f"found {len(cards)}")
+    check(len(cards) == 75, "75 card blocks in the cards section", f"found {len(cards)}")
 
     drawn_in_s6 = [re.search(r"- \*\*Card Drawn\*\*: (.+)", b).group(1).strip() for _, b in sorted(cards.items())
                    if re.search(r"- \*\*Card Drawn\*\*: (.+)", b)]
-    check(drawn_in_s6 == draws, "section 6 card order matches the draw log")
+    check(drawn_in_s6 == draws, "cards section order matches the draw log")
 
     majors_checked = 0
     bad = []
@@ -211,7 +220,7 @@ def main(path):
         warn("mapping is golden_dawn, French Major check skipped")
 
     # ---------- known data gaps (not failures) ----------
-    dots = len(re.findall(r"- \*\*Attribution\*\*: \.\.\.$", sections[6], re.M))
+    dots = len(re.findall(r"- \*\*Attribution\*\*: \.\.\.$", sections["cards"], re.M))
     check(dots == 0, "no card shows '...' as attribution", f"{dots} card(s)")
 
     # ---------- spatial type follows the letter shown ----------
