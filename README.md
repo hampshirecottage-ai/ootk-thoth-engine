@@ -44,6 +44,7 @@ ootk-thoth-engine/
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
 │   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
 │   ├── significator.py     # Book T significator: court card from description or birth date
+│   ├── sky.py              # Today's sky: Sun and Moon decans and their cards, local maths (/today)
 │   ├── visual.py           # Web report view: summary figures, drawable layouts, link notes
 │   ├── assets.py           # Static files: versioned URLs, cache headers, compression
 │   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
