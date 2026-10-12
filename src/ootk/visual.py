@@ -597,7 +597,8 @@ def link_view(layout_key, cards, aspects, pairs):
 
 
 def build_report_view(spread_key, spread_results, element_counts, dignity_matrix, spatial_matrix,
-                      macro_framework, framework_basis, sign_carriers=None, own_place=None):
+                      macro_framework, framework_basis, sign_carriers=None, own_place=None,
+                      significator_places=None):
     """Everything report.html needs beyond the raw prompt: summary first, then segments."""
     cards = [_card_view(item, i, dignity_matrix) for i, item in enumerate(spread_results)]
     all_aspects = []
@@ -645,6 +646,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "framework": macro_framework,
         "framework_basis": framework_basis,
         "own_place": [dict(c, sentence=own_place_sentence(c)) for c in own_place or ()],
+        "significator_places": list(significator_places or ()),
         "elements": element_rows,
         "spirit_secondary": spirit_bearing_cards(spread_results),
         "dignity": dignity,

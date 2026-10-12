@@ -102,3 +102,39 @@ def duplicate_in_operation(positions, titles):
             return title
         seen.add(key)
     return None
+
+
+# Book T's First Operation cuts the pack into four for the letters of the divine name; the pack
+# holding the significator shows which of these the matter turns on.
+IHVH_PACKS = (("Yod", "Wands", "work and business"), ("Heh", "Cups", "love and pleasure"),
+              ("Vau", "Swords", "trouble and loss"), ("Heh final", "Disks", "money and goods"))
+_POSITION_PREFIX = re.compile(r"^(\[Op \d+\] )?(\d+\. )?")
+
+
+def significator_places(cards, seed, positions, sig_card):
+    """Where the significator falls in each operation when that operation's whole shuffled
+    deck is laid out as Book T does, as [{"op", "place", "shown"}].
+
+    Operation 1 cuts the deck into four equal packs (Yod, Heh, Vau, Heh final). Later
+    operations deal the whole deck round, one card to each house, sign or decan in turn, so
+    the cards the spread shows are the first card dealt to each, and the draw is unchanged;
+    `shown` says the significator is one of those. Empty without a seed or a significator
+    position, since the place comes from the seed's shuffle."""
+    if not (seed and sig_card and has_significator_position(positions)):
+        return []
+    places = []
+    for op_num in sorted({operation_number(p) for p in positions}):
+        indices = [i for i, p in enumerate(positions) if operation_number(p) == op_num]
+        deck = [c["card_id"] for c in shuffle_deck(cards, operation_seed(seed, op_num))]
+        if sig_card["card_id"] not in deck:
+            return []
+        at = deck.index(sig_card["card_id"])
+        if indices[0] == 0:                    # the operation that opens on the significator
+            letter, suit, topic = IHVH_PACKS[at * len(IHVH_PACKS) // len(deck)]
+            places.append({"op": op_num, "place": f"the {letter} pack ({suit}: {topic})",
+                           "shown": True})
+        else:
+            pack = at % len(indices)
+            places.append({"op": op_num, "shown": at < len(indices),
+                           "place": _POSITION_PREFIX.sub("", positions[indices[pack]])})
+    return places

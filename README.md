@@ -19,7 +19,8 @@ It places the Hebrew letters and the Platonic solids in three-dimensional space 
   - Operation 2: 12 astrological houses
   - Operation 3: 12 zodiacal signs
   - Operation 4: 36 decans, each labelled with its ruler, sign and pip (Decan 1: Mars in Aries (2 of Wands))
-  - Each operation reshuffles the whole deck (Operation 1 keeps the seed's own order), so the significator can fall in a house, sign or decan, and a card may appear in more than one operation
+  - Each operation reshuffles the whole deck (Operation 1 keeps the seed's own order), and a card may appear in more than one operation
+  - **Where the significator falls**: for a seeded draw, each operation's whole shuffled deck is also laid out as Book T does (cut into four I H V H packs for Operation 1, then dealt round into 12, 12 and 36 packs), and the prompt and report say which pack holds the significator. The cards shown are the first dealt to each house, sign or decan, so this changes no draw
 - **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Cube of Space positions and King Scale colours follow the letter, so the swap moves the Emperor and the Star between the Aries and Aquarius edges.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.

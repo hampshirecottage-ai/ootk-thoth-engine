@@ -4,6 +4,8 @@
 **Operation/Spread:** 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
+**Where the Significator Falls:** the whole shuffled deck laid out as in Book T: Operation 1 cut into four packs for I H V H.
+  * Operation 1: the Yod pack (Wands: work and business)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution (Arcana Progression)
 **Framework Basis:** auto: no significant Sephirothic trend, default lens - r=-0.00, z=-0.00 (needs |z| >= 1.64), n=12 cards with a Sephira or path of their own (Majors and pips; courts are left out: a court takes its Hebrew letter through its zodiac sign, a Princess through her element, not through a position on the Tree)
@@ -215,7 +217,7 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
-4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Dodecahedron, Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5). Section 4 lists the neighbouring cards whose solids are duals (polyhedral inversions).
+4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Dodecahedron, Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5). Section 4 lists the neighbouring cards whose solids are duals (polyhedral inversions). Where the Significator Falls (in the header) is the Golden Dawn's key to each operation: read the pack, house, sign or decan it falls in as where the matter turns, alongside the cards drawn.
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 

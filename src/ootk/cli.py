@@ -10,6 +10,7 @@ from ootk.db import (
 from ootk.report import analyze_reading, generate_html_output
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
+    significator_places,
 )
 from ootk.significator import RANKS, SUITS, book_t_card
 from ootk.spreads import SPREADS, spread_positions
@@ -179,6 +180,7 @@ def run_spread_session():
         reading = analyze_reading(
             selected_spread["name"], spread_choice, query_prompt, significator_label, args.seed,
             spread_results, framework=args.framework, mapping_system=args.mapping, withheld=withheld,
+            significator_places=significator_places(cards, args.seed, target_positions, sig_card),
         )
         analytical_prompt = reading["analytical_prompt"]
 
