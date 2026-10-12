@@ -307,10 +307,13 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
                                "correcting it silently."),
         ("Macro Conceptual Framework", f"Read the spread through the lens of **{macro_framework}**."),
         ("Suggested order", " ".join([order] + notes)),
-        ("Closing Summary", "Conclude with a short summary of the key forces the calculations above "
-                            "show, then the outcome they lean toward and which findings point "
-                            "there. Offer it as a likely outcome to weigh, not a certainty, and "
-                            "leave the decision to the querent."),
+        ("Closing Summary", "Conclude with a summary that draws each part of the reading above "
+                            "together, then the outcome they lean toward and which findings point there. "
+                            "Offer it as a likely outcome to weigh, not a certainty, and leave the "
+                            "decision to the querent."),
+        ("Plain-Language Recap", "End with a short recap in simple everyday words, free of technical "
+                                 "terms, that someone new to tarot could follow: what the cards "
+                                 "show and the likely outcome."),
     ]
     md = ("SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM\n\n"
           "Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the "
