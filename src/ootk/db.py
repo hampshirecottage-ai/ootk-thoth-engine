@@ -122,7 +122,9 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
     under Thoth and Golden Dawn the attribution is thoth_cards.attribution (the Major's sign, planet or
     element, the pip's decan, the court's span), and the Platonic solid follows the card's
     element (analysis.apply_card_solid). That keeps the Thoth swap whole: under 'thoth' the
-    Emperor sits on Tzaddi but stays Aries, Fire and a Tetrahedron.
+    Emperor sits on Tzaddi but stays Aries, Fire and a Tetrahedron. The King Scale colour
+    follows the sign too (the Golden Dawn row, where each letter keeps its sign), so the
+    Emperor stays Scarlet and the Star Violet, as Thoth paints them.
     """
     query = """
     SELECT
@@ -143,7 +145,9 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
              THEN cf.attribution_french
              ELSE COALESCE(tc.attribution, c.element_or_planet_or_sign) END AS attribution,
         c.element_or_planet_or_sign AS element,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.king_scale_color ELSE c.king_scale_color END AS king_scale_color,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.king_scale_color ELSE gd.king_scale_color END AS king_scale_color,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.attributions ELSE gd.attributions END
+            ->> 'king_scale_hex' AS king_scale_hex,
         c.attributions,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_type ELSE c.spatial_type END AS spatial_type,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE c.spatial_dimension END AS spatial_dimension,

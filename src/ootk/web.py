@@ -24,7 +24,7 @@ import psycopg
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ootk import PROJECT_ROOT as BASE_DIR
-from ootk.analysis import WITHHELD_MAX, derive_primary_element, withheld_summary
+from ootk.analysis import WITHHELD_MAX, derive_primary_element, king_scale_hex, withheld_summary
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
@@ -572,7 +572,7 @@ def export_card(card_data):
     of its path (plants, perfumes, gods and some 30 more, about 1.3 KB a card) that nothing in a
     reading uses; only its King Scale hex colour is kept."""
     row = {k: v for k, v in card_data.items() if k != "attributions"}
-    row["king_scale_hex"] = (card_data.get("attributions") or {}).get("king_scale_hex")
+    row["king_scale_hex"] = king_scale_hex(card_data)
     return row
 
 

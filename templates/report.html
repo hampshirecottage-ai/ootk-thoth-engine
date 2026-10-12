@@ -403,7 +403,7 @@
 
         {% if S.significator_places %}
         <h3 style="margin-top:18px">Where the significator falls</h3>
-        <p class="muted" style="margin-top:0">The Golden Dawn read each operation from where the significator falls when the whole shuffled deck is laid out: cut into four packs for Operation 1, then dealt round one card to each house, sign or decan. The cards shown are the first dealt to each.</p>
+        <p class="muted" style="margin-top:0">The Golden Dawn read each operation from where the significator falls when the whole shuffled deck is laid out. For Operation 1 the same shuffle is cut into four packs for I&nbsp;H&nbsp;V&nbsp;H and the pack holding the significator is named; the cards shown are still the 15-card heap. Later operations deal the deck round one card to each house, sign or decan, and the cards shown are the first dealt to each.</p>
         <ul class="own-place">
             {% for p in S.significator_places %}<li><strong>Operation {{ p.op }}:</strong> {{ p.place }}{% if p.op > 1 %}{{ ', the card drawn there' if p.shown else ', deeper in that pack' }}{% endif %}</li>{% endfor %}
         </ul>

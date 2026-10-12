@@ -4,7 +4,7 @@
 **Operation/Spread:** Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
-**Where the Significator Falls:** the whole shuffled deck laid out as in Book T: Operation 1 cut into four packs for I H V H; later operations dealt round one card to each place in turn, so the cards in section 1 are the first card dealt to each.
+**Where the Significator Falls:** Book T's key to each operation, worked out from the same shuffle. For Operation 1 the shuffled deck is cut into four packs for I H V H and the pack holding the Significator is named; the cards drawn for Operation 1 are still the 15-card heap. Later operations deal the deck round one card to each house, sign or decan, so the cards in section 1 are the first card dealt to each.
   * Operation 1: the Yod pack (Wands: work and business)
   * Operation 2: Third House (Local Mind & Travel), deeper in that pack
   * Operation 3: Leo, deeper in that pack
@@ -42,7 +42,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Scarlet
+- **King Scale Color**: Violet
 
 ### Position 3: [Op 1] 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -280,7 +280,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Scarlet
+- **King Scale Color**: Violet
 
 ### Position 30: [Op 3] 3. Gemini
 - **Card Drawn**: Prince of Swords
@@ -290,7 +290,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Scarlet
+- **King Scale Color**: Violet
 
 ### Position 31: [Op 3] 4. Cancer
 - **Card Drawn**: XIV - Art
@@ -554,7 +554,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Violet
+- **King Scale Color**: Scarlet
 
 ### Position 60: [Op 4] Decan 21: Jupiter in Libra (4 of Swords)
 - **Card Drawn**: 4 of Wands - Completion
@@ -572,7 +572,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Scarlet
+- **King Scale Color**: Violet
 
 ### Position 62: [Op 4] Decan 23: Sun in Scorpio (6 of Cups)
 - **Card Drawn**: 10 of Wands - Oppression
@@ -694,7 +694,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Violet
+- **King Scale Color**: Scarlet
 
 ### Position 75: [Op 4] Decan 36: Mars in Pisces (10 of Cups)
 - **Card Drawn**: 5 of Swords - Defeat

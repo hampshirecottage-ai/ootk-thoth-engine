@@ -4,7 +4,7 @@
 **Operation/Spread:** 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
-**Where the Significator Falls:** the whole shuffled deck laid out as in Book T: Operation 1 cut into four packs for I H V H.
+**Where the Significator Falls:** Book T's key to each operation, worked out from the same shuffle. For Operation 1 the shuffled deck is cut into four packs for I H V H and the pack holding the Significator is named; the cards drawn for Operation 1 are still the 15-card heap.
   * Operation 1: the Yod pack (Wands: work and business)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution (Arcana Progression)
@@ -35,7 +35,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Scarlet
+- **King Scale Color**: Violet
 
 ### Position 3: 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce

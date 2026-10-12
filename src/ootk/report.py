@@ -349,10 +349,12 @@ OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trum
                    "house (the house of that sign, Aries = 1st). The chance is exact for a random "
                    "deal from the 78 cards.")
 
-SIGNIFICATOR_PLACES_INTRO = ("the whole shuffled deck laid out as in Book T: Operation 1 cut into "
-                             "four packs for I H V H")
-SIGNIFICATOR_PLACES_DEALT = ("; later operations dealt round one card to each place in turn, so "
-                             f"the cards in section {CARDS} are the first card dealt to each")
+SIGNIFICATOR_PLACES_INTRO = ("Book T's key to each operation, worked out from the same shuffle. For "
+                             "Operation 1 the shuffled deck is cut into four packs for I H V H and the "
+                             "pack holding the Significator is named; the cards drawn for Operation 1 "
+                             "are still the 15-card heap")
+SIGNIFICATOR_PLACES_DEALT = (". Later operations deal the deck round one card to each house, sign or "
+                             f"decan, so the cards in section {CARDS} are the first card dealt to each")
 
 def significator_places_markdown(places):
     if not places:
