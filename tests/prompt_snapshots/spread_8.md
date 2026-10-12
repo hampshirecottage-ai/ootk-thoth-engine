@@ -216,7 +216,8 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
 4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Dodecahedron, Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5). Section 4 lists the neighbouring cards whose solids are duals (polyhedral inversions).
-5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
+5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
+6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 
 **How to read the numbers:**
 * `Score` in section 5 is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other).
