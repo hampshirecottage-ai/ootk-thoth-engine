@@ -354,9 +354,9 @@ def test_form_errors_render_a_page_with_a_way_back(client):
 
 
 def test_pages_link_to_bug_report_and_contact(client):
-    for html in (client.get("/").text, post(client).text):              # settings and report pages
-        assert 'class="site-footer"' in html
-        assert "/issues/new?template=bug_report.yml" in html and "/discussions" in html
+    for page in (client.get("/").text, post(client).text):              # settings and report pages
+        assert 'class="site-footer"' in page
+        assert "/issues/new?template=bug_report.yml" in page and "/discussions" in page
 
 
 def test_pages_have_description_previews_and_icons(client, monkeypatch):
