@@ -2,6 +2,7 @@
 Needs: pip install -e ".[dev]"
 """
 import json
+import re
 import time
 from contextlib import nullcontext
 from pathlib import Path
@@ -750,11 +751,11 @@ def build_report(tmp_path, monkeypatch, topic="Love & War <3", pos_prefix="[Op 1
     counts = analysis.analyze_elemental_balance(results)
     dignity = analysis.calculate_elemental_dignities(results)
     spatial = analysis.analyze_spatial_vectors(results, "3")
-    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
     solids, topo, duals = analysis.analyze_platonic_topology(results)
     framework, basis = analysis.evaluate_macro_framework(results)
     prompt = report.build_analytical_prompt("Triad <test>", topic, "Knight of Swords", "1568", results, counts,
-                                        dignity, spatial, sdist, sdet, solids, topo, duals, framework,
+                                        dignity, spatial, sdist, solids, duals, framework,
                                         framework_basis=basis)
     report.generate_html_output(7, "Triad <test>", topic, prompt)
     return prompt, tmp_path / "output" / "ootk_output_7.html"
@@ -827,19 +828,19 @@ def test_prompt_states_repeated_facts_once():
                for i, c in enumerate([minor, major])]
     counts = analysis.analyze_elemental_balance(results)
     solids, topo, duals = analysis.analyze_platonic_topology(results)
-    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
     heap = [{"pair": "Pos 1 <-> Pos 2", "distance": 0.5, "delta_angle": None, "aspect": "Heap Pair",
              "description": "Neighbours in the deal", "score_modifier": 0}] * 2
     prompt = report.build_analytical_prompt("Test", "גְּבוּרָה?", "", "1", results, counts, [], heap,
-                                            sdist, sdet, solids, topo, duals)
+                                            sdist, solids, duals)
     assert "**Query/Intent Topic:** גְּבוּרָה?" in prompt          # the querent's text is untouched
     body = prompt.split("**Active Mapping System:**", 1)[1]
     assert "גבורה (Geburah)" in body and "גְּבוּרָה" not in body  # points dropped, name kept
     assert "Sephira (both systems)" not in prompt and "`Sephira_Point` (Nodal" not in prompt
     assert prompt.count("Faces 4, Vertices 4 | Dual: `Tetrahedron` | Role: Node") == 1
     assert prompt.count("- **Platonic Solid**: `Tetrahedron`") == 2
-    assert prompt.count("Heap Pair - Neighbours in the deal") == 1
-    assert prompt.count("* **Pos 1 <-> Pos 2**: Spatial Distance `0.5` units") == 2
+    assert prompt.count("A heap is not a wheel") == 1      # one sentence, not its drawing distances
+    assert "Spatial Distance" not in prompt
     assert "Comparative Hebrew Mapping" in prompt and "Spatial Dimension**: `Simple_Edge`" in prompt
 
 
@@ -901,10 +902,10 @@ def _elements_section(cards):
                for i, c in enumerate(cards)]
     counts = analysis.analyze_elemental_balance(results)
     solids, topo, duals = analysis.analyze_platonic_topology(results)
-    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
     prompt = report.build_analytical_prompt("Test", "", "", "1", results, counts, [], [],
-                                            sdist, sdet, solids, topo, duals)
-    return counts, prompt.split("## 1. ELEMENTAL VECTOR DISTRIBUTION", 1)[1].split("---", 1)[0]
+                                            sdist, solids, duals)
+    return counts, prompt.split("## 2. ELEMENTAL VECTOR DISTRIBUTION", 1)[1].split("---", 1)[0]
 
 
 def test_empty_spirit_row_is_hidden_but_secondary_spirit_still_named():
@@ -2113,11 +2114,47 @@ def test_headline_says_aspects_are_set_by_the_layout(key, n):
 def test_prompt_says_layout_aspects_are_fixed():
     results, dignity, spatial = _spread_parts("6", [fake_card(f"C{i}") for i in range(7)])
     counts = analysis.analyze_elemental_balance(results)
-    sdist, sdet = analysis.analyze_hebrew_spatial_distribution(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
     solids, topo, duals = analysis.analyze_platonic_topology(results, "6")
     prompt = report.build_analytical_prompt("Hexagram", "", "", "1", results, counts, dignity, spatial,
-                                            sdist, sdet, solids, topo, duals)
+                                            sdist, solids, duals)
     assert "same in every reading of this spread" in prompt
+
+
+def _prompt_for(key, n, topic=""):
+    cards = [fake_card(f"C{i}", ("Wands", "Cups", "Swords", "Disks")[i % 4]) for i in range(n)]
+    results = [{"position_number": i + 1, "position_name": p, "card_data": c}
+               for i, (p, c) in enumerate(zip(spreads.spread_positions(key), cards))]
+    return report.analyze_reading("Test", key, topic, "", "1", results)["analytical_prompt"]
+
+
+def test_prompt_lists_the_cards_first_and_ends_with_the_instructions():
+    prompt = _prompt_for("3", 3)
+    headings = re.findall(r"^## (\d)\. (\S+)", prompt, re.M)
+    assert [int(n) for n, _ in headings] == list(range(1, 8))
+    assert headings[0][1] == "CARD-BY-CARD" and headings[-1][1] == "SYNTHESIS"
+    assert "Card Spatial Vectors" not in prompt            # each card's letter is in section 1 only
+
+
+def test_instructions_name_the_question_only_when_there_is_one():
+    asked = _prompt_for("3", 3, topic="Which way?")
+    assert "Relate the reading to the querent's question" in asked
+    assert "No question was given" in _prompt_for("3", 3)
+    assert "Use only this data" in asked and "-2 contrary" in asked
+
+
+def test_centre_pairs_are_left_out_of_the_geometry():
+    triad = _prompt_for("3", 3)
+    assert "Centre Node" not in triad and "Every pair in this layout meets at the centre card" in triad
+    hexagram = _prompt_for("6", 7)
+    assert "Centre Node" not in hexagram and "Geometric Aspect: **Trine" in hexagram
+
+
+def test_numbers_key_names_only_the_aspects_in_the_reading():
+    hexagram = _prompt_for("6", 7)
+    key = hexagram.split("**How to read the numbers:**", 1)[1]
+    assert "Sextile +1" in key and "Quincunx" not in key
+    assert "`Modifier`" not in _prompt_for("8", 15)          # a heap has no aspects
 
 
 def test_spreads_4_and_5_share_one_cross():

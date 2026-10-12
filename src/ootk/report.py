@@ -10,6 +10,7 @@ from ootk.analysis import (
     derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
     spirit_bearing_cards,
 )
+from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.spreads import ZODIAC_SIGNS
 
 # The report header and the web form both name the systems from here, so the label always
@@ -55,9 +56,8 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
     own_place = own_place_check(spread_results, spread_key)
     analytical_prompt = build_analytical_prompt(
         spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
-        dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts,
-        topology_details, dual_pairings, macro_framework, mapping_system=mapping_system,
-        framework_basis=framework_basis, withheld=withheld, own_place=own_place,
+        dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework,
+        mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -68,13 +68,17 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         "own_place": own_place, "analytical_prompt": analytical_prompt,
     }
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, spatial_details, solid_counts, topology_details, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None):
-    total_cards = sum(element_counts.values()) or 1
+# Section numbers, so the notes that point from one section to another stay right if the
+# order changes. The cards come first: every later section names positions, and the AI
+# reads them better once it knows which card sits where.
+CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
+
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None):
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
     end_marker = end_of_prompt_marker(len(spread_results))
-    prompt_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
+    header_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists {_positions(len(spread_results))} and its very last line is `{end_marker}`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
 **Operation/Spread:** {spread_name}
@@ -84,12 +88,66 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
 """
-    header_md = prompt_md
-    prompt_md = """
----
+    legend = _solid_legend(spread_results)
+    sections = (                     # in the order of the numbers above
+        _cards_md(spread_results, legend),
+        _elements_md(spread_results, element_counts, withheld),
+        _hebrew_md(spatial_dist),
+        _solids_md(solid_counts, legend, dual_pairings),
+        _dignity_md(dignity_matrix),
+        _spatial_md(spatial_matrix),
+        _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
+                         spatial_matrix, solid_counts, dual_pairings, withheld, own_place),
+    )
+    prompt_md = "".join(f"\n---\n\n## {n}. {body}" for n, body in enumerate(sections, start=1))
+    prompt_md += f"\n{end_marker}\n"
+    # The header keeps the querent's own text exactly as typed.
+    return header_md + strip_hebrew_points(prompt_md)
 
-## 1. ELEMENTAL VECTOR DISTRIBUTION
-"""
+def _cards_md(spread_results, legend):
+    md = "CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
+    if any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
+        md += ("Minor (pip) cards sit on the same Sephira in every mapping system and are nodal "
+               "Sephira points on the Cube of Space, so their entries name the Sephira once "
+               "and leave out the spatial dimension.\n\n")
+
+    for item in spread_results:
+        data = item["card_data"]
+        letter_val = data.get('hebrew_letter')
+        letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
+
+        gd_letter = data.get('gd_hebrew_letter') or 'N/A'
+        thoth_letter = data.get('thoth_hebrew_letter') or gd_letter
+        french_letter = data.get('french_hebrew_letter') or 'N/A'
+
+        md += f"### Position {item['position_number']}: {item['position_name']}\n"
+        md += f"- **Card Drawn**: {data['title']}\n"
+        md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
+        md += f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
+        md += f"- **Attribution**: {data['attribution']}\n"
+        minor = data['arcana_type'] == 'Minor'
+        if minor:
+            if gd_letter != letter_val:
+                md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
+        else:
+            md += f"- **Comparative Hebrew Mapping**: Thoth: `{thoth_letter}` | Golden Dawn: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
+        stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
+        if not stype and minor:
+            stype, sdim = _MINOR_SPATIAL
+        if not (minor and (stype, sdim) == _MINOR_SPATIAL):
+            md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
+        solid = data.get('platonic_solid', 'N/A')
+        if solid in legend:
+            md += f"- **Platonic Solid**: `{solid}`\n"
+        else:
+            md += f"- **Platonic Topology**: `{solid}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
+            md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
+        md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
+    return md
+
+def _elements_md(spread_results, element_counts, withheld):
+    total_cards = sum(element_counts.values()) or 1
+    md = "ELEMENTAL VECTOR DISTRIBUTION\n"
     secondary = spirit_bearing_cards(spread_results)
     for elem, count in element_counts.items():
         if elem == "Spirit" and not count:
@@ -97,7 +155,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
             # secondary quality: name those cards instead of printing an empty 0% row.
             if secondary:
                 cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
-                prompt_md += f"* **Spirit**: secondary quality only, on {len(secondary)}: {cards}\n"
+                md += f"* **Spirit**: secondary quality only, on {len(secondary)}: {cards}\n"
             continue
         pct = (count / total_cards) * 100
         bar = "█" * int(count * 2)
@@ -105,142 +163,174 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         if elem == "Spirit" and secondary:
             cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
             line += f" | secondary on {len(secondary)}: {cards}"
-        prompt_md += line + "\n"
-
+        md += line + "\n"
     if withheld:
-        prompt_md += withheld_markdown(withheld)
+        md += withheld_markdown(withheld)
+    return md
 
-    prompt_md += "\n---\n\n## 2. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
-    prompt_md += f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
-    prompt_md += f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
-    prompt_md += f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
-    prompt_md += f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n\n"
-    prompt_md += "**Card Spatial Vectors:**\n"
-    for sd in spatial_details:
-        prompt_md += f"- Pos {sd['position']} ({sd['title']}): Letter `{sd['letter']}` -> **{sd['spatial_type']}** [{sd['spatial_dimension']}]\n"
+def _hebrew_md(spatial_dist):
+    # Totals only: each card's letter and spatial type are in its section 1 entry.
+    return ("HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
+            f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
+            f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
+            f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
+            f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n"
+            f"\nSection {CARDS} gives each card's letter and spatial type.\n")
 
-    prompt_md += "\n---\n\n## 3. PLATONIC SOLID TOPOLOGY MATRIX\n"
+def _solids_md(solid_counts, legend, dual_pairings):
+    md = "PLATONIC SOLID TOPOLOGY MATRIX\n"
     for solid, count in solid_counts.items():
-        prompt_md += f"* **{solid:20s}**: `{count}`\n"
+        if count:
+            md += f"* **{solid:20s}**: `{count}`\n"
+    absent = [s for s, c in solid_counts.items() if not c and s != "Unmapped"]
+    if absent:
+        md += f"* None drawn: {', '.join(absent)}\n"
 
-    legend = _solid_legend(spread_results)
     if legend:
-        prompt_md += "\n**Solid properties** (fixed for each solid; section 6 names only the card's solid):\n"
+        md += f"\n**Solid properties** (fixed for each solid; section {CARDS} names only the card's solid):\n"
         for solid, (faces, vertices, dual, role) in legend.items():
-            prompt_md += f"* **{solid}**: Faces {faces}, Vertices {vertices} | Dual: `{dual}` | Role: {role}\n"
+            md += f"* **{solid}**: Faces {faces}, Vertices {vertices} | Dual: `{dual}` | Role: {role}\n"
 
     if dual_pairings:
-        prompt_md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
+        md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
         for dp in dual_pairings:
-            prompt_md += f"* {dp}\n"
+            md += f"* {dp}\n"
+    return md
 
-    prompt_md += "\n---\n\n## 4. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+def _dignity_md(dignity_matrix):
+    md = "PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    if not dignity_matrix:
+        return md + "* Only one card was drawn, so there are no pairs to score.\n"
     last_segment = None
     for d in dignity_matrix:
         if d.get("segment_name") and d["segment_name"] != last_segment:
-            prompt_md += f"\n**{d['segment_name']}**\n\n"
+            md += f"\n**{d['segment_name']}**\n\n"
             last_segment = d["segment_name"]
-        score_str = f"+{d['score']}" if d['score'] > 0 else str(d['score'])
-        prompt_md += f"* **{d['pair']}**: `Score: {score_str}` | {d['relationship']}\n"
+        md += f"* **{d['pair']}**: `Score: {_signed(d['score'])}` | {d['relationship']}\n"
+    return md
 
-    prompt_md += "\n---\n\n## 5. SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
-    if any(s.get("pair_mode") == "aspect" for s in spatial_matrix or ()):
-        prompt_md += ("\nOn the house, sign and decan wheels the aspect between two positions is "
-                      "fixed by the layout and is the same in every reading; the `cards:` part "
-                      "(the elemental dignity of the two cards drawn there) is this reading's.\n")
-    if any(s.get("pair_mode") == "consecutive" and s.get("delta_angle") is not None
-           and s.get("aspect") != "Centre Node"
-           for s in spatial_matrix or ()):
-        prompt_md += ("\nThe aspects below come from where the positions sit in the spread's layout, "
-                      "not from the cards, so they are the same in every reading of this spread. "
-                      "This reading's cards are scored in section 4.\n")
-    if spatial_matrix:
-        last_segment = None
-        last_aspect = None
-        first_in_segment = False
-        for s in spatial_matrix:
-            if s.get("segment_name") and s["segment_name"] != last_segment:
-                prompt_md += f"\n**{s['segment_name']}**\n"
-                last_segment = s["segment_name"]
-                last_aspect = None
-                first_in_segment = True
-            else:
-                first_in_segment = False
-            mod_str = f"+{s['score_modifier']}" if s['score_modifier'] > 0 else str(s['score_modifier'])
-            if s.get("pair_mode") == "aspect":
-                # Ring layouts: pairs are grouped under their aspect, one line per pair.
-                if s["aspect"] != last_aspect:
-                    prompt_md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
-                    last_aspect = s["aspect"]
-                cards = f"{_signed(s['card_score'])} {s['card_relationship']}" if "card_score" in s else ""
-                prompt_md += f"* {s['pair']}" + (f" | cards: {cards}" if cards else "") + "\n"
-            elif s["delta_angle"] is None:
-                # Heap layouts: no angle, so every pair shares one aspect; state it once.
-                if s["aspect"] != last_aspect:
-                    prompt_md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
-                    last_aspect = s["aspect"]
-                prompt_md += f"* **{s['pair']}**: Spatial Distance `{s['distance']}` units\n"
-            else:
-                prompt_md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
-                prompt_md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
-                prompt_md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
+def _is_heap(s):
+    return s.get("pair_mode") != "aspect" and s["delta_angle"] is None
+
+def _spatial_md(spatial_matrix):
+    md = "SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
+    # A pair touching a centre card has no angle, and a heap's drawing coordinates are not a
+    # wheel, so neither says anything about the reading: they are left out.
+    shown = [s for s in spatial_matrix or () if s.get("aspect") != "Centre Node"]
+    if not spatial_matrix:
+        return md + ("* No spatial layout is defined for this spread (or only one card was drawn), "
+                     "so no geometric relations were evaluated.\n")
+    if not shown:
+        return md + (f"* Every pair in this layout meets at the centre card, so no pair makes an angle "
+                     f"and there is no geometry to report. The cards' pairs are scored in section {DIGNITY}.\n")
+    if any(s.get("pair_mode") == "aspect" for s in shown):
+        md += ("\nOn the house, sign and decan wheels the aspect between two positions is "
+               "fixed by the layout and is the same in every reading; the `cards:` part "
+               "(the elemental dignity of the two cards drawn there) is this reading's.\n")
+    if any(s.get("pair_mode") == "consecutive" and s["delta_angle"] is not None for s in shown):
+        md += ("\nThe aspects below come from where the positions sit in the spread's layout, "
+               "not from the cards, so they are the same in every reading of this spread. "
+               f"This reading's cards are scored in section {DIGNITY}.\n")
+    last_segment = None
+    last_aspect = None
+    first_in_segment = False
+    heaps_noted = set()
+    for s in shown:
+        if s.get("segment_name") and s["segment_name"] != last_segment:
+            md += f"\n**{s['segment_name']}**\n"
+            last_segment = s["segment_name"]
+            last_aspect = None
+            first_in_segment = True
+        else:
+            first_in_segment = False
+        mod_str = _signed(s['score_modifier'])
+        if s.get("pair_mode") == "aspect":
+            # Ring layouts: pairs are grouped under their aspect, one line per pair.
+            if s["aspect"] != last_aspect:
+                md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
+                last_aspect = s["aspect"]
+            cards = f"{_signed(s['card_score'])} {s['card_relationship']}" if "card_score" in s else ""
+            md += f"* {s['pair']}" + (f" | cards: {cards}" if cards else "") + "\n"
+        elif _is_heap(s):
+            # One sentence per heap instead of its pairs' drawing distances.
+            if last_segment not in heaps_noted:
+                heaps_noted.add(last_segment)
+                md += (f"\n* A heap is not a wheel: its cards make no angles. Its named pairs are "
+                       f"scored in section {DIGNITY}.\n")
+        else:
+            md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
+            md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"
+            md += f"  - Geometric Aspect: **{s['aspect']}** ({s['description']}) [Modifier: `{mod_str}`]\n"
+    return md
+
+def _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
+                     spatial_matrix, solid_counts, dual_pairings, withheld, own_place):
+    """What the AI is asked to do. Each rule names only what this reading contains."""
+    operations = len({d["segment_name"] for d in dignity_matrix if d.get("segment_name")})
+    aspects = {}
+    for s in spatial_matrix or ():
+        if s.get("aspect_name"):
+            aspects.setdefault(s["aspect_name"], s["score_modifier"])
+    solids = [s for s, c in solid_counts.items() if c and s != "Unmapped"]
+
+    if query_prompt:
+        question = ("Relate the reading to the querent's question, given as the Query/Intent Topic "
+                    "in the header.")
     else:
-        prompt_md += "* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.\n"
+        question = "No question was given, so describe the forces the reading shows in general."
+    if len(spread_results) == 1:
+        order = (f"Start with the card in section {CARDS} and its correspondences, then its element, "
+                 f"letter and solid (sections {ELEMENTS}-{SOLIDS}).")
+    else:
+        order = (f"First the overall balance of elements, Cube of Space letters and solids "
+                 f"({', '.join(solids) or 'none mapped'}) in sections {ELEMENTS}-{SOLIDS}; then each "
+                 f"position in turn (its name says what it stands for, and section {CARDS} says which "
+                 f"card fell there); then the strongest and most strained pairs (section {DIGNITY}" + (f" and the aspects in section {SPATIAL}" if aspects else "")
+                 + ").")
+        if operations > 1:
+            order += " Take the operations one at a time, in order, then draw them together."
+    notes = []
+    if dual_pairings:
+        notes.append(f"Section {SOLIDS} lists the neighbouring cards whose solids are duals (polyhedral inversions).")
+    if own_place:
+        notes.append("The Own-Place Check in the header compares the cards on their own place with "
+                     "chance; give it weight only where it is marked unusual.")
+    if withheld:
+        notes.append(f"With so few cards left out, the withheld cards in section {ELEMENTS} say as much "
+                     f"as the element counts.")
 
-    prompt_md += "\n---\n\n## 6. CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
-    if any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
-        prompt_md += ("Minor (pip) cards sit on the same Sephira in every mapping system and are nodal "
-                      "Sephira points on the Cube of Space, so their entries name the Sephira once "
-                      "and leave out the spatial dimension.\n\n")
+    rules = [
+        ("The question", question),
+        ("Use only this data", f"Work from the correspondences listed here, under the {mapping_label} "
+                               "system. Do not swap in meanings or attributions from another deck or "
+                               "system; if something here looks inconsistent, say so rather than "
+                               "correcting it silently."),
+        ("Macro Conceptual Framework", f"Read the spread through the lens of **{macro_framework}**."),
+        ("Suggested order", " ".join([order] + notes)),
+        ("Closing Summary", "Conclude with a short summary of the key forces the calculations above "
+                            "show. Describe tendencies and tensions between the cards rather than "
+                            "predicting a fixed outcome, and leave the conclusion to the querent."),
+    ]
+    md = ("SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM\n\n"
+          "Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the "
+          "calculations above, following these rules:\n\n")
+    md += "".join(f"{i}. **{name}:** {text}\n" for i, (name, text) in enumerate(rules, start=1))
 
-    for item in spread_results:
-        data = item["card_data"]
-        letter_val = data.get('hebrew_letter')
-        letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
-        
-        gd_letter = data.get('gd_hebrew_letter') or 'N/A'
-        thoth_letter = data.get('thoth_hebrew_letter') or gd_letter
-        french_letter = data.get('french_hebrew_letter') or 'N/A'
-
-        prompt_md += f"### Position {item['position_number']}: {item['position_name']}\n"
-        prompt_md += f"- **Card Drawn**: {data['title']}\n"
-        prompt_md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
-        prompt_md += f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
-        prompt_md += f"- **Attribution**: {data['attribution']}\n"
-        minor = data['arcana_type'] == 'Minor'
-        if minor:
-            if gd_letter != letter_val:
-                prompt_md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
-        else:
-            prompt_md += f"- **Comparative Hebrew Mapping**: Thoth: `{thoth_letter}` | Golden Dawn: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
-        stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
-        if not stype and minor:
-            stype, sdim = _MINOR_SPATIAL
-        if not (minor and (stype, sdim) == _MINOR_SPATIAL):
-            prompt_md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
-        solid = data.get('platonic_solid', 'N/A')
-        if solid in legend:
-            prompt_md += f"- **Platonic Solid**: `{solid}`\n"
-        else:
-            prompt_md += f"- **Platonic Topology**: `{solid}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
-            prompt_md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
-        prompt_md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
-
-    prompt_md += f"""---
-
-## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
-
-Act as an expert Hermetic scholar and Tarot authority. Synthesize the above spread matrix following these dynamic rules:
-
-1. **Active System Context ({mapping_label}):** Analyze how the cards function under the `{mapping_system}` mapping.
-2. **Hebrew Letter Spatial Geometry & Platonic Topology:** Consider the balance between Mother Axes, Double Directions, Simple Edges, and the active Platonic Solid geometries (Tetrahedron, Cube, Octahedron, Icosahedron, Dodecahedron).
-3. **Macro Conceptual Framework Context:** Interpret this spread through the Lens of **{macro_framework}**.
-4. **Elemental Dignity & Spatial Geometry Analysis:** Utilize the Pairwise Dignity interactions, Spatial Vector Aspects, and Polyhedral Dual Inversions calculated above.
-5. **Closing Summary:** Conclude with a short summary of the key forces the calculations above show. Describe tendencies and tensions between the cards rather than predicting a fixed outcome, and leave the conclusion to the querent.
-"""
-    # The header keeps the querent's own text exactly as typed.
-    prompt_md += f"\n{end_marker}\n"
-    return header_md + strip_hebrew_points(prompt_md)
+    key = []
+    if dignity_matrix:
+        key.append(f"* `Score` in section {DIGNITY}" + (f" (and `cards:` in section {SPATIAL})" if any(
+            "card_score" in s for s in spatial_matrix or ()) else "")
+                   + f" is the pair's Book T elemental dignity: {_signed(DIGNITY_SAME)} same element (strong), "
+                   f"{_signed(DIGNITY_FRIENDLY)} friendly, {DIGNITY_NEUTRAL} neutral (Spirit), "
+                   f"{_signed(DIGNITY_CONTRARY)} contrary (ill-dignified: each card weakens the other).")
+    if aspects:
+        named = ", ".join(f"{a} {_signed(m)}" for a, m in
+                          sorted(aspects.items(), key=lambda kv: [x.name for x in ASPECTS].index(kv[0])))
+        key.append(f"* `Modifier` (section {SPATIAL}) is the weight of the aspect itself ({named}). It "
+                   f"describes the two positions, not the cards, and is not added to the dignity score.")
+    key.append(f"* Section {ELEMENTS} counts each card once, under its primary element.")
+    md += "\n**How to read the numbers:**\n" + "\n".join(key) + "\n"
+    return md
 
 OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a "
                    "Knight, Queen or Prince by the sign that gives it its letter) or its natural "

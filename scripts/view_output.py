@@ -112,18 +112,6 @@ def render_hebrew(section):
             counts.add_row(escape(m.group(1)), m.group(2))
     console.print(counts)
 
-    vectors = Table(title="Card Spatial Vectors", border_style="magenta", header_style="bold cyan")
-    vectors.add_column("Card", style="bold white")
-    vectors.add_column("Letter", style="cyan")
-    vectors.add_column("Type / Dimension", style="green")
-    for line in section.split("\n"):
-        m = re.match(r"- Pos (\d+) \((.+?)\): Letter `(.+?)` -> \*\*(.+?)\*\* \[(.+?)\]", line.strip())
-        if m:
-            pos, title, letter, stype, sdim = m.groups()
-            vectors.add_row(escape(f"{pos}. {title}"), escape(letter), escape(f"{stype} [{sdim}]"))
-    if vectors.row_count:
-        console.print(vectors)
-
 
 def render_platonic(section):
     table = Table(title="Platonic Solid Topology", border_style="cyan", header_style="bold magenta")
@@ -164,18 +152,8 @@ def render_spatial(section):
     table.add_column("Mod", justify="center", width=5)
 
     pair = dist = angle = None
-    group = None      # heap layouts state their shared aspect once, above their pairs
     for raw in section.split("\n"):
         line = raw.strip()
-        m = re.match(r"_(.+?) - (.+) \[Modifier: `([+-]?\d+)`\]_$", line)
-        if m:
-            group = m.groups()
-            continue
-        m = re.match(r"\* \*\*(.+?)\*\*: Spatial Distance `(.+?)` units$", line)
-        if m and group:
-            aspect, desc, mod = group
-            table.add_row(escape(m.group(1)), m.group(2), "", escape(f"{aspect} - {desc}"), score_style(mod))
-            continue
         m = re.match(r"\* \*\*(.+?)\*\*:$", line)
         if m:
             pair = m.group(1)

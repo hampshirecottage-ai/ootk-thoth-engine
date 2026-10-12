@@ -4,6 +4,7 @@ Skipped unless OOTK_TEST_DB=1, so the default suite stays database-free. To run:
     createdb ootk_test && psql -d ootk_test -f database/schema.sql
     OOTK_TEST_DB=1 DB_NAME=ootk_test python -m pytest tests/test_db_integration.py -v
 """
+import json
 import os
 import re
 
@@ -412,3 +413,19 @@ def test_every_degree_of_the_zodiac_has_its_three_sky_cards(conn):
             assert p[key], (k / 2, key)
             seen[key].add(p[key])
     assert [len(seen[k]) for k in ("pip", "trump", "court")] == [36, 12, 12]
+
+
+def test_prompt_snapshot_fixture_matches_the_database(conn):
+    """tests/fixtures/reference_cards.json lets test_prompt_snapshots build real prompts with
+    no database. It must stay a copy of what the database returns; after a migration that
+    changes card data, rewrite it with OOTK_UPDATE_SNAPSHOTS=1 and re-check the snapshots."""
+    deck = [dict(c) for c in db.fetch_all_cards(conn)]
+    rows = db.fetch_cards_correspondences(conn, [c["title"] for c in deck], system="thoth")
+    current = {"deck": deck, "rows": {c["title"]: dict(rows[c["title"]]) for c in deck}}
+    path = os.path.join(os.path.dirname(__file__), "fixtures", "reference_cards.json")
+    if os.getenv("OOTK_UPDATE_SNAPSHOTS") == "1":
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(current, f, ensure_ascii=False, indent=1, sort_keys=True)
+            f.write("\n")
+    with open(path, encoding="utf-8") as f:
+        assert json.load(f) == json.loads(json.dumps(current))
