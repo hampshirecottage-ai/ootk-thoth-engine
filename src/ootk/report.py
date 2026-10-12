@@ -44,7 +44,7 @@ def _solid_legend(spread_results):
     return {k: v for k, v in legend.items() if k not in mixed}
 
 def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
-                    framework="auto", mapping_system="thoth", withheld=None):
+                    framework="auto", mapping_system="thoth", withheld=None, significator_places=None):
     """Every analysis of a drawn spread, then its prompt. The command line and the web site both
     call this, so the same draw always gives the same prompt from either."""
     element_counts = analyze_elemental_balance(spread_results)
@@ -58,6 +58,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
         dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework,
         mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
+        significator_places=significator_places,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -65,7 +66,8 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         "spatial_details": spatial_details, "solid_counts": solid_counts,
         "topology_details": topology_details, "dual_pairings": dual_pairings,
         "macro_framework": macro_framework, "framework_basis": framework_basis,
-        "own_place": own_place, "analytical_prompt": analytical_prompt,
+        "own_place": own_place, "significator_places": significator_places or [],
+        "analytical_prompt": analytical_prompt,
     }
 
 # Section numbers, so the notes that point from one section to another stay right if the
@@ -73,7 +75,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None):
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
@@ -84,7 +86,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 **Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
-**PRNG Seed:** {seed_val or 'Manual Entry'}
+{significator_places_markdown(significator_places)}**PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
 """
@@ -97,7 +99,8 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         _dignity_md(dignity_matrix),
         _spatial_md(spatial_matrix),
         _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
-                         spatial_matrix, solid_counts, dual_pairings, withheld, own_place),
+                         spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
+                         significator_places),
     )
     prompt_md = "".join(f"\n---\n\n## {n}. {body}" for n, body in enumerate(sections, start=1))
     prompt_md += f"\n{end_marker}\n"
@@ -264,7 +267,8 @@ def _spatial_md(spatial_matrix):
     return md
 
 def _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
-                     spatial_matrix, solid_counts, dual_pairings, withheld, own_place):
+                     spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
+                     significator_places=None):
     """What the AI is asked to do. Each rule names only what this reading contains."""
     operations = len({d["segment_name"] for d in dignity_matrix if d.get("segment_name")})
     aspects = {}
@@ -292,6 +296,10 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     notes = []
     if dual_pairings:
         notes.append(f"Section {SOLIDS} lists the neighbouring cards whose solids are duals (polyhedral inversions).")
+    if significator_places:
+        notes.append("Where the Significator Falls (in the header) is the Golden Dawn's key to each "
+                     "operation: read the pack, house, sign or decan it falls in as where the matter turns, "
+                     "alongside the cards drawn.")
     if own_place:
         notes.append("The Own-Place Check in the header compares the cards on their own place with "
                      "chance; give it weight only where it is marked unusual.")
@@ -340,6 +348,22 @@ OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trum
                    "Knight, Queen or Prince by the sign that gives it its letter) or its natural "
                    "house (the house of that sign, Aries = 1st). The chance is exact for a random "
                    "deal from the 78 cards.")
+
+SIGNIFICATOR_PLACES_INTRO = ("the whole shuffled deck laid out as in Book T: Operation 1 cut into "
+                             "four packs for I H V H")
+SIGNIFICATOR_PLACES_DEALT = ("; later operations dealt round one card to each place in turn, so "
+                             f"the cards in section {CARDS} are the first card dealt to each")
+
+def significator_places_markdown(places):
+    if not places:
+        return ""
+    def where(p):
+        if p["op"] == 1:
+            return p["place"]
+        return p["place"] + (", the card drawn there" if p["shown"] else ", deeper in that pack")
+    lines = "".join(f"  * Operation {p['op']}: {where(p)}\n" for p in places)
+    dealt = SIGNIFICATOR_PLACES_DEALT if len(places) > 1 else ""
+    return f"**Where the Significator Falls:** {SIGNIFICATOR_PLACES_INTRO}{dealt}.\n{lines}"
 
 def own_place_markdown(own_place):
     if not own_place:

@@ -1,6 +1,7 @@
 """Run from the project root:  python -m pytest -v
 Needs: pip install -e ".[dev]"
 """
+import html
 import json
 import re
 import time
@@ -661,6 +662,33 @@ def test_draw_spread_pins_significator_and_keeps_seed_order():
     assert titles == [c["title"] for c in shuffle.shuffle_deck(deck, "1568")][:3]
 
 
+def test_significator_places_follow_the_book_t_deal():
+    deck = [{"card_id": i, "title": f"C{i}"} for i in range(78)]
+    sig = deck[10]
+    positions = spreads.spread_positions("12")
+    places = shuffle.significator_places(deck, "1568", positions, sig)
+    assert [p["op"] for p in places] == [1, 2, 3, 4]
+    # Op 1: the pack is cut into four equal quarters of the seed's own shuffle.
+    at = [c["card_id"] for c in shuffle.shuffle_deck(deck, "1568")].index(10)
+    assert places[0]["place"].startswith("the " + shuffle.IHVH_PACKS[at * 4 // 78][0] + " pack")
+    # Later operations deal the whole deck round, one card to each place in turn, so the
+    # drawn cards are the first dealt to each and the significator's pack is its index mod n.
+    titles, _ = shuffle.draw_spread(deck, "1568", positions, sig)
+    for p, (start, n) in zip(places[1:], ((15, 12), (27, 12), (39, 36))):
+        at = [c["card_id"] for c in shuffle.shuffle_deck(deck, f"1568|op{p['op']}")].index(10)
+        assert p["shown"] == (at < n) == ("C10" in titles[start:start + n])
+        assert positions[start + at % n].endswith(p["place"])
+        assert not p["place"].startswith("[Op")
+    # Over many seeds every operation places the significator somewhere.
+    for seed in range(50):
+        assert len(shuffle.significator_places(deck, str(seed), positions, sig)) == 4
+    assert len(shuffle.significator_places(deck, "1", spreads.spread_positions("8"), sig)) == 1
+    # Nothing to place without a seed, a significator, or a significator position.
+    assert shuffle.significator_places(deck, None, positions, sig) == []
+    assert shuffle.significator_places(deck, "1", positions, None) == []
+    assert shuffle.significator_places(deck, "1", spreads.spread_positions("9"), sig) == []
+
+
 # ---------- engine: fixed bugs (regression tests) ----------
 
 def test_db_config_reads_env_and_falls_back_to_local_defaults(monkeypatch):
@@ -975,6 +1003,20 @@ def test_seed_mode_draws_like_the_cli(seeded_client):
     assert "1568" in r.text and "ootk --spread 12 --seed 1568" in r.text
     assert "PRNG Seed: 1568" in seeded_client.saved["notes"]
     assert seeded_client.saved["significator"] == "Knight of Swords"
+
+
+def test_report_shows_where_the_significator_falls(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="1568", selected_cards="",
+             significator="Knight of Swords")
+    places = shuffle.significator_places(DECK, "1568", spreads.spread_positions("12"), DECK[77])
+    assert "Where the significator falls" in r.text and "**Where the Significator Falls:**" in r.text
+    for p in places:
+        assert f"Operation {p['op']}:</strong> {html.escape(p['place'])}" in r.text
+    # Cards picked by hand have no seed, so no place is claimed for them.
+    titles = shuffle.draw_spread(DECK, "1568", spreads.spread_positions("12"), DECK[77])[0]
+    r = post(seeded_client, spread_key="12", seed="", selected_cards=",".join(titles),
+             significator="Knight of Swords")
+    assert r.status_code == 200 and "Where the significator falls" not in r.text
 
 
 def test_seed_mode_same_seed_same_cards(seeded_client):

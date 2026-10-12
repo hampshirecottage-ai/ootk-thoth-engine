@@ -14,7 +14,7 @@ import pytest
 
 from ootk.analysis import withheld_summary
 from ootk.report import analyze_reading
-from ootk.shuffle import draw_spread, has_significator_position, resolve_significator
+from ootk.shuffle import draw_spread, has_significator_position, resolve_significator, significator_places
 from ootk.spreads import SPREADS, spread_positions
 
 HERE = os.path.dirname(__file__)
@@ -42,7 +42,8 @@ def build_prompt(spread_key):
     withheld = withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles)
     significator = sig_card["title"] if pinned else "None (spread has no significator position)"
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, TOPIC, significator, SEED,
-                              spread_results, withheld=withheld)
+                              spread_results, withheld=withheld,
+                              significator_places=significator_places(deck, SEED, positions, sig_card))
     return reading["analytical_prompt"]
 
 

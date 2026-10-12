@@ -39,6 +39,7 @@ from ootk import sky
 from ootk import significator as significator_methods
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
+    significator_places,
 )
 from ootk.spreads import SPREADS, spread_positions, spread_segments
 from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_name_hint, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
@@ -587,6 +588,7 @@ def reading_export(spread_name, settings, significator, framework, framework_bas
         "framework": framework,
         "framework_basis": framework_basis,
         "own_place": view.get("own_place", []),
+        "significator_places": view.get("significator_places", []),
         "element_counts": element_counts,
         "cards": [
             dict(export_card(item["card_data"]), position_number=item["position_number"],
@@ -1523,6 +1525,23 @@ def load_sign_carriers(deck, system):
     return _sign_carriers_cache[system]
 
 
+def seeded_significator_places(settings, card_titles, deck):
+    """Where the significator falls in each operation (shuffle.significator_places), only when
+    the reading's seed still draws exactly these cards: not for cards picked by hand, nor for a
+    reading saved under an older draw."""
+    positions = spread_positions(settings["spread_key"])
+    sig_card = resolve_significator(deck, settings.get("significator"))
+    if not (settings.get("seed") and sig_card):
+        return []
+    try:
+        titles, _ = draw_spread(deck, settings["seed"], positions, sig_card)
+    except ValueError:
+        return []
+    if titles != list(card_titles):
+        return []
+    return significator_places(deck, settings["seed"], positions, sig_card)
+
+
 def run_reading(settings, card_titles, significator_label, deck=None):
     """Looks up the drawn cards and runs every analysis. Returns the pieces the report needs."""
     spread_key, mapping_system = settings["spread_key"], settings["mapping_system"]
@@ -1549,6 +1568,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         selected_spread["name"], spread_key, settings["topic"], significator_label,
         settings["seed"] or "Graphical Selection", spread_results,
         framework=settings["framework"], mapping_system=mapping_system, withheld=withheld,
+        significator_places=seeded_significator_places(settings, card_titles, deck),
     )
     return {
         "spread_name": selected_spread["name"], "significator_label": significator_label,
@@ -1560,7 +1580,8 @@ def run_reading(settings, card_titles, significator_label, deck=None):
 def report_view(settings, r):
     return build_report_view(settings["spread_key"], r["spread_results"], r["element_counts"],
                              r["dignity_matrix"], r["spatial_matrix"], r["macro_framework"],
-                             r["framework_basis"], r.get("sign_carriers"), r.get("own_place"))
+                             r["framework_basis"], r.get("sign_carriers"), r.get("own_place"),
+                             r.get("significator_places"))
 
 
 def export_reading(settings, r, view):
