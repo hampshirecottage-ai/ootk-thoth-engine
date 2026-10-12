@@ -9,7 +9,7 @@ against the database. static/js/atlas.js draws the result. Nothing here interpre
 """
 import re
 
-from ootk.analysis import ELEMENT_SOLIDS, PLANETARY_MAJORS, derive_primary_element, major_name
+from ootk.analysis import ELEMENT_SOLIDS, PLANETARY_MAJORS, derive_primary_element, king_scale_hex, major_name
 
 SIGNS = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio",
          "Sagittarius", "Capricorn", "Aquarius", "Pisces")
@@ -233,7 +233,7 @@ def card_atlas(row, signs):
         "attribution": row.get("attribution") or "",
         "tree": _tree(row, kind), "cube": _cube(row, kind, signs), "zodiac": _zodiac(row, kind),
         "solid": _solid(row), "grid": _grid(row, kind, element),
-        "colour": (row.get("attributions") or {}).get("king_scale_hex") if kind == "Major" else None,
+        "colour": king_scale_hex(row) if kind == "Major" else None,
         "colour_name": row.get("king_scale_color") if kind == "Major" else None,
     }
 

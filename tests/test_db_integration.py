@@ -177,6 +177,7 @@ def test_golden_dawn_undoes_the_thoth_swap(conn, title, thoth_letter, gd_letter,
     # The card keeps its own sign and solid; only the letter and its geometry move.
     assert gd["attribution"] == thoth["attribution"]
     assert gd["platonic_solid"] == thoth["platonic_solid"]
+    assert gd["king_scale_color"] == thoth["king_scale_color"]
     for card in (thoth, gd):        # the comparison line names both letters in either system
         assert thoth_letter in card["thoth_hebrew_letter"] and gd_letter in card["gd_hebrew_letter"]
 
@@ -187,6 +188,24 @@ def test_only_the_swapped_cards_differ_between_thoth_and_golden_dawn(conn):
     gd = db.fetch_cards_correspondences(conn, titles, system="golden_dawn")
     differ = {t for t in titles if thoth[t]["hebrew_letter"] != gd[t]["hebrew_letter"]}
     assert differ == {"IV - The Emperor", "XVII - The Star", "Queen of Wands", "Prince of Swords"}
+
+
+@pytest.mark.parametrize("title,colour,hex_colour", [
+    ("IV - The Emperor", "Scarlet", "#FF2400"), ("Queen of Wands", "Scarlet", "#FF2400"),    # Aries
+    ("XVII - The Star", "Violet", "#EE82EE"), ("Prince of Swords", "Violet", "#EE82EE"),     # Aquarius
+])
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn"])
+def test_king_scale_colour_follows_the_sign_not_the_letter(conn, system, title, colour, hex_colour):
+    card = fetch(conn, title, system)
+    assert (card["king_scale_color"], card["king_scale_hex"]) == (colour, hex_colour)
+
+
+def test_thoth_and_golden_dawn_give_every_card_the_same_colour(conn):
+    titles = [c["title"] for c in db.fetch_all_cards(conn)]
+    thoth = db.fetch_cards_correspondences(conn, titles, system="thoth")
+    gd = db.fetch_cards_correspondences(conn, titles, system="golden_dawn")
+    assert all((thoth[t]["king_scale_color"], thoth[t]["king_scale_hex"])
+               == (gd[t]["king_scale_color"], gd[t]["king_scale_hex"]) for t in titles)
 
 
 @pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])

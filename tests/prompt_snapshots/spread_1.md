@@ -21,7 +21,7 @@
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Scarlet
+- **King Scale Color**: Violet
 
 
 ---

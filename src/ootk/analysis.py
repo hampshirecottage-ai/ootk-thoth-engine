@@ -80,6 +80,13 @@ def major_name(card_data):
     """'XI - Lust' -> 'Lust'."""
     return str(card_data.get("title") or "").split(" - ", 1)[-1].strip()
 
+def king_scale_hex(card_data):
+    """The card's King Scale hex colour: the sign's colour that db.fetch_cards_correspondences
+    picks, or, for a row built without it, the one in its 777 attributions."""
+    if card_data.get("king_scale_hex"):
+        return card_data["king_scale_hex"]
+    return (card_data.get("attributions") or {}).get("king_scale_hex")
+
 def derive_primary_element(card_data):
     """Suit wins; otherwise the first element, zodiac sign or planet word found in the
     attribution, then the title. Whole-word matching, so 'chair' never reads as 'air'."""
