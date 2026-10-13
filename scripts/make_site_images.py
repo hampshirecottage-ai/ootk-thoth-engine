@@ -5,11 +5,14 @@
     static/site/apple-touch-icon.png  180 px, for phone home screens
     static/site/og-image.jpg          1200 x 630 preview card shown when a link is shared
 
-The preview uses the public-domain 1909 Rider-Waite-Smith art in static/cards/full (see
-static/cards/CREDITS.md), never the copyrighted Thoth paintings.
+The preview is the site's headline on the page green beside three fanned cards. The cards are the
+public-domain 1909 Rider-Waite-Smith art in static/cards/full
+(see static/cards/CREDITS.md), never the copyrighted Thoth paintings.
 
-Run `python scripts/make_site_images.py` (needs Pillow) after changing the colours or text.
+Run `python scripts/make_site_images.py` (needs Pillow; `pip install -e ".[images]"` also adds
+fontTools so the preview uses the site's own fonts) after changing the colours or text.
 """
+import io
 import math
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -18,29 +21,46 @@ from ootk import PROJECT_ROOT
 
 STATIC = PROJECT_ROOT / "static"
 SITE = STATIC / "site"
-PURPLE = (58, 29, 92)       # #3a1d5c, the light theme's text colour
-BEIGE = (244, 236, 220)     # #f4ecdc, the light theme's background
-MUTED = (102, 85, 122)      # #66557a
-PREVIEW_CARDS = ["i---the-magus.webp", "xvii---the-star.webp", "xix---the-sun.webp"]
-TITLE = "LLM Tarot Reading"
-SUBTITLE = ("Golden Dawn dignities, decans and Liber 777 correspondences, "
-            "calculated for your LLM to interpret.")
+PURPLE = (58, 29, 92)       # #3a1d5c, the favicon's purple
+BEIGE = (244, 236, 220)     # #f4ecdc, the favicon's card
+GREEN = (46, 138, 86)       # #2e8a56, the page background
+DEEP_GREEN = (24, 82, 50)   # the darker end of the preview's gradient
+CREAM = (255, 224, 160)     # #ffe0a0, text directly on green
+TITLE = ["Navigate", "with Tarot."]
+TAGLINE = "Draw a spread. Get every card, dignity and decan worked out. Your AI interprets it."
 FOOTER = "tarotthoth.com · free and open source"
+PREVIEW_CARDS = ["0---the-fool.webp", "xvii---the-star.webp", "xix---the-sun.webp"]
+
+# The site's self-hosted fonts are variable WOFF2 files; Pillow reads them once fontTools has
+# turned them back into plain TrueType. Without fontTools the preview falls back to system fonts.
+SITE_FONTS = {"serif": "cinzel-latin.woff2", "sans": "inter-latin.woff2"}
+FALLBACKS = {
+    "serif": ["DejaVuSerif-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
+              "/System/Library/Fonts/Supplemental/Georgia Bold.ttf"],
+    "sans": ["DejaVuSans.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+             "/System/Library/Fonts/Supplemental/Arial.ttf"],
+}
 
 
-def font(names, size):
-    for name in names:
+def font(kind, size, weight=400):
+    try:
+        from fontTools.ttLib import TTFont
+        ttf = TTFont(STATIC / "fonts" / SITE_FONTS[kind])
+        ttf.flavor = None
+        data = io.BytesIO()
+        ttf.save(data)
+        data.seek(0)
+        fnt = ImageFont.truetype(data, size)
+        fnt.set_variation_by_axes([weight])
+        return fnt
+    except (ImportError, OSError):
+        pass
+    for name in FALLBACKS[kind]:
         try:
             return ImageFont.truetype(name, size)
         except OSError:
             continue
     return ImageFont.load_default(size)
-
-
-SERIF_BOLD = ["DejaVuSerif-Bold.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf",
-              "/System/Library/Fonts/Supplemental/Georgia Bold.ttf"]
-SANS = ["DejaVuSans.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf"]
 
 
 def icon(size, rounded=True):
@@ -75,44 +95,46 @@ def wrap(draw, text, fnt, width):
     return lines + [line]
 
 
+def with_shadow(im, layer, x, y, blur=12, offset=(8, 12), alpha=100):
+    """Paste RGBA `layer` at (x, y) on `im` over a soft drop shadow."""
+    pad = 3 * blur
+    shadow = Image.new("RGBA", (layer.width + 2 * pad, layer.height + 2 * pad), (0, 0, 0, 0))
+    shadow.paste((0, 0, 0, alpha), (pad, pad), mask=layer.split()[3])
+    shadow = shadow.filter(ImageFilter.GaussianBlur(blur))
+    im.alpha_composite(shadow, (x - pad + offset[0], y - pad + offset[1]))
+    im.alpha_composite(layer, (x, y))
+
+
 def preview():
     W, H = 1200, 630
-    im = Image.new("RGB", (W, H), BEIGE)
+    im = Image.new("RGBA", (W, H))
     d = ImageDraw.Draw(im)
-    d.rectangle([0, 0, W, 10], fill=PURPLE)
+    for x in range(W):                              # the page green, darkening to the right
+        t = x / (W - 1)
+        d.line([(x, 0), (x, H)], fill=tuple(round(a + (b - a) * t) for a, b in zip(GREEN, DEEP_GREEN)))
 
-    # Three cards fanned on the right, each with a soft shadow.
-    card_w, pad = 210, 40
+    # Three cards fanned on the right, in cream frames.
     for i, name in enumerate(PREVIEW_CARDS):
         card = Image.open(STATIC / "cards" / "full" / name).convert("RGBA")
-        card = card.resize((card_w, round(card.height * card_w / card.width)), Image.LANCZOS)
-        framed = Image.new("RGBA", (card.width + 8, card.height + 8), (*PURPLE, 255))
-        framed.paste(card, (4, 4))
-        rotated = framed.rotate((1 - i) * 9, expand=True, resample=Image.BICUBIC)
-        shadow = Image.new("RGBA", (rotated.width + 2 * pad, rotated.height + 2 * pad), (0, 0, 0, 0))
-        shadow.paste((40, 20, 60, 80), (pad, pad), mask=rotated.split()[3])
-        shadow = shadow.filter(ImageFilter.GaussianBlur(12))
-        x = 845 + (i - 1) * 150 - rotated.width // 2
-        y = (H - rotated.height) // 2 + abs(1 - i) * 20
-        im.paste(shadow, (x - pad + 6, y - pad + 12), shadow)
-        im.paste(rotated, (x, y), rotated)
+        card = card.resize((round(card.width * 380 / card.height), 380), Image.LANCZOS)
+        framed = Image.new("RGBA", (card.width + 12, card.height + 12), (250, 246, 236, 255))
+        framed.paste(card, (6, 6))
+        rotated = framed.rotate((1 - i) * 14, expand=True, resample=Image.BICUBIC)
+        x = 935 + (i - 1) * 150 - rotated.width // 2
+        y = 320 - rotated.height // 2 + (0 if i == 1 else 25)
+        with_shadow(im, rotated, x, y)
 
-    title_font = font(SERIF_BOLD, 72)
-    sub_font = font(SANS, 30)
-    foot_font = font(SANS, 24)
-    left, text_w = 64, 520
-    y = 110
-    for line in wrap(d, TITLE, title_font, text_w):
-        d.text((left, y), line, font=title_font, fill=PURPLE)
-        y += 86
-    y += 24
-    for line in wrap(d, SUBTITLE, sub_font, text_w):
-        d.text((left, y), line, font=sub_font, fill=MUTED)
-        y += 42
-    ico = icon(56)
-    im.paste(ico, (left, H - 112), ico)
-    d.text((left + 72, H - 98), FOOTER, font=foot_font, fill=PURPLE)
-    return im
+    d = ImageDraw.Draw(im)
+    title_font = font("serif", 76, 700)
+    for k, line in enumerate(TITLE):
+        d.text((70, 125 + 87 * k), line, font=title_font, fill=CREAM)
+    sub_font = font("sans", 30)
+    y = 345
+    for line in wrap(d, TAGLINE, sub_font, 500):
+        d.text((72, y), line, font=sub_font, fill=(255, 255, 255))
+        y += 39
+    d.text((72, 540), FOOTER, font=font("sans", 24, 500), fill=CREAM)
+    return im.convert("RGB")
 
 
 def main():
