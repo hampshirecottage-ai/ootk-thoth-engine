@@ -297,32 +297,53 @@ def place_cards(truth, names):
     return places
 
 
-def pair_positions(truth, by_number, places, names, c):
-    """The two positions a pair claim means, or None. Uses the claimed numbers when they are two
-    real positions; otherwise finds each card (at its claimed position if it is there, else where
-    it was drawn, else the decan it names), keeping to one operation when a card was drawn more
-    than once."""
-    a, b = c["position_a"], c["position_b"]
-    if a in by_number and b in by_number and a != b:
-        return a, b
+def at(by_number, places, n, title):
+    """Is this card at position n, drawn there or named by its decan?"""
+    return n in by_number and title in (by_number[n]["card"], places.get(n))
 
-    def where(card, hint):
-        title = names.title(card)
-        if hint in by_number and title in (by_number[hint]["card"], places.get(hint)):
+
+def drawn_elsewhere(truth, by_number, n, title):
+    """The one other position in n's operation where this card was drawn, or None. Only the
+    Opening of the Key has operations; its 75 places repeat house and sign numbers ("9. Sagittarius"
+    is position 36), so a claimed number there can be the claims step's slip."""
+    if n not in by_number or by_number[n].get("operation") is None:
+        return None
+    others = [m for m in positions_of(truth, title) if m != n
+              and by_number[m]["operation"] == by_number[n]["operation"]]
+    return others[0] if len(others) == 1 else None
+
+
+def pair_positions(truth, by_number, places, names, c):
+    """(a, b, moved) for the two positions a pair claim means, or None. Uses the claimed numbers
+    when they are two real positions (in the Opening of the Key, only when both cards are there,
+    see drawn_elsewhere); otherwise finds each card (at its claimed position if it is there,
+    else where it was drawn in that position's operation, else anywhere it was drawn, else the
+    decan it names), keeping to one operation when a card was drawn more than once. moved is
+    True when the claimed numbers did not hold the cards."""
+    a, b = c["position_a"], c["position_b"]
+    ta, tb = names.title(c["card_a"]), names.title(c["card_b"])
+    if a != b and a in by_number and b in by_number and (
+            by_number[a].get("operation") is None or (at(by_number, places, a, ta) and at(by_number, places, b, tb))):
+        return a, b, False
+
+    def where(title, hint):
+        if at(by_number, places, hint, title):
             return [hint]
+        if drawn_elsewhere(truth, by_number, hint, title):
+            return [drawn_elsewhere(truth, by_number, hint, title)]
         return positions_of(truth, title) or [n for n, t in places.items() if t == title]
-    pa, pb = where(c["card_a"], a), where(c["card_b"], b)
+    pa, pb = where(ta, a), where(tb, b)
     if len(pa) == 1 and len(pb) > 1:
         pb = [n for n in pb if by_number[n]["operation"] == by_number[pa[0]]["operation"]]
     elif len(pb) == 1 and len(pa) > 1:
         pa = [n for n in pa if by_number[n]["operation"] == by_number[pb[0]]["operation"]]
     if len(pa) == 1 and len(pb) == 1 and pa != pb:
-        return pa[0], pb[0]
+        return pa[0], pb[0], (pa[0], pb[0]) != (a, b) and a in by_number and b in by_number and a != b
     return None
 
 
 def score_answer(claims, truth, names, answer_text):
-    errors, notes = [], []
+    errors, notes, by_hand = [], [], []
     expect = truth["expect"]
     drawn = set(truth["drawn"])
     by_number = {p["number"]: p for p in truth["positions"]}
@@ -346,7 +367,12 @@ def score_answer(claims, truth, names, answer_text):
         if title not in drawn and title != truth.get("significator"):
             err("A1 invented card", f"{p['card']!r} (read as {title}) is not in this reading")
         elif p["position"] in by_number:
-            if by_number[p["position"]]["card"] != title:
+            other = drawn_elsewhere(truth, by_number, p["position"], title)
+            if by_number[p["position"]]["card"] != title and other:
+                # Most likely the claims step wrote the wrong number for the place the answer named.
+                by_hand.append({"check": "A2 wrong position?", "what": f"position {p['position']}: says {title}, "
+                                f"drawn {by_number[p['position']]['card']}; {title} was drawn at {other} in the same operation"})
+            elif by_number[p["position"]]["card"] != title:
                 err("A2 wrong position", f"position {p['position']}: says {title}, drawn {by_number[p['position']]['card']}")
             else:
                 covered.add(p["position"])
@@ -375,28 +401,35 @@ def score_answer(claims, truth, names, answer_text):
         if found is None:
             notes.append(f"pair not tied to positions: {c['card_a']} / {c['card_b']}")
             continue
-        a, b = found
+        a, b, moved = found
+
+        def pair_err(check, what, moved=moved, c=c):
+            if moved:
+                # Read by its cards, not its claimed numbers: a slip may be the claims step's, not the answer's.
+                by_hand.append({"check": check + "?", "what": f"{what} (claimed as {c['position_a']} and {c['position_b']})"})
+            else:
+                err(check, what)
         key, label = frozenset((a, b)), f"positions {a} and {b}"
         real = pairs.get(key, {})
         stated = int(c["dignity_score"].replace("+", "")) if re.fullmatch(r"[+-]?\d", c["dignity_score"].strip()) else None
         if stated is not None:
             if "score" not in real:
-                err("A5 wrong dignity", f"{label}: gives {c['dignity_score']}, but the prompt scores no such pair")
+                pair_err("A5 wrong dignity", f"{label}: gives {c['dignity_score']}, but the prompt scores no such pair")
             elif stated != real["score"]:
-                err("A5 wrong dignity", f"{label}: gives {c['dignity_score']}, data {real['score']:+d}")
+                pair_err("A5 wrong dignity", f"{label}: gives {c['dignity_score']}, data {real['score']:+d}")
         if c["dignity_quality"] in QUALITY_SIGN and "score" in real:
             if QUALITY_SIGN[c["dignity_quality"]] != (real["score"] > 0) - (real["score"] < 0):
-                err("A5 wrong dignity", f"{label}: calls it {c['dignity_quality']}, data {real['score']:+d}")
+                pair_err("A5 wrong dignity", f"{label}: calls it {c['dignity_quality']}, data {real['score']:+d}")
         if c["aspect"] != "not_stated":
             if key in no_aspect or not truth["aspects"]:
-                err("A6 wrong aspect", f"{label}: says {c['aspect']}, the layout gives this pair no aspect")
+                pair_err("A6 wrong aspect", f"{label}: says {c['aspect']}, the layout gives this pair no aspect")
             elif real.get("aspect") != c["aspect"]:
-                err("A6 wrong aspect", f"{label}: says {c['aspect']}, data {real.get('aspect', 'none')}")
+                pair_err("A6 wrong aspect", f"{label}: says {c['aspect']}, data {real.get('aspect', 'none')}")
         if "score" in real and all_scores:
             if c["says_strongest"] and real["score"] != max(all_scores):
-                err("B5 strongest pair", f"{label} called strongest at {real['score']:+d}; top score is {max(all_scores):+d}")
+                pair_err("B5 strongest pair", f"{label} called strongest at {real['score']:+d}; top score is {max(all_scores):+d}")
             if c["says_most_strained"] and real["score"] != min(all_scores):
-                err("B5 most strained pair", f"{label} called most strained at {real['score']:+d}; lowest is {min(all_scores):+d}")
+                pair_err("B5 most strained pair", f"{label} called most strained at {real['score']:+d}; lowest is {min(all_scores):+d}")
     # element counts
     for e in claims["element_counts"]:
         if e["element"] in truth["element_counts"] and e["count"] != truth["element_counts"][e["element"]]:
@@ -455,7 +488,7 @@ def score_answer(claims, truth, names, answer_text):
         "positions_missed": sorted(set(by_number) - covered),
         "rules": rules, "recap_terms": terms, "special": special,
         "prompt_status": claims["prompt_status"], "likely_outcome": claims["likely_outcome"],
-        "notes": notes,
+        "check_by_hand": by_hand, "notes": notes,
     }
 
 
@@ -598,17 +631,19 @@ def score(build, answers):
 
 
 def results_md(rows):
-    lines = ["| Answer | AI | Hard errors | Facts checked | Pairs | Coverage | Rules met | Special |",
-             "|---|---|---|---|---|---|---|---|"]
+    lines = ["| Answer | AI | Hard errors | Check by hand | Facts checked | Pairs | Coverage | Rules met | Special |",
+             "|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
         met = sum(bool(v) for v in r["rules"].values())
         special = ", ".join(f"{k}: {v}" for k, v in r["special"].items()) or "-"
-        lines.append(f"| {r['case_id']} #{r['run']} | {r['ai']} | {r['hard_errors']} | {r['facts_checked']} | "
+        lines.append(f"| {r['case_id']} #{r['run']} | {r['ai']} | {r['hard_errors']} | "
+                     f"{len(r.get('check_by_hand', []))} | {r['facts_checked']} | "
                      f"{r['pairs_checked']} | {r['coverage']:.0%} | {met}/{len(r['rules'])} | {special} |")
     for r in rows:
-        if r["errors"] or not all(r["rules"].values()):
+        if r["errors"] or r.get("check_by_hand") or not all(r["rules"].values()):
             lines.append(f"\n**{r['case_id']} #{r['run']} ({r['ai']})**")
             lines += [f"- {e['check']}: {e['what']}" for e in r["errors"]]
+            lines += [f"- check by hand, {e['check']} {e['what']}" for e in r.get("check_by_hand", [])]
             lines += [f"- {k}: not met" + (f" ({', '.join(r['recap_terms'])})" if k.startswith("B7") and r["recap_terms"] else "")
                       for k, v in r["rules"].items() if not v]
     return "\n".join(lines) + "\n"
