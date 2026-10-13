@@ -128,10 +128,11 @@ Everything else is optional:
 | `SITE_URL` | Public address used in link previews, `robots.txt` and `sitemap.xml` | Render's address, then the request's |
 | `DB_CONNECT_TIMEOUT` | Seconds to wait for the database before showing the "database down" page | `10` |
 | `DB_QUERY_TIMEOUT` | Seconds one database query may take (including waiting on a migration's lock, or a connection that went silent) before it gives up; a reading that can't be saved in time is still shown, with a notice | `15` |
+| `DB_DOWN_SECONDS` | After the database fails to answer within `DB_CONNECT_TIMEOUT`, how many seconds pages show the "database down" page at once instead of waiting again | `15` |
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
 | `PGSSLMODE` | Standard PostgreSQL setting; set `require` for a hosted database such as Neon | libpq default |
 
-`DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT` and `WEB_THREADS` must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
+`DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT`, `DB_DOWN_SECONDS` and `WEB_THREADS` must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
 
 ### 3. Create the database
 
