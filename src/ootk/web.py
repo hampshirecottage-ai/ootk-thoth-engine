@@ -468,19 +468,40 @@ templates.env.globals.update(static_url=static_url, card_image_url=card_image_ur
                              default_spread=DEFAULT_SPREAD)
 
 
-def get_db_connection():
-    """A connection, tried twice: a hosted database that sleeps when idle (Neon) can refuse the
-    first attempt while it wakes. A second failure reaches database_unreachable_page."""
+# After a connection attempt times out, the next requests fail at once for this many seconds
+# instead of each waiting out DB_CONNECT_TIMEOUT again. Every one of those waits holds a reading
+# slot, so a stalled database would otherwise hold up share links, which need no database.
+# A quick refusal (Neon waking) doesn't count: it costs nothing to try again.
+DB_DOWN_SECONDS = env_int("DB_DOWN_SECONDS", 15)
+_db_down_until = 0.0
+
+
+def _connect_once():
+    """connect(), remembering a timeout so the next requests don't wait on it too."""
+    global _db_down_until
     started = time.monotonic()
     try:
         return connect()
+    except psycopg.OperationalError:
+        if time.monotonic() - started > 3:
+            _db_down_until = time.monotonic() + DB_DOWN_SECONDS
+        raise
+
+
+def get_db_connection():
+    """A connection, tried twice: a hosted database that sleeps when idle (Neon) can refuse the
+    first attempt while it wakes. A second failure reaches database_unreachable_page."""
+    if time.monotonic() < _db_down_until:
+        raise psycopg.OperationalError("database timed out moments ago; not waiting on it again yet")
+    try:
+        return _connect_once()
     except psycopg.OperationalError as e:
         # A refusal comes back at once; a timeout has already used up the wait, so no retry.
-        if time.monotonic() - started > 3:
+        if time.monotonic() < _db_down_until:
             raise
         log.warning("database connection failed, retrying once: %s", e)
         time.sleep(1)
-        return connect()
+        return _connect_once()
 
 
 # thoth_cards and correspondences are reference data that change only with a migration, so the
@@ -1134,30 +1155,36 @@ def generate_report(
     }
     reading = run_reading(settings, card_titles, significator_label, deck)
 
-    with get_db_connection() as conn:
-        source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
-        # The report's address: random, so readings can't be found by counting session numbers.
-        link = secrets.token_urlsafe(16)
-        session_id = save_spread_session(
-            conn,
-            selected_spread["name"],
-            topic,
-            f"{source} | Mapping: {mapping_system} | Framework: {reading['macro_framework']}",
-            significator_label,
-            reading["spread_results"],
-            reading["dignity_matrix"],
-            report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label,
-                                 link=link, mapping_version=MAPPING_VERSION,
-                                 draw_version=DRAW_VERSION),
-        )
-        linked = bool(session_id)
+    source = f"PRNG Seed: {seed}" if seed else "GUI Selection"
+    # The report's address: random, so readings can't be found by counting session numbers.
+    link = secrets.token_urlsafe(16)
+    try:
+        with get_db_connection() as conn:
+            session_id = save_spread_session(
+                conn,
+                selected_spread["name"],
+                topic,
+                f"{source} | Mapping: {mapping_system} | Framework: {reading['macro_framework']}",
+                significator_label,
+                reading["spread_results"],
+                reading["dignity_matrix"],
+                report_settings=dict(settings, card_titles=card_titles, significator_label=significator_label,
+                                     link=link, mapping_version=MAPPING_VERSION,
+                                     draw_version=DRAW_VERSION),
+            )
+    except psycopg.OperationalError as e:
+        # The reading is already drawn from cached cards; losing it to an outage would throw away
+        # hand-picked cards. Show it with the unsaved notice instead of the 503 page.
+        log.warning("database unreachable when saving a reading: %s", e)
+        session_id = None
+    linked = bool(session_id)
 
     if linked:
         # Post/Redirect/Get: the report gets its own link, and reloading it saves nothing.
         return RedirectResponse(f"/report/{link}", status_code=303)
     if not session_id:
-        # The database refused the write (db.py printed why). Still show the reading, but say so:
-        # without a link a hand-picked reading is gone once the page is left.
+        # The database refused the write (db.py printed why) or couldn't be reached. Still show
+        # the reading, but say so: without a link a hand-picked reading is gone once the page is left.
         log.error("reading was not saved; showing the report without a link")
     return render_report(request, session_id, settings, reading, unsaved=not session_id)
 

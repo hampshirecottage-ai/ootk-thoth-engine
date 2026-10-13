@@ -1847,6 +1847,21 @@ def test_failed_save_says_so_on_the_report(client, monkeypatch):
     assert "Copy the prompt now" in r.text and "saved as session" not in r.text
 
 
+def test_unreachable_database_at_save_still_shows_the_reading(client, monkeypatch):
+    """The cards are drawn and analysed before the save connects; an outage at that point
+    keeps the reading on screen with the notice instead of the 503 page."""
+    real_run = app_module.run_reading
+
+    def run_then_lose_database(*a, **k):
+        reading = real_run(*a, **k)
+        monkeypatch.setattr(app_module, "get_db_connection", _db_down)
+        return reading
+
+    monkeypatch.setattr(app_module, "run_reading", run_then_lose_database)
+    r = post(client, follow=False)
+    assert r.status_code == 200 and 'id="saveFailed"' in r.text
+
+
 def test_saved_report_has_no_save_failed_notice(client):
     assert 'id="saveFailed"' not in post(client).text
 
@@ -2004,6 +2019,46 @@ def test_connection_is_retried_once_after_a_quick_refusal(monkeypatch):
     monkeypatch.setattr(app_module.time, "sleep", lambda s: None)
     assert app_module.get_db_connection() is conn and len(calls) == 2
     assert "connect_timeout" in calls[0]
+
+
+def test_a_connect_timeout_fails_fast_for_a_while(monkeypatch):
+    """After one attempt waits out the connect timeout, the next requests fail at once until
+    DB_DOWN_SECONDS pass, so a stalled database can't fill every reading slot."""
+    clock, calls = [1000.0], []
+
+    def stalled():
+        calls.append(clock[0])
+        clock[0] += 10                                      # the connect timeout passes
+        raise app_module.psycopg.OperationalError("timeout expired")
+
+    monkeypatch.setattr(app_module, "_db_down_until", 0.0)
+    monkeypatch.setattr(app_module.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(app_module, "connect", stalled)
+    with pytest.raises(app_module.psycopg.OperationalError):
+        app_module.get_db_connection()
+    assert len(calls) == 1                                  # a timeout isn't retried
+    with pytest.raises(app_module.psycopg.OperationalError, match="moments ago"):
+        app_module.get_db_connection()
+    assert len(calls) == 1                                  # failed without trying
+    clock[0] += app_module.DB_DOWN_SECONDS
+    conn = FakeConn()
+    monkeypatch.setattr(app_module, "connect", lambda: conn)
+    assert app_module.get_db_connection() is conn            # tries again once the window ends
+
+
+def test_a_quick_refusal_does_not_hold_off_the_next_request(monkeypatch):
+    """Neon refuses at once while it wakes; that must not stop the next visitor connecting."""
+    def refused():
+        raise app_module.psycopg.OperationalError("connection refused")
+
+    monkeypatch.setattr(app_module, "_db_down_until", 0.0)
+    monkeypatch.setattr(app_module.time, "sleep", lambda s: None)
+    monkeypatch.setattr(app_module, "connect", refused)
+    with pytest.raises(app_module.psycopg.OperationalError, match="refused"):
+        app_module.get_db_connection()
+    conn = FakeConn()
+    monkeypatch.setattr(app_module, "connect", lambda: conn)
+    assert app_module.get_db_connection() is conn
 
 
 def test_every_connection_has_a_query_time_limit(monkeypatch):
