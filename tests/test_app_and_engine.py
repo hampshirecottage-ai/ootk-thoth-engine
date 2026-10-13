@@ -2355,3 +2355,25 @@ def test_env_int_upper_bound(monkeypatch):
 
 def test_shuffle_has_no_demo_entry_point():
     assert not hasattr(shuffle, "main")
+
+
+def test_sample_walkthrough_names_the_balance_the_weak_cards_and_the_significator():
+    def item(n, title):
+        return {"position_number": n, "position_name": f"{n}. Pos", "card_data": {"title": title}}
+    r = {
+        "spread_results": [item(1, "Queen of Cups"), item(2, "Ace of Wands"), item(3, "Art")],
+        "element_counts": {"Fire": 2, "Water": 1, "Air": 0, "Earth": 0, "Spirit": 0},
+        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": -2},
+                           {"from_index": 1, "to_index": 2, "score": 2}],
+        "significator_places": [{"op": 1, "place": "the Water pack (H)", "shown": True}],
+    }
+    w = app_module.sample_walkthrough(r, {"spread_key": "3"})
+    assert w["lead"] == ["Fire"] and w["lead_count"] == 2 and w["total"] == 3
+    assert w["absent"] == ["Air", "Earth"]
+    assert w["weak"] == [{"card": app_module.short_card_name("Queen of Cups"),
+                          "by": [app_module.short_card_name("Ace of Wands")]}]
+    assert w["places"][0]["op"] == 1 and w["heap_size"] == 3
+
+
+def test_front_page_links_to_the_sample(client):
+    assert 'href="/start#sample"' in client.get("/").text
