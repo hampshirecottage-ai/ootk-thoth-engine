@@ -722,6 +722,31 @@ def sample_summary(r, settings):
     return [first, " ".join(second)]
 
 
+def sample_walkthrough(r, settings):
+    """The figures behind the three "read it yourself" steps on /start, taken from the sample:
+    which elements lead and which are missing, which heap cards are weakened and by whom,
+    and where the significator falls in each operation."""
+    items = r["spread_results"]
+    counts = {e: n for e, n in r["element_counts"].items() if e != "Spirit"}
+    top = max(counts.values(), default=0)
+    _, start, end, _ = spread_segments(items, settings["spread_key"])[0]
+    weak = []
+    for idx in range(start, end):
+        pairs = [d for d in r["dignity_matrix"] if idx in (d["from_index"], d["to_index"])]
+        if sum(d["score"] for d in pairs) >= 0:
+            continue
+        weak.append({"card": short_card_name(items[idx]["card_data"]["title"]),
+                     "by": [short_card_name(items[d["to_index"] if d["from_index"] == idx
+                                                else d["from_index"]]["card_data"]["title"])
+                            for d in pairs if d["score"] < 0]})
+    return {
+        "lead": [e for e, n in counts.items() if n == top and n], "lead_count": top,
+        "total": len(items), "absent": [e for e, n in counts.items() if not n],
+        "heap_size": end - start, "weak": weak,
+        "places": r.get("significator_places") or [],
+    }
+
+
 def sample_view(r, settings):
     """Everything /start shows of the sample: the summary, the heap and wheel for the
     diagram, the element breakdown, the cube positions and one summary per operation."""
@@ -755,7 +780,8 @@ def sample_view(r, settings):
     return {
         "seed": settings["seed"], "significator": settings["significator"],
         "spread_name": r["spread_name"], "card_count": total,
-        "summary": sample_summary(r, settings), "elements": elements, "ops": ops,
+        "summary": sample_summary(r, settings), "walkthrough": sample_walkthrough(r, settings),
+        "elements": elements, "ops": ops,
         "heap": heap, "wheel": wheel,
         "cube": [c for c in heap if c["place"]],
         "prompt": r["analytical_prompt"], "url": share_path(settings),

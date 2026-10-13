@@ -70,6 +70,31 @@
 
         {% if sample %}
 {% include "_sample_reading.html" %}
+        {% set w = sample.walkthrough %}
+        <details class="panel fold" id="readYourself">
+            <summary class="fold-toggle"><h2 id="readYourselfTitle">Reading a report yourself</h2></summary>
+            <p>Your AI writes the full interpretation, but you can read the main lines of any report yourself in three steps. Each step uses the sample above.</p>
+            <ol class="path">
+                <li>
+                    <h3>Look at the element balance</h3>
+                    <p>The leading element sets the tone: Fire for will and drive, Water for feeling, Air for thought, Earth for practical and material things. An element that is missing matters too: the cards say nothing through it.</p>
+                    <p class="muted">In the sample: {{ w.lead | join(' and ') }} {{ 'lead' if w.lead | length > 1 else 'leads' }} with {{ w.lead_count }} of {{ w.total }} cards{% if w.absent %}, and {{ w.absent | join(' and ') }} {{ 'are' if w.absent | length > 1 else 'is' }} missing{% endif %}.</p>
+                </li>
+                <li>
+                    <h3>Find the weakened cards</h3>
+                    <p>A card is ill-dignified when the elemental dignities with its neighbours add up to less than zero. In Book&nbsp;T a weakened card speaks with less force, or from its harder side; a well-dignified card speaks at full strength.</p>
+                    <p class="muted">In the sample: {% if w.weak %}{{ w.weak | length }} of the {{ w.heap_size }} heap cards {{ 'are' if w.weak | length > 1 else 'is' }} weakened: {% for c in w.weak %}{{ c.card }} (by {{ c.by | join(' and ') }}){{ '; ' if not loop.last else '.' }}{% endfor %}{% else %}none of the {{ w.heap_size }} heap cards is weakened, so every card speaks at full strength.{% endif %}</p>
+                </li>
+                {% if w.places %}
+                <li>
+                    <h3>Follow the significator</h3>
+                    <p>The significator stands for you, or for whoever the question is about. Where it falls in each operation shows where the matter turns: the pack names the side of life it starts from, then the house, sign and decan narrow it down.</p>
+                    <p class="muted">In the sample: {% for p in w.places %}Operation {{ p.op }}, {{ p.place }}{{ '; ' if not loop.last else '.' }}{% endfor %}</p>
+                </li>
+                {% endif %}
+            </ol>
+            <p>Every report shows the same things near the top: the element bar and the ill-dignified count in the Summary, and, when there is a significator, where it falls in each operation.</p>
+        </details>
         {% endif %}
 
         <details class="panel fold">
