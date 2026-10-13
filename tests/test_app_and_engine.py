@@ -1263,10 +1263,17 @@ def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_repor
 
 # ---------- testimonials ----------
 
-def test_front_page_invites_a_testimonial_until_one_is_approved(client):
+def test_testimonial_is_asked_for_on_the_report_not_the_front_page(client):
     page = client.get("/").text
-    assert 'href="/testimonial"' in page and "Testimonial of the day" not in page
+    assert 'href="/testimonial"' not in page and "Testimonial of the day" not in page
     assert 'href="/testimonial"' not in client.get("/pick").text
+    assert 'href="/testimonial"' in post(client).text
+
+
+def test_question_box_comes_first_and_wraps(client):
+    page = client.get("/").text
+    assert page.index('id="topicInput"') < page.index('id="spreadSelect"')
+    assert '<textarea name="topic" id="topicInput"' in page
 
 
 def test_testimonial_is_saved_unapproved_with_its_session(client, monkeypatch):
