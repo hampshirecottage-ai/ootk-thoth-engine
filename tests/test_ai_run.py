@@ -52,7 +52,8 @@ class FakeClient:
         self.extract_calls.append(kw)
         content = kw["messages"][0]["content"]
         # The answer quotes the prompt's end marker, which names the spread's position count.
-        case = next(c["id"] for c in self.cases() if self.truth(c["id"])["end_marker"] in content)
+        case = next((c["id"] for c in self.cases() if self.truth(c["id"])["end_marker"] in content),
+                    self.cases()[0]["id"])
         claims = clean_claims(self.truth(case))
         return SimpleNamespace(stop_reason="end_turn", usage=usage(2_000, 1_000),
                                content=[SimpleNamespace(type="text", text=json.dumps(claims))])
@@ -108,3 +109,31 @@ def test_refusal_saves_no_answer(tmp_path):
     answers = os.path.join(str(tmp_path), "answers")
     ai_score.run(client, build, answers, ["s408850_sp1_full"])
     assert os.listdir(answers) == ["s408850_sp1_full__opus-5-5__1.meta.json"]
+
+
+def test_round_asks_first_then_answers_every_prompt_with_each_model(tmp_path, capsys):
+    out = str(tmp_path)
+    build = os.path.join(out, "build")
+    ai_check.build(build)
+    client = FakeClient(build)
+    assert ai_score.full_round(client, out, ask=lambda q: "n") == 0.0
+    assert client.answer_calls == [] and "Nothing sent." in capsys.readouterr().out
+
+    questions = []
+    ai_score.full_round(client, out, models=("claude-opus-5-5", "claude-haiku-5-5"),
+                        ask=lambda q: questions.append(q) or "y")
+    assert "roughly $" in questions[0]
+    with open(os.path.join(build, "cases.json")) as f:
+        cases = json.load(f)
+    per_model = sum(2 if c["variant"] == "full" else 1 for c in cases)
+    assert per_model == 56 and len(client.answer_calls) == 2 * per_model
+    opus = [c for c in client.answer_calls if c["model"] == "claude-opus-5-5"]
+    haiku = [c for c in client.answer_calls if c["model"] == "claude-haiku-5-5"]
+    assert all(c["output_config"] == {"effort": "medium"} for c in opus)
+    assert haiku and all("output_config" not in c for c in haiku)
+    names = os.listdir(os.path.join(out, "answers"))
+    assert sum(n.endswith(".score.json") for n in names) == 112
+    assert "s408850_sp12_cut40__haiku-5-5__1.md" in names and "s408850_sp12_cut40__haiku-5-5__2.md" not in names
+
+    # Nothing left to send: the estimate is nothing and no call is made.
+    assert ai_score.round_estimate(build, os.path.join(out, "answers"), ("claude-opus-5-5", "claude-haiku-5-5")) == 0
