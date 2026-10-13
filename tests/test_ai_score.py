@@ -130,3 +130,46 @@ def test_names_read_every_spelling(built):
     assert names.title("Knight of Cups") == "Knight of Cups"          # the Thoth Knight, not the Waite one
     assert names.title("Page of Wands") == "Princess of Wands"
     assert names.title("the Hierophant") == "V - The Hierophant"
+
+
+def test_decan_place_cards_are_not_drawn_cards(built):
+    # Decan names hold a card ("Decan 10: Venus in Cancer (2 of Cups)"); naming it is not a claim it was drawn.
+    truth, names = built
+    t = truth("s408850_sp12_full")
+    places = ai_score.place_cards(t, names)
+    assert len(places) == 36 and min(places) == 40
+    by_number = {p["number"]: p for p in t["positions"]}
+    n, place = next((n, c) for n, c in sorted(places.items()) if c not in t["drawn"])
+    m, drawn_place = next((m, c) for m, c in sorted(places.items()) if c in t["drawn"] and by_number[m]["card"] != c)
+    claims = clean_claims(t)
+    claims["positions"] += [{"position": n, "card": place}, {"position": m, "card": drawn_place}]
+    result = ai_score.score_answer(claims, t, names, ANSWER)
+    assert result["errors"] == [] and len([x for x in result["notes"] if x.startswith("place card")]) == 2
+
+
+def test_pair_given_one_position_twice_is_found_by_its_cards(built):
+    truth, names = built
+    t = truth("s408850_sp12_full")
+    places = ai_score.place_cards(t, names)
+    by_number = {p["number"]: p for p in t["positions"]}
+    aspect = next(a for a in t["aspects"] if a["operation"] == 4 and places[a["a"]] not in t["drawn"]
+                  and len(ai_score.positions_of(t, by_number[a["b"]]["card"])) == 1)
+    pair = {"position_a": aspect["a"], "position_b": aspect["a"], "card_a": places[aspect["a"]],
+            "card_b": by_number[aspect["b"]]["card"], "dignity_score": "", "dignity_quality": "not_stated",
+            "aspect": aspect["aspect"].lower(), "says_strongest": False, "says_most_strained": False}
+    assert ai_score.pair_positions(t, by_number, places, names, pair) == (aspect["a"], aspect["b"])
+    claims = clean_claims(t)
+    claims["pair_claims"].append(pair)
+    assert ai_score.score_answer(claims, t, names, ANSWER)["errors"] == []
+    wrong = {**pair, "aspect": next(x for x in ("trine", "square") if x != pair["aspect"])}
+    claims["pair_claims"][-1] = wrong
+    assert "A6 wrong aspect" in checks(ai_score.score_answer(claims, t, names, ANSWER))
+
+
+def test_own_place_not_checked_where_the_spread_has_none(built):
+    truth, names = built
+    t = truth("s408850_sp7_full")
+    assert t["own_place"] == []
+    claims = clean_claims(t)
+    claims["own_place_treated_as_significant"] = True
+    assert ai_score.score_answer(claims, t, names, ANSWER)["errors"] == []
