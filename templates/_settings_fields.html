@@ -1,4 +1,7 @@
 {# Settings shared by both pages; `mode` is "seed" or "manual". #}
+            <label for="topicInput">Question <span class="optional">(optional)</span></label>
+            <textarea name="topic" id="topicInput" rows="2" maxlength="2000" placeholder="Transform yourself through what you learn?"></textarea>
+
             <label for="spreadSelect">Spread</label>
             <select name="spread_key" id="spreadSelect">
                 {% for level, name, keys, learn in spread_stages %}
@@ -56,8 +59,6 @@
             <p class="hint sig-none" id="sigNone">The first card you place is the significator.</p>
             {% endif %}
 
-            <label for="topicInput">Question <span class="optional">(optional)</span></label>
-            <input type="text" name="topic" id="topicInput" maxlength="2000" placeholder="Transform yourself through what you learn?">
 
             <details class="more" id="moreOptions">
                 <summary>More options <span class="more-sum" id="moreSummary"></span></summary>

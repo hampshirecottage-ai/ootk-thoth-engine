@@ -13,7 +13,8 @@
         .settings { position: sticky; top: 20px; }
         .deck-panel { max-height: 88vh; overflow-y: auto; }
         label { display: block; font-size: 0.8em; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-        input, select { width: 100%; padding: 8px 10px; margin-bottom: 12px; background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 4px; font-size: 0.95em; }
+        input, select, textarea { width: 100%; padding: 8px 10px; margin-bottom: 12px; background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 4px; font-size: 0.95em; }
+        textarea { font-family: inherit; resize: vertical; line-height: 1.35; }
         .row { display: flex; gap: 6px; }
         .row > input, .row > select { flex: 1; }
         .row button { margin-bottom: 12px; }
@@ -74,7 +75,7 @@
             .tagline { font-size: 0.92em; }
             .panel { padding: 14px; }
             /* 16px stops iOS Safari zooming the page when a field is focused. */
-            input, select { font-size: 16px; }
+            input, select, textarea { font-size: 16px; }
             .card-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
             .card-item:hover { transform: none; }
             .slot { flex-wrap: wrap; }

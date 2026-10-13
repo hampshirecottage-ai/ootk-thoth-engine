@@ -195,3 +195,11 @@ $("themeToggle").addEventListener("click", () => {
 const linkedSpread = new URLSearchParams(location.search).get("spread");
 applySettings(Object.assign(readStore(LAST_KEY, {}),
                             linkedSpread in positionsData ? { spread_key: linkedSpread } : {}));
+
+// The question box wraps onto two lines, but Enter still draws the cards (Shift+Enter for a new line).
+$("topicInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+        e.preventDefault();
+        e.target.form.requestSubmit();
+    }
+});
