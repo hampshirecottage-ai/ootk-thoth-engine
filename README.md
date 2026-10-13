@@ -1,8 +1,8 @@
 # OOTK Thoth Engine
 
-**OOTK writes the instructions an LLM needs to interpret a tarot reading.** It draws a Thoth spread from a seed you can repeat, works out its elemental dignities, aspects and Liber 777 correspondences (up to the full Opening of the Key), and writes them up as a prompt you paste into an LLM. The prompt asks the LLM to relate the findings to your question and name the outcome they lean toward, as a likely possibility rather than a certainty. OOTK does not interpret the cards itself.
+**OOTK does the table work of a Thoth tarot reading, so you and your AI can get straight to the meaning.** It draws a spread from a seed you can repeat, works out its elemental dignities, aspects and Liber 777 correspondences (up to the full Opening of the Key), and writes them up as one prompt. Your AI relates them to your question and says where the cards lean, as a possibility rather than a certainty.
 
-**Its strengths are objective analysis and clear conceptual models.** Every dignity, aspect and correspondence is looked up from the Book T and Liber 777 tables and scored the same way each time, and the heap, the wheel of houses and signs, and the Cube of Space show where each card sits and how the cards link. The meaning is left to the LLM.
+**What it is good at: getting the details right, the same way every time.** Every dignity, aspect and correspondence comes from the Book T and Liber 777 tables, and the heap, the wheel of houses and signs, and the Cube of Space let you see where each card sits and how the cards link.
 
 **Try it online: [tarotthoth.com](https://tarotthoth.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
