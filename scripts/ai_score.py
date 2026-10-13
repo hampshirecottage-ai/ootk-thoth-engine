@@ -18,11 +18,12 @@ in one folder; claims go next to them as .claims.json and scores as .score.json.
 
 Usage:
     python scripts/ai_score.py pilot                    # the whole pilot, into output/ai_check
+    python scripts/ai_score.py round                    # every prompt x Opus, Sonnet, Haiku (asks first)
     python scripts/ai_score.py run --build BUILD --answers ANSWERS --cases all [--runs 2]
     python scripts/ai_score.py extract --build BUILD --answers ANSWERS [--model claude-sonnet-5-5]
     python scripts/ai_score.py score   --build BUILD --answers ANSWERS
 
-run, extract and pilot call the Claude API: they need `pip install anthropic` and
+run, extract, pilot and round call the Claude API: they need `pip install anthropic` and
 ANTHROPIC_API_KEY set in the shell, and each prints what it cost.
 """
 import argparse
@@ -522,6 +523,14 @@ PRICES = {"claude-opus-5-5": (4.00, 20.00), "claude-sonnet-5-5": (2.00, 10.00), 
 ANSWER_MODEL = "claude-opus-5-5"
 # The pilot: the snapshot seed's five full prompts, each answered twice.
 PILOT_SEED, PILOT_RUNS = "408850", 2
+# The full round: every full prompt answered twice (to see if answers repeat), every special
+# prompt (cut off, planted error, cards only) once, by each of these.
+ROUND_MODELS = ("claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5")
+ROUND_RUNS = {"full": 2}
+# Effort is left out for Haiku, which is sent the plain request.
+EFFORT = {"claude-haiku-5-5": None}
+# Rough answer lengths in tokens, from the pilot, for the cost estimate before a round.
+ANSWER_TOKENS = {"1": 4_000, "3": 4_000, "7": 9_000, "9": 11_000, "12": 16_000}
 
 
 def cost(model, usage):
@@ -563,8 +572,9 @@ def run(client, build, answers, case_ids, model=ANSWER_MODEL, runs=1, effort="me
             # A fresh conversation per run, no system prompt: what a visitor does when they
             # paste the prompt. Server-side fallbacks answer on another model if this one
             # declines; the meta file records which model answered.
+            extra = {"output_config": {"effort": effort}} if effort else {}
             with client.beta.messages.stream(
-                    model=model, max_tokens=64000, output_config={"effort": effort},
+                    model=model, max_tokens=64000, **extra,
                     betas=["server-side-fallback-2026-07-01"], fallbacks="default",
                     messages=[{"role": "user", "content": prompt}]) as stream:
                 response = stream.get_final_message()
@@ -664,12 +674,61 @@ def pilot(client, out, model=ANSWER_MODEL):
     print(f"This run cost about ${spent:.2f}. Results: {os.path.join(answers, 'results.md')}")
 
 
+def round_cases(build):
+    """[(case id, runs)] for the full round."""
+    return [(c["id"], ROUND_RUNS.get(c["variant"], 1)) for c in load(os.path.join(build, "cases.json"))]
+
+
+def round_estimate(build, answers, models):
+    """Rough dollars for the answers a round would still send, plus their claims."""
+    cases = {c["id"]: c for c in load(os.path.join(build, "cases.json"))}
+    total = 0.0
+    for model in models:
+        price_in, price_out = PRICES.get(model, (0.0, 0.0))
+        for case_id, runs in round_cases(build):
+            c = cases[case_id]
+            out = 1_500 if c["variant"].startswith("cut") else ANSWER_TOKENS.get(c["spread"], 10_000)
+            for n in range(1, runs + 1):
+                if not os.path.exists(os.path.join(answers, f"{case_id}__{ai_label(model)}__{n}.md")):
+                    total += (c["chars"] / 3.5 * price_in + out * price_out) / 1e6
+                    sonnet_in, sonnet_out = PRICES[EXTRACT_MODEL]
+                    total += (out * 1.3 * sonnet_in + 2_500 * sonnet_out) / 1e6
+    return total
+
+
+def full_round(client, out, models=ROUND_MODELS, ask=input):
+    """Answers every prompt with each model (full prompts twice, the rest once), extracts and
+    scores everything into <out>/answers. Answers already there, such as the pilot's, are kept.
+    Asks before spending; safe to run again after a stop, finished answers are skipped."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import ai_check
+    build, answers = os.path.join(out, "build"), os.path.join(out, "answers")
+    if not os.path.exists(os.path.join(build, "cases.json")):
+        ai_check.build(build)
+    estimate = round_estimate(build, answers, models)
+    if ask(f"This round will cost roughly ${estimate:.0f} (models: {', '.join(models)}). Go ahead? [y/N] ").strip().lower() != "y":
+        print("Nothing sent.")
+        return 0.0
+    spent = 0.0
+    for model in models:
+        for case_id, runs in round_cases(build):
+            spent += run(client, build, answers, [case_id], model=model, runs=runs,
+                         effort=EFFORT.get(model, "medium"))
+    spent += extract(client, build, answers)
+    score(build, answers)
+    print(f"This round cost about ${spent:.2f}. Results: {os.path.join(answers, 'results.md')}")
+    return spent
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("pilot", help="build, answer the 10 pilot prompts, extract and score")
     p.add_argument("--out", default=os.path.join("output", "ai_check"), help="folder for everything (default output/ai_check, not committed)")
     p.add_argument("--model", default=ANSWER_MODEL)
+    p = sub.add_parser("round", help="the full round: every prompt, each model, then extract and score")
+    p.add_argument("--out", default=os.path.join("output", "ai_check"), help="folder for everything (default output/ai_check, not committed)")
+    p.add_argument("--models", default=",".join(ROUND_MODELS), help="comma-separated model ids")
     p = sub.add_parser("run", help="send prompts to Claude and save the answers")
     p.add_argument("--build", required=True)
     p.add_argument("--answers", required=True)
@@ -687,6 +746,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.command == "pilot":
         pilot(make_client(), args.out, args.model)
+    elif args.command == "round":
+        full_round(make_client(), args.out, tuple(m.strip() for m in args.models.split(",") if m.strip()))
     elif args.command == "run":
         cases = ([c["id"] for c in load(os.path.join(args.build, "cases.json"))] if args.cases == "all"
                  else [c.strip() for c in args.cases.split(",") if c.strip()])
