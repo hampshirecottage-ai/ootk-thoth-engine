@@ -21,7 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest", "httpx", "pillow", "rich"]
-images = ["pillow"]
+images = ["pillow", "fonttools[woff]"]
 # scripts/view_output.py only; the web app and CLI don't use it, so the server doesn't install it.
 viewer = ["rich"]
 
