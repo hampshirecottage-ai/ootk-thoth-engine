@@ -157,7 +157,7 @@ def test_pair_given_one_position_twice_is_found_by_its_cards(built):
     pair = {"position_a": aspect["a"], "position_b": aspect["a"], "card_a": places[aspect["a"]],
             "card_b": by_number[aspect["b"]]["card"], "dignity_score": "", "dignity_quality": "not_stated",
             "aspect": aspect["aspect"].lower(), "says_strongest": False, "says_most_strained": False}
-    assert ai_score.pair_positions(t, by_number, places, names, pair) == (aspect["a"], aspect["b"])
+    assert ai_score.pair_positions(t, by_number, places, names, pair) == (aspect["a"], aspect["b"], False)
     claims = clean_claims(t)
     claims["pair_claims"].append(pair)
     assert ai_score.score_answer(claims, t, names, ANSWER)["errors"] == []
@@ -173,3 +173,42 @@ def test_own_place_not_checked_where_the_spread_has_none(built):
     claims = clean_claims(t)
     claims["own_place_treated_as_significant"] = True
     assert ai_score.score_answer(claims, t, names, ANSWER)["errors"] == []
+
+
+def test_ootk_number_slips_go_to_check_by_hand(built):
+    # Opening of the Key place names repeat their own numbers ("9. Sagittarius" is position 36), so a
+    # card claimed one place off, but drawn once in that operation, is listed to check by hand.
+    truth, names = built
+    t = truth("s408850_sp12_full")
+    by_number = {p["number"]: p for p in t["positions"]}
+    once = [p for p in t["positions"] if p["operation"] == 3 and len(ai_score.positions_of(t, p["card"])) == 1]
+    p, q = once[0], next(x for x in t["positions"] if x["operation"] == 3 and x["card"] != once[0]["card"])
+    claims = clean_claims(t)
+    claims["positions"].append({"position": q["number"], "card": p["card"]})
+    result = ai_score.score_answer(claims, t, names, ANSWER)
+    assert result["errors"] == [] and [e["check"] for e in result["check_by_hand"]] == ["A2 wrong position?"]
+
+    # A pair claimed at the wrong numbers is read by its cards; true claims raise nothing.
+    aspect = next(a for a in t["aspects"] if a["operation"] == 3
+                  and all(len(ai_score.positions_of(t, by_number[n]["card"])) == 1 for n in (a["a"], a["b"])))
+    off = next(n for n in range(28, 40) if n not in (aspect["a"], aspect["b"]))
+    pair = {"position_a": aspect["a"], "position_b": off, "card_a": by_number[aspect["a"]]["card"],
+            "card_b": by_number[aspect["b"]]["card"], "dignity_score": "", "dignity_quality": "not_stated",
+            "aspect": aspect["aspect"].lower(), "says_strongest": False, "says_most_strained": False}
+    claims = clean_claims(t)
+    claims["pair_claims"].append(pair)
+    result = ai_score.score_answer(claims, t, names, ANSWER)
+    assert result["errors"] == [] and result["check_by_hand"] == []
+    claims["pair_claims"][-1] = {**pair, "aspect": next(x for x in ("trine", "square") if x != pair["aspect"])}
+    result = ai_score.score_answer(claims, t, names, ANSWER)
+    assert result["errors"] == [] and [e["check"] for e in result["check_by_hand"]] == ["A6 wrong aspect?"]
+    assert "Check by hand" in ai_score.results_md([{**result, "ai": "x", "run": 1}])
+
+
+def test_other_spreads_keep_hard_position_errors(built):
+    truth, names = built
+    t = truth("s408850_sp9_full")
+    claims = clean_claims(t)
+    claims["positions"][3]["card"] = claims["positions"][4]["card"]
+    result = ai_score.score_answer(claims, t, names, ANSWER)
+    assert "A2 wrong position" in checks(result) and result["check_by_hand"] == []
