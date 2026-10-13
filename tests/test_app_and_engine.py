@@ -457,7 +457,7 @@ def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
     for path, heading in [("/start", "Your first reading, step by step"), ("/history", "The Golden Dawn"),
                           ("/examples", "Open the report"),
-                          ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Limitations")]:
+                          ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Worth knowing")]:
         page = client.get(path)
         assert page.status_code == 200 and heading in page.text
         assert f'<a href="{path}" aria-current="page">' in page.text      # nav marks this page
@@ -1960,7 +1960,7 @@ def test_sample_summary_states_facts_not_meanings():
     assert "1 Fire, 1 Water and 1 Earth" in second
     assert "Of the 2 scored pairs, 1 is friendly and 1 is contrary, a net score of -1." in second
     assert "One of the heap's cards sits on the Cube of Space." in second
-    assert second.endswith("What it means is left to your AI.")
+    assert second.endswith("sits on the Cube of Space.")
 
 
 def test_start_page_sample_is_the_full_opening_of_the_key():

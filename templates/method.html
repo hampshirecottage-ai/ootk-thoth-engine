@@ -1,5 +1,5 @@
 {% extends "_guide_base.html" %}
-{% set page_title = "Method and limits" %}
+{% set page_title = "How it works" %}
 {% set page_description = "How LLM Tarot Reading draws the cards and works out their correspondences, what it can't do, what it stores and what it is for." %}
 {% set tagline = "How a reading is made, what it can't do, and what it is for." %}
 {% set active = "/method" %}
@@ -20,9 +20,9 @@
 {% block content %}
         <section class="panel" aria-labelledby="useTitle">
             <h2 id="useTitle">What it is for</h2>
-            <p>This site is a calculator and a prompt writer. It draws tarot cards, looks up their traditional correspondences, scores how they interact, and writes all of that up as a prompt. <strong>It does not interpret the cards itself.</strong> Your AI does that, from the prompt.</p>
-            <p>It is meant for studying the Thoth deck and its correspondences, for reflection, and for giving an AI the same careful groundwork every time instead of a bare list of card names.</p>
-            <p>It is not meant for decisions about health, money, law or safety, and it does not predict the future. Treat any reading, and anything an AI says about it, as something to think with rather than advice.</p>
+            <p>I made this to do the slow part of a Thoth reading for me: shuffling, looking up every correspondence and scoring how the cards interact. It writes all of that up as a prompt, and your AI does the interpreting.</p>
+            <p>It is for studying the Thoth deck and its correspondences, for reflection, and for giving an AI the same careful groundwork every time instead of a bare list of card names.</p>
+            <p>Please don&rsquo;t use it for decisions about health, money, law or safety. A reading, and whatever an AI makes of it, is something to think with, not advice or a forecast.</p>
         </section>
 
         <section class="panel" aria-labelledby="howTitle">
@@ -57,7 +57,7 @@
         </section>
 
         <section class="panel" aria-labelledby="limitsTitle">
-            <h2 id="limitsTitle">Limitations</h2>
+            <h2 id="limitsTitle">Worth knowing</h2>
             <ul>
                 <li><strong>The interpretation is your AI&rsquo;s, not this site&rsquo;s.</strong> AIs can be wrong, invent details, or answer the same prompt differently each time. Nothing here checks what they say.</li>
                 <li><strong>One tradition among several.</strong> Card attributions differ between systems, which is why there are three to choose from. The dignity scores (+2, +1, &minus;2, 0) and the aspect orbs are this project&rsquo;s reading of Book T and astrological practice, not the only one.</li>

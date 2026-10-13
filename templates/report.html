@@ -50,8 +50,8 @@
         details.menu { position: relative; }
         details.menu > summary { list-style: none; }
         details.menu > summary::-webkit-details-marker { display: none; }
-        .menu-list { position: absolute; z-index: 30; top: calc(100% + 4px); right: 0; min-width: 150px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.2); padding: 4px; display: flex; flex-direction: column; }
-        .menu-list button { background: none; border: none; color: var(--text); text-align: left; padding: 9px 12px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 0.9em; }
+        .menu-list { position: absolute; z-index: 30; top: calc(100% + 4px); right: 0; min-width: 190px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.2); padding: 4px; display: flex; flex-direction: column; }
+        .menu-list button { background: none; border: none; color: var(--text); text-align: left; white-space: nowrap; padding: 9px 12px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 0.9em; }
         .menu-list button:hover { background: var(--panel-2); }
         details.types > summary { list-style: none; display: inline-block; }
         details.types > summary::-webkit-details-marker { display: none; }
@@ -80,8 +80,8 @@
         .report-actions .send-llm { flex-direction: column; }
         .report-actions .send-llm .btn { flex: 1; padding: 11px 16px; font-size: 1em; }
         .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .md-tip { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-        .md-tip p { margin: 0 0 10px; font-size: 0.9em; }
+        .md-tip { margin: 12px 0 0; font-size: 0.9em; }
+        .link-btn { background: none; border: none; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; font: inherit; }
         .btn-small { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); padding: 6px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; font: inherit; }
         .btn-small:hover { border-color: var(--accent); }
         .steps-done { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; font-size: 0.9em; counter-reset: step; }
@@ -298,21 +298,18 @@
             <p class="form-lede">Copy and open copies the prompt and opens your AI in a new tab. Paste it in there.</p>
             {% with prompt_source = "promptText", llm_note_elsewhere = true %}{% include "_send_to_llm.html" %}{% endwith %}
             <div class="action-row">
-                <button class="btn secondary" type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
                 <details class="menu">
-                    <summary class="btn secondary">Save &#9662;</summary>
+                    <summary class="btn secondary">More &#9662;</summary>
                     <div class="menu-list">
-                        <button type="button" onclick="window.print()">PDF (print)</button>
-                        <button type="button" data-download-md>Markdown</button>
-                        <button type="button" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>JSON</button>
+                        <button type="button" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
+                        <button type="button" data-download-md>Save as Markdown (.md)</button>
+                        <button type="button" onclick="window.print()">Save as PDF (print)</button>
+                        <button type="button" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>Save as JSON</button>
                     </div>
                 </details>
                 <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
             </div>
-            <div class="md-tip" id="mdTip">
-                <p><strong>Our tip: attach it as a file.</strong> Save the prompt as a Markdown file, then in your AI chat (Gemini, Claude, ChatGPT and others) press <strong>+</strong>, add the file and send. A file gets round the limits many AI chats put on pasted text, so it suits long readings and Gemini.</p>
-                <button class="btn secondary" type="button" data-download-md title="Download the prompt as ootk_report.md">Save prompt as Markdown (.md)</button>
-            </div>
+            <p class="md-tip" id="mdTip">Long prompt? <button type="button" class="link-btn" data-download-md title="Download the prompt as ootk_report.md">Save it as a file</button> and attach it in your AI with <strong>+</strong>.</p>
         </div>
         <div class="band-more">
             <ol class="steps-done no-print" aria-label="Your progress">
@@ -320,7 +317,7 @@
                 <li class="here">Copy the prompt</li>
                 <li>Paste or attach it in your AI</li>
             </ol>
-            <p class="tagline no-print">Your AI writes the interpretation; this page only shows what the prompt contains. <a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
+            <p class="tagline no-print"><a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
             <p class="tagline left-out no-print">{% include "_llm_left_out.html" %}</p>
         </div>
     </section>

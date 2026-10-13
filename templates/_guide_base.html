@@ -48,7 +48,7 @@
         <h1>{{ page_title }}</h1>
         <p class="tagline">{{ tagline }}</p>
         <nav class="guide-nav" aria-label="Guide">
-            {% for href, label in [("/start", "Start here"), ("/history", "History"), ("/examples", "Examples"), ("/library", "Library"), ("/maps", "Card maps"), ("/method", "Method and limits")] %}
+            {% for href, label in [("/start", "Start here"), ("/history", "History"), ("/examples", "Examples"), ("/library", "Library"), ("/maps", "Card maps"), ("/method", "How it works")] %}
             <a href="{{ href }}"{% if href == active %} aria-current="page"{% endif %}>{{ label }}</a>
             {% endfor %}
             <a href="/#readingForm" class="guide-draw">Draw a reading</a>

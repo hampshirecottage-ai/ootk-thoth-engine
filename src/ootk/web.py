@@ -284,8 +284,8 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 REPO_URL = "https://github.com/hampshirecottage-ai/ootk-thoth-engine"
 BUG_REPORT_URL = f"{REPO_URL}/issues/new?template=bug_report.yml"
 CONTACT_URL = f"{REPO_URL}/discussions"
-SITE_DESCRIPTION = ("Draw a Thoth tarot spread and get its Golden Dawn dignities, decans and "
-                    "Liber 777 correspondences calculated, as a prompt for your LLM to interpret.")
+SITE_DESCRIPTION = ("Draw a Thoth tarot spread. OOTK works out its Golden Dawn dignities, decans "
+                    "and Liber 777 correspondences and writes them up for your AI to read with you.")
 # The spreads from first steps to the full Opening of the Key: (level, name, spread keys, what
 # it teaches). Start here lists them and the spread picker groups its options the same way.
 SPREAD_STAGES = [
@@ -322,7 +322,7 @@ LANDING_PAGES = {
         "tagline": "Your AI interprets the cards. OOTK gives it the facts to work from.",
         "description": "An AI tarot reading with the correspondences done properly: draw your "
                        "cards, copy the prompt into ChatGPT, Claude or Gemini.",
-        "intro": "Chatbots guess at tarot correspondences. OOTK looks every card up in the Golden "
+        "intro": "Chatbots are good with meaning but shaky on correspondences. OOTK looks every card up in the Golden "
                  "Dawn and Liber 777 tables, scores the dignities between them, and writes it all "
                  "into one prompt you paste into ChatGPT, Claude, Gemini or any other AI.",
         "spread": "3"},
@@ -719,7 +719,6 @@ def sample_summary(r, settings):
     if on_cube:
         verb = "sits" if len(on_cube) == 1 else "sit"
         second.append(f"{_count(len(on_cube)).capitalize()} of the heap's cards {verb} on the Cube of Space.")
-    second.append("What it means is left to your AI.")
     return [first, " ".join(second)]
 
 
