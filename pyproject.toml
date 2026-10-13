@@ -24,6 +24,8 @@ dev = ["pytest", "httpx", "pillow", "rich"]
 images = ["pillow", "fonttools[woff]"]
 # scripts/view_output.py only; the web app and CLI don't use it, so the server doesn't install it.
 viewer = ["rich"]
+# scripts/ai_score.py run / extract / pilot only (they call the Claude API).
+aicheck = ["anthropic"]
 
 [project.scripts]
 ootk = "ootk.cli:main"
