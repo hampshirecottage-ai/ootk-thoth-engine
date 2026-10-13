@@ -94,6 +94,9 @@ def test_pilot_answers_extracts_and_scores(tmp_path, capsys):
     # Again: nothing new to send.
     ai_score.pilot(client, out)
     assert len(client.answer_calls) == 10 and len(client.extract_calls) == 10
+    # Extract again after the instructions change: every answer, no new answers.
+    ai_score.extract(client, build, answers, again=True)
+    assert len(client.answer_calls) == 10 and len(client.extract_calls) == 20
 
 
 def test_refusal_saves_no_answer(tmp_path):

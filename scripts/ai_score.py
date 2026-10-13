@@ -100,12 +100,14 @@ CLAIMS_SCHEMA = {
                 "dignity_quality": {"type": "string", "enum": ["strong", "friendly", "neutral", "contrary", "not_stated"]},
                 "aspect": {"type": "string", "enum": ["opposition", "square", "trine", "sextile", "conjunction", "not_stated"]},
                 "says_strongest": {"type": "boolean"}, "says_most_strained": {"type": "boolean"}}},
-            "description": "every pair of cards or positions the answer scores, rates or links by an aspect"},
+            "description": "every pair of cards or positions the answer scores, rates or links by an aspect; "
+                           "two different positions, and a score only where the text plainly gives it to these two"},
         "element_counts": {"type": "array", "items": {
             "type": "object", "additionalProperties": False, "required": ["element", "count"],
             "properties": {"element": {"type": "string", "enum": list(ELEMENTS)}, "count": {"type": "integer"}}},
             "description": "element counts it states; convert percentages to counts only if the total is given"},
-        "own_place_treated_as_significant": {"type": "boolean"},
+        "own_place_treated_as_significant": {"type": "boolean",
+                                             "description": "does it lean on the Own-Place Check; false if it does not mention one"},
         "says_significator_mismatch": {"type": "boolean",
                                        "description": "does it say the Significator's place disagrees with the printed cards"},
         "relates_to_question": {"type": "boolean"},
@@ -121,6 +123,11 @@ Record only what the reading itself says, as the JSON schema asks. Copy card nam
 Give positions as numbers using the position list below; use 0 when the reading does not tie a claim to a position.
 Record a card fact only where the reading states it for a card in this reading, not general remarks
 about other cards (for example "Heh is the Star" is not a fact about a drawn card).
+Some position names hold a card in brackets, such as "Decan 10: Venus in Cancer (2 of Cups)". That card names
+the place only; the card drawn there is the one the reading puts on it ("the Queen of Cups sits at Venus in
+Cancer (2 of Cups)" records that decan's position as the Queen of Cups). Never record a bracketed place card as drawn.
+In a chain such as "A -> B (+2) -> C", a score belongs to the link it is written on only when that is clear;
+otherwise leave dignity_score empty.
 
 Position list:
 {positions}
@@ -278,11 +285,48 @@ def positions_of(truth, title):
     return [p["number"] for p in truth["positions"] if p["card"] == title]
 
 
+def place_cards(truth, names):
+    """{position: card title} for the decan positions, whose names hold a card in brackets, such
+    as "Decan 10: Venus in Cancer (2 of Cups)". That card names the place; it is not drawn there."""
+    places = {}
+    for p in truth["positions"]:
+        m = re.fullmatch(r"Decan \d+: .*\(([^()]*)\)\s*", p["name"])
+        title = names.title(m.group(1)) if m else None
+        if title:
+            places[p["number"]] = title
+    return places
+
+
+def pair_positions(truth, by_number, places, names, c):
+    """The two positions a pair claim means, or None. Uses the claimed numbers when they are two
+    real positions; otherwise finds each card (at its claimed position if it is there, else where
+    it was drawn, else the decan it names), keeping to one operation when a card was drawn more
+    than once."""
+    a, b = c["position_a"], c["position_b"]
+    if a in by_number and b in by_number and a != b:
+        return a, b
+
+    def where(card, hint):
+        title = names.title(card)
+        if hint in by_number and title in (by_number[hint]["card"], places.get(hint)):
+            return [hint]
+        return positions_of(truth, title) or [n for n, t in places.items() if t == title]
+    pa, pb = where(c["card_a"], a), where(c["card_b"], b)
+    if len(pa) == 1 and len(pb) > 1:
+        pb = [n for n in pb if by_number[n]["operation"] == by_number[pa[0]]["operation"]]
+    elif len(pb) == 1 and len(pa) > 1:
+        pa = [n for n in pa if by_number[n]["operation"] == by_number[pb[0]]["operation"]]
+    if len(pa) == 1 and len(pb) == 1 and pa != pb:
+        return pa[0], pb[0]
+    return None
+
+
 def score_answer(claims, truth, names, answer_text):
     errors, notes = [], []
     expect = truth["expect"]
     drawn = set(truth["drawn"])
     by_number = {p["number"]: p for p in truth["positions"]}
+    places = place_cards(truth, names)
 
     def err(check, what):
         errors.append({"check": check, "what": what})
@@ -293,6 +337,11 @@ def score_answer(claims, truth, names, answer_text):
         title = names.title(p["card"])
         if title is None:
             notes.append(f"could not read the card name {p['card']!r}")
+            continue
+        if places.get(p["position"]) == title or (title in places.values() and title not in drawn
+                                                   and title != truth.get("significator")):
+            # The card named in a decan's name ("Decan 10: Venus in Cancer (2 of Cups)"), not one drawn.
+            notes.append(f"place card, not a drawn card: {p['card']!r} at position {p['position']}")
             continue
         if title not in drawn and title != truth.get("significator"):
             err("A1 invented card", f"{p['card']!r} (read as {title}) is not in this reading")
@@ -322,15 +371,11 @@ def score_answer(claims, truth, names, answer_text):
     all_scores = [p["score"] for p in pairs.values() if "score" in p]
     no_aspect = {frozenset((x["a"], x["b"])) for x in truth["pairs_without_aspect"]}
     for c in claims["pair_claims"]:
-        a, b = c["position_a"], c["position_b"]
-        if not (a in by_number and b in by_number):
-            ta, tb = names.title(c["card_a"]), names.title(c["card_b"])
-            pa, pb = positions_of(truth, ta), positions_of(truth, tb)
-            if len(pa) == 1 and len(pb) == 1:
-                a, b = pa[0], pb[0]
-            else:
-                notes.append(f"pair not tied to positions: {c['card_a']} / {c['card_b']}")
-                continue
+        found = pair_positions(truth, by_number, places, names, c)
+        if found is None:
+            notes.append(f"pair not tied to positions: {c['card_a']} / {c['card_b']}")
+            continue
+        a, b = found
         key, label = frozenset((a, b)), f"positions {a} and {b}"
         real = pairs.get(key, {})
         stated = int(c["dignity_score"].replace("+", "")) if re.fullmatch(r"[+-]?\d", c["dignity_score"].strip()) else None
@@ -363,7 +408,7 @@ def score_answer(claims, truth, names, answer_text):
     # A8, A9
     if claims["says_significator_mismatch"]:
         err("A8 significator misread", "says the Significator's place disagrees with the printed cards")
-    if claims["own_place_treated_as_significant"] and not any(o["unusual"] for o in truth["own_place"]):
+    if claims["own_place_treated_as_significant"] and truth["own_place"] and not any(o["unusual"] for o in truth["own_place"]):
         err("A9 own place overread", "treats the Own-Place Check as significant; the prompt marks it not unusual")
 
     # B4 coverage, B7 recap, B rules
@@ -509,12 +554,13 @@ def run(client, build, answers, case_ids, model=ANSWER_MODEL, runs=1, effort="me
     return total
 
 
-def extract(client, build, answers, model=EXTRACT_MODEL):
-    """Writes <answer>.claims.json for every answer that has none. Returns the total cost."""
+def extract(client, build, answers, model=EXTRACT_MODEL, again=False):
+    """Writes <answer>.claims.json for every answer that has none (every answer, with again=True,
+    after the extract instructions change). Returns the total cost."""
     total = 0.0
     for path, case_id, ai, run_n in answer_files(answers):
         out = path[:-3] + ".claims.json"
-        if os.path.exists(out):
+        if os.path.exists(out) and not again:
             continue
         truth = load(os.path.join(build, "truth", f"{case_id}.json"))
         positions = "\n".join(f"{p['number']}. {p['name']}" for p in truth["positions"])
@@ -602,6 +648,7 @@ def main(argv=None):
         p.add_argument("--answers", required=True, help="folder of <case>__<ai>__<run>.md answers")
         if name == "extract":
             p.add_argument("--model", default=EXTRACT_MODEL)
+            p.add_argument("--again", action="store_true", help="extract again even where claims exist")
     args = parser.parse_args(argv)
     if args.command == "pilot":
         pilot(make_client(), args.out, args.model)
@@ -610,7 +657,7 @@ def main(argv=None):
                  else [c.strip() for c in args.cases.split(",") if c.strip()])
         print(f"total ${run(make_client(), args.build, args.answers, cases, args.model, args.runs, args.effort):.2f}")
     elif args.command == "extract":
-        print(f"total ${extract(make_client(), args.build, args.answers, args.model):.2f}")
+        print(f"total ${extract(make_client(), args.build, args.answers, args.model, args.again):.2f}")
     else:
         score(args.build, args.answers)
     return 0
