@@ -177,7 +177,8 @@ def truth_for(reading, positions, titles, significator, withheld, seed, spread_k
     for s in reading["spatial_matrix"] or ():
         pair = {"a": s["from_index"] + 1, "b": s["to_index"] + 1, "operation": _op(s.get("segment_name"))}
         if s.get("aspect_name"):
-            aspects.append({**pair, "aspect": s["aspect_name"], "modifier": s["score_modifier"]})
+            aspects.append({**pair, "aspect": s["aspect_name"], "modifier": s["score_modifier"],
+                            "card_score": s.get("card_score")})
         else:
             no_aspect.append({**pair, "kind": s.get("aspect")})
     scores = [d["score"] for d in dignities]
