@@ -678,6 +678,7 @@ def test_significator_places_follow_the_book_t_deal():
         at = [c["card_id"] for c in shuffle.shuffle_deck(deck, f"1568|op{p['op']}")].index(10)
         assert p["shown"] == (at < n) == ("C10" in titles[start:start + n])
         assert positions[start + at % n].endswith(p["place"])
+        assert p["position"] == start + at % n + 1
         assert not p["place"].startswith("[Op")
     # Over many seeds every operation places the significator somewhere.
     for seed in range(50):
