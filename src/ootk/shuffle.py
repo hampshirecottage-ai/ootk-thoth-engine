@@ -113,7 +113,8 @@ _POSITION_PREFIX = re.compile(r"^(\[Op \d+\] )?(\d+\. )?")
 
 def significator_places(cards, seed, positions, sig_card):
     """Where the significator falls in each operation when that operation's whole shuffled
-    deck is laid out as Book T does, as [{"op", "place", "shown"}].
+    deck is laid out as Book T does, as [{"op", "place", "shown"}], plus "position" (the
+    spread position number of that place) for the dealt operations.
 
     Operation 1 cuts the deck into four equal packs (Yod, Heh, Vau, Heh final). Later
     operations deal the whole deck round, one card to each house, sign or decan in turn, so
@@ -136,5 +137,6 @@ def significator_places(cards, seed, positions, sig_card):
         else:
             pack = at % len(indices)
             places.append({"op": op_num, "shown": at < len(indices),
-                           "place": _POSITION_PREFIX.sub("", positions[indices[pack]])})
+                           "place": _POSITION_PREFIX.sub("", positions[indices[pack]]),
+                           "position": indices[pack] + 1})
     return places

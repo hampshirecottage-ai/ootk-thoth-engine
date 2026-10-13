@@ -299,7 +299,9 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     if significator_places:
         notes.append("Where the Significator Falls (in the header) is the Golden Dawn's key to each "
                      "operation: read the pack, house, sign or decan it falls in as where the matter turns, "
-                     "alongside the cards drawn.")
+                     "alongside the cards drawn. It names a place, not a printed card: unless a line "
+                     "says the Significator is the card printed there, do not look for it among "
+                     "the cards at that place.")
     if own_place:
         notes.append("The Own-Place Check in the header compares the cards on their own place with "
                      "chance; give it weight only where it is marked unusual.")
@@ -349,12 +351,16 @@ OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trum
                    "house (the house of that sign, Aries = 1st). The chance is exact for a random "
                    "deal from the 78 cards.")
 
-SIGNIFICATOR_PLACES_INTRO = ("Book T's key to each operation, worked out from the same shuffle. For "
-                             "Operation 1 the shuffled deck is cut into four packs for I H V H and the "
-                             "pack holding the Significator is named; the cards drawn for Operation 1 "
-                             "are still the 15-card heap")
-SIGNIFICATOR_PLACES_DEALT = (". Later operations deal the deck round one card to each house, sign or "
-                             f"decan, so the cards in section {CARDS} are the first card dealt to each")
+SIGNIFICATOR_PLACES_INTRO = ("Book T's key to each operation, worked out from the same shuffle by "
+                             "laying out the whole deck, not only the cards printed in section "
+                             f"{CARDS}. For Operation 1 the deck is cut into four packs for I H V H and "
+                             "the pack holding the Significator is named; the printed Operation 1 "
+                             "cards are still the 15-card heap")
+SIGNIFICATOR_PLACES_DEALT = (". Later operations deal the whole deck round into one pile per house, "
+                             f"sign or decan, and section {CARDS} prints only the top card of each "
+                             "pile, so the Significator usually lies inside its pile, under the card "
+                             "printed there, and is not one of the printed cards. That is expected, "
+                             "not a mismatch")
 
 def significator_places_markdown(places):
     if not places:
@@ -362,7 +368,9 @@ def significator_places_markdown(places):
     def where(p):
         if p["op"] == 1:
             return p["place"]
-        return p["place"] + (", the card drawn there" if p["shown"] else ", deeper in that pack")
+        at = f"position {p['position']}" if p.get("position") else "that place"
+        return p["place"] + (f", the Significator is the card printed at {at}" if p["shown"]
+                             else f", inside that pile, under the card printed at {at}")
     lines = "".join(f"  * Operation {p['op']}: {where(p)}\n" for p in places)
     dealt = SIGNIFICATOR_PLACES_DEALT if len(places) > 1 else ""
     return f"**Where the Significator Falls:** {SIGNIFICATOR_PLACES_INTRO}{dealt}.\n{lines}"
