@@ -40,7 +40,7 @@
         .steps { list-style: none; padding: 0; margin: 12px 0 0; display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 18px; font-size: 0.95em; }
         .steps li { display: flex; align-items: center; gap: 6px; }
         .steps span { display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--panel); color: var(--text); font-weight: 700; font-size: 0.85em; }
-        .trust { margin: 0 0 16px; text-align: center; color: var(--muted); font-size: 0.85em; }
+        .trust { margin: 0; color: var(--muted); font-size: 0.85em; }
         .trust a { color: inherit; }
         :root[data-theme="light"] .trust { color: #ffe0a0; }
         .hero-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 6px 18px; margin: 14px 0 0; }
@@ -65,6 +65,7 @@
     </style>
 </head>
 <body>
+{% set show_open_source = true %}
 {% include "_site_bar.html" %}
     <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
@@ -111,6 +112,5 @@
     <script src="{{ static_url('js/copy.js') }}" defer></script>
     <script src="{{ static_url('js/index.js') }}" defer></script>
 {% include "_site_footer.html" %}
-<p class="trust">Free and <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a></p>
 </body>
 </html>
