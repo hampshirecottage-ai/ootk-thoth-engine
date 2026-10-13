@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Scores AI answers to the OOTK test prompts against what the engine knows.
 
-Step 2 of the AI answer check. Each answer goes through two stages:
+Steps 2 and 3 of the AI answer check. run (or pilot) sends the prompts to Claude and saves
+the answers; answers from other AIs can be saved by hand. Each answer then goes through two
+stages:
 
 1. extract: an AI turns the answer into a fixed-shape list of claims (which card it puts
    where, each correspondence and pair score it states, what it says about the prompt being
@@ -15,8 +17,13 @@ Answers are files named <case id>__<ai>__<run>.md, e.g. s408850_sp3_full__claude
 in one folder; claims go next to them as .claims.json and scores as .score.json.
 
 Usage:
+    python scripts/ai_score.py pilot                    # the whole pilot, into output/ai_check
+    python scripts/ai_score.py run --build BUILD --answers ANSWERS --cases all [--runs 2]
     python scripts/ai_score.py extract --build BUILD --answers ANSWERS [--model claude-sonnet-5-5]
     python scripts/ai_score.py score   --build BUILD --answers ANSWERS
+
+run, extract and pilot call the Claude API: they need `pip install anthropic` and
+ANTHROPIC_API_KEY set in the shell, and each prints what it cost.
 """
 import argparse
 import glob
@@ -432,13 +439,80 @@ def load(path):
         return json.load(f) if path.endswith(".json") else f.read()
 
 
-def extract(build, answers, model):
+# List prices in US dollars per million tokens (input, output), for the cost each run prints.
+PRICES = {"claude-opus-5-5": (4.00, 20.00), "claude-sonnet-5-5": (2.00, 10.00), "claude-haiku-5-5": (0.10, 0.50)}
+ANSWER_MODEL = "claude-opus-5-5"
+# The pilot: the snapshot seed's five full prompts, each answered twice.
+PILOT_SEED, PILOT_RUNS = "408850", 2
+
+
+def cost(model, usage):
+    """Dollars for one response's usage, or 0.0 for a model without a listed price."""
+    price_in, price_out = PRICES.get(model, (0.0, 0.0))
+    tokens_in = (usage.input_tokens + (getattr(usage, "cache_creation_input_tokens", 0) or 0)
+                 + (getattr(usage, "cache_read_input_tokens", 0) or 0))
+    return (tokens_in * price_in + usage.output_tokens * price_out) / 1_000_000
+
+
+def make_client():
     try:
         import anthropic
     except ImportError:
-        sys.exit("extract needs the anthropic package: pip install anthropic")
-    client = anthropic.Anthropic()
-    for path, case_id, ai, run in answer_files(answers):
+        sys.exit("This needs the anthropic package: .venv/bin/python -m pip install anthropic")
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        sys.exit("Set your key first, in this Terminal window only: export ANTHROPIC_API_KEY=sk-ant-...")
+    return anthropic.Anthropic()
+
+
+def ai_label(model):
+    """'claude-opus-5-5' -> 'opus-5-5', the middle part of an answer's file name."""
+    return model.removeprefix("claude-")
+
+
+def run(client, build, answers, case_ids, model=ANSWER_MODEL, runs=1, effort="medium"):
+    """Sends each prompt to `model` as a fresh conversation, like pasting it into a new chat,
+    and saves the answer as <case>__<ai>__<run>.md with a .meta.json beside it (the model that
+    actually answered, tokens, cost, stop reason). Answers already saved are not sent again.
+    Returns the total cost of the calls made."""
+    os.makedirs(answers, exist_ok=True)
+    total = 0.0
+    for case_id in case_ids:
+        prompt = load(os.path.join(build, "prompts", f"{case_id}.md"))
+        for n in range(1, runs + 1):
+            base = os.path.join(answers, f"{case_id}__{ai_label(model)}__{n}")
+            if os.path.exists(base + ".md"):
+                continue
+            # A fresh conversation per run, no system prompt: what a visitor does when they
+            # paste the prompt. Server-side fallbacks answer on another model if this one
+            # declines; the meta file records which model answered.
+            with client.beta.messages.stream(
+                    model=model, max_tokens=64000, output_config={"effort": effort},
+                    betas=["server-side-fallback-2026-07-01"], fallbacks="default",
+                    messages=[{"role": "user", "content": prompt}]) as stream:
+                response = stream.get_final_message()
+            spent = cost(model, response.usage)
+            total += spent
+            meta = {"case_id": case_id, "run": n, "requested_model": model, "served_model": response.model,
+                    "effort": effort, "stop_reason": response.stop_reason,
+                    "input_tokens": response.usage.input_tokens, "output_tokens": response.usage.output_tokens,
+                    "cost_usd": round(spent, 4)}
+            with open(base + ".meta.json", "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=1)
+            text = "".join(b.text for b in response.content if b.type == "text")
+            if response.stop_reason == "refusal" or not text.strip():
+                print(f"{case_id} run {n}: no answer ({response.stop_reason}), see {base}.meta.json")
+                continue
+            with open(base + ".md", "w", encoding="utf-8") as f:
+                f.write(text)
+            print(f"{case_id} run {n}: {meta['input_tokens']:,} in, {meta['output_tokens']:,} out, ${spent:.3f}"
+                  + (f" (answered by {response.model})" if response.model != model else ""))
+    return total
+
+
+def extract(client, build, answers, model=EXTRACT_MODEL):
+    """Writes <answer>.claims.json for every answer that has none. Returns the total cost."""
+    total = 0.0
+    for path, case_id, ai, run_n in answer_files(answers):
         out = path[:-3] + ".claims.json"
         if os.path.exists(out):
             continue
@@ -447,22 +521,28 @@ def extract(build, answers, model):
         response = client.messages.create(
             model=model, max_tokens=16000, output_config={"effort": "low", "format": {"type": "json_schema", "schema": CLAIMS_SCHEMA}},
             messages=[{"role": "user", "content": EXTRACT_INSTRUCTIONS.format(positions=positions, answer=load(path))}])
-        text = next(b.text for b in response.content if b.type == "text")
+        text = next((b.text for b in response.content if b.type == "text"), "")
+        if response.stop_reason != "end_turn" or not text:
+            print(f"{os.path.basename(path)}: claims not extracted ({response.stop_reason})")
+            continue
+        spent = cost(model, response.usage)
+        total += spent
         with open(out, "w", encoding="utf-8") as f:
             json.dump(json.loads(text), f, ensure_ascii=False, indent=1)
-        print(f"{os.path.basename(out)}: {response.usage.input_tokens} in, {response.usage.output_tokens} out")
+        print(f"{os.path.basename(out)}: {response.usage.input_tokens:,} in, {response.usage.output_tokens:,} out, ${spent:.3f}")
+    return total
 
 
 def score(build, answers):
     names = Names(load(os.path.join(build, "deck.json")))
     rows = []
-    for path, case_id, ai, run in answer_files(answers):
+    for path, case_id, ai, run_n in answer_files(answers):
         claims_path = path[:-3] + ".claims.json"
         if not os.path.exists(claims_path):
             print(f"no claims yet for {os.path.basename(path)} (run extract)")
             continue
         truth = load(os.path.join(build, "truth", f"{case_id}.json"))
-        result = {"ai": ai, "run": run, **score_answer(load(claims_path), truth, names, load(path))}
+        result = {"ai": ai, "run": run_n, **score_answer(load(claims_path), truth, names, load(path))}
         with open(path[:-3] + ".score.json", "w", encoding="utf-8") as f:
             json.dump(result, f, ensure_ascii=False, indent=1)
         rows.append(result)
@@ -488,9 +568,34 @@ def results_md(rows):
     return "\n".join(lines) + "\n"
 
 
+def pilot(client, out, model=ANSWER_MODEL):
+    """Builds the prompt set into <out>/build, answers the pilot prompts into <out>/answers,
+    extracts and scores them. Safe to run again: finished steps are skipped."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import ai_check
+    build, answers = os.path.join(out, "build"), os.path.join(out, "answers")
+    if not os.path.exists(os.path.join(build, "cases.json")):
+        ai_check.build(build)
+    cases = [f"s{PILOT_SEED}_sp{key}_full" for key in ai_check.SPREAD_KEYS]
+    spent = run(client, build, answers, cases, model=model, runs=PILOT_RUNS)
+    spent += extract(client, build, answers)
+    score(build, answers)
+    print(f"This run cost about ${spent:.2f}. Results: {os.path.join(answers, 'results.md')}")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
+    p = sub.add_parser("pilot", help="build, answer the 10 pilot prompts, extract and score")
+    p.add_argument("--out", default=os.path.join("output", "ai_check"), help="folder for everything (default output/ai_check, not committed)")
+    p.add_argument("--model", default=ANSWER_MODEL)
+    p = sub.add_parser("run", help="send prompts to Claude and save the answers")
+    p.add_argument("--build", required=True)
+    p.add_argument("--answers", required=True)
+    p.add_argument("--cases", required=True, help="comma-separated case ids, or 'all' for every case in cases.json")
+    p.add_argument("--model", default=ANSWER_MODEL)
+    p.add_argument("--runs", type=int, default=1)
+    p.add_argument("--effort", default="medium")
     for name in ("extract", "score"):
         p = sub.add_parser(name)
         p.add_argument("--build", required=True, help="folder written by scripts/ai_check.py build")
@@ -498,8 +603,14 @@ def main(argv=None):
         if name == "extract":
             p.add_argument("--model", default=EXTRACT_MODEL)
     args = parser.parse_args(argv)
-    if args.command == "extract":
-        extract(args.build, args.answers, args.model)
+    if args.command == "pilot":
+        pilot(make_client(), args.out, args.model)
+    elif args.command == "run":
+        cases = ([c["id"] for c in load(os.path.join(args.build, "cases.json"))] if args.cases == "all"
+                 else [c.strip() for c in args.cases.split(",") if c.strip()])
+        print(f"total ${run(make_client(), args.build, args.answers, cases, args.model, args.runs, args.effort):.2f}")
+    elif args.command == "extract":
+        print(f"total ${extract(make_client(), args.build, args.answers, args.model):.2f}")
     else:
         score(args.build, args.answers)
     return 0
