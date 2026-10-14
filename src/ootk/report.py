@@ -21,6 +21,20 @@ MAPPING_LABELS = {
     "french_egyptian": "French / Egyptian System (Lévi / Papus / Wirth)",
 }
 
+# A note under the system name, for a system whose path numbers would otherwise read as a
+# clash with the Golden Dawn Tree an AI already knows.
+MAPPING_NOTES = {
+    "french_egyptian": (
+        "Under this system each Major takes the Hebrew letter of its own number (I = Aleph, "
+        "II = Beth ... XXI = Tav; the Fool = Shin, which Papus places between XX and XXI), and "
+        "its \"Path n\" is the Tree path that carries that letter. So The Star (XVII) is Peh on "
+        "Path 27 (Netzach-Hod) and The Devil (XV) is Samekh on Path 25 (Tiphareth-Yesod). These "
+        "are not the Golden Dawn card-to-path pairings: the Thoth and Golden Dawn letters on each "
+        "card's Comparative Hebrew Mapping line are there for comparison only. Minor and court "
+        "cards keep their Thoth places."
+    ),
+}
+
 # Hebrew vowel points and cantillation marks. Every Hebrew name in the prompt carries its
 # transliteration, so dropping the points loses nothing and saves many tokens.
 _HEBREW_POINTS = re.compile("[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]")
@@ -77,6 +91,8 @@ CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is
 
 def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None):
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
+    mapping_note = MAPPING_NOTES.get(mapping_system)
+    mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
     end_marker = end_of_prompt_marker(len(spread_results))
@@ -89,7 +105,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 {significator_places_markdown(significator_places)}**PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
-"""
+{mapping_note_line}"""
     legend = _solid_legend(spread_results)
     sections = (                     # in the order of the numbers above
         _cards_md(spread_results, legend),
