@@ -6,7 +6,7 @@
 
 **Try it online: [tarotthoth.com](https://tarotthoth.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![The start page: the headline "Navigate with Tarot.", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Ask your question" panel with its Draw my cards button](docs/images/front.png)
+![The start page: the headline "Welcome to the Tarot Compass.", the three steps (draw your cards, copy the prompt, open it in your AI) and the "Ask your question" panel with its Draw my cards button](docs/images/front.png)
 
 It places the Hebrew letters and the Platonic solids in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://tarotthoth.com/method#space) explains both and [/maps](https://tarotthoth.com/maps) draws them.
 
