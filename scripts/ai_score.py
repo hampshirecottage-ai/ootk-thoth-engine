@@ -99,8 +99,11 @@ CLAIMS_SCHEMA = {
                 "card_a": {"type": "string"}, "card_b": {"type": "string"},
                 "dignity_score": {"type": "string", "description": "e.g. '+2', '-2', '' if not stated"},
                 "dignity_quality": {"type": "string", "enum": ["strong", "friendly", "neutral", "contrary", "not_stated"]},
-                "aspect": {"type": "string", "enum": ["opposition", "square", "trine", "sextile", "conjunction", "not_stated"]},
-                "says_strongest": {"type": "boolean"}, "says_most_strained": {"type": "boolean"}}},
+                "aspect": {"type": "string", "enum": ["opposition", "square", "trine", "sextile", "conjunction", "not_stated"],
+                           "description": "an aspect the reading names; neighbours or 'adjacent' cards are not_stated, "
+                                          "not conjunction"},
+                "says_strongest": {"type": "boolean", "description": "calls it the single strongest pair, not one of a list"},
+                "says_most_strained": {"type": "boolean", "description": "calls it the single most strained pair, not one of a list"}}},
             "description": "every pair of cards or positions the answer scores, rates or links by an aspect; "
                            "two different positions, and a score only where the text plainly gives it to these two"},
         "element_counts": {"type": "array", "items": {
@@ -110,7 +113,9 @@ CLAIMS_SCHEMA = {
         "own_place_treated_as_significant": {"type": "boolean",
                                              "description": "does it lean on the Own-Place Check; false if it does not mention one"},
         "says_significator_mismatch": {"type": "boolean",
-                                       "description": "does it say the Significator's place disagrees with the printed cards"},
+                                       "description": "does it say the data is wrong or contradicts itself about the Significator "
+                                                      "(e.g. its pack does not fit its suit); false when it only says the "
+                                                      "Significator lies hidden under another printed card"},
         "relates_to_question": {"type": "boolean"},
         "framework_used_as_lens": {"type": "integer", "description": "0 not used, 1 named only, 2 shapes the reading"},
         "likely_outcome": {"type": "string", "description": "its likely outcome in one sentence, '' if none"},
@@ -123,12 +128,16 @@ EXTRACT_INSTRUCTIONS = """You are checking a tarot reading an AI wrote from a da
 Record only what the reading itself says, as the JSON schema asks. Copy card names and values as written.
 Give positions as numbers using the position list below; use 0 when the reading does not tie a claim to a position.
 Record a card fact only where the reading states it for a card in this reading, not general remarks
-about other cards (for example "Heh is the Star" is not a fact about a drawn card).
+about other cards (for example "Heh is the Star" is not a fact about a drawn card). Give each card only
+the value the reading ties to that card: "A and B pair Icosahedron with Dodecahedron" does not say which
+is which, so record no solid for either. A place a card sits in ("Fortune at Moon in Sagittarius") is
+not that card's own sign or planet.
 Some position names hold a card in brackets, such as "Decan 10: Venus in Cancer (2 of Cups)". That card names
 the place only; the card drawn there is the one the reading puts on it ("the Queen of Cups sits at Venus in
 Cancer (2 of Cups)" records that decan's position as the Queen of Cups). Never record a bracketed place card as drawn.
 In a chain such as "A -> B (+2) -> C", a score belongs to the link it is written on only when that is clear;
-otherwise leave dignity_score empty.
+otherwise leave dignity_score empty. A run of neighbours ("positions 68-70 are -2") is two pairs, 68-69 and
+69-70, never 68 with 70.
 
 Position list:
 {positions}
@@ -225,6 +234,8 @@ def check_fact(fact, truth_card):
         attribution = truth_card.get("attribution") or ""
         court = re.match(r"(\w+) of (\w+)", attribution) if truth_card.get("arcana") == "Court" else None
         allowed = {truth_card["element"]} | ({court[1], court[2]} if court else set())
+        if letter(truth_card.get("hebrew_letter") or "") == letter("Shin"):
+            allowed.add("Spirit")   # Shin is the letter of Fire and of Spirit (the Aeon)
         return all(e in allowed for e in said), f"data: {truth_card['element']}" + (f" ({court[0]})" if court else "")
     if attr == "sign_or_planet":
         said = [w for w in SIGNS + PLANETS if w.lower() in tokens(value)]
@@ -256,8 +267,10 @@ def check_fact(fact, truth_card):
             return None, "no solid name"
         return said == {truth_card.get("platonic_solid")}, f"data: {truth_card.get('platonic_solid')}"
     if attr == "colour":
-        real = fold(truth_card.get("king_scale_color") or "")
-        return (fold(value) in real or real in fold(value)), f"data: {truth_card.get('king_scale_color')}"
+        # "Red orange", "red-orange" and "orange-red" are one colour; "Yellow, greenish" is "greenish yellow".
+        real = set(re.findall(r"[a-z]+", fold(truth_card.get("king_scale_color") or "")))
+        said = set(re.findall(r"[a-z]+", fold(value)))
+        return bool(real) and (said <= real or real <= said), f"data: {truth_card.get('king_scale_color')}"
     if attr == "cube_type":
         said = {CUBE_TYPES[t] for t in tokens(value) if t in CUBE_TYPES}
         if not said:
@@ -268,6 +281,16 @@ def check_fact(fact, truth_card):
 
 
 # --- scoring one answer --------------------------------------------------------------------
+
+CONTRARY = {"Fire": "Water", "Water": "Fire", "Air": "Earth", "Earth": "Air"}
+
+
+def rule_dignity(e1, e2):
+    """The Book T dignity the prompt's rules give two elements (as src/ootk/rules.py)."""
+    if "Spirit" in (e1, e2):
+        return 0
+    return 2 if e1 == e2 else -2 if CONTRARY.get(e1) == e2 else 1
+
 
 def scored_pairs(truth):
     """{frozenset(a, b): {"score", "aspect"}} for every pair the prompt scores or links."""
@@ -343,12 +366,27 @@ def pair_positions(truth, by_number, places, names, c):
     return None
 
 
+def placed_at(truth, title, value, sig_places):
+    """Does `value` name a place (a decan, sign or house) where this card fell, or where the
+    Significator lies if this card is the Significator?"""
+    want = set(re.findall(r"[a-z]+", fold(value))) - {"in", "the", "of", "decan"}
+    if not want:
+        return False
+    for p in truth["positions"]:
+        if p["card"] == title or (title == truth.get("significator") and p["number"] in sig_places):
+            if want <= set(re.findall(r"[a-z]+", fold(p["name"]))):
+                return True
+    return False
+
+
 def score_answer(claims, truth, names, answer_text):
     errors, notes, by_hand = [], [], []
     expect = truth["expect"]
     drawn = set(truth["drawn"])
     by_number = {p["number"]: p for p in truth["positions"]}
     places = place_cards(truth, names)
+    # Where the Significator lies in each operation, under the printed card ("shown": False).
+    sig_places = {s["position"] for s in truth.get("significator_places", []) if s.get("position")}
 
     def err(check, what):
         errors.append({"check": check, "what": what})
@@ -364,6 +402,9 @@ def score_answer(claims, truth, names, answer_text):
                                                    and title != truth.get("significator")):
             # The card named in a decan's name ("Decan 10: Venus in Cancer (2 of Cups)"), not one drawn.
             notes.append(f"place card, not a drawn card: {p['card']!r} at position {p['position']}")
+            continue
+        if title == truth.get("significator") and p["position"] in sig_places:
+            covered.add(p["position"])   # "the Significator lies here": true, though another card is printed
             continue
         if title not in drawn and title != truth.get("significator"):
             err("A1 invented card", f"{p['card']!r} (read as {title}) is not in this reading")
@@ -388,6 +429,10 @@ def score_answer(claims, truth, names, answer_text):
             continue
         ok, note = check_fact(fact, truth["cards"][title])
         if ok is None:
+            continue
+        if not ok and fact["attribute"] == "sign_or_planet" and placed_at(truth, title, fact["value"], sig_places):
+            # "Fortune at Moon in Sagittarius": the place it fell in, not its own attribution.
+            notes.append(f"place, not attribution: {title} at {fact['value']!r}")
             continue
         checked += 1
         if not ok:
@@ -415,7 +460,14 @@ def score_answer(claims, truth, names, answer_text):
         stated = int(c["dignity_score"].replace("+", "")) if re.fullmatch(r"[+-]?\d", c["dignity_score"].strip()) else None
         if stated is not None:
             if "score" not in real:
-                pair_err("A5 wrong dignity", f"{label}: gives {c['dignity_score']}, but the prompt scores no such pair")
+                rule = rule_dignity(truth["cards"][by_number[a]["card"]]["element"],
+                                    truth["cards"][by_number[b]["card"]]["element"]) \
+                    if by_number[a]["card"] in truth["cards"] and by_number[b]["card"] in truth["cards"] else None
+                if rule == stated:
+                    notes.append(f"{label}: scores a pair the prompt does not, {c['dignity_score']}, as the rules give")
+                else:
+                    pair_err("A5 wrong dignity", f"{label}: gives {c['dignity_score']} to a pair the prompt does not score"
+                             + (f"; the rules give {rule:+d}" if rule is not None else ""))
             elif stated != real["score"]:
                 pair_err("A5 wrong dignity", f"{label}: gives {c['dignity_score']}, data {real['score']:+d}")
         if c["dignity_quality"] in QUALITY_SIGN and "score" in real:
@@ -432,7 +484,12 @@ def score_answer(claims, truth, names, answer_text):
             if c["says_most_strained"] and real["score"] != min(all_scores):
                 pair_err("B5 most strained pair", f"{label} called most strained at {real['score']:+d}; lowest is {min(all_scores):+d}")
     # element counts
+    shin = sum(1 for p in truth["positions"] if p["card"] in truth["cards"]
+               and letter(truth["cards"][p["card"]].get("hebrew_letter") or "") == letter("Shin"))
     for e in claims["element_counts"]:
+        if e["element"] == "Spirit" and 0 < e["count"] <= shin:
+            notes.append(f"counts {e['count']} Spirit for the Shin card (the prompt counts it as Fire)")
+            continue
         if e["element"] in truth["element_counts"] and e["count"] != truth["element_counts"][e["element"]]:
             err("A3 wrong element count", f"{e['element']} {e['count']}, data {truth['element_counts'][e['element']]}")
     # A7 framework
@@ -442,7 +499,7 @@ def score_answer(claims, truth, names, answer_text):
     # A8, A9
     if claims["says_significator_mismatch"]:
         err("A8 significator misread", "says the Significator's place disagrees with the printed cards")
-    if claims["own_place_treated_as_significant"] and truth["own_place"] and not any(o["unusual"] for o in truth["own_place"]):
+    if claims["own_place_treated_as_significant"] and truth["own_place"] and truth["variant"] != "cardsonly" and not any(o["unusual"] for o in truth["own_place"]):
         err("A9 own place overread", "treats the Own-Place Check as significant; the prompt marks it not unusual")
 
     # B4 coverage, B7 recap, B rules
@@ -458,6 +515,8 @@ def score_answer(claims, truth, names, answer_text):
         "B6 decision left to querent": claims["leaves_decision_to_querent"],
         "B7 plain recap": bool(recap) and not terms,
     }
+    if expect.get("cut_off"):
+        rules = {}   # a cut-off prompt should not be read at all, so the reading rules do not apply
     # C1, C3
     special = {}
     if expect.get("cut_off"):
@@ -648,7 +707,7 @@ def results_md(rows):
         special = ", ".join(f"{k}: {v}" for k, v in r["special"].items()) or "-"
         lines.append(f"| {r['case_id']} #{r['run']} | {r['ai']} | {r['hard_errors']} | "
                      f"{len(r.get('check_by_hand', []))} | {r['facts_checked']} | "
-                     f"{r['pairs_checked']} | {r['coverage']:.0%} | {met}/{len(r['rules'])} | {special} |")
+                     f"{r['pairs_checked']} | {r['coverage']:.0%} | {f"{met}/{len(r['rules'])}" if r['rules'] else "n/a"} | {special} |")
     for r in rows:
         if r["errors"] or r.get("check_by_hand") or not all(r["rules"].values()):
             lines.append(f"\n**{r['case_id']} #{r['run']} ({r['ai']})**")
