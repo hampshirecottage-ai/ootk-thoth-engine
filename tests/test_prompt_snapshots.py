@@ -29,7 +29,7 @@ with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-
     REFERENCE = json.load(f)
 
 
-def build_prompt(spread_key):
+def build_prompt(spread_key, mapping_system="thoth"):
     """The same steps as cli.run_spread_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     positions = spread_positions(spread_key)
@@ -42,7 +42,7 @@ def build_prompt(spread_key):
     withheld = withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles)
     significator = sig_card["title"] if pinned else "None (spread has no significator position)"
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, TOPIC, significator, SEED,
-                              spread_results, withheld=withheld,
+                              spread_results, withheld=withheld, mapping_system=mapping_system,
                               significator_places=significator_places(deck, SEED, positions, sig_card))
     return reading["analytical_prompt"]
 
@@ -64,3 +64,13 @@ def test_prompt_matches_saved_copy(spread_key):
         saved = f.read()
     assert prompt == saved, (f"The prompt for spread {spread_key} changed. If that was intended, "
                              f"rewrite the copy with OOTK_UPDATE_SNAPSHOTS=1 and check the diff.")
+
+
+def test_french_prompt_explains_its_path_numbers():
+    """Under French/Egyptian the Star carries Peh and Path 27; without a note an AI that knows
+    the Golden Dawn Tree reads that as a mix-up (Peh is the Tower's letter there)."""
+    french = build_prompt("12", "french_egyptian")
+    assert "**Mapping Note:**" in french
+    assert "The Star (XVII) is Peh on Path 27" in french
+    assert "**Mapping Note:**" not in build_prompt("12")
+    assert "**Mapping Note:**" not in build_prompt("12", "golden_dawn")
