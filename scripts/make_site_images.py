@@ -26,7 +26,7 @@ BEIGE = (244, 236, 220)     # #f4ecdc, the favicon's card
 GREEN = (46, 138, 86)       # #2e8a56, the page background
 DEEP_GREEN = (24, 82, 50)   # the darker end of the preview's gradient
 CREAM = (255, 224, 160)     # #ffe0a0, text directly on green
-TITLE = ["Navigate", "with Tarot."]
+TITLE = ["Welcome to the", "Tarot Compass."]
 TAGLINE = "Draw a spread. Get every card, dignity and decan worked out. Your AI interprets it."
 FOOTER = "tarotthoth.com · free and open source"
 PREVIEW_CARDS = ["0---the-fool.webp", "xvii---the-star.webp", "xix---the-sun.webp"]
@@ -125,9 +125,12 @@ def preview():
         with_shadow(im, rotated, x, y)
 
     d = ImageDraw.Draw(im)
-    title_font = font("serif", 76, 700)
+    size = 76                                       # shrink a long title so it clears the cards
+    while size > 40 and max(d.textlength(line, font=font("serif", size, 700)) for line in TITLE) > 530:
+        size -= 2
+    title_font = font("serif", size, 700)
     for k, line in enumerate(TITLE):
-        d.text((70, 125 + 87 * k), line, font=title_font, fill=CREAM)
+        d.text((70, 125 + round(size * 1.15) * k), line, font=title_font, fill=CREAM)
     sub_font = font("sans", 30)
     y = 345
     for line in wrap(d, TAGLINE, sub_font, 500):
