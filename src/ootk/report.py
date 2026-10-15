@@ -212,6 +212,7 @@ def _solids_md(solid_counts, legend, dual_pairings):
 
     if dual_pairings:
         md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
+        md += f"These are the pairs scored in section {DIGNITY} (in a heap, only its named pairs).\n"
         for dp in dual_pairings:
             md += f"* {dp}\n"
     return md
@@ -352,7 +353,10 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
             "card_score" in s for s in spatial_matrix or ()) else "")
                    + f" is the pair's Book T elemental dignity: {_signed(DIGNITY_SAME)} same element (strong), "
                    f"{_signed(DIGNITY_FRIENDLY)} friendly, {DIGNITY_NEUTRAL} neutral (Spirit), "
-                   f"{_signed(DIGNITY_CONTRARY)} contrary (ill-dignified: each card weakens the other).")
+                   f"{_signed(DIGNITY_CONTRARY)} contrary (ill-dignified: each card weakens the other). "
+                   f"As Book T says, each element is contrary only to its opposite (Fire-Water, "
+                   f"Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as "
+                   f"fully friendly here, not as the weaker pairs some later writers make them.")
     if aspects:
         named = ", ".join(f"{a} {_signed(m)}" for a, m in
                           sorted(aspects.items(), key=lambda kv: [x.name for x in ASPECTS].index(kv[0])))

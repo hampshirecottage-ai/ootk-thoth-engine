@@ -1630,7 +1630,7 @@ def test_report_cards_are_clickable_and_searchable(client):
     cards = ",".join(f"Card {i}" for i in range(75))
     text = post(client, spread_key="12", selected_cards=cards).text
     assert text.count('class="card-slot"') == 75
-    assert 'data-card="74"' in text and 'data-search="[op 4] decan 36: mars in pisces (10 of cups) card 74' in text
+    assert 'data-card="74"' in text and 'data-search="[op 4] decan 36: moon in cancer (4 of cups) card 74' in text
     assert 'id="reportSearch"' in text and 'data-svg-download="op4"' in text
 
 
@@ -1694,9 +1694,10 @@ def test_closing_pair_counts_towards_dignity():
 
 def test_decan_positions_name_the_decan():
     labels = spreads.SPREADS["11"]["positions"]
-    assert labels[0] == "Decan 1: Mars in Aries (2 of Wands)"
-    assert labels[3] == "Decan 4: Mercury in Taurus (5 of Disks)"
-    assert labels[35] == "Decan 36: Mars in Pisces (10 of Cups)"
+    assert labels[0] == "Decan 1: Saturn in Leo (5 of Wands)"        # Book T: from Regulus
+    assert labels[3] == "Decan 4: Sun in Virgo (8 of Disks)"
+    assert labels[24] == "Decan 25: Mars in Aries (2 of Wands)"
+    assert labels[35] == "Decan 36: Moon in Cancer (4 of Cups)"
     assert len(set(labels)) == 36
 
 
@@ -1790,17 +1791,17 @@ def test_own_place_distribution_is_exact():
 def test_own_decan_cards_are_flagged_with_their_chance():
     blank = [fake_card(f"Filler {i}", attribution="Fire") for i in range(36)]
     cards = list(blank)
-    cards[0] = fake_card("2 of Wands - Dominion", attribution="Mars in Aries")       # Decan 1, own
-    cards[12] = fake_card("5 of Wands - Strife", attribution="Saturn in Leo")        # Decan 13, own
-    cards[35] = fake_card("10 of Cups - Satiety", suit="Cups", attribution="Mars in Pisces")  # own
-    cards[1] = fake_card("4 of Wands - Completion", attribution="Venus in Aries")    # Decan 2, not own
+    cards[0] = fake_card("5 of Wands - Strife", attribution="Saturn in Leo")         # Decan 1, own
+    cards[12] = fake_card("8 of Wands - Swiftness", attribution="Mercury in Sagittarius")  # Decan 13
+    cards[35] = fake_card("4 of Cups - Luxury", suit="Cups", attribution="Moon in Cancer")  # own
+    cards[1] = fake_card("2 of Wands - Dominion", attribution="Mars in Aries")       # Decan 2, not own
     [check] = analysis.own_place_check(_wheel("11", cards), "11")
     assert [h["position"] for h in check["hits"]] == [1, 13, 36]
     assert check["count"] == 3 and check["expected"] == pytest.approx(36 / 78)
     assert check["chance"] == pytest.approx(sum(analysis.own_place_distribution("decan", 36)[3:]))
     assert check["unusual"] and check["z"] > 1.64
     text = analysis.own_place_sentence(check)
-    assert "3 of 36 cards on their own decan" in text and "Pos 1 (2 of Wands - Dominion)" in text
+    assert "3 of 36 cards on their own decan" in text and "Pos 1 (5 of Wands - Strife)" in text
     assert "3 or more happens in 1.1% of random draws" in text
 
 

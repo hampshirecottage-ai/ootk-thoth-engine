@@ -9,20 +9,26 @@ ZODIAC_SIGNS = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", 
 _SIGN_SUITS = {"Fire": "Wands", "Earth": "Disks", "Air": "Swords", "Water": "Cups"}
 _CHALDEAN = ("Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon")
 
+# Book T counts the decans from the Royal Star of Leo (Regulus, 0 deg Leo), so the Fourth
+# Operation's wheel opens on Saturn in Leo (5 of Wands). This is the index of that decan
+# counted from 0 deg Aries, the frame atlas.py and analysis.card_home use.
+DECAN_START = 12
+
 def _decan_labels():
-    """'Decan 1: Mars in Aries (2 of Wands)' ... 'Decan 36: Mars in Pisces (10 of Cups)'.
+    """'Decan 1: Saturn in Leo (5 of Wands)' ... 'Decan 36: Moon in Cancer (4 of Cups)'.
 
     Rulers run in Chaldean order from Mars at 0 deg Aries; each sign's three decans are its
-    suit's 2-4 (cardinal), 5-7 (fixed) or 8-10 (mutable), as in the Book of Thoth.
+    suit's 2-4 (cardinal), 5-7 (fixed) or 8-10 (mutable). The wheel starts at DECAN_START.
     """
     elements = ("Fire", "Earth", "Air", "Water")
     labels = []
-    for i in range(36):
+    for p in range(36):
+        i = (p + DECAN_START) % 36
         sign_idx, third = divmod(i, 3)
         ruler = _CHALDEAN[(2 + i) % 7]
         pip = 2 + 3 * (sign_idx % 3) + third
         suit = _SIGN_SUITS[elements[sign_idx % 4]]
-        labels.append(f"Decan {i + 1}: {ruler} in {ZODIAC_SIGNS[sign_idx]} ({pip} of {suit})")
+        labels.append(f"Decan {p + 1}: {ruler} in {ZODIAC_SIGNS[sign_idx]} ({pip} of {suit})")
     return labels
 
 SPREADS = {
@@ -170,7 +176,8 @@ SPREAD_DEFAULT_COORDINATES = {
     # OOTK Op 2: chart wheel, house 1 at 9 o'clock (180 deg), houses running counter-clockwise
     # (house 4 at the bottom, house 7 at 3 o'clock, house 10 at the top).
     "9": _ring(12, start_deg=180.0, step_deg=30.0),
-    # OOTK Op 4: 36 decans, 10 deg apart, counter-clockwise from 0 deg (Aries 0).
+    # OOTK Op 4: 36 decans, 10 deg apart, counter-clockwise from 0 deg, where decan 1 (0 deg Leo)
+    # sits. Only the angles between positions are scored, so where the ring starts is free.
     "11": _ring(36, start_deg=0.0, step_deg=10.0),
 }
 
