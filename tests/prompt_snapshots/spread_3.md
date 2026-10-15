@@ -96,7 +96,7 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 
 **How to read the numbers:**
-* `Score` in section 5 is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other).
+* `Score` in section 5 is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
 * Section 2 counts each card once, under its primary element.
 
 END OF OOTK PROMPT (3 positions)

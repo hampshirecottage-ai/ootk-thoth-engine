@@ -8,7 +8,7 @@
   * Operation 1: the Yod pack (Wands: work and business)
   * Operation 2: Third House (Local Mind & Travel), inside that pile, under the card printed at position 18
   * Operation 3: Leo, inside that pile, under the card printed at position 32
-  * Operation 4: Decan 10: Venus in Cancer (2 of Cups), the Significator is the card printed at position 49
+  * Operation 4: Decan 10: Mars in Scorpio (5 of Cups), the Significator is the card printed at position 49
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution (Arcana Progression)
 **Framework Basis:** auto: no significant Sephirothic trend, default lens - r=+0.18, z=+1.36 (needs |z| >= 1.64), n=59 cards with a Sephira or path of their own (Majors and pips; courts are left out: a court takes its Hebrew letter through its zodiac sign, a Princess through her element, not through a position on the Tree)
@@ -372,7 +372,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Clear pink rose
 
-### Position 40: [Op 4] Decan 1: Mars in Aries (2 of Wands)
+### Position 40: [Op 4] Decan 1: Saturn in Leo (5 of Wands)
 - **Card Drawn**: Prince of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Leo)**: Serpent (ט (Teth))
@@ -382,7 +382,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Yellow, greenish
 
-### Position 41: [Op 4] Decan 2: Sun in Aries (3 of Wands)
+### Position 41: [Op 4] Decan 2: Jupiter in Leo (6 of Wands)
 - **Card Drawn**: 5 of Disks - Worry
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Strength (גבורה (Geburah))
@@ -390,7 +390,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Orange
 
-### Position 42: [Op 4] Decan 3: Venus in Aries (4 of Wands)
+### Position 42: [Op 4] Decan 3: Mars in Leo (7 of Wands)
 - **Card Drawn**: VI - The Lovers
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
@@ -400,7 +400,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Orange
 
-### Position 43: [Op 4] Decan 4: Mercury in Taurus (5 of Disks)
+### Position 43: [Op 4] Decan 4: Sun in Virgo (8 of Disks)
 - **Card Drawn**: VIII - Adjustment
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox Goad (ל (Lamed))
@@ -410,7 +410,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Emerald green
 
-### Position 44: [Op 4] Decan 5: Moon in Taurus (6 of Disks)
+### Position 44: [Op 4] Decan 5: Venus in Virgo (9 of Disks)
 - **Card Drawn**: Prince of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Scorpio)**: Fish (נ (Nun))
@@ -420,7 +420,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Green blue
 
-### Position 45: [Op 4] Decan 6: Saturn in Taurus (7 of Disks)
+### Position 45: [Op 4] Decan 6: Mercury in Virgo (10 of Disks)
 - **Card Drawn**: 3 of Swords - Sorrow
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Understanding (בינה (Binah))
@@ -428,7 +428,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Crimson
 
-### Position 46: [Op 4] Decan 7: Jupiter in Gemini (8 of Swords)
+### Position 46: [Op 4] Decan 7: Moon in Libra (2 of Swords)
 - **Card Drawn**: 6 of Cups - Pleasure
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
@@ -436,7 +436,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Clear pink rose
 
-### Position 47: [Op 4] Decan 8: Mars in Gemini (9 of Swords)
+### Position 47: [Op 4] Decan 8: Saturn in Libra (3 of Swords)
 - **Card Drawn**: Ace of Wands
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Crown (כתר (Kether))
@@ -444,7 +444,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Brilliance
 
-### Position 48: [Op 4] Decan 9: Sun in Gemini (10 of Swords)
+### Position 48: [Op 4] Decan 9: Jupiter in Libra (4 of Swords)
 - **Card Drawn**: Princess of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Element (Water)**: Water (מ (Mem))
@@ -454,7 +454,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Deep blue
 
-### Position 49: [Op 4] Decan 10: Venus in Cancer (2 of Cups)
+### Position 49: [Op 4] Decan 10: Mars in Scorpio (5 of Cups)
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
@@ -464,7 +464,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Amber
 
-### Position 50: [Op 4] Decan 11: Mercury in Cancer (3 of Cups)
+### Position 50: [Op 4] Decan 11: Sun in Scorpio (6 of Cups)
 - **Card Drawn**: 2 of Swords - Peace
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
@@ -472,7 +472,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Pure soft blue
 
-### Position 51: [Op 4] Decan 12: Moon in Cancer (4 of Cups)
+### Position 51: [Op 4] Decan 12: Venus in Scorpio (7 of Cups)
 - **Card Drawn**: VII - The Chariot
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
@@ -482,7 +482,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Amber
 
-### Position 52: [Op 4] Decan 13: Saturn in Leo (5 of Wands)
+### Position 52: [Op 4] Decan 13: Mercury in Sagittarius (8 of Wands)
 - **Card Drawn**: 8 of Swords - Interference
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
@@ -490,7 +490,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet purple
 
-### Position 53: [Op 4] Decan 14: Jupiter in Leo (6 of Wands)
+### Position 53: [Op 4] Decan 14: Moon in Sagittarius (9 of Wands)
 - **Card Drawn**: XIX - The Sun
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Head (ר (Resh))
@@ -500,7 +500,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Dodecahedron`
 - **King Scale Color**: Orange
 
-### Position 54: [Op 4] Decan 15: Mars in Leo (7 of Wands)
+### Position 54: [Op 4] Decan 15: Saturn in Sagittarius (10 of Wands)
 - **Card Drawn**: 9 of Swords - Cruelty
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Foundation (יסוד (Yesod))
@@ -508,7 +508,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Indigo
 
-### Position 55: [Op 4] Decan 16: Sun in Virgo (8 of Disks)
+### Position 55: [Op 4] Decan 16: Jupiter in Capricorn (2 of Disks)
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Mouth (פ (Pé))
@@ -518,7 +518,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Dodecahedron`
 - **King Scale Color**: Scarlet
 
-### Position 56: [Op 4] Decan 17: Venus in Virgo (9 of Disks)
+### Position 56: [Op 4] Decan 17: Mars in Capricorn (3 of Disks)
 - **Card Drawn**: XX - The Aeon
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Tooth (ש (Shin))
@@ -528,7 +528,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Glowing orange scarlet
 
-### Position 57: [Op 4] Decan 18: Mercury in Virgo (10 of Disks)
+### Position 57: [Op 4] Decan 18: Sun in Capricorn (4 of Disks)
 - **Card Drawn**: XII - The Hanged Man
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Water (מ (Mem))
@@ -538,7 +538,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Deep blue
 
-### Position 58: [Op 4] Decan 19: Moon in Libra (2 of Swords)
+### Position 58: [Op 4] Decan 19: Venus in Aquarius (5 of Swords)
 - **Card Drawn**: 3 of Disks - Works
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
@@ -546,7 +546,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Crimson
 
-### Position 59: [Op 4] Decan 20: Saturn in Libra (3 of Swords)
+### Position 59: [Op 4] Decan 20: Mercury in Aquarius (6 of Swords)
 - **Card Drawn**: IV - The Emperor
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
@@ -556,7 +556,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Scarlet
 
-### Position 60: [Op 4] Decan 21: Jupiter in Libra (4 of Swords)
+### Position 60: [Op 4] Decan 21: Moon in Aquarius (7 of Swords)
 - **Card Drawn**: 4 of Wands - Completion
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Mercy (חסד (Chesed))
@@ -564,7 +564,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Deep violet
 
-### Position 61: [Op 4] Decan 22: Mars in Scorpio (5 of Cups)
+### Position 61: [Op 4] Decan 22: Saturn in Pisces (8 of Cups)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
@@ -574,7 +574,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
 
-### Position 62: [Op 4] Decan 23: Sun in Scorpio (6 of Cups)
+### Position 62: [Op 4] Decan 23: Jupiter in Pisces (9 of Cups)
 - **Card Drawn**: 10 of Wands - Oppression
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
@@ -582,7 +582,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Yellow
 
-### Position 63: [Op 4] Decan 24: Venus in Scorpio (7 of Cups)
+### Position 63: [Op 4] Decan 24: Mars in Pisces (10 of Cups)
 - **Card Drawn**: Prince of Disks
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Taurus)**: Nail (ו (Vau))
@@ -592,7 +592,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Red orange
 
-### Position 64: [Op 4] Decan 25: Mercury in Sagittarius (8 of Wands)
+### Position 64: [Op 4] Decan 25: Mars in Aries (2 of Wands)
 - **Card Drawn**: Princess of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Element (Fire)**: Tooth (ש (Shin))
@@ -602,7 +602,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Glowing orange scarlet
 
-### Position 65: [Op 4] Decan 26: Moon in Sagittarius (9 of Wands)
+### Position 65: [Op 4] Decan 26: Sun in Aries (3 of Wands)
 - **Card Drawn**: X - Fortune
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Palm (כ (Kaph))
@@ -612,7 +612,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Dodecahedron`
 - **King Scale Color**: Violet
 
-### Position 66: [Op 4] Decan 27: Saturn in Sagittarius (10 of Wands)
+### Position 66: [Op 4] Decan 27: Venus in Aries (4 of Wands)
 - **Card Drawn**: 0 - The Fool
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox (א (Aleph))
@@ -622,7 +622,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Bright pale yellow
 
-### Position 67: [Op 4] Decan 28: Jupiter in Capricorn (2 of Disks)
+### Position 67: [Op 4] Decan 28: Mercury in Taurus (5 of Disks)
 - **Card Drawn**: XVIII - The Moon
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Back of head (ק (Qoph))
@@ -632,7 +632,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Crimson (ultra violet)
 
-### Position 68: [Op 4] Decan 29: Mars in Capricorn (3 of Disks)
+### Position 68: [Op 4] Decan 29: Moon in Taurus (6 of Disks)
 - **Card Drawn**: Queen of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Libra)**: Ox Goad (ל (Lamed))
@@ -642,7 +642,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Emerald green
 
-### Position 69: [Op 4] Decan 30: Sun in Capricorn (4 of Disks)
+### Position 69: [Op 4] Decan 30: Saturn in Taurus (7 of Disks)
 - **Card Drawn**: 10 of Swords - Ruin
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
@@ -650,7 +650,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Yellow
 
-### Position 70: [Op 4] Decan 31: Venus in Aquarius (5 of Swords)
+### Position 70: [Op 4] Decan 31: Jupiter in Gemini (8 of Swords)
 - **Card Drawn**: 9 of Cups - Happiness
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Foundation (יסוד (Yesod))
@@ -658,7 +658,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Indigo
 
-### Position 71: [Op 4] Decan 32: Mercury in Aquarius (6 of Swords)
+### Position 71: [Op 4] Decan 32: Mars in Gemini (9 of Swords)
 - **Card Drawn**: 2 of Disks - Change
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
@@ -666,7 +666,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Pure soft blue
 
-### Position 72: [Op 4] Decan 33: Moon in Aquarius (7 of Swords)
+### Position 72: [Op 4] Decan 33: Sun in Gemini (10 of Swords)
 - **Card Drawn**: XIV - Art
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
@@ -676,7 +676,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Blue
 
-### Position 73: [Op 4] Decan 34: Saturn in Pisces (8 of Cups)
+### Position 73: [Op 4] Decan 34: Venus in Cancer (2 of Cups)
 - **Card Drawn**: XI - Lust
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
@@ -686,7 +686,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Yellow, greenish
 
-### Position 74: [Op 4] Decan 35: Jupiter in Pisces (9 of Cups)
+### Position 74: [Op 4] Decan 35: Mercury in Cancer (3 of Cups)
 - **Card Drawn**: Queen of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
@@ -696,7 +696,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Scarlet
 
-### Position 75: [Op 4] Decan 36: Mars in Pisces (10 of Cups)
+### Position 75: [Op 4] Decan 36: Moon in Cancer (4 of Cups)
 - **Card Drawn**: 5 of Swords - Defeat
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Strength (גבורה (Geburah))
@@ -741,6 +741,7 @@ Section 1 gives each card's letter and spatial type.
 * **Dodecahedron**: Faces 12, Vertices 20 | Dual: `Icosahedron` | Role: Planetary Celestial Face
 
 **Topological Dual Pairings / Polyhedral Inversions:**
+These are the pairs scored in section 5 (in a heap, only its named pairs).
 * Positions 6 & 7: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
 * Positions 1 & 15: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
 * Positions 18 & 19: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
@@ -1117,7 +1118,7 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 
 **How to read the numbers:**
-* `Score` in section 5 (and `cards:` in section 6) is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other).
+* `Score` in section 5 (and `cards:` in section 6) is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
 * `Modifier` (section 6) is the weight of the aspect itself (Sextile +1, Square -2, Trine +2, Opposition -1). It describes the two positions, not the cards, and is not added to the dignity score.
 * Section 2 counts each card once, under its primary element.
 

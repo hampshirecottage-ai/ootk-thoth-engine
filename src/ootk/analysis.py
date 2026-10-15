@@ -5,7 +5,7 @@ import re
 
 from ootk.rules import aspect_label, element_dignity, find_aspect, separation
 from ootk.spreads import (
-    HEAP_LAYOUTS, HEAP_PAIRS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
+    DECAN_START, HEAP_LAYOUTS, HEAP_PAIRS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
     TREE_LAYOUTS, spread_segments,
 )
 
@@ -601,8 +601,8 @@ def card_home(card_data):
 def own_places(card_data, kind):
     """Positions (0-based on the wheel) that are this card's own on a 'house', 'sign' or 'decan' wheel."""
     sign, decans = card_home(card_data)
-    if kind == "decan":
-        return decans
+    if kind == "decan":                 # the wheel opens on DECAN_START, not on 0 deg Aries
+        return frozenset((d - DECAN_START) % 36 for d in decans)
     return frozenset() if sign is None else frozenset({sign})
 
 def _deck_homes(kind):

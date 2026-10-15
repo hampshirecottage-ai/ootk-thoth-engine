@@ -248,8 +248,8 @@ def test_own_place_chance_uses_the_real_decks_own_places(conn, system):
         places = Counter(analysis.own_places(r, kind) for r in rows)
         del places[frozenset()]
         assert places == Counter(analysis._deck_homes(kind)), kind
-    pip = analysis.own_places(fetch(conn, "2 of Wands - Dominion", system), "decan")
-    assert pip == {0}                                             # Decan 1: Mars in Aries
+    pip = analysis.own_places(fetch(conn, "5 of Wands - Strife", system), "decan")
+    assert pip == {0}                                             # Decan 1: Saturn in Leo
     assert analysis.card_home(fetch(conn, "Knight of Swords", system))[0] == 2    # Gemini, Zain
 
 
