@@ -309,3 +309,24 @@ def set_testimonial_approved(conn, testimonial_id, approved):
 def delete_testimonial(conn, testimonial_id):
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM testimonials WHERE testimonial_id = %s;", (testimonial_id,))
+
+def list_sessions(conn, limit, offset=0):
+    """(rows, total) for the admin Sessions list, newest first: created_at (UTC), question,
+    spread and report link. Web readings keep the question in report_settings; command-line
+    readings have no settings, so theirs is read back from notes ("Prompt: q | Notes: ...")
+    and they have no link."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT count(*) AS total FROM tarot_sessions;")
+        total = cur.fetchone()["total"]
+        cur.execute(
+            "SELECT s.session_id, s.created_at AT TIME ZONE 'UTC' AS created_at, "
+            "  CASE WHEN s.report_settings IS NULL "
+            "       THEN NULLIF(regexp_replace(split_part(s.notes, ' | Notes: ', 1), '^Prompt: ', ''), '') "
+            "       ELSE NULLIF(s.report_settings->>'topic', '') END AS question, "
+            "  p.spread_name AS spread, s.report_settings->>'link' AS link "
+            "FROM tarot_sessions s "
+            "LEFT JOIN LATERAL (SELECT spread_name FROM spread_pulls "
+            "                   WHERE session_id = s.session_id ORDER BY pull_order LIMIT 1) p ON true "
+            "ORDER BY s.created_at DESC, s.session_id DESC LIMIT %s OFFSET %s;",
+            (limit, offset))
+        return [dict(row) for row in cur.fetchall()], total

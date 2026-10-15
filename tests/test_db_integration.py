@@ -393,6 +393,24 @@ def test_command_line_reading_saves_without_report_settings(conn):
     assert row == {"report_settings": None, "notes": "Prompt: q | Notes: n"}
 
 
+def test_admin_sessions_list_reads_web_and_command_line_questions(conn):
+    card = db.fetch_all_cards(conn)[0]
+    results = [{"card_data": card, "position_number": 1, "position_name": "Card"}]
+    with conn.transaction(force_rollback=True):
+        cli_id = db.save_spread_session(conn, "Single Card", "cli question", "n", card["title"], results)
+        web_id = db.save_spread_session(conn, "Triad", "web question", "n", card["title"], results,
+                                        report_settings={"topic": "web question", "link": "tok123"})
+        blank_id = db.save_spread_session(conn, "Triad", "", "PRNG Seed: 1", card["title"], results,
+                                          report_settings={"topic": "", "link": "tok456"})
+        rows, total = db.list_sessions(conn, 3)
+        assert total >= 3 and [r["session_id"] for r in rows] == [blank_id, web_id, cli_id]
+        blank, web, cli = rows
+        assert (cli["question"], cli["spread"], cli["link"]) == ("cli question", "Single Card", None)
+        assert (web["question"], web["spread"], web["link"]) == ("web question", "Triad", "tok123")
+        assert blank["question"] is None and blank["link"] == "tok456"
+        assert db.list_sessions(conn, 1, 1)[0][0]["session_id"] == web_id
+
+
 def test_schema_has_no_stored_solids_or_unused_geometry(conn):
     with conn.cursor() as cur:
         cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'correspondences'")

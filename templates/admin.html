@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Admin" %}
 {% set page_description = "Site admin." %}
-{% set tagline = "Testimonials" %}
+{% set tagline = "Sessions" if view == "sessions" else "Testimonials" %}
 {% set active = "" %}
 {% block head %}
     <meta name="robots" content="noindex, nofollow">
@@ -17,6 +17,23 @@
         .admin blockquote { margin: 4px 0 10px; white-space: pre-line; overflow-wrap: anywhere; }
         .admin .badge { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; border-radius: 4px; background: var(--panel-2); }
         .admin .top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .admin .tabs { display: flex; gap: 14px; margin: 0 0 12px; }
+        .admin .tabs a[aria-current="page"] { font-weight: 700; text-decoration: none; }
+        .admin .table-wrap { overflow-x: auto; }
+        .admin table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+        .admin th, .admin td { text-align: left; vertical-align: top; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+        .admin td.when { white-space: nowrap; }
+        .admin td.question { overflow-wrap: anywhere; white-space: pre-line; min-width: 14em; }
+        .admin td.empty { color: var(--muted); font-style: italic; }
+        .admin .pager { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+        @media (max-width: 640px) {
+            .admin thead { display: none; }
+            .admin tr, .admin td { display: block; }
+            .admin tr { border-bottom: 1px solid var(--line); padding: 6px 0; }
+            .admin td { border: none; padding: 2px 0; }
+            .admin td.when { font-size: 0.85em; color: var(--muted); }
+            .admin td.question { min-width: 0; }
+        }
     </style>
 {% endblock %}
 {% block content %}
@@ -31,9 +48,42 @@
             </form>
             {% else %}
             <div class="top-row">
-                <h2 id="adminTitle">Testimonials</h2>
+                <h2 id="adminTitle">{{ "Sessions" if view == "sessions" else "Testimonials" }}</h2>
                 <form method="post" action="/admin/logout" class="inline"><button type="submit" class="secondary">Sign out</button></form>
             </div>
+            <nav class="tabs" aria-label="Admin">
+                <a href="/admin"{% if view != "sessions" %} aria-current="page"{% endif %}>Testimonials</a>
+                <a href="/admin/sessions"{% if view == "sessions" %} aria-current="page"{% endif %}>Sessions</a>
+            </nav>
+            {% if view == "sessions" %}
+            <p class="note">{{ total }} saved reading{{ "" if total == 1 else "s" }}, newest first. Dates are UTC. Questions are private: don't share this page.</p>
+            {% if sessions %}
+            <div class="table-wrap">
+            <table>
+                <thead><tr><th scope="col">Date</th><th scope="col">Question</th><th scope="col">Spread</th><th scope="col">Report</th></tr></thead>
+                <tbody>
+                {% for s in sessions %}
+                <tr>
+                    <td class="when">{{ s.created_at.strftime('%-d %b %Y, %H:%M') }}</td>
+                    {% if s.question %}<td class="question">{{ s.question }}</td>{% else %}<td class="question empty">No question</td>{% endif %}
+                    <td>{{ s.spread or "" }}</td>
+                    <td>{% if s.link %}<a href="/report/{{ s.link | urlencode }}" target="_blank" rel="noopener noreferrer">Open report</a>{% else %}<span class="empty">None</span>{% endif %}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </div>
+            {% if pages > 1 %}
+            <p class="pager">
+                {% if page > 1 %}<a href="/admin/sessions?page={{ page - 1 }}">Newer</a>{% endif %}
+                <span>Page {{ page }} of {{ pages }}</span>
+                {% if page < pages %}<a href="/admin/sessions?page={{ page + 1 }}">Older</a>{% endif %}
+            </p>
+            {% endif %}
+            {% else %}
+            <p>No readings on this page.</p>
+            {% endif %}
+            {% else %}
             <p class="note">{{ waiting }} waiting for approval · {{ testimonials | length - waiting }} approved. Approved ones take turns on the start page, one a day.</p>
             {% for t in testimonials %}
             <div class="item{% if not t.approved %} waiting{% endif %}" id="t{{ t.testimonial_id }}">
@@ -49,6 +99,7 @@
             {% else %}
             <p>No testimonials yet.</p>
             {% endfor %}
+            {% endif %}
             {% endif %}
         </section>
 {% endblock %}

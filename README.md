@@ -123,7 +123,7 @@ Everything else is optional:
 | Variable | What it does | Default |
 |---|---|---|
 | `APP_PASSWORD` | Every web page asks for this password | off |
-| `ADMIN_PASSWORD` | Turns on `/admin` for approving testimonials | off (no `/admin` page) |
+| `ADMIN_PASSWORD` | Turns on `/admin` for approving testimonials and listing saved readings | off (no `/admin` page) |
 | `VISITOR_HASH_KEY` | Stores a keyed hash of a testimonial sender's IP address (never the address itself) | off |
 | `SITE_URL` | Public address used in link previews, `robots.txt` and `sitemap.xml` | Render's address, then the request's |
 | `DB_CONNECT_TIMEOUT` | Seconds to wait for the database before showing the "database down" page | `10` |
@@ -216,6 +216,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
 | `/report/<link>` | A saved reading |
 | `/admin` | Approve, hide or delete testimonials; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
+| `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
 
 `/?spread=N` opens the start page with that spread chosen.
 

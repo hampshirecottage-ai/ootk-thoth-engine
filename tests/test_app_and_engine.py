@@ -1401,6 +1401,40 @@ def test_admin_cookie_stops_working_when_the_password_changes(client, monkeypatc
     assert 'name="password"' in client.get("/admin").text
 
 
+def test_admin_sessions_lists_readings_only_when_signed_in(client, monkeypatch):
+    from datetime import datetime
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    seen = []
+
+    def fake_sessions(conn, limit, offset=0):
+        seen.append((limit, offset))
+        return [{"session_id": 2, "created_at": datetime(2026, 10, 15, 9, 30), "question": "Will <it> work?",
+                 "spread": "Triad (Timeline & Motion)", "link": "abc_DEF-123"},
+                {"session_id": 1, "created_at": datetime(2026, 10, 14, 8, 0), "question": None,
+                 "spread": "Single Card", "link": None}], 250
+
+    monkeypatch.setattr(app_module, "list_sessions", fake_sessions)
+    page = client.get("/admin/sessions")
+    assert 'name="password"' in page.text and "Will" not in page.text and seen == []
+    assert page.headers["cache-control"] == "no-store" and "noindex" in page.text
+    client.post("/admin/login", data={"password": "secret"})
+    page = client.get("/admin/sessions?page=2")
+    assert page.status_code == 200 and seen == [(100, 100)]
+    text = page.text
+    assert "Will &lt;it&gt; work?" in text and "<it>" not in text                 # questions are escaped
+    assert '/report/abc_DEF-123' in text and "15 Oct 2026, 09:30" in text and "No question" in text
+    assert "250 saved readings" in text and "Page 2 of 3" in text
+    assert "/admin/sessions?page=1" in text and "/admin/sessions?page=3" in text
+    assert 'href="/admin/sessions"' in client.get("/admin").text                # tab on the testimonials view
+    client.get("/admin/sessions?page=0")
+    assert seen[-1] == (100, 0)
+
+
+def test_admin_sessions_does_not_exist_without_a_password(client, monkeypatch):
+    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    assert client.get("/admin/sessions").status_code == 404
+
+
 def test_wrong_admin_passwords_lock_the_visitor_out(client, monkeypatch):
     monkeypatch.setenv("ADMIN_PASSWORD", "secret")
     codes = [client.post("/admin/login", data={"password": "x"}).status_code for _ in range(10)]
