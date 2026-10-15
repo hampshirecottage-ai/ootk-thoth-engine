@@ -28,7 +28,7 @@ from ootk.analysis import WITHHELD_MAX, derive_primary_element, king_scale_hex, 
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
-    connect, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
+    connect, list_sessions, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
     session_has_testimonial, set_testimonial_approved,
 )
 from ootk.lockout import FailedLogins
@@ -1472,8 +1472,25 @@ def admin_home(request: Request):
         return admin_page(request, signed_in=False)
     with get_db_connection() as conn:
         rows = list_testimonials(conn)
-    return admin_page(request, signed_in=True, testimonials=rows,
+    return admin_page(request, signed_in=True, view="testimonials", testimonials=rows,
                       waiting=sum(not t["approved"] for t in rows))
+
+
+SESSIONS_PER_PAGE = 100
+
+
+@app.get("/admin/sessions", response_class=HTMLResponse)
+def admin_sessions(request: Request, page: int = 1):
+    """Every saved reading, newest first: date, question, spread and report link. Questions are
+    querent data, so this stays behind the admin password with the rest of /admin."""
+    if not is_admin(request):
+        return admin_page(request, signed_in=False)
+    page = max(page, 1)
+    with get_db_connection() as conn:
+        rows, total = list_sessions(conn, SESSIONS_PER_PAGE, (page - 1) * SESSIONS_PER_PAGE)
+    pages = max(1, -(-total // SESSIONS_PER_PAGE))
+    return admin_page(request, signed_in=True, view="sessions", sessions=rows, total=total,
+                      page=page, pages=pages)
 
 
 @app.post("/admin/login")
