@@ -159,9 +159,20 @@ def test_every_trump_sits_on_its_cube_of_space_place(conn):
         assert fetch(conn, title, "golden_dawn")["spatial_dimension"] == place, title
 
 
-def test_emperor_keeps_its_letters_cube_edge(conn):
-    emperor = fetch(conn, "IV - The Emperor", "thoth")
-    assert "Tzaddi" in emperor["hebrew_letter"] and emperor["spatial_dimension"] == "Upper-South Edge"
+@pytest.mark.parametrize("title,edge", [
+    ("IV - The Emperor", "North-East Edge"), ("Queen of Wands", "North-East Edge"),          # Aries
+    ("XVII - The Star", "Upper-South Edge"), ("Prince of Swords", "Upper-South Edge"),       # Aquarius
+])
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn"])
+def test_cube_edge_follows_the_sign_not_the_letter(conn, system, title, edge):
+    assert fetch(conn, title, system)["spatial_dimension"] == edge
+
+
+def test_thoth_and_golden_dawn_put_every_card_on_the_same_cube_place(conn):
+    titles = [c["title"] for c in db.fetch_all_cards(conn)]
+    thoth = db.fetch_cards_correspondences(conn, titles, system="thoth")
+    gd = db.fetch_cards_correspondences(conn, titles, system="golden_dawn")
+    assert all(thoth[t]["spatial_dimension"] == gd[t]["spatial_dimension"] for t in titles)
 
 
 @pytest.mark.parametrize("title,thoth_letter,gd_letter,gd_edge,gd_key_scale", [
@@ -174,10 +185,11 @@ def test_golden_dawn_undoes_the_thoth_swap(conn, title, thoth_letter, gd_letter,
     thoth, gd = fetch(conn, title, "thoth"), fetch(conn, title, "golden_dawn")
     assert thoth_letter in thoth["hebrew_letter"] and gd_letter in gd["hebrew_letter"]
     assert gd["spatial_dimension"] == gd_edge and gd["key_scale"] == gd_key_scale
-    # The card keeps its own sign and solid; only the letter and its geometry move.
+    # The card keeps its own sign, solid, colour and cube edge; only the letter moves.
     assert gd["attribution"] == thoth["attribution"]
     assert gd["platonic_solid"] == thoth["platonic_solid"]
     assert gd["king_scale_color"] == thoth["king_scale_color"]
+    assert gd["spatial_dimension"] == thoth["spatial_dimension"]
     for card in (thoth, gd):        # the comparison line names both letters in either system
         assert thoth_letter in card["thoth_hebrew_letter"] and gd_letter in card["gd_hebrew_letter"]
 

@@ -166,16 +166,23 @@ def _cube(row, kind, signs):
             return {"place": None, "note": ""}
         letter = row.get("hebrew_letter") or ""
         where = place_label(place)
-        return {"place": place, "derived": False,
-                "note": f"The {where}, where its letter {letter} sits." if letter not in ("", "N/A")
-                        else f"The {where}."}
+        sign_letter = row.get("gd_hebrew_letter") or ""
+        if letter == row.get("thoth_hebrew_letter") and sign_letter not in ("", "N/A", letter):
+            # Thoth's Tzaddi/Heh swap: the card keeps its sign's edge, not its new letter's.
+            note = (f"The {where}, the edge of its sign. Thoth gives it the letter {letter}, "
+                    f"but the cube keeps the zodiac, so it stays where {sign_letter} sits.")
+        elif letter not in ("", "N/A"):
+            note = f"The {where}, where its letter {letter} sits."
+        else:
+            note = f"The {where}."
+        return {"place": place, "derived": False, "note": note}
     sign = first_of(row.get("attribution") or "", SIGNS)
     via = signs.get(sign)
     if not via or not via.get("place"):
         return {"place": None, "note": "Aces have no place on the cube." if sign is None else ""}
     return {"place": via["place"], "derived": True,
-            "note": f"Not placed itself. Its sign, {sign}, belongs to {via['card']}, whose letter "
-                    f"{via['letter']} sits on the {place_label(via['place'])}."}
+            "note": f"Not placed itself. Its sign, {sign}, belongs to {via['card']}, "
+                    f"on the {place_label(via['place'])}."}
 
 
 FACE_LABELS = {"Up (Zenith)": "upper face (Zenith)", "Down (Nadir)": "lower face (Nadir)",
@@ -211,7 +218,7 @@ def _grid(row, kind, element):
 
 def sign_carriers(rows):
     """{sign: {card, letter, place}}: which Major carries each sign in the active system,
-    and where its letter sits on the cube. Built from the Majors' fetched rows."""
+    and where it sits on the cube. Built from the Majors' fetched rows."""
     out = {}
     for row in rows:
         if row.get("arcana_type") != "Major":

@@ -13,7 +13,8 @@ def row(**kw):
 
 
 EMPEROR = row(title="IV - The Emperor", key_scale=28, hebrew_letter="צ (Tzaddi)", attribution="Aries",
-              spatial_dimension="Upper-South Edge", platonic_solid="Tetrahedron", solid_faces=4,
+              thoth_hebrew_letter="צ (Tzaddi)", gd_hebrew_letter="ה (Hé)",
+              spatial_dimension="North-East Edge", platonic_solid="Tetrahedron", solid_faces=4,
               solid_vertices=4, dual_solid="Tetrahedron (Self-Dual)")
 
 
@@ -29,7 +30,8 @@ def test_decans_follow_book_t():
 def test_major_places():
     a = atlas.card_atlas(EMPEROR, {})
     assert a["tree"]["path"] == 28 and "Netzach and Yesod" in a["tree"]["note"]
-    assert a["cube"]["place"] == "Upper-South Edge" and not a["cube"]["derived"]
+    assert a["cube"]["place"] == "North-East Edge" and not a["cube"]["derived"]
+    assert "edge of its sign" in a["cube"]["note"] and "ה (Hé)" in a["cube"]["note"]
     assert a["zodiac"]["decans"] == [0, 1, 2] and a["zodiac"]["arcs"] == [[0, 30]]
     assert a["solid"]["edges"] == 6
     assert a["grid"] == {"row": "Fire", "col": None, "note": a["grid"]["note"]}
@@ -48,7 +50,7 @@ def test_pip_sits_on_its_sephira_and_reaches_the_cube_through_its_sign():
                                number_or_rank="3", key_scale=3, attribution="Sun in Aries"), carriers)
     assert pip["tree"] == {"path": None, "sephira": [3], "note": pip["tree"]["note"]}
     assert pip["zodiac"]["decans"] == [1] and "10° to 20°" in pip["zodiac"]["note"]
-    assert pip["cube"]["place"] == "Upper-South Edge" and pip["cube"]["derived"]
+    assert pip["cube"]["place"] == "North-East Edge" and pip["cube"]["derived"]
     assert "The Emperor" in pip["cube"]["note"]
     ace = atlas.card_atlas(row(title="Ace of Wands", arcana_type="Minor", suit="Wands", number_or_rank="1",
                                key_scale=1, attribution="Root of the Powers of Fire"), carriers)

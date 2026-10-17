@@ -24,6 +24,12 @@ MAPPING_LABELS = {
 # A note under the system name, for a system whose path numbers would otherwise read as a
 # clash with the Golden Dawn Tree an AI already knows.
 MAPPING_NOTES = {
+    "thoth": (
+        "Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of "
+        "Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale "
+        "colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's "
+        "edge (North-East, Aries) and the reverse."
+    ),
     "french_egyptian": (
         "Under this system each Major takes the Hebrew letter of its own number (I = Aleph, "
         "II = Beth ... XXI = Tav; the Fool = Shin, which Papus places between XX and XXI), and "
