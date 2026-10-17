@@ -287,8 +287,16 @@ document.querySelectorAll("[data-download-json]").forEach(btn => btn.addEventLis
 }));
 // The prompt is already on the page, so the download needs no new request (and saves no
 // second copy of the session).
+// The name says what to do with the file. The seed (or today's date, for cards picked by hand)
+// keeps one reading's file apart from the next.
+function promptFileName() {
+    const seed = document.getElementById("seedValue")?.textContent.trim();
+    if (seed) return `attach_this_to_your_ai_seed${seed}.md`;
+    const d = new Date(), pad = n => String(n).padStart(2, "0");
+    return `attach_this_to_your_ai_${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.md`;
+}
 document.querySelectorAll("[data-download-md]").forEach(btn => btn.addEventListener("click", () =>
-    download("ootk_report.md", "text/markdown",
+    download(promptFileName(), "text/markdown",
              document.getElementById("promptText").textContent)));
 
 document.querySelectorAll("[data-svg-download]").forEach(btn => btn.addEventListener("click", () => {
