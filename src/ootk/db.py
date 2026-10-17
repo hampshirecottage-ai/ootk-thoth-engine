@@ -101,7 +101,7 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
 
     Titles with no thoth_cards row are simply absent from the result.
 
-    Letter data (spatial type, cube position, colours, Hebrew letter) joins on the card's
+    Letter data (spatial type, colours, Hebrew letter) joins on the card's
     key_scale. Under 'thoth' that is the stored Thoth layout; under 'golden_dawn' the Tzaddi/Heh
     swap is undone, so the Emperor sits on Heh and the Star on Tzaddi. The returned key_scale
     is the one the active system uses. 'french_egyptian' keeps the Thoth layout for the cards
@@ -124,7 +124,10 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
     element (analysis.apply_card_solid). That keeps the Thoth swap whole: under 'thoth' the
     Emperor sits on Tzaddi but stays Aries, Fire and a Tetrahedron. The King Scale colour
     follows the sign too (the Golden Dawn row, where each letter keeps its sign), so the
-    Emperor stays Scarlet and the Star Violet, as Thoth paints them.
+    Emperor stays Scarlet and the Star Violet, as Thoth paints them. The cube edge follows the
+    sign the same way: Crowley swapped the letters, not the zodiac, so the Emperor and the Queen
+    of Wands (Aries) stay on the North-East edge and the Star and the Prince of Swords
+    (Aquarius) on the Upper-South edge, where the Sefer Yetzirah puts their signs.
     """
     query = """
     SELECT
@@ -150,7 +153,7 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
             ->> 'king_scale_hex' AS king_scale_hex,
         c.attributions,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_type ELSE c.spatial_type END AS spatial_type,
-        CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE c.spatial_dimension END AS spatial_dimension,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE gd.spatial_dimension END AS spatial_dimension,
         tc.attribution AS card_attribution
     FROM thoth_cards tc
     CROSS JOIN LATERAL (SELECT CASE tc.key_scale WHEN 15 THEN 28 WHEN 28 THEN 15

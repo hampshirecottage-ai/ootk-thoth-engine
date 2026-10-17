@@ -10,6 +10,7 @@
 **Own-Place Check:** a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a Knight, Queen or Prince by the sign that gives it its letter) or its natural house (the house of that sign, Aries = 1st). The chance is exact for a random deal from the 78 cards.
   * Signs: 1 of 12 cards on their own sign: Pos 5 (XI - Lust) - expected 0.77 at random, z=+0.27; 1 or more happens in 54.7% of random draws (about 1 in 2)
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -23,7 +24,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
 

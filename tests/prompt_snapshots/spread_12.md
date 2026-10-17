@@ -17,6 +17,7 @@
   * Op 3 (signs): none of 12 cards on their own sign - expected 0.77 at random, z=-0.90
   * Op 4 (decans): none of 36 cards on their own decan - expected 0.46 at random, z=-0.68
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -40,7 +41,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
 
@@ -278,7 +279,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Path/Sephira**: Window (ה (Hé))
 - **Attribution**: Aquarius
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
 
@@ -288,7 +289,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
 
@@ -552,7 +553,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Scarlet
 
@@ -570,7 +571,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
 
@@ -692,7 +693,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `N/A`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Scarlet
 

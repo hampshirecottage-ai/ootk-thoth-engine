@@ -72,5 +72,12 @@ def test_french_prompt_explains_its_path_numbers():
     french = build_prompt("12", "french_egyptian")
     assert "**Mapping Note:**" in french
     assert "The Star (XVII) is Peh on Path 27" in french
-    assert "**Mapping Note:**" not in build_prompt("12")
     assert "**Mapping Note:**" not in build_prompt("12", "golden_dawn")
+
+
+def test_thoth_prompt_explains_the_swapped_cards_edges():
+    """Under Thoth the Star carries Heh but sits on Aquarius's Upper-South edge; without a note
+    an AI that knows Paul Case's cube reads that as a mix-up (Heh is the North-East edge)."""
+    thoth = build_prompt("12")
+    assert "**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs" in thoth
+    assert "Cube of Space edge follow the sign" in thoth
