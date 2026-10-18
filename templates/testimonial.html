@@ -31,6 +31,7 @@
                 <label for="testimonialName">Name to show (optional)</label>
                 <input id="testimonialName" name="name" maxlength="{{ max_name }}" autocomplete="nickname" placeholder="e.g. Sam, tarot reader" value="{{ given_name or "" }}">
                 <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+                <input type="hidden" name="opened" value="{{ opened }}">
                 <p class="note">Only your words and the name you give are ever shown. A random session id, the time and your browser type are stored with them so each visitor sends one.</p>
                 <div class="actions"><button type="submit" class="send">Send testimonial</button></div>
             </form>

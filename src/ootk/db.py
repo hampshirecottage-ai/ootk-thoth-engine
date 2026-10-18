@@ -287,6 +287,13 @@ def session_has_testimonial(conn, session_id):
         cur.execute("SELECT 1 FROM testimonials WHERE session_id = %s;", (session_id,))
         return cur.fetchone() is not None
 
+def waiting_testimonials(conn, days):
+    """How many testimonials sent in the last `days` days are waiting for approval."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT count(*) AS n FROM testimonials WHERE NOT approved "
+                    "AND created_at > now() - make_interval(days => %s);", (days,))
+        return cur.fetchone()["n"]
+
 def approved_testimonials(conn):
     """[{name, body}] of approved testimonials, oldest first.
     Session details are never read here, so they can't reach a page."""

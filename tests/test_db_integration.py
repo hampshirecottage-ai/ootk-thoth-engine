@@ -361,6 +361,10 @@ def test_admin_testimonial_queries(conn):
         db.set_testimonial_approved(conn, rows[1]["testimonial_id"], True)
         assert db.approved_testimonials(conn) == [{"name": None, "body": "One."}]
         assert [r["body"] for r in db.list_testimonials(conn)] == ["Two.", "One."]   # waiting first
+        assert db.waiting_testimonials(conn, 7) == 1
+        with conn.cursor() as cur:
+            cur.execute("UPDATE testimonials SET created_at = now() - interval '8 days' WHERE NOT approved;")
+        assert db.waiting_testimonials(conn, 7) == 0                    # older waiting ones don't count
         db.delete_testimonial(conn, rows[0]["testimonial_id"])
         assert [r["body"] for r in db.list_testimonials(conn)] == ["One."]
 

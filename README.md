@@ -275,7 +275,7 @@ The web app reads the card and correspondence tables once per process, so restar
 
 ### Testimonials
 
-New testimonials from `/testimonial` are saved unapproved. With `ADMIN_PASSWORD` set, sign in at `/admin` to approve, hide or delete them (wrong passwords lock out like `APP_PASSWORD`). Without it, approve one with `UPDATE testimonials SET approved = true WHERE testimonial_id = <id>;`. Each is stored with a random session id from a cookie, the time and the browser's user agent, plus a keyed IP hash when `VISITOR_HASH_KEY` is set. Approved testimonials take turns by date and reach the start page within five minutes.
+New testimonials from `/testimonial` are saved unapproved. With `ADMIN_PASSWORD` set, sign in at `/admin` to approve, hide or delete them (wrong passwords lock out like `APP_PASSWORD`). Without it, approve one with `UPDATE testimonials SET approved = true WHERE testimonial_id = <id>;`. Each is stored with a random session id from a cookie, the time and the browser's user agent, plus a keyed IP hash when `VISITOR_HASH_KEY` is set. Approved testimonials take turns by date and reach the start page within five minutes. Spam guards: a hidden field bots fill in, a check that drops forms sent within 3 seconds of opening, one per session, three per address an hour, and a pause on new testimonials while 50 sent in the last week are waiting (hidden ones count as waiting, so delete spam rather than hiding it).
 
 ### Sanity-check a full run
 
