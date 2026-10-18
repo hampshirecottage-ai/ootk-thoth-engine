@@ -29,7 +29,7 @@ from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
     connect, list_sessions, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
-    session_has_testimonial, set_testimonial_approved,
+    session_has_testimonial, set_testimonial_approved, waiting_testimonials,
 )
 from ootk.lockout import FailedLogins
 from ootk.report import MAPPING_LABELS, analyze_reading
@@ -1337,6 +1337,13 @@ TESTIMONIAL_RETRY_SECONDS = 60
 _testimonial_cache = {}
 # Clearing cookies starts a new session, so one address may send at most three an hour.
 testimonial_senders = FailedLogins(attempts=3, window=3600)
+# The form carries the time it was opened. Anything sent sooner than this, or without that time,
+# came from a bot: nobody reads the form and writes a testimonial that fast.
+TESTIMONIAL_MIN_SECONDS = 3
+# While this many testimonials sent in the last week are waiting for approval, the form takes
+# no more, so a flood can't bury /admin. Older waiting (or hidden) ones don't count.
+TESTIMONIAL_WAITING_MAX = 50
+TESTIMONIAL_WAITING_DAYS = 7
 
 
 def visitor_session(request: Request) -> str | None:
@@ -1358,6 +1365,16 @@ def visitor_hash(request: Request) -> str | None:
     if not key:
         return None
     return hmac.new(key.encode(), visitor_address(request).encode(), hashlib.sha256).hexdigest()
+
+
+def sent_too_fast(opened: str) -> bool:
+    """Whether a testimonial form came back sooner than a person could fill it in, or without
+    the time it was opened (a bot posting straight to /testimonial)."""
+    try:
+        seconds = time.time() - int(opened)
+    except ValueError:
+        return True
+    return not TESTIMONIAL_MIN_SECONDS <= seconds
 
 
 def testimonial_of_the_day():
@@ -1382,7 +1399,7 @@ def testimonial_of_the_day():
 
 def testimonial_page(request: Request, sid: str, status: int = 200, **context):
     response = guide_page(request, "testimonial.html", max_body=TESTIMONIAL_MAX,
-                          max_name=TESTIMONIAL_NAME_MAX, **context)
+                          max_name=TESTIMONIAL_NAME_MAX, opened=int(time.time()), **context)
     response.status_code = status
     return with_session_cookie(request, response, sid)
 
@@ -1400,12 +1417,14 @@ def testimonial_form(request: Request):
 
 @app.post("/testimonial", response_class=HTMLResponse)
 def send_testimonial(request: Request, body: str = Form(""), name: str = Form(""),
-                     website: str = Form("")):
+                     website: str = Form(""), opened: str = Form("")):
     """Saves a testimonial, unapproved, with this session's id. One per session: a second one
-    is refused. `website` is a field people never see; bots that fill it in are ignored."""
+    is refused. `website` is a field people never see; bots that fill it in are ignored, and so
+    are bots that send the form within seconds of opening it (`opened`). Either way the bot is
+    thanked, so it can't tell it was caught."""
     sid = visitor_session(request) or secrets.token_urlsafe(16)
     body, name = body.strip(), " ".join(name.split())
-    if website:
+    if website or sent_too_fast(opened):
         return testimonial_page(request, sid, sent=True)
     error = None
     if not body:
@@ -1425,6 +1444,11 @@ def send_testimonial(request: Request, body: str = Form(""), name: str = Form(""
                                       "Please try again in an hour.")
     user_agent = request.headers.get("user-agent", "")[:USER_AGENT_MAX]
     with get_db_connection() as conn:
+        if waiting_testimonials(conn, TESTIMONIAL_WAITING_DAYS) >= TESTIMONIAL_WAITING_MAX:
+            log.warning("testimonial refused: %d already waiting for approval", TESTIMONIAL_WAITING_MAX)
+            return testimonial_page(request, sid, status=429, given_body=body, given_name=name,
+                                    error="A lot of testimonials are waiting to be read, so new ones "
+                                          "are paused for now. Please try again in a few days.")
         saved = save_testimonial(conn, sid, name, body, user_agent, visitor_hash(request))
     if saved:
         testimonial_senders.failed(visitor)

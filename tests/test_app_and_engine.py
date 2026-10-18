@@ -32,6 +32,9 @@ def fake_card(title, suit="Wands", arcana="Minor", attribution="Fire"):
         "dual_solid": "Tetrahedron", "topological_role": "Node",
     }
 
+# A testimonial form opened a minute ago, as a person would send it.
+OPENED = {"opened": str(int(time.time()) - 60)}
+
 
 @pytest.fixture
 def client(monkeypatch):
@@ -65,6 +68,8 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "save_testimonial", fake_save_testimonial)
     monkeypatch.setattr(app_module, "session_has_testimonial",
                         lambda conn, sid: any(t["session_id"] == sid for t in testimonials))
+    monkeypatch.setattr(app_module, "waiting_testimonials",
+                        lambda conn, days: sum(not t["approved"] for t in testimonials))
     monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
 
     def fake_list(conn):
@@ -1283,7 +1288,7 @@ def test_testimonial_is_saved_unapproved_with_its_session(client, monkeypatch):
     sid = form.cookies.get("ootk_session")
     assert form.status_code == 200 and len(sid) == 22 and 'name="body"' in form.text
     assert form.headers["cache-control"] == "no-store"
-    r = client.post("/testimonial", data={"body": "  Clear and thorough.  ", "name": " Sam  R "},
+    r = client.post("/testimonial", data={**OPENED, "body": "  Clear and thorough.  ", "name": " Sam  R "},
                     headers={"user-agent": "TestBrowser/1.0"})
     assert r.status_code == 200 and "Thank you" in r.text
     [t] = client.testimonials
@@ -1294,27 +1299,27 @@ def test_testimonial_is_saved_unapproved_with_its_session(client, monkeypatch):
 
 
 def test_one_testimonial_per_session(client):
-    client.post("/testimonial", data={"body": "first"})
-    r = client.post("/testimonial", data={"body": "second"})
+    client.post("/testimonial", data={**OPENED, "body": "first"})
+    r = client.post("/testimonial", data={**OPENED, "body": "second"})
     assert "already shared one" in r.text and len(client.testimonials) == 1
     assert "already shared one" in client.get("/testimonial").text
     client.cookies.clear()                                             # a new session may send one
-    client.post("/testimonial", data={"body": "other visitor"})
+    client.post("/testimonial", data={**OPENED, "body": "other visitor"})
     assert len(client.testimonials) == 2
 
 
 def test_one_address_sends_at_most_three_an_hour(client):
     for n in range(3):
         client.cookies.clear()
-        assert "Thank you" in client.post("/testimonial", data={"body": f"t{n}"}).text
+        assert "Thank you" in client.post("/testimonial", data={**OPENED, "body": f"t{n}"}).text
     client.cookies.clear()
-    r = client.post("/testimonial", data={"body": "t3"})
+    r = client.post("/testimonial", data={**OPENED, "body": "t3"})
     assert r.status_code == 429 and "try again in an hour" in r.text and len(client.testimonials) == 3
 
 
 def test_no_ip_hash_without_a_key(client, monkeypatch):
     monkeypatch.delenv("VISITOR_HASH_KEY", raising=False)
-    client.post("/testimonial", data={"body": "hello"})
+    client.post("/testimonial", data={**OPENED, "body": "hello"})
     assert client.testimonials[0]["ip_hash"] is None
 
 
@@ -1324,13 +1329,41 @@ def test_no_ip_hash_without_a_key(client, monkeypatch):
     ({"body": "ok", "name": "n" * 61}, "60 characters"),
 ])
 def test_bad_testimonials_are_refused_and_kept_in_the_form(client, data, message):
-    r = client.post("/testimonial", data=data)
+    r = client.post("/testimonial", data={**OPENED, **data})
     assert r.status_code == 400 and message in r.text and client.testimonials == []
 
 
 def test_honeypot_field_drops_bot_testimonials(client):
-    r = client.post("/testimonial", data={"body": "buy now", "website": "http://spam"})
+    r = client.post("/testimonial", data={**OPENED, "body": "buy now", "website": "http://spam"})
     assert r.status_code == 200 and client.testimonials == []
+
+
+def test_form_carries_the_time_it_was_opened(client):
+    [opened] = re.findall(r'name="opened" value="(\d+)"', client.get("/testimonial").text)
+    assert abs(int(opened) - time.time()) < 5
+
+
+@pytest.mark.parametrize("opened", ["", "soon", 0, 3600])
+def test_testimonials_sent_too_fast_or_without_a_time_are_dropped(client, opened):
+    if isinstance(opened, int):                                        # seconds from now
+        opened = str(int(time.time()) + opened)
+    r = client.post("/testimonial", data={"body": "buy now", "opened": opened})
+    assert r.status_code == 200 and "Thank you" in r.text and client.testimonials == []
+
+
+def test_form_pauses_while_too_many_wait_for_approval(client, monkeypatch):
+    monkeypatch.setattr(app_module, "TESTIMONIAL_WAITING_MAX", 2)
+    monkeypatch.setattr(app_module, "testimonial_senders", FailedLogins(attempts=10, window=3600))
+    for n in range(2):
+        client.cookies.clear()
+        client.post("/testimonial", data={**OPENED, "body": f"t{n}"})
+    client.cookies.clear()
+    r = client.post("/testimonial", data={**OPENED, "body": "third", "name": "Cy"})
+    assert r.status_code == 429 and "paused for now" in r.text and "third" in r.text
+    assert len(client.testimonials) == 2
+    client.testimonials[0]["approved"] = True                         # approving one frees a place
+    assert "Thank you" in client.post("/testimonial", data={**OPENED, "body": "third"}).text
+    assert len(client.testimonials) == 3
 
 
 def test_testimonial_of_the_day_rotates_by_date_and_is_escaped(client, monkeypatch):
@@ -1367,7 +1400,7 @@ def test_admin_is_linked_from_nowhere(client, monkeypatch):
 
 def test_admin_signs_in_and_approves_hides_and_deletes(client, monkeypatch):
     monkeypatch.setenv("ADMIN_PASSWORD", "secret")
-    client.post("/testimonial", data={"body": "Waiting one", "name": "Ann"})
+    client.post("/testimonial", data={**OPENED, "body": "Waiting one", "name": "Ann"})
     page = client.get("/admin")
     assert 'name="password"' in page.text and "Waiting one" not in page.text
     assert page.headers["cache-control"] == "no-store" and "noindex" in page.text
@@ -1457,7 +1490,7 @@ def test_front_page_survives_a_testimonial_database_error(client, monkeypatch):
 
 
 def test_testimonial_with_a_nul_character_is_refused(client):
-    r = client.post("/testimonial", data={"body": "hi\x00there"})
+    r = client.post("/testimonial", data={**OPENED, "body": "hi\x00there"})
     assert r.status_code == 400 and client.testimonials == []
 
 
