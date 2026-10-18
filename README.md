@@ -130,9 +130,14 @@ Everything else is optional:
 | `DB_QUERY_TIMEOUT` | Seconds one database query may take (including waiting on a migration's lock, or a connection that went silent) before it gives up; a reading that can't be saved in time is still shown, with a notice | `15` |
 | `DB_DOWN_SECONDS` | After the database fails to answer within `DB_CONNECT_TIMEOUT`, how many seconds pages show the "database down" page at once instead of waiting again | `15` |
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
+| `BUSY_ALERT_NTFY_TOPIC` | Turns on the busy-server alert: a push to this [ntfy](https://ntfy.sh) topic when CPU stays high, and another when it calms down. Anyone who knows the name can read the topic, so make it long and random | off |
+| `BUSY_ALERT_PERCENT` | CPU use, as a share of what the host allows (a tenth of a CPU on Render's free plan), that counts as busy | `70` |
+| `BUSY_ALERT_MINUTES` | Minutes the average must stay at or above that before an alert | `5` |
+| `BUSY_ALERT_COOLDOWN_MINUTES` | Least time between two busy alerts | `60` |
+| `BUSY_ALERT_NTFY_SERVER` | ntfy server to post to | `https://ntfy.sh` |
 | `PGSSLMODE` | Standard PostgreSQL setting; set `require` for a hosted database such as Neon | libpq default |
 
-`DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT`, `DB_DOWN_SECONDS` and `WEB_THREADS` must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
+`DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT`, `DB_DOWN_SECONDS`, `WEB_THREADS` and the `BUSY_ALERT_` numbers must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
 
 ### 3. Create the database
 
