@@ -12,6 +12,7 @@ import secrets
 from collections import Counter
 import shlex
 import time
+from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import urlencode, urlsplit
 
@@ -35,6 +36,7 @@ from ootk.lockout import FailedLogins
 from ootk.report import MAPPING_LABELS, analyze_reading
 from ootk.rules import element_dignity
 from ootk import atlas
+from ootk import busy
 from ootk import sky
 from ootk import significator as significator_methods
 from ootk.shuffle import (
@@ -83,8 +85,17 @@ def builds_a_reading(path: str) -> bool:
     return path == "/generate_report" or path.startswith(("/reading", "/report/"))
 
 
+@asynccontextmanager
+async def lifespan(app):
+    # The busy-server alert (off unless BUSY_ALERT_NTFY_TOPIC is set) runs for the server's life.
+    watch = busy.start()
+    yield
+    if watch:
+        watch.cancel()
+
+
 # No interactive API docs: the site has no API clients, and the docs page loads scripts from a CDN.
-app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None)
+app = FastAPI(title="OOTK Thoth Graphic GUI", docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 log = logging.getLogger("ootk.web")
 
 
