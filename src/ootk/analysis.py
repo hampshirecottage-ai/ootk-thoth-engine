@@ -61,6 +61,27 @@ ELEMENT_SOLIDS = {"Fire": "Tetrahedron", "Water": "Icosahedron", "Air": "Octahed
 PLANETARY_MAJORS = {"The Magus", "The Priestess", "The Empress", "Fortune", "The Tower", "The Sun",
                     "The Universe"}
 
+# Why each planetary Major has the element in MAJOR_ELEMENTS. A planet that rules two signs
+# could take either sign's element; these name the sign used and the one left out, so the
+# prompt can say why, for example, the Empress scores as Earth and not Air.
+PLANETARY_ELEMENT_NOTES = {
+    "The Magus": "Mercury via Gemini; Virgo would make it Earth",
+    "The Priestess": "the Moon via Cancer, its only sign",
+    "The Empress": "Venus via Taurus; Libra would make it Air",
+    "Fortune": "Jupiter via Sagittarius; Pisces would make it Water",
+    "The Tower": "Mars via Aries; Scorpio would make it Water",
+    "The Sun": "the Sun via Leo, its only sign",
+    "The Universe": "Saturn via Capricorn, also the card's own Earth; Aquarius would make it Air",
+}
+
+def planetary_element_note(card_data):
+    """'Earth (Venus via Taurus; Libra would make it Air)' for a planetary Major, else None."""
+    data = card_data or {}
+    if data.get("arcana_type") != "Major":
+        return None
+    note = PLANETARY_ELEMENT_NOTES.get(major_name(data))
+    return f"{MAJOR_ELEMENTS[major_name(data)]} ({note})" if note else None
+
 def card_solid(card_data):
     """The card's Platonic solid name (see PLATONIC_SOLIDS), or None for an unknown card."""
     data = card_data or {}

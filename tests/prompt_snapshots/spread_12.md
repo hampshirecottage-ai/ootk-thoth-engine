@@ -136,6 +136,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
+- **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
@@ -154,6 +155,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
+- **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
 - **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
@@ -190,6 +192,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
+- **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
 - **Comparative Hebrew Mapping**: Thoth: `כ (Kaph)` | Golden Dawn: `כ (Kaph)` | French/Egyptian: `Yod (י)`
 - **Spatial Dimension**: `Double_Direction` (West)
 - **Platonic Solid**: `Dodecahedron`
@@ -308,6 +311,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
+- **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
@@ -360,6 +364,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
+- **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
 - **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
@@ -496,6 +501,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Head (ר (Resh))
 - **Attribution**: Sun
+- **Element (used in scores)**: Fire (the Sun via Leo, its only sign)
 - **Comparative Hebrew Mapping**: Thoth: `ר (Resh)` | Golden Dawn: `ר (Resh)` | French/Egyptian: `Qoph (ק)`
 - **Spatial Dimension**: `Double_Direction` (South)
 - **Platonic Solid**: `Dodecahedron`
@@ -514,6 +520,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
+- **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
@@ -608,6 +615,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
+- **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
 - **Comparative Hebrew Mapping**: Thoth: `כ (Kaph)` | Golden Dawn: `כ (Kaph)` | French/Egyptian: `Yod (י)`
 - **Spatial Dimension**: `Double_Direction` (West)
 - **Platonic Solid**: `Dodecahedron`

@@ -81,3 +81,20 @@ def test_thoth_prompt_explains_the_swapped_cards_edges():
     thoth = build_prompt("12")
     assert "**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs" in thoth
     assert "Cube of Space edge follow the sign" in thoth
+
+
+def test_planetary_majors_say_which_sign_gives_their_element():
+    """Venus rules Taurus (Earth) and Libra (Air); without a note an AI that reads Venus by Libra
+    takes the Empress's Earth scores as a mistake."""
+    from ootk.analysis import MAJOR_ELEMENTS, PLANETARY_ELEMENT_NOTES, PLANETARY_MAJORS, planetary_element_note
+    assert set(PLANETARY_ELEMENT_NOTES) == PLANETARY_MAJORS
+    empress = {"arcana_type": "Major", "title": "III - The Empress"}
+    assert planetary_element_note(empress) == "Earth (Venus via Taurus; Libra would make it Air)"
+    assert planetary_element_note({"arcana_type": "Major", "title": "XI - Lust"}) is None
+    assert planetary_element_note({"arcana_type": "Minor", "title": "3 of Swords - Sorrow"}) is None
+    for name in PLANETARY_MAJORS:
+        assert planetary_element_note({"arcana_type": "Major", "title": f"X - {name}"}).startswith(MAJOR_ELEMENTS[name])
+    prompt = build_prompt("12")
+    assert prompt.count("- **Element (used in scores)**:") == sum(
+        1 for line in prompt.splitlines()
+        if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in PLANETARY_MAJORS)
