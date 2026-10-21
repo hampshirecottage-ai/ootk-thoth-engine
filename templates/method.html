@@ -40,7 +40,14 @@
                         <tr><td>Spirit on either side</td><td class="n">0</td></tr>
                     </table>
                     Cards are also related by where they sit in the layout; on the wheels of houses, signs and decans that means astrological aspects, counted within set orbs. These aspects belong to the layout, so they are the same in every reading of a spread; only the cards at their two ends change. The report adds the elemental balance, where the cards fall on the Cube of Space, and their Platonic solids.</li>
-                <li><strong>Choose a lens.</strong> On Auto, the macro framework comes from whether the cards run down the Tree of Life towards Malkuth or up towards Kether. The report says which, and why.</li>
+                <li id="lens"><strong>Choose a lens.</strong> The framework is the overall story your AI is asked to read the cards as. It sets one line of the prompt and changes nothing else: the cards, scores and calculations stay the same. There are four:
+                    <ul>
+                        <li><strong>1. Divine Light Flow:</strong> energy coming down from Kether, the divine, into Malkuth, the material world.</li>
+                        <li><strong>2. Soul Formation:</strong> the soul taking shape before birth.</li>
+                        <li><strong>3. Incarnational Life Path:</strong> growth through everyday life. This is the default.</li>
+                        <li><strong>4. Post-Mortem Return:</strong> the climb back up the Tree, as in the Book of the Dead.</li>
+                    </ul>
+                    On Auto, each card that has a place of its own on the Tree of Life is given a height: a pip its Sephira (Ace in Kether, 10 in Malkuth), a Trump the midpoint of the two Sephiroth its path joins. Court cards have no place of their own and are left out. With at least six such cards, Auto checks whether they run steadily down towards Malkuth in position order (lens 1) or up towards Kether (lens 4); the bar is set so a random shuffle passes it only about one time in ten. Otherwise, and in every spread of fewer than six cards, it uses Life Path. Auto never picks Soul Formation, which has no pattern in the cards to test, so choose it yourself if you want it. The report says which lens was used, and why.</li>
                 <li><strong>Write the prompt.</strong> Section 1 lists the cards, and sections 2 to 6 hold every calculation. Section 7 asks your AI to relate them to your question, using only the data given, to name the outcome they lean toward as a likely possibility, not a certainty, leaving the decision to you, and to end with a recap in plain words. It also explains what the scores mean.</li>
             </ol>
             <p class="note">The code, tables and tests are all <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a>, so every step above can be checked.</p>
