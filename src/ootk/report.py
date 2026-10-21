@@ -135,6 +135,10 @@ def _cards_md(spread_results, legend):
         md += ("Minor (pip) cards sit on the same Sephira in every mapping system and are nodal "
                "Sephira points on the Cube of Space, so their entries name the Sephira once "
                "and leave out the spatial dimension.\n\n")
+    if any(item["card_data"]["arcana_type"] == "Court" for item in spread_results):
+        md += ("Court cards take their Hebrew letter through their sign (a Princess through her "
+               "element), a Golden Dawn and Thoth practice. The French/Egyptian system gives "
+               "courts no path letter, so `none` there is by design, not missing data.\n\n")
 
     for item in spread_results:
         data = item["card_data"]
@@ -144,6 +148,8 @@ def _cards_md(spread_results, legend):
         gd_letter = data.get('gd_hebrew_letter') or 'N/A'
         thoth_letter = data.get('thoth_hebrew_letter') or gd_letter
         french_letter = data.get('french_hebrew_letter') or 'N/A'
+        if data['arcana_type'] == 'Court' and french_letter == 'N/A':
+            french_letter = 'none'
 
         md += f"### Position {item['position_number']}: {item['position_name']}\n"
         md += f"- **Card Drawn**: {data['title']}\n"
