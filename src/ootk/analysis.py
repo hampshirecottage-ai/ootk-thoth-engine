@@ -510,6 +510,14 @@ def card_sephirothic_rank(card_data):
         return sum(GD_PATH_ENDPOINTS[key]) / 2
     return None
 
+# One name per lens, the same whether Auto picks it or the user does.
+FRAMEWORK_NAMES = {
+    "light_descent": "1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)",
+    "soul_formation": "2. Soul Formation & Pre-Incarnation Shaping",
+    "life_path": "3. Incarnational Life Path & Psychological Evolution",
+    "post_mortem": "4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)",
+}
+
 def evaluate_macro_framework(spread_results, forced_framework="auto"):
     """Returns (framework_name, basis). 'basis' says why, so the label is never opaque.
 
@@ -525,16 +533,10 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     of it), so use --framework soul_formation to choose it.
     """
     if forced_framework != "auto":
-        framework_names = {
-            "light_descent": "1. Divine Light Flow (Aleph -> Tav Pathway)",
-            "soul_formation": "2. Soul Formation & Pre-Incarnation Shaping",
-            "life_path": "3. Incarnational Life Path & Psychological Evolution",
-            "post_mortem": "4. Post-Mortem Return & Reversal of Paths (Book of the Dead)"
-        }
-        return (framework_names.get(forced_framework, "1. Divine Light Flow"),
+        return (FRAMEWORK_NAMES.get(forced_framework, FRAMEWORK_NAMES["life_path"]),
                 f"forced by --framework {forced_framework}")
 
-    life_path = "3. Incarnational Life Path & Psychological Evolution"
+    life_path = FRAMEWORK_NAMES["life_path"]
     if not spread_results:
         return life_path, "auto: no cards drawn"
 
@@ -567,10 +569,10 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
              f"a position on the Tree)")
 
     if z >= FRAMEWORK_TREND_Z:
-        return ("1. Divine Light Flow (Involutionary Descent: Kether -> Malkuth)",
+        return (FRAMEWORK_NAMES["light_descent"],
                 f"auto: rank rises toward Malkuth across the draw - {stats}")
     if z <= -FRAMEWORK_TREND_Z:
-        return ("4. Post-Mortem Return & Reversal of Paths (Ascension / Book of the Dead)",
+        return (FRAMEWORK_NAMES["post_mortem"],
                 f"auto: rank falls toward Kether across the draw - {stats}")
     return default_name, f"auto: no significant Sephirothic trend, default lens - {stats}"
 
