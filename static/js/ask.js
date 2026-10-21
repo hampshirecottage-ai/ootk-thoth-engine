@@ -135,13 +135,16 @@
         $("askTooLong").hidden = !tooLong;
         $("askTooLong").textContent = tooLong ? `That's ${r.topic.length} characters; the question box holds ${TOPIC_MAX}. Shorten the context a little.` : "";
         $("askUse").disabled = tooLong;
+        $("askNext").disabled = step === STEP_COUNT - 1 && tooLong;
     }
 
     function go(i) {
         step = Math.max(0, Math.min(STEP_COUNT - 1, i));
         document.querySelectorAll("[data-ask-step]").forEach(el => el.hidden = Number(el.dataset.askStep) !== step);
         $("askBack").disabled = step === 0;
-        $("askNext").disabled = step === STEP_COUNT - 1;
+        // On the last step Next becomes the finish button, so it never sits there doing nothing.
+        $("askNext").textContent = step === STEP_COUNT - 1 ? "Use this question" : "Next";
+        $("askNext").disabled = step === STEP_COUNT - 1 && $("askUse").disabled;
         $("askCount").textContent = `Step ${step + 1} of ${STEP_COUNT}`;
     }
 
@@ -153,7 +156,7 @@
     $("askHelper").addEventListener("input", render);
     $("askHelper").addEventListener("change", render);
     $("askBack").addEventListener("click", () => go(step - 1));
-    $("askNext").addEventListener("click", () => go(step + 1));
+    $("askNext").addEventListener("click", () => step === STEP_COUNT - 1 ? $("askUse").click() : go(step + 1));
     // Enter in a one-line box moves on instead of drawing the cards.
     $("askHelper").addEventListener("keydown", e => {
         if (e.key === "Enter" && e.target.tagName === "INPUT" && !e.isComposing) { e.preventDefault(); go(step + 1); }
