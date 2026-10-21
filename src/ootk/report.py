@@ -310,10 +310,21 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     solids = [s for s, c in solid_counts.items() if c and s != "Unmapped"]
 
     if query_prompt:
+        # The question doesn't change the draw, only how it is read, so it is worth framing in the
+        # terms this spread and framework read in before any card is interpreted.
+        lens = re.sub(r"^\d+\.\s*", "", macro_framework)     # "3. Incarnational..." -> "Incarnational..."
         question = ("Relate the reading to the querent's question, given as the Query/Intent Topic "
-                    "in the header.")
+                    "in the header. Before reading any card, restate it in one or two sentences as "
+                    f"an open question framed in this spread's terms: its positions (section {CARDS}) "
+                    f"and the {lens} lens. If it asks yes or no, or whether "
+                    "something will happen, turn it toward what the querent can understand or do. Keep the "
+                    "querent's subject and intent and change only the wording; show the reframed "
+                    "question first so the querent can correct it, then read each position as "
+                    "answering part of it.")
+        summary_answer = " Answer the reframed question directly."
     else:
         question = "No question was given, so describe the forces the reading shows in general."
+        summary_answer = ""
     if len(spread_results) == 1:
         order = (f"Start with the card in section {CARDS} and its correspondences, then its element, "
                  f"letter and solid (sections {ELEMENTS}-{SOLIDS}).")
@@ -350,9 +361,9 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
         ("Macro Conceptual Framework", f"Read the spread through the lens of **{macro_framework}**."),
         ("Suggested order", " ".join([order] + notes)),
         ("Closing Summary", "Conclude with a summary that draws each part of the reading above "
-                            "together, then the outcome they lean toward and which findings point there. "
-                            "Offer it as a likely outcome to weigh, not a certainty, and leave the "
-                            "decision to the querent."),
+                            "together, then the outcome they lean toward and which findings point there."
+                            + summary_answer + " Offer it as a likely outcome to weigh, not a "
+                            "certainty, and leave the decision to the querent."),
         ("Plain-Language Recap", "End with a short recap in simple everyday words, free of technical "
                                  "terms, that someone new to tarot could follow: what the cards "
                                  "show and the likely outcome."),

@@ -70,11 +70,11 @@ Section 1 gives each card's letter and spatial type.
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 
-1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header.
+1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header. Before reading any card, restate it in one or two sentences as an open question framed in this spread's terms: its positions (section 1) and the Incarnational Life Path & Psychological Evolution lens. If it asks yes or no, or whether something will happen, turn it toward what the querent can understand or do. Keep the querent's subject and intent and change only the wording; show the reframed question first so the querent can correct it, then read each position as answering part of it.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
 4. **Suggested order:** Start with the card in section 1 and its correspondences, then its element, letter and solid (sections 2-4).
-5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
+5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Answer the reframed question directly. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 
 **How to read the numbers:**
