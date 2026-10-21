@@ -2454,3 +2454,23 @@ def test_sample_walkthrough_names_the_balance_the_weak_cards_and_the_significato
 
 def test_front_page_links_to_the_sample(client):
     assert 'href="/start#sample"' in client.get("/").text
+
+
+def test_question_helper_is_on_both_pages_and_posts_nothing(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
+    for path in ["/", "/pick"]:
+        html = client.get(path).text
+        assert 'id="askHelper"' in html and 'src="/static/js/ask.js?v=' in html, path
+        helper = html[html.index('id="askHelper"'):html.index("</details>", html.index('id="askHelper"'))]
+        # Only what "Use this question" writes into the form is sent, never the helper's own fields.
+        assert " name=" not in helper, path
+    assert client.get("/static/js/ask.js").status_code == 200
+
+
+def test_question_helper_covers_every_spread():
+    from pathlib import Path
+    from ootk.spreads import SPREADS
+    js = (Path(__file__).resolve().parents[1] / "static" / "js" / "ask.js").read_text()
+    block = js[js.index("const SPREAD_QUESTIONS"):js.index("const TIMES")]
+    for key in SPREADS:
+        assert f'"{key}": {{ q:' in block, key
