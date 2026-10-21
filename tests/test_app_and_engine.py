@@ -2316,6 +2316,14 @@ def test_instructions_name_the_question_only_when_there_is_one():
     assert "Use only this data" in asked and "-2 contrary" in asked
 
 
+def test_a_question_is_reframed_in_the_spreads_terms_and_answered():
+    asked = _prompt_for("3", 3, topic="Will I get the job?")
+    assert "restate it in one or two sentences as an open question" in asked
+    assert "Answer the reframed question directly." in asked
+    unasked = _prompt_for("3", 3)
+    assert "reframed" not in unasked
+
+
 def test_centre_pairs_are_left_out_of_the_geometry():
     triad = _prompt_for("3", 3)
     assert "Centre Node" not in triad and "Every pair in this layout meets at the centre card" in triad
