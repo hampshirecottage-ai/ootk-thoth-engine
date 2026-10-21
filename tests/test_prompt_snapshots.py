@@ -98,3 +98,12 @@ def test_planetary_majors_say_which_sign_gives_their_element():
     assert prompt.count("- **Element (used in scores)**:") == sum(
         1 for line in prompt.splitlines()
         if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in PLANETARY_MAJORS)
+
+
+def test_courts_say_they_have_no_french_letter():
+    # The French/Egyptian system gives courts no path letter on purpose: the prompt says so
+    # once, and the court's mapping line reads "none" rather than a missing-data "N/A".
+    prompt = build_prompt("12")
+    assert "The French/Egyptian system gives courts no path letter" in prompt
+    assert "French/Egyptian: `none`" in prompt
+    assert "French/Egyptian: `N/A`" not in prompt

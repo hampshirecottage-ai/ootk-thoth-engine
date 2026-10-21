@@ -25,12 +25,14 @@
 
 Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
 
+Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
+
 ### Position 1: [Op 1] 1. Significator / Core Nature of Question
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Amber
@@ -40,7 +42,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
@@ -94,7 +96,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Crimson (ultra violet)
@@ -182,7 +184,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Crimson (ultra violet)
@@ -263,7 +265,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Capricorn)**: Eye (ע (Ayin))
 - **Attribution**: Water of Earth - 20° Sagittarius to 20° Capricorn
-- **Comparative Hebrew Mapping**: Thoth: `ע (Ayin)` | Golden Dawn: `ע (Ayin)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ע (Ayin)` | Golden Dawn: `ע (Ayin)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-West Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Indigo
@@ -291,7 +293,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
@@ -338,7 +340,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Virgo)**: Hand (י (Yod))
 - **Attribution**: Fire of Earth - 20° Leo to 20° Virgo
-- **Comparative Hebrew Mapping**: Thoth: `י (Yod)` | Golden Dawn: `י (Yod)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `י (Yod)` | Golden Dawn: `י (Yod)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-North Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Green, yellowish
@@ -383,7 +385,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Leo)**: Serpent (ט (Teth))
 - **Attribution**: Air of Fire - 20° Cancer to 20° Leo
-- **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Yellow, greenish
@@ -421,7 +423,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Scorpio)**: Fish (נ (Nun))
 - **Attribution**: Air of Water - 20° Libra to 20° Scorpio
-- **Comparative Hebrew Mapping**: Thoth: `נ (Nun)` | Golden Dawn: `נ (Nun)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `נ (Nun)` | Golden Dawn: `נ (Nun)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (South-West Edge)
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Green blue
@@ -455,7 +457,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Element (Water)**: Water (מ (Mem))
 - **Attribution**: Earth of Water - Libra, Scorpio, Sagittarius quadrant
-- **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Deep blue
@@ -465,7 +467,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
 - **King Scale Color**: Amber
@@ -577,7 +579,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Violet
@@ -595,7 +597,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Taurus)**: Nail (ו (Vau))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
-- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Red orange
@@ -605,7 +607,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Element (Fire)**: Tooth (ש (Shin))
 - **Attribution**: Earth of Fire - Cancer, Leo, Virgo quadrant
-- **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Glowing orange scarlet
@@ -646,7 +648,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Libra)**: Ox Goad (ל (Lamed))
 - **Attribution**: Water of Air - 20° Virgo to 20° Libra
-- **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 - **Platonic Solid**: `Octahedron`
 - **King Scale Color**: Emerald green
@@ -700,7 +702,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `N/A`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 - **King Scale Color**: Scarlet
