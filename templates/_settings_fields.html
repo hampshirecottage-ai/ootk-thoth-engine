@@ -1,6 +1,7 @@
 {# Settings shared by both pages; `mode` is "seed" or "manual". #}
             <label for="topicInput">Question <span class="optional">(optional)</span></label>
             <textarea name="topic" id="topicInput" rows="2" maxlength="2000" placeholder="Transform yourself through what you learn?"></textarea>
+{% include "_question_helper.html" %}
 
             <label for="spreadSelect">Spread</label>
             <select name="spread_key" id="spreadSelect">

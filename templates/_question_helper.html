@@ -1,0 +1,123 @@
+{# Question helper, under the Question box: turns a rough question into an open one shaped to a
+   spread's positions, then fills in the question, spread and framework. Its fields have no
+   name, so nothing here is posted; only what "Use this question" writes into the form is.
+   Logic in static/js/ask.js. #}
+            <style>
+                details.ask { margin: -6px 0 12px; }
+                details.ask > summary { cursor: pointer; color: var(--accent); font-size: 0.9em; padding: 2px 0; }
+                details.ask[open] { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px 10px; background: var(--panel-3); }
+                details.ask[open] > summary { margin-bottom: 8px; }
+                .ask-step { display: flex; flex-direction: column; }
+                .ask-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 4px; }
+                .ask-count { font-size: 0.8em; color: var(--muted); font-variant-numeric: tabular-nums; }
+                .ask-check { display: flex; gap: 8px; align-items: flex-start; text-transform: none; letter-spacing: 0; font-size: 0.88em; color: var(--text); margin-bottom: 12px; }
+                .ask-check input { width: auto; margin: 3px 0 0; }
+                .ask-hints { display: flex; flex-direction: column; gap: 4px; margin: -6px 0 12px; }
+                .ask-hints p { margin: 0; font-size: 0.82em; padding: 5px 8px; border-radius: 4px; background: var(--panel-2); border-left: 3px solid var(--accent-2); }
+                .ask-hints p.warn { border-left-color: #c0562a; }
+                .ask-out { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+                .ask-out h3 { font-size: 0.8em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; font-weight: 600; }
+                .ask-q { margin: 0 0 10px; font-size: 1em; line-height: 1.4; }
+                .ask-set { margin: 0 0 10px; font-size: 0.85em; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 10px; }
+                .ask-set dt { color: var(--muted); }
+                .ask-set dd { margin: 0; }
+                .ask-set dd, .ask-pos li, .ask-q { color: var(--text); }   /* the start page banner sets cream text */
+                .ask-pos { list-style: none; padding: 0; margin: 0 0 10px; font-size: 0.85em; }
+                .ask-pos li { padding: 3px 0; border-top: 1px solid var(--line); }
+                .ask-pos b { font-weight: 600; }
+                .ask-warn { color: #c0562a; font-size: 0.85em; margin: 0 0 8px; }
+            </style>
+            <details class="ask" id="askHelper">
+                <summary>Help me shape my question</summary>
+                <p class="hint" style="margin:0 0 10px">The cards don't depend on your question; your AI's reading does. Six short steps turn what's on your mind into an open question your spread's positions can answer.</p>
+
+                <div class="ask-step" data-ask-step="0">
+                    <label for="askRaw">Your question as it is now</label>
+                    <textarea id="askRaw" rows="2" maxlength="300" placeholder="e.g. Should I take the new job?"></textarea>
+                    <div class="ask-hints" id="askHints" aria-live="polite"></div>
+                    <label for="askSubject">What it's about, in a few words</label>
+                    <input type="text" id="askSubject" maxlength="120" placeholder="e.g. the job offer from the design studio" autocomplete="off">
+                </div>
+
+                <div class="ask-step" data-ask-step="1" hidden>
+                    <label for="askArea">Which part of life does it touch?</label>
+                    <select id="askArea">
+                        <option value="">Choose…</option>
+                        <option value="love">Love and relationships</option>
+                        <option value="work">Work and career</option>
+                        <option value="money">Money and resources</option>
+                        <option value="home">Home and family</option>
+                        <option value="health">Health and wellbeing</option>
+                        <option value="creative">Creative work</option>
+                        <option value="spirit">Spiritual path</option>
+                        <option value="other">Something else</option>
+                    </select>
+                </div>
+
+                <div class="ask-step" data-ask-step="2" hidden>
+                    <label for="askIntent">What do you want the reading to do?</label>
+                    <select id="askIntent">
+                        <option value="">Choose…</option>
+                        <option value="focus">Give me one clear focus</option>
+                        <option value="decide">Help me weigh a decision</option>
+                        <option value="heading">Show where it's heading</option>
+                        <option value="blocked">Show what's holding me back</option>
+                        <option value="manifest">Help bring an idea into being</option>
+                        <option value="wholelife">Show how it affects my whole life</option>
+                        <option value="spiritual">Show its spiritual meaning</option>
+                        <option value="full">The full picture of a turning point</option>
+                    </select>
+                    <p class="hint">This picks the spread: each spread's positions answer a different kind of question.</p>
+                </div>
+
+                <div class="ask-step" data-ask-step="3" hidden>
+                    <label for="askFocus">Whose question is it?</label>
+                    <select id="askFocus">
+                        <option value="me">Mine</option>
+                        <option value="other">Mainly about someone else</option>
+                        <option value="us">About us together</option>
+                    </select>
+                    <div id="askOtherBox" hidden>
+                        <label for="askOther">Their name or role <span class="optional">(optional)</span></label>
+                        <input type="text" id="askOther" maxlength="60" autocomplete="off">
+                    </div>
+                    <p class="hint">The reading speaks best to the person who can act, so a question about someone else asks about your part in it.</p>
+                </div>
+
+                <div class="ask-step" data-ask-step="4" hidden>
+                    <label for="askTime">Over what span of time?</label>
+                    <select id="askTime">
+                        <option value="weeks">The next few weeks</option>
+                        <option value="months">The next three months</option>
+                        <option value="year">The coming year</option>
+                        <option value="open" selected>No set window</option>
+                    </select>
+                    <label class="ask-check"><input type="checkbox" id="askPath"> Frame it as a step on my longer path</label>
+                </div>
+
+                <div class="ask-step" data-ask-step="5" hidden>
+                    <label for="askSituation">The situation now <span class="optional">(optional)</span></label>
+                    <textarea id="askSituation" rows="2" maxlength="400"></textarea>
+                    <label for="askTried">What you've tried or decided <span class="optional">(optional)</span></label>
+                    <textarea id="askTried" rows="2" maxlength="300"></textarea>
+                    <label for="askUnsure">What you're most unsure about <span class="optional">(optional)</span></label>
+                    <textarea id="askUnsure" rows="2" maxlength="300"></textarea>
+                    <label class="ask-check"><input type="checkbox" id="askCatchAll" checked> Also ask: what am I not asking that I should be?</label>
+                </div>
+
+                <div class="ask-nav">
+                    <button type="button" class="btn-small" id="askBack">Back</button>
+                    <span class="ask-count" id="askCount"></span>
+                    <button type="button" class="btn-small" id="askNext">Next</button>
+                </div>
+
+                <div class="ask-out" aria-live="polite">
+                    <h3>Your question</h3>
+                    <p class="ask-q" id="askQ"></p>
+                    <dl class="ask-set" id="askSet"></dl>
+                    <h3>How each position answers it</h3>
+                    <ul class="ask-pos" id="askPos"></ul>
+                    <p class="ask-warn" id="askTooLong" hidden></p>
+                    <button type="button" class="btn-small" id="askUse">Use this question</button>
+                </div>
+            </details>
