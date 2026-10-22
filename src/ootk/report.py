@@ -11,6 +11,7 @@ from ootk.analysis import (
     planetary_element_note, spirit_bearing_cards,
 )
 from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
+from ootk.shuffle import operation_number
 from ootk.spreads import ZODIAC_SIGNS
 
 # The report header and the web form both name the systems from here, so the label always
@@ -129,6 +130,8 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     # The header keeps the querent's own text exactly as typed.
     return header_md + strip_hebrew_points(prompt_md)
 
+_DECAN_POSITION = re.compile(r"\bDecan \d+: ")
+
 def _cards_md(spread_results, legend):
     md = "CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
     if any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
@@ -139,6 +142,13 @@ def _cards_md(spread_results, legend):
         md += ("Court cards take their Hebrew letter through their sign (a Princess through her "
                "element), a Golden Dawn and Thoth practice. The French/Egyptian system gives "
                "courts no path letter, so `none` there is by design, not missing data.\n\n")
+    if any(_DECAN_POSITION.search(item["position_name"]) for item in spread_results):
+        md += ("A decan position's name ends with that decan's own pip in brackets, for example "
+               "\"Saturn in Leo (5 of Wands)\". The bracket names the place, not the card: the "
+               "card that fell there is the Card Drawn.\n\n")
+    if len({operation_number(item["position_name"]) for item in spread_results}) > 1:
+        md += ("Each operation is dealt from its own fresh shuffle of the whole deck, so a card "
+               "can appear in more than one operation, but never twice in the same one.\n\n")
 
     for item in spread_results:
         data = item["card_data"]
@@ -397,9 +407,9 @@ OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trum
                    "house (the house of that sign, Aries = 1st). The chance is exact for a random "
                    "deal from the 78 cards.")
 
-SIGNIFICATOR_PLACES_INTRO = ("Book T's key to each operation, worked out from the same shuffle by "
-                             "laying out the whole deck, not only the cards printed in section "
-                             f"{CARDS}. For Operation 1 the deck is cut into four packs for I H V H and "
+SIGNIFICATOR_PLACES_INTRO = ("Book T's key to each operation, worked out from the shuffle each "
+                             "operation was dealt from by laying out the whole deck, not only the "
+                             f"cards printed in section {CARDS}. For Operation 1 the deck is cut into four packs for I H V H and "
                              "the pack holding the Significator is named; the printed Operation 1 "
                              "cards are still the 15-card heap")
 SIGNIFICATOR_PLACES_DEALT = (". Later operations deal the whole deck round into one pile per house, "

@@ -6,7 +6,7 @@
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
-**Framework Basis:** auto: only 2 card(s) carry Sephirothic data (minimum 6); defaulted to Life Path
+**Framework Basis:** auto: only 2 card(s) carry Sephirothic data (minimum 6), so the default Life Path lens is used
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
