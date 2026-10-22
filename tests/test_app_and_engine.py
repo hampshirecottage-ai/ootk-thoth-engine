@@ -542,7 +542,7 @@ def test_spread_picker_groups_every_spread_by_stage_and_starts_on_three_cards(cl
 def test_report_opens_on_the_next_step_not_the_settings(client):
     page = post(client).text
     assert page.index('id="nowStep"') < page.index('id="summary"') < page.index('id="readingDetails"')
-    assert "<span>Your reading</span>" in page and '<h1 id="pageTitle">Triad (Timeline &amp; Motion)</h1>' in page
+    assert "<span>Your reading</span>" in page and '<h1 id="pageTitle">Triad</h1>' in page
     assert page.index('class="site-bar"') < page.index('id="nowStep"')   # same OOTK bar as the start page
 
 
@@ -1511,7 +1511,7 @@ def test_testimonial_with_a_nul_character_is_refused(client):
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
     assert "so the interpreting is left to your AI." in page
-    assert "Welcome to Opening Of The Key.</h1>" in page
+    assert "Welcome to the Opening of the Key</h1>" in page
     assert "ChatGPT" not in page and "For tarot readers" not in page
     assert 'id="readingForm"' in page and 'class="btn-cta"' not in page
     assert "Draw my cards" in page and "<h2>Ask your question</h2>" in page

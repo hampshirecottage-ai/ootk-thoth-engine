@@ -35,7 +35,7 @@
             <p class="muted">All {{ spreads | length }} spreads and their positions. <a href="/start#stagesTitle">Start here</a> groups them into learning stages.</p>
             {% for key, spread in spreads.items() %}
             <details class="spread" id="spread-{{ key }}">
-                <summary><strong>{{ key }}.</strong> {{ spread.name }} <span class="muted">({{ positions[key] | length }} card{{ 's' if positions[key] | length != 1 }})</span></summary>
+                <summary><strong>{{ key }}.</strong> {{ spread_label(key) }} <span class="muted">{{ spread.name }} · {{ positions[key] | length }} card{{ 's' if positions[key] | length != 1 }}</span></summary>
                 <ol>{% for p in positions[key] %}<li>{{ p }}</li>{% endfor %}</ol>
                 <a href="/?spread={{ key }}#readingForm">Draw this spread</a>
             </details>

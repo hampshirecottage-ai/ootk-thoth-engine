@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% with noindex=true %}{% include "_head_meta.html" %}{% endwith %}
-    <title>Report - {{ spread_name }}</title>
+    <title>{{ spread_name }} reading · OOTK Thoth Engine</title>
     <script>
         // Saved choice first, otherwise the light (beige) theme.
         (function () {
@@ -364,7 +364,7 @@
             <div class="tile">
                 <div class="label">Elemental dignities</div>
                 <div class="big">{{ signed(S.dignity.net) }}</div>
-                <div class="muted" style="font-size:0.85em">{{ S.dignity.strong }} strong · {{ S.dignity.friendly }} friendly · {{ S.dignity.neutral }} neutral · {{ S.dignity.contrary }} contrary, over {{ S.dignity.pairs }} pairs</div>
+                <div class="muted" style="font-size:0.85em">{{ S.dignity.strong }} same element · {{ S.dignity.friendly }} friendly · {{ S.dignity.neutral }} neutral · {{ S.dignity.contrary }} contrary, over {{ S.dignity.pairs }} pairs</div>
             </div>
             {% endif %}
             {% if S.aspects.total %}
