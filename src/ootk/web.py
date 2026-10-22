@@ -123,6 +123,33 @@ class ReadingSlots:
 app.add_middleware(ReadingSlots)
 
 
+# Each reading page costs a reading slot, and each drawn reading a row in the database, so one
+# visitor (a script, say) could otherwise fill a small database or keep every slot busy. Far more
+# than anyone reads by hand; past it that visitor waits out the window. Checked before a slot is
+# taken, so refused requests never queue for one.
+READINGS_PER_VISITOR = env_int("READINGS_PER_VISITOR", 60)
+READINGS_WINDOW = 10 * 60
+reading_visitors = FailedLogins(attempts=READINGS_PER_VISITOR, window=READINGS_WINDOW)
+
+
+@app.middleware("http")
+async def limit_readings(request: Request, call_next):
+    if not builds_a_reading(request.url.path):
+        return await call_next(request)
+    visitor = visitor_address(request)
+    wait = reading_visitors.retry_after(visitor)
+    if wait:
+        minutes = max(1, (wait + 59) // 60)
+        return error_page(request, 429, "Too many readings at once",
+                          f"This address has opened a great many readings in the last few minutes. "
+                          f"Please try again in {minutes} minute{'' if minutes == 1 else 's'}.",
+                          headers={"Retry-After": str(wait)})
+    if reading_visitors.failed(visitor):
+        log.warning("reading limit reached for one visitor (%d in %d minutes)",
+                    READINGS_PER_VISITOR, READINGS_WINDOW // 60)
+    return await call_next(request)
+
+
 # Form posts are a few kilobytes at most (the question is capped at TOPIC_MAX characters), so
 # anything far larger is refused before it is read, rather than parsed into memory.
 MAX_BODY_BYTES = 64 * 1024
