@@ -25,9 +25,9 @@ services:
       # Password for the unlinked /admin page (approving testimonials); leave empty to turn it off.
       - key: ADMIN_PASSWORD
         sync: false
-      # Key for hashing visitors' IP addresses stored with testimonials (the address itself never is).
       # Private ntfy topic for the busy-server alert (CPU high for 5 minutes); leave empty to turn it off.
       - key: BUSY_ALERT_NTFY_TOPIC
         sync: false
+      # Key for hashing visitors' IP addresses stored with testimonials (the address itself never is).
       - key: VISITOR_HASH_KEY
         generateValue: true
