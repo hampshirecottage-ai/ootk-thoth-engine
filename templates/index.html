@@ -54,6 +54,32 @@
         :root[data-theme="light"] .testimonial { border-top-color: rgba(255, 224, 160, 0.4); }
         .band .testimonial { margin: 16px 0 0; border-top-color: var(--band-line); }
         .band .testimonial blockquote, .band .testimonial-label { color: var(--band-text); }
+        /* Step-by-step form (static/js/wizard.js): one .wiz-step at a time, Draw on the last. */
+        #readingForm:not(.wizard) .wiz-only { display: none; }
+        .wizard .wiz-step[data-hidden] { display: none; }
+        .wizard details.more > summary { display: none; }
+        .wizard details.more { border-top: none; padding-top: 0; margin-top: 0; }
+        .wizard fieldset#sigBox { border-top: none; padding-top: 0; margin-top: 0; }
+        .wizard.wiz-not-last .btn-submit, .wizard.wiz-not-last .mode-link { display: none; }
+        .wiz-rail { list-style: none; padding: 0; margin: 0 0 14px; display: flex; flex-wrap: wrap; gap: 6px; counter-reset: wiz; }
+        .wiz-rail button { font-size: 0.82em; background: transparent; color: var(--muted); border: 1px solid var(--control); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+        .wiz-rail button span { font-variant-numeric: tabular-nums; margin-right: 4px; color: var(--accent-2); font-weight: 700; }
+        .wiz-rail button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+        .wiz-rail button[aria-current="step"] span { color: inherit; }
+        .wiz-rail button.done { color: var(--text); }
+        .wiz-nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 4px 0 0; }
+        .wiz-nav .btn-small:disabled { opacity: 0.45; cursor: default; }
+        .wiz-nav .wiz-next { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; padding-inline: 18px; }
+        .wizard:not(.wiz-not-last) .wiz-next { visibility: hidden; }
+        .wiz-count { font-size: 0.82em; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .wiz-lead { margin: 0 0 10px; }
+        .wiz-review { display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; gap: 6px 12px; align-items: baseline; margin: 0 0 14px; font-size: 0.92em; }
+        .wiz-review dt { color: var(--muted); }
+        .wiz-review dd { color: var(--text); margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+        .wiz-review dd.q { max-height: 8.5em; overflow: auto; }
+        .wiz-review button { font-size: 0.85em; background: none; border: none; color: var(--accent); text-decoration: underline; cursor: pointer; padding: 0; }
+        #readingForm .wiz-error { color: #b3261e; font-size: 0.88em; margin: 0 0 10px; }
+        :root:not([data-theme="light"]) #readingForm .wiz-error { color: #ff9a8f; }
         @media (max-width: 860px) {
             .band { grid-template-columns: minmax(0, 1fr); gap: 16px; }
             .band-text, .band #readingForm, .band-more { grid-column: 1; grid-row: auto; }
@@ -82,8 +108,19 @@
             <!-- SETTINGS: everything that shapes a reading, in one place -->
             <section class="panel settings" aria-label="Settings">
                 <h2>Ask your question</h2>
+                <ol class="wiz-rail" id="wizRail" aria-label="Steps" hidden></ol>
 
 {% include "_settings_fields.html" %}
+                <div class="wiz-step" data-step="review" data-title="Draw" hidden>
+                    <p class="wiz-lead">Check your choices, then draw.</p>
+                    <dl class="wiz-review" id="wizReview"></dl>
+                </div>
+                <p class="wiz-error" id="wizError" role="alert" hidden></p>
+                <div class="wiz-nav" id="wizNav" hidden>
+                    <button type="button" class="btn-small" id="wizBack">Back</button>
+                    <span class="wiz-count" id="wizCount"></span>
+                    <button type="button" class="btn-small wiz-next" id="wizNext">Next</button>
+                </div>
                 <button type="submit" class="btn-submit">Draw my cards</button>
                 <p class="mode-link"><strong>Free, no sign-up.</strong> Want to choose the cards? <a href="/pick" id="modeSwitch">Pick them by hand</a></p>
             </section>
@@ -110,6 +147,7 @@
     <script src="{{ static_url('js/copy.js') }}" defer></script>
     <script src="{{ static_url('js/index.js') }}" defer></script>
     <script src="{{ static_url('js/ask.js') }}" defer></script>
+    <script src="{{ static_url('js/wizard.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>

@@ -1,7 +1,13 @@
-{# Settings shared by both pages; `mode` is "seed" or "manual". #}
+{# Settings shared by both pages; `mode` is "seed" or "manual". On the start page
+   static/js/wizard.js shows each .wiz-step as its own page; elsewhere, and without
+   JavaScript, the steps are plain wrappers and every field shows at once. #}
+            <div class="wiz-step" data-step="question" data-title="Question">
             <label for="topicInput">Question <span class="optional">(optional)</span></label>
             <textarea name="topic" id="topicInput" rows="2" maxlength="2000" placeholder="Transform yourself through what you learn?"></textarea>
 {% include "_question_helper.html" %}
+            </div>
+
+            <div class="wiz-step" data-step="spread" data-title="Spread">
 
             <label for="spreadSelect">Spread</label>
             <select name="spread_key" id="spreadSelect">
@@ -13,9 +19,12 @@
                 </optgroup>
                 {% endfor %}
             </select>
+            <p class="hint wiz-only" id="spreadPreview" aria-live="polite"></p>
+            </div>
 
             <input type="hidden" name="draw_mode" value="{{ mode }}">
             {% if mode == "seed" %}
+            <div class="wiz-step" data-step="significator" data-title="Significator">
             <fieldset id="sigBox" hidden>
                 <legend>Significator</legend>
                 <div id="sigPicker">
@@ -55,12 +64,14 @@
                     <p class="sig-result" id="sigResult" aria-live="polite"></p>
                 </div>
             </fieldset>
+            </div>
             <script type="application/json" id="birthSpans">{{ birth_spans | tojson }}</script>
             {% else %}
             <p class="hint sig-none" id="sigNone">The first card you place is the significator.</p>
             {% endif %}
 
 
+            <div class="wiz-step" data-step="options" data-title="Options">
             <details class="more" id="moreOptions">
                 <summary>More options <span class="more-sum" id="moreSummary"></span></summary>
                 {% if mode == "seed" %}
@@ -88,3 +99,4 @@
                 </select>
                 <p class="hint">The angle your AI is asked to read from. It does not change the cards or the scores. <a href="/method#lens">More</a></p>
             </details>
+            </div>
