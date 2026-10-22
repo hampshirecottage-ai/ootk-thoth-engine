@@ -131,6 +131,7 @@ Everything else is optional:
 | `DB_QUERY_TIMEOUT` | Seconds one database query may take (including waiting on a migration's lock, or a connection that went silent) before it gives up; a reading that can't be saved in time is still shown, with a notice | `15` |
 | `DB_DOWN_SECONDS` | After the database fails to answer within `DB_CONNECT_TIMEOUT`, how many seconds pages show the "database down" page at once instead of waiting again | `15` |
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
+| `READINGS_PER_VISITOR` | Most reading pages (drawn, shared, saved, or their JSON) one visitor may open in 10 minutes; past it they wait out the 10 minutes | `60` |
 | `BUSY_ALERT_NTFY_TOPIC` | Turns on the busy-server alert: a push to this [ntfy](https://ntfy.sh) topic when CPU stays high, and another when it calms down. Anyone who knows the name can read the topic, so make it long and random | off |
 | `BUSY_ALERT_PERCENT` | CPU use, as a share of what the host allows (a tenth of a CPU on Render's free plan), that counts as busy | `70` |
 | `BUSY_ALERT_MINUTES` | Minutes the average must stay at or above that before an alert | `5` |
@@ -138,7 +139,7 @@ Everything else is optional:
 | `BUSY_ALERT_NTFY_SERVER` | ntfy server to post to | `https://ntfy.sh` |
 | `PGSSLMODE` | Standard PostgreSQL setting; set `require` for a hosted database such as Neon | libpq default |
 
-`DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT`, `DB_DOWN_SECONDS`, `WEB_THREADS` and the `BUSY_ALERT_` numbers must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
+`DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT`, `DB_DOWN_SECONDS`, `WEB_THREADS`, `READINGS_PER_VISITOR` and the `BUSY_ALERT_` numbers must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
 
 ### 3. Create the database
 
@@ -249,7 +250,7 @@ docker run --rm -p 7860:7860 ootk
 
 The local database lives inside the container and starts empty on every run. To keep readings, pass `DB_HOST`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` for an external PostgreSQL; the local one is then not started, and the card tables are loaded on first start if missing.
 
-Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link.
+Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link. One visitor can open at most `READINGS_PER_VISITOR` reading pages (60 by default) in 10 minutes, so a script can't fill the database or keep every reading slot busy.
 
 On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [tarotthoth.com](https://tarotthoth.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked.
 

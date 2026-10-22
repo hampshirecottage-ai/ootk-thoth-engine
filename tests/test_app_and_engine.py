@@ -71,6 +71,7 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "waiting_testimonials",
                         lambda conn, days: sum(not t["approved"] for t in testimonials))
     monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
+    monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=60, window=600))
 
     def fake_list(conn):
         from datetime import datetime
@@ -223,6 +224,18 @@ def test_lockout_uses_cloudflares_address_on_render_not_x_forwarded_for(monkeypa
     monkeypatch.setenv("RENDER", "true")
     assert app_module.visitor_address(Req(spoof)) == "203.0.113.9"
     assert app_module.visitor_address(Req({"x-forwarded-for": "1.2.3.4"})) == "10.0.0.1"
+
+
+def test_one_visitor_opens_a_limited_number_of_readings(client, monkeypatch):
+    monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=3, window=600))
+    for _ in range(3):
+        assert post(client, follow=False).status_code == 303
+    r = client.post("/generate_report", data={"spread_key": "3", "selected_cards": "A,B,C"},
+                    headers={"accept": "text/html"})
+    assert r.status_code == 429 and "Too many readings" in r.text and r.headers["retry-after"] == "600"
+    assert client.saved["count"] == 3                                   # the refused one wasn't saved
+    assert client.get("/reading?seed=1&spread=3").status_code == 429     # share links count too
+    assert client.get("/").status_code == 200                            # other pages don't
 
 
 def test_security_headers(client, monkeypatch):
