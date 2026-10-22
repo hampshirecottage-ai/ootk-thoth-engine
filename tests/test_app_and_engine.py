@@ -2490,9 +2490,37 @@ def test_question_helper_is_on_both_pages_and_posts_nothing(client, monkeypatch)
         html = client.get(path).text
         assert 'id="askHelper"' in html and 'src="/static/js/ask.js?v=' in html, path
         helper = html[html.index('id="askHelper"'):html.index("</details>", html.index('id="askHelper"'))]
-        # Only what "Use this question" writes into the form is sent, never the helper's own fields.
-        assert " name=" not in helper, path
+        # Only what "Use this question" writes into the form is sent, never the helper's own fields:
+        # its answers are named radios that belong to no form.
+        for tag in re.findall(r"<[^>]* name=[^>]*>", helper):
+            assert 'form="noPost"' in tag, (path, tag)
+    assert 'id="noPost"' not in client.get("/").text
     assert client.get("/static/js/ask.js").status_code == 200
+
+
+def test_guided_options_post_nothing_and_cover_every_choice(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
+    html = client.get("/").text
+    # The guided answers only steer the real fields, so none of them is sent.
+    for tag in re.findall(r'<input[^>]* name="g_[^>]*>', html):
+        assert 'form="noPost"' in tag, tag
+    guided = lambda name: set(re.findall(rf'name="{name}" value="([^"]+)"', html))
+    assert guided("g_spread") == set(spreads.SPREADS)
+    assert guided("g_depth") == {str(i) for i in range(len(app_module.SPREAD_STAGES))}
+    assert guided("g_mapping") == set(re.findall(r'<option value="([^"]+)"', html[html.index('id="mappingSelect"'):html.index("</select>", html.index('id="mappingSelect"'))]))
+    assert guided("g_framework") == {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
+    assert len(app_module.SPREAD_DEPTHS) == len(app_module.SPREAD_STAGES)
+    # /pick has no wizard, so it keeps the plain selects only.
+    assert 'name="g_' not in client.get("/pick").text
+
+
+def test_example_questions_are_open_questions():
+    for area, examples in app_module.ASK_EXAMPLES.items():
+        assert len(examples) == 3, area
+        for q, subject in examples:
+            # The helper warns about yes/no openings; its own examples never trip that warning.
+            assert not re.match(r"(will|should|is|are|does|do|did|can|could|am|would|has|have|was)\b", q, re.I), q
+            assert q.endswith("?") and subject and " when " not in q.lower(), q
 
 
 def test_question_helper_covers_every_spread():

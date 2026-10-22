@@ -57,6 +57,9 @@
         /* Step-by-step form (static/js/wizard.js): one .wiz-step at a time, Draw on the last. */
         #readingForm:not(.wizard) .wiz-only { display: none; }
         .wizard .wiz-step[data-hidden] { display: none; }
+        .wizard .wiz-hide { display: none; }   /* the plain selects; the guided answers set them */
+        .g-suggested { color: var(--accent); font-weight: 600; }
+        .wizard .sig-q > .hint { margin-top: 6px; }
         .wizard details.more > summary { display: none; }
         .wizard details.more { border-top: none; padding-top: 0; margin-top: 0; }
         .wizard fieldset#sigBox { border-top: none; padding-top: 0; margin-top: 0; }
