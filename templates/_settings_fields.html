@@ -45,7 +45,7 @@
                 {% for level, name, keys, learn in spread_stages %}
                 <optgroup label="{{ level }} · {{ name }}">
                     {% for key in keys %}{% set n = positions[key] | length %}
-                    <option value="{{ key }}"{{ ' selected' if key == default_spread }}>{{ spreads[key].name }} · {{ n }} card{{ 's' if n != 1 }}</option>
+                    <option value="{{ key }}"{{ ' selected' if key == default_spread }}>{{ spread_label(key) }} · {{ n }} card{{ 's' if n != 1 }}</option>
                     {% endfor %}
                 </optgroup>
                 {% endfor %}
@@ -177,21 +177,21 @@
                 <fieldset class="sig-q wiz-only" data-g="framework">
                     <legend>What kind of story should your AI tell?</legend>
                     <label><input type="radio" name="g_framework" value="auto" form="noPost"><span>Let the cards decide <small>Auto, recommended: Everyday growth, unless the cards clearly run down or up the Tree of Life</small></span></label>
-                    <label><input type="radio" name="g_framework" value="life_path" form="noPost"><span>Everyday growth <small>3. Incarnational Life Path: most practical questions</small></span></label>
-                    <label><input type="radio" name="g_framework" value="light_descent" form="noPost"><span>Something coming into being <small>1. Divine Light Flow: a new start, idea or project taking shape</small></span></label>
-                    <label><input type="radio" name="g_framework" value="soul_formation" form="noPost"><span>The soul before birth <small>2. Soul Formation: purpose, and what you came here to do. Auto never picks it</small></span></label>
-                    <label><input type="radio" name="g_framework" value="post_mortem" form="noPost"><span>Letting go and returning <small>4. Post-Mortem Return: endings, grief, looking back over a life</small></span></label>
+                    <label><input type="radio" name="g_framework" value="life_path" form="noPost"><span>Everyday growth <small>Life Path: most practical questions</small></span></label>
+                    <label><input type="radio" name="g_framework" value="light_descent" form="noPost"><span>Something coming into being <small>Divine Light Flow: a new start, idea or project taking shape</small></span></label>
+                    <label><input type="radio" name="g_framework" value="soul_formation" form="noPost"><span>The soul before birth <small>Soul Formation: purpose, and what you came here to do. Auto never picks it</small></span></label>
+                    <label><input type="radio" name="g_framework" value="post_mortem" form="noPost"><span>Letting go and returning <small>Post-Mortem Return: endings, grief, looking back over a life</small></span></label>
                     <p class="hint">It only changes the angle your AI reads from, not the cards or the scores. <a href="/method#lens">More</a></p>
                 </fieldset>
                 {% endif %}
                 <div class="wiz-hide">
                 <label for="frameworkSelect">Framework</label>
                 <select name="framework" id="frameworkSelect">
-                    <option value="auto">Auto-detect from the draw</option>
-                    <option value="light_descent">1. Divine Light Flow (Kether -> Malkuth)</option>
-                    <option value="soul_formation">2. Pre-Incarnation Soul Formation</option>
-                    <option value="life_path">3. Incarnational Life Path & Evolution</option>
-                    <option value="post_mortem">4. Post-Mortem Return (Book of the Dead)</option>
+                    <option value="auto">Let the cards decide (Auto)</option>
+                    <option value="light_descent">Something coming into being (Divine Light Flow)</option>
+                    <option value="soul_formation">The soul before birth (Soul Formation)</option>
+                    <option value="life_path">Everyday growth (Life Path)</option>
+                    <option value="post_mortem">Letting go and returning (Post-Mortem Return)</option>
                 </select>
                 <p class="hint">The angle your AI is asked to read from. It does not change the cards or the scores. <a href="/method#lens">More</a></p>
                 </div>

@@ -1,6 +1,6 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Start here" %}
-{% set page_description = "New to LLM Tarot Reading? Five short steps from your first card to a full Opening of the Key, and what each spread teaches." %}
+{% set page_description = "New to OOTK? Five short steps from your first card to a full Opening of the Key, and what each spread teaches." %}
 {% set tagline = "New here? Five steps from your first card to the Opening of the Key." %}
 {% set active = "/start" %}
 {% block head %}
@@ -108,7 +108,7 @@
                     <p>{{ learn | safe }}</p>
                     <ul>
                         {% for key in keys %}
-                        <li><a href="/?spread={{ key }}#readingForm">{{ spreads[key].name }}</a> <span class="muted">({{ sizes[key] }} card{{ 's' if sizes[key] != 1 }})</span></li>
+                        <li><a href="/?spread={{ key }}#readingForm">{{ spread_label(key) }}</a> <span class="muted">({{ sizes[key] }} card{{ 's' if sizes[key] != 1 }})</span></li>
                         {% endfor %}
                     </ul>
                 </div>

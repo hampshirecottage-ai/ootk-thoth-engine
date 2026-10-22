@@ -13,7 +13,7 @@
         body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("{{ static_url('site/emblem.webp') }}") center 60% / min(92vmin, 760px) no-repeat; opacity: var(--emblem-opacity); mix-blend-mode: luminosity; }
         @media print { body::before { display: none; } }
         /* Banner colours: a darker green band with cream text on the green theme, the panel colours on the dark one. */
-        :root { --band-bg: var(--panel); --band-line: var(--line); --band-text: var(--text); --band-head: var(--accent); --tile-bg: var(--panel-2); --page-width: 1160px; }
+        :root { --band-bg: var(--panel); --band-line: var(--line); --band-text: var(--text); --band-head: #ffe0a0; --tile-bg: var(--panel-2); --page-width: 1160px; }
         :root[data-theme="light"] { --band-bg: #24704a; --band-line: #5fae84; --band-text: #ffe0a0; --band-head: #ffe0a0; --tile-bg: var(--panel); }
         .site-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; max-width: var(--page-width); margin: 0 auto 14px; }
         .brand { font-family: "Cinzel", serif; font-weight: 800; letter-spacing: 0.12em; color: var(--band-head); text-decoration: none; line-height: 1.15; }

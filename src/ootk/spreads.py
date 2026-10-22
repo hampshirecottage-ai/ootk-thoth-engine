@@ -40,7 +40,7 @@ SPREADS = {
         "positions": [
             "1. Yod of Yod (Fire of Fire - Pure Flash)",
             "2. Heh of Yod (Water of Fire - Emotional Will)",
-            "3. Vav of Yod (Air of Fire - Directed Focus)",
+            "3. Vau of Yod (Air of Fire - Directed Focus)",
             "4. Heh Final of Yod (Earth of Fire - Physicalized Action)"
         ]
     },
@@ -49,7 +49,7 @@ SPREADS = {
         "positions": [
             "Atziluth / Yod (Fire - Creative Spark)", 
             "Briah / Heh (Water - Mental/Emotional Container)", 
-            "Yetzirah / Vav (Air - Formative Processing)", 
+            "Yetzirah / Vau (Air - Formative Processing)", 
             "Assiah / Heh Final (Earth - Material Result)"
         ]
     },

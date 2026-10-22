@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% set page_title = "Card of the day: " ~ name -%}
-{% set page_description %}The tarot card of the day for {{ day.strftime('%-d %B %Y') }} is {{ name }} ({{ card.attribution }}), with its Liber 777 correspondences and a ready-made prompt for your LLM.{% endset -%}
+{% set page_description %}The tarot card of the day for {{ day.strftime('%-d %B %Y') }} is {{ name }} ({{ card.attribution }}), with its Liber 777 correspondences and a ready-made prompt for your AI.{% endset -%}
 {% include "_head_meta.html" %}
-    <title>Card of the day, {{ day.strftime('%-d %B %Y') }}: {{ name }} · LLM Tarot Reading</title>
+    <title>Card of the day, {{ day.strftime('%-d %B %Y') }}: {{ name }} · OOTK Thoth Engine</title>
     <script>
         // Saved choice first, otherwise the light (beige) theme.
         (function () {
@@ -18,7 +18,7 @@
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
-        :root { --page-width: 760px; }
+        :root { --page-width: 780px; }   /* the guide pages' width */
         .day { max-width: var(--page-width); margin: 0 auto; }
         .day-card { display: grid; grid-template-columns: minmax(160px, 260px) 1fr; gap: 20px; align-items: start; }
         .day-card img { width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); display: block; }

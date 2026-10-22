@@ -365,6 +365,12 @@ SPREAD_GUIDE = {
     "12": ("Full Opening of the Key", "All four operations in one reading. Long: best attached to your "
                                       "AI as a .md file. Needs a significator."),
 }
+
+
+def spread_label(key: str) -> str:
+    """The short spread name visitors see on the site. The longer technical name in SPREADS
+    stays in the prompt and as the Library's subtitle."""
+    return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else SPREADS[key]["name"]
 # Example questions in the question helper, per area of life: (question, what it is about in a
 # few words). Open "what" and "how" questions, which the helper's hints never flag.
 ASK_EXAMPLES = {
@@ -427,7 +433,7 @@ LANDING_PAGES = {
         "title": "Tarot Elemental Dignities",
         "tagline": "Which cards strengthen each other, scored by Book T.",
         "description": "Work out tarot elemental dignities automatically: every neighbouring pair "
-                       "scored as friendly, contrary or neutral by the Golden Dawn’s Book T.",
+                       "scored as same element, friendly, neutral or contrary by the Golden Dawn’s Book T.",
         "intro": "Elemental dignities say whether neighbouring cards strengthen or weaken each "
                  "other. OOTK scores every pair in your spread by the Book T rules, the same way "
                  "every time, so you can read the pattern instead of working it out by hand.",
@@ -502,7 +508,9 @@ async def form_error_page(request: Request, exc: StarletteHTTPException):
     if not isinstance(exc, HTTPException) and exc.status_code in ROUTER_ERRORS:
         heading, message = ROUTER_ERRORS[exc.status_code]
         return error_page(request, exc.status_code, heading, message)
-    return error_page(request, exc.status_code, "This reading can’t be shown", str(exc.detail),
+    # A missing card, day or report is a missing page, not a reading that went wrong.
+    heading = "Page not found" if exc.status_code == 404 else "This reading can’t be shown"
+    return error_page(request, exc.status_code, heading, str(exc.detail),
                       headers=getattr(exc, "headers", None))
 
 
@@ -554,6 +562,7 @@ templates.env.globals.update(static_url=static_url, card_image_url=card_image_ur
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
                              spread_depths=SPREAD_DEPTHS, spread_guide=SPREAD_GUIDE,
+                             spread_label=spread_label,
                              ask_examples=ASK_EXAMPLES,
                              default_spread=DEFAULT_SPREAD)
 
@@ -1066,7 +1075,7 @@ def example_readings(deck):
                     "significator": "", "mapping_system": DEFAULT_MAPPING}
         positions = spread_positions(ex["spread_key"])
         titles = draw_spread(deck, ex["seed"], positions)[0] if full_deck else []
-        examples.append(dict(ex, spread_name=SPREADS[ex["spread_key"]]["name"],
+        examples.append(dict(ex, spread_name=spread_label(ex["spread_key"]),
                              count=len(positions), url=share_path(settings),
                              cards=[{"title": t, "name": short_card_name(t)} for t in titles]))
     if full_deck:
@@ -1369,6 +1378,9 @@ def card_of_the_day_today():
     return RedirectResponse(f"/day/{utc_today().isoformat()}", status_code=307)
 
 
+DAY_ARCHIVE_DAYS = 365
+
+
 @app.get("/day/{day}", response_class=HTMLResponse)
 def card_of_the_day(request: Request, day: str):
     """The card of the day: the top card of the deck shuffled with the ISO date as the seed,
@@ -1383,6 +1395,11 @@ def card_of_the_day(request: Request, day: str):
     # A day ahead of UTC is allowed, so it is "today" everywhere on Earth.
     if when > today + timedelta(days=1):
         raise HTTPException(status_code=404, detail="That day's card hasn't been drawn yet.")
+    # The archive stops a year back, so Previous day links don't lead crawlers through every
+    # date since the year 1.
+    first_day = today - timedelta(days=DAY_ARCHIVE_DAYS)
+    if when < first_day:
+        raise HTTPException(status_code=404, detail="The card of the day archive goes back one year.")
     settings = {
         "spread_key": "1", "topic": "", "significator": "", "framework": "auto",
         "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "seed": day,
@@ -1406,7 +1423,7 @@ def card_of_the_day(request: Request, day: str):
             "image": card_image_url(title, "full"),
             "prompt": reading["analytical_prompt"],
             "reading_url": share_path(settings),
-            "previous": (when - timedelta(days=1)).isoformat() if when > date.min else None,
+            "previous": (when - timedelta(days=1)).isoformat() if when > first_day else None,
             "next": (when + timedelta(days=1)).isoformat() if when < today else None,
             "today": today.isoformat(),
             "sky": todays_sky,
@@ -1804,7 +1821,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
         name="report.html",
         context={
             "session_id": session_id,
-            "spread_name": r["spread_name"],
+            "spread_name": spread_label(spread_key),
             "topic": settings["topic"],
             "prompt": r["analytical_prompt"],
             "spread_results": r["spread_results"],

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% include "_head_meta.html" %}
-    <title>LLM Tarot Reading · OOTK Thoth Engine</title>
+    <title>OOTK Thoth Engine · Thoth tarot readings for your AI</title>
     {# Tells search engines this is a free web app, for a richer search result. -#}
     <script type="application/ld+json">
     {{ {"@context": "https://schema.org", "@type": "WebApplication", "name": "OOTK Thoth Engine",
@@ -14,7 +14,7 @@
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}} | tojson }}
     </script>
     <script>
-        // Saved choice first, otherwise the light (beige) theme.
+        // Saved choice first, otherwise the light (green) theme.
         (function () {
             let t = null;
             try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
@@ -28,10 +28,11 @@
         .band { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; }
         .band .steps, .band .hero-actions { justify-content: flex-start; }
         .band .steps span { background: var(--tile-bg); }
-        .band-text { grid-column: 1; grid-row: 1; }
-        .band #readingForm { grid-column: 2; grid-row: 1 / span 2; align-self: start; max-width: none; }
-        .band-more { grid-column: 1; grid-row: 2; align-self: start; }
-        .band { row-gap: 0; grid-template-rows: auto 1fr; }
+        /* The text sits in the middle rows, so it centres against the taller form instead of leaving a gap below. */
+        .band-text { grid-column: 1; grid-row: 2; }
+        .band #readingForm { grid-column: 2; grid-row: 1 / span 4; align-self: start; max-width: none; }
+        .band-more { grid-column: 1; grid-row: 3; align-self: start; }
+        .band { row-gap: 0; grid-template-rows: 1fr auto auto 1fr; }
         .band .settings { margin: 0; }
         .band .settings p, .band .settings p a { color: var(--text); }
         #readingForm { width: 100%; max-width: 560px; justify-self: center; }
@@ -88,7 +89,7 @@
         @media (max-width: 860px) {
             .band { grid-template-columns: minmax(0, 1fr); gap: 16px; }
             .band-text, .band #readingForm, .band-more { grid-column: 1; grid-row: auto; }
-            .band { row-gap: 16px; }
+            .band { row-gap: 16px; grid-template-rows: none; }
         }
         @media (max-width: 640px) {
             .steps { font-size: 0.85em; gap: 6px 10px; }
@@ -101,7 +102,7 @@
     <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
-            <h1 id="pageTitle">Welcome to Opening Of The Key.</h1>
+            <h1 id="pageTitle">Welcome to the Opening of the Key</h1>
             <p class="tagline">Draw a Thoth spread. OOTK looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables and hands your AI a ready-made prompt, so the interpreting is left to your AI.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Ask your question and draw</li>
