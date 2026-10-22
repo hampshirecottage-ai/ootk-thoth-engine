@@ -61,6 +61,8 @@
         .g-suggested { color: var(--accent); font-weight: 600; }
         .wizard .sig-q > .hint { margin-top: 6px; }
         .wizard details.more > summary { display: none; }
+        /* "Help me find my question" opens the question helper, so its own fold title would repeat it. */
+        .wizard details.ask > summary { display: none; }
         .wizard details.more { border-top: none; padding-top: 0; margin-top: 0; }
         .wizard fieldset#sigBox { border-top: none; padding-top: 0; margin-top: 0; }
         .wizard.wiz-not-last .btn-submit, .wizard.wiz-not-last .mode-link { display: none; }
