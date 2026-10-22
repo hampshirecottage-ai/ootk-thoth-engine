@@ -98,13 +98,16 @@ function chosenSignificator() {
     return $("sigAny").value.trim();
 }
 
+// Only the sixteen court cards have a preview. The title shown is the page's own, never the
+// typed text, and a typed "__proto__" or "toString" finds nothing.
 function showPreview(card) {
-    const p = sigPreviews[card];
+    const title = Object.keys(sigPreviews).find(t => t === card);
+    const p = title && sigPreviews[title];
     $("sigPreview").hidden = !p;
     if (!p) return;
     $("sigPreviewImg").src = p.img;
-    $("sigPreviewImg").alt = card;
-    $("sigPreviewTitle").textContent = card;
+    $("sigPreviewImg").alt = title;
+    $("sigPreviewTitle").textContent = title;
     $("sigPreviewElement").textContent = p.element;
     $("sigPreviewPlace").textContent = p.place;
     $("sigPreviewArt").textContent = p.art;
