@@ -502,7 +502,9 @@ async def form_error_page(request: Request, exc: StarletteHTTPException):
     if not isinstance(exc, HTTPException) and exc.status_code in ROUTER_ERRORS:
         heading, message = ROUTER_ERRORS[exc.status_code]
         return error_page(request, exc.status_code, heading, message)
-    return error_page(request, exc.status_code, "This reading can’t be shown", str(exc.detail),
+    # A missing card, day or report is a missing page, not a reading that went wrong.
+    heading = "Page not found" if exc.status_code == 404 else "This reading can’t be shown"
+    return error_page(request, exc.status_code, heading, str(exc.detail),
                       headers=getattr(exc, "headers", None))
 
 
@@ -1369,6 +1371,9 @@ def card_of_the_day_today():
     return RedirectResponse(f"/day/{utc_today().isoformat()}", status_code=307)
 
 
+DAY_ARCHIVE_DAYS = 365
+
+
 @app.get("/day/{day}", response_class=HTMLResponse)
 def card_of_the_day(request: Request, day: str):
     """The card of the day: the top card of the deck shuffled with the ISO date as the seed,
@@ -1383,6 +1388,11 @@ def card_of_the_day(request: Request, day: str):
     # A day ahead of UTC is allowed, so it is "today" everywhere on Earth.
     if when > today + timedelta(days=1):
         raise HTTPException(status_code=404, detail="That day's card hasn't been drawn yet.")
+    # The archive stops a year back, so Previous day links don't lead crawlers through every
+    # date since the year 1.
+    first_day = today - timedelta(days=DAY_ARCHIVE_DAYS)
+    if when < first_day:
+        raise HTTPException(status_code=404, detail="The card of the day archive goes back one year.")
     settings = {
         "spread_key": "1", "topic": "", "significator": "", "framework": "auto",
         "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed", "seed": day,
@@ -1406,7 +1416,7 @@ def card_of_the_day(request: Request, day: str):
             "image": card_image_url(title, "full"),
             "prompt": reading["analytical_prompt"],
             "reading_url": share_path(settings),
-            "previous": (when - timedelta(days=1)).isoformat() if when > date.min else None,
+            "previous": (when - timedelta(days=1)).isoformat() if when > first_day else None,
             "next": (when + timedelta(days=1)).isoformat() if when < today else None,
             "today": today.isoformat(),
             "sky": todays_sky,

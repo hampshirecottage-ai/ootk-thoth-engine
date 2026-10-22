@@ -2242,9 +2242,14 @@ def test_long_seed_and_topic_are_refused(seeded_client):
     assert "count" not in seeded_client.saved
 
 
-def test_earliest_day_has_no_previous_link(seeded_client):
-    r = seeded_client.get("/day/0001-01-01")
+def test_card_of_the_day_archive_stops_a_year_back(seeded_client, monkeypatch):
+    from datetime import date
+    monkeypatch.setattr(app_module, "utc_today", lambda: date(2026, 10, 3))
+    r = seeded_client.get("/day/2025-10-03")
     assert r.status_code == 200 and "Previous day" not in r.text
+    assert "Previous day" in seeded_client.get("/day/2025-10-04").text
+    assert seeded_client.get("/day/2025-10-02").status_code == 404
+    assert seeded_client.get("/day/0001-01-01").status_code == 404
 
 
 # ---------- app: privacy and input limits ----------
