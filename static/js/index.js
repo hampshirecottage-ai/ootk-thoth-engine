@@ -83,7 +83,7 @@ function updateDescribe() {
     const about = radioValue("sig_about"), basis = radioValue("sig_basis");
     const suit = basis === "matter" ? radioValue("sig_topic") : radioValue("sig_suit");
     const show = { about: true, basis: !!about, suit: basis === "person", topic: basis === "matter", rank: !!suit };
-    document.querySelectorAll(".sig-q").forEach(q => q.hidden = !show[q.dataset.q]);
+    document.querySelectorAll(".sig-q[data-q]").forEach(q => q.hidden = !show[q.dataset.q]);
     document.querySelectorAll("#sigPicker [data-me]").forEach(t => t.textContent = about === "other" ? t.dataset.other : t.dataset.me);
     return { suit, rank: show.rank ? radioValue("sig_rank") : "" };
 }

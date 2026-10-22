@@ -1,6 +1,8 @@
 // Start page: shows the reading form one step at a time (question, spread, significator,
 // options, then a review with the Draw button). Runs after index.js and uses its
 // hasSigPosition() and positionsData. Without this script every field shows at once.
+// The guided answers (the g_* radios, outside the form so never sent) only set the real
+// fields: the question box, and the spread, mapping and framework selects.
 (function () {
     const form = document.getElementById("readingForm");
     const el = id => document.getElementById(id);
@@ -20,6 +22,82 @@
         return o ? o.text : "";
     }
 
+    // ---------- guided answers ----------
+    const radios = name => Array.from(document.querySelectorAll(`input[name="${name}"]`));
+    const picked = name => { const r = radios(name).find(r => r.checked); return r ? r.value : ""; };
+    const setPicked = (name, value) => radios(name).forEach(r => r.checked = r.value === value);
+    // The plain answer, without its small print.
+    const answerText = (name, value) => {
+        const r = radios(name).find(r => r.value === value);
+        return r ? r.nextElementSibling.firstChild.textContent.trim() : "";
+    };
+    const smallText = (name, value) => {
+        const r = radios(name).find(r => r.value === value), s = r && r.nextElementSibling.querySelector("small");
+        return s ? s.firstChild.textContent.trim() : "";
+    };
+
+    // Question: "Help me" opens the helper, "No question" sets the box aside (disabled, so it
+    // is not sent, but kept in case they change their mind).
+    function syncAsk() {
+        const how = picked("g_ask");
+        el("topicInput").disabled = how === "none";
+        // Until one is chosen only the three answers show.
+        form.querySelector(".ask-own").hidden = how !== "own";
+        el("askHelper").hidden = how !== "help";
+        if (how === "help" && !el("askHelper").open) el("askHelper").open = true;
+    }
+    function startAsk() {
+        if (el("topicInput").value.trim()) setPicked("g_ask", "own");
+        syncAsk();
+    }
+    radios("g_ask").forEach(r => r.addEventListener("change", () => {
+        if (picked("g_ask") === "own") el("askHelper").open = false;
+        syncAsk();
+    }));
+    // "Use this question" shows the finished question in the box, to read or edit.
+    el("askHelper").addEventListener("ask:used", () => { setPicked("g_ask", "own"); syncAsk(); });
+
+    // Spread: how deep, then the spreads at that depth. Follows the select, which saved
+    // settings, links and the question helper may have set; a new depth starts on its first spread.
+    function syncSpreadGuide() {
+        const key = el("spreadSelect").value;
+        const opt = radios("g_spread").find(r => r.value === key);
+        const depth = opt ? opt.closest("label").dataset.depth : "";
+        setPicked("g_depth", depth);
+        setPicked("g_spread", key);
+        form.querySelector('[data-g="spread"]').hidden = !depth;
+        radios("g_spread").forEach(r => {
+            const label = r.closest("label");
+            label.hidden = label.dataset.depth !== depth;
+            label.querySelector(".g-suggested").hidden = r.value !== el("spreadSelect").dataset.suggested;
+        });
+    }
+    radios("g_depth").forEach(r => r.addEventListener("change", () => {
+        const first = radios("g_spread").find(s => s.closest("label").dataset.depth === r.value);
+        if (first) setSelect("spreadSelect", first.value);
+    }));
+    radios("g_spread").forEach(r => r.addEventListener("change", () => setSelect("spreadSelect", r.value)));
+
+    function setSelect(id, value) {
+        el(id).value = value;
+        el(id).dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    // Options: the seed box shows only for a repeat; mapping and framework follow their selects.
+    function syncOptions() {
+        if (!picked("g_seed")) setPicked("g_seed", el("seedInput").value.trim() ? "repeat" : "new");
+        form.querySelector(".seed-box").hidden = picked("g_seed") !== "repeat";
+        setPicked("g_mapping", el("mappingSelect").value);
+        setPicked("g_framework", el("frameworkSelect").value);
+    }
+    radios("g_seed").forEach(r => r.addEventListener("change", () => {
+        if (picked("g_seed") === "new") el("seedInput").value = "";
+        syncOptions();
+        if (picked("g_seed") === "repeat") el("seedInput").focus({ preventScroll: true });
+    }));
+    radios("g_mapping").forEach(r => r.addEventListener("change", () => setSelect("mappingSelect", r.value)));
+    radios("g_framework").forEach(r => r.addEventListener("change", () => setSelect("frameworkSelect", r.value)));
+
     function renderSpreadPreview() {
         const positions = positionsData[el("spreadSelect").value] || [];
         const names = positions.slice(0, 6).map(p => p.replace(/^\[Op \d+\]\s*/, "").replace(/^\d+\.\s*/, "").split(" (")[0]);
@@ -28,14 +106,16 @@
     }
 
     function renderReview() {
+        const key = el("spreadSelect").value, n = (positionsData[key] || []).length;
+        const fw = el("frameworkSelect").value, seed = el("seedInput").value.trim();
         const rows = [
-            ["Question", el("topicInput").value.trim() || "None: a general reading", "question"],
-            ["Spread", selectedText(el("spreadSelect")), "spread"],
+            ["Question", (!el("topicInput").disabled && el("topicInput").value.trim()) || "None: a general reading", "question"],
+            ["Spread", `${smallText("g_spread", key).split(" · ")[0]}, ${n} card${n === 1 ? "" : "s"}`, "spread"],
         ];
         if (hasSigPosition()) rows.push(["Significator", el("significatorInput").value || "Not chosen yet", "significator"]);
-        rows.push(["Mapping", selectedText(el("mappingSelect")).split(" (")[0], "options"],
-                  ["Framework", selectedText(el("frameworkSelect")), "options"],
-                  ["Seed", el("seedInput").value.trim() || "New random seed", "options"]);
+        rows.push(["Tradition", answerText("g_mapping", el("mappingSelect").value), "options"],
+                  ["Story", answerText("g_framework", fw) + (fw === "auto" ? " (Auto)" : ` (${smallText("g_framework", fw).split(":")[0]})`), "options"],
+                  ["Cards", seed ? `Repeat seed ${seed}` : "New cards", "options"]);
         el("wizReview").replaceChildren(...rows.flatMap(([label, value, step]) => {
             const dt = document.createElement("dt"), dd = document.createElement("dd");
             const edit = document.createElement("button");
@@ -80,7 +160,9 @@
             li.append(b);
             return li;
         }));
-        if (step.dataset.step === "spread") renderSpreadPreview();
+        if (step.dataset.step === "question") syncAsk();
+        if (step.dataset.step === "spread") { syncSpreadGuide(); renderSpreadPreview(); }
+        if (step.dataset.step === "options") syncOptions();
         if (last) renderReview();
     }
 
@@ -110,6 +192,8 @@
     el("wizBack").addEventListener("click", () => go(current - 1));
     el("wizNext").addEventListener("click", () => go(current + 1));
     el("spreadSelect").addEventListener("change", () => { renderSpreadPreview(); render(); });
+    el("mappingSelect").addEventListener("change", syncOptions);
+    el("frameworkSelect").addEventListener("change", syncOptions);
     el("sigPicker").addEventListener("change", () => showError(""));
 
     // Enter in the question box, or in a one-line field, moves on until the last step,
@@ -132,5 +216,6 @@
         }
     }, true);
 
+    startAsk();
     render();
 })();

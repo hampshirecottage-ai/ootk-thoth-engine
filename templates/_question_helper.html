@@ -26,6 +26,10 @@
                 .ask-pos { list-style: none; padding: 0; margin: 0 0 10px; font-size: 0.85em; }
                 .ask-pos li { padding: 3px 0; border-top: 1px solid var(--line); }
                 .ask-pos b { font-weight: 600; }
+                .ask-examples { margin: -6px 0 12px; }
+                .ask-examples p.hint { margin: 0 0 4px; }
+                .ask-examples div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+                .ask-examples button { text-align: left; white-space: normal; }
                 .ask-warn { color: #c0562a; font-size: 0.85em; margin: 0 0 8px; }
             </style>
             <details class="ask" id="askHelper">
@@ -41,43 +45,48 @@
                 </div>
 
                 <div class="ask-step" data-ask-step="1" hidden>
-                    <label for="askArea">Which part of life does it touch?</label>
-                    <select id="askArea">
-                        <option value="">Choose…</option>
-                        <option value="love">Love and relationships</option>
-                        <option value="work">Work and career</option>
-                        <option value="money">Money and resources</option>
-                        <option value="home">Home and family</option>
-                        <option value="health">Health and wellbeing</option>
-                        <option value="creative">Creative work</option>
-                        <option value="spirit">Spiritual path</option>
-                        <option value="other">Something else</option>
-                    </select>
+                    <fieldset class="sig-q" id="askArea">
+                        <legend>Which part of life does it touch?</legend>
+                        <label><input type="radio" name="askArea" value="love" form="noPost"><span>Love and relationships</span></label>
+                        <label><input type="radio" name="askArea" value="work" form="noPost"><span>Work and career</span></label>
+                        <label><input type="radio" name="askArea" value="money" form="noPost"><span>Money and resources</span></label>
+                        <label><input type="radio" name="askArea" value="home" form="noPost"><span>Home and family</span></label>
+                        <label><input type="radio" name="askArea" value="health" form="noPost"><span>Health and wellbeing</span></label>
+                        <label><input type="radio" name="askArea" value="creative" form="noPost"><span>Creative work</span></label>
+                        <label><input type="radio" name="askArea" value="spirit" form="noPost"><span>Spiritual path</span></label>
+                        <label><input type="radio" name="askArea" value="other" form="noPost"><span>Something else</span></label>
+                    </fieldset>
+                    {# Tapping an example fills step 1 with it (static/js/ask.js). #}
+                    <div class="ask-examples" id="askExamples" hidden>
+                        <p class="hint">Or start from an example:</p>
+                        {% for area, examples in ask_examples.items() %}
+                        <div data-area="{{ area }}" hidden>{% for q, subject in examples %}<button type="button" class="btn-small" data-q="{{ q }}" data-subject="{{ subject }}">{{ q }}</button>{% endfor %}</div>
+                        {% endfor %}
+                    </div>
                 </div>
 
                 <div class="ask-step" data-ask-step="2" hidden>
-                    <label for="askIntent">What do you want the reading to do?</label>
-                    <select id="askIntent">
-                        <option value="">Choose…</option>
-                        <option value="focus">Give me one clear focus</option>
-                        <option value="decide">Help me weigh a decision</option>
-                        <option value="heading">Show where it's heading</option>
-                        <option value="blocked">Show what's holding me back</option>
-                        <option value="manifest">Help bring an idea into being</option>
-                        <option value="wholelife">Show how it affects my whole life</option>
-                        <option value="spiritual">Show its spiritual meaning</option>
-                        <option value="full">The full picture of a turning point</option>
-                    </select>
+                    <fieldset class="sig-q" id="askIntent">
+                        <legend>What do you want the reading to do?</legend>
+                        <label><input type="radio" name="askIntent" value="focus" data-spread="1" form="noPost"><span>Give me one clear focus <small>Suggests the {{ spread_guide["1"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="decide" data-spread="2" form="noPost"><span>Help me weigh a decision <small>Suggests the {{ spread_guide["2"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="heading" data-spread="3" form="noPost"><span>Show where it's heading <small>Suggests the {{ spread_guide["3"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="blocked" data-spread="6" form="noPost"><span>Show what's holding me back <small>Suggests the {{ spread_guide["6"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="manifest" data-spread="5" form="noPost"><span>Help bring an idea into being <small>Suggests the {{ spread_guide["5"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="wholelife" data-spread="9" form="noPost"><span>Show how it affects my whole life <small>Suggests the {{ spread_guide["9"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="spiritual" data-spread="7" form="noPost"><span>Show its spiritual meaning <small>Suggests the {{ spread_guide["7"][0] }}</small></span></label>
+                        <label><input type="radio" name="askIntent" value="full" data-spread="12" form="noPost"><span>The full picture of a turning point <small>Suggests the {{ spread_guide["12"][0] }}</small></span></label>
+                    </fieldset>
                     <p class="hint">This picks the spread: each spread's positions answer a different kind of question.</p>
                 </div>
 
                 <div class="ask-step" data-ask-step="3" hidden>
-                    <label for="askFocus">Whose question is it?</label>
-                    <select id="askFocus">
-                        <option value="me">Mine</option>
-                        <option value="other">Mainly about someone else</option>
-                        <option value="us">About us together</option>
-                    </select>
+                    <fieldset class="sig-q" id="askFocus">
+                        <legend>Whose question is it?</legend>
+                        <label><input type="radio" name="askFocus" value="me" form="noPost" checked><span>Mine</span></label>
+                        <label><input type="radio" name="askFocus" value="other" form="noPost"><span>Mainly about someone else</span></label>
+                        <label><input type="radio" name="askFocus" value="us" form="noPost"><span>About us together</span></label>
+                    </fieldset>
                     <div id="askOtherBox" hidden>
                         <label for="askOther">Their name or role <span class="optional">(optional)</span></label>
                         <input type="text" id="askOther" maxlength="60" autocomplete="off">
@@ -86,13 +95,13 @@
                 </div>
 
                 <div class="ask-step" data-ask-step="4" hidden>
-                    <label for="askTime">Over what span of time?</label>
-                    <select id="askTime">
-                        <option value="weeks">The next few weeks</option>
-                        <option value="months">The next three months</option>
-                        <option value="year">The coming year</option>
-                        <option value="open" selected>No set window</option>
-                    </select>
+                    <fieldset class="sig-q" id="askTime">
+                        <legend>Over what span of time?</legend>
+                        <label><input type="radio" name="askTime" value="weeks" form="noPost"><span>The next few weeks</span></label>
+                        <label><input type="radio" name="askTime" value="months" form="noPost"><span>The next three months</span></label>
+                        <label><input type="radio" name="askTime" value="year" form="noPost"><span>The coming year</span></label>
+                        <label><input type="radio" name="askTime" value="open" form="noPost" checked><span>No set window</span></label>
+                    </fieldset>
                     <label class="ask-check"><input type="checkbox" id="askPath"> Frame it as a step on my longer path</label>
                 </div>
 

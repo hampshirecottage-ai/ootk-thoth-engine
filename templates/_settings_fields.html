@@ -2,13 +2,44 @@
    static/js/wizard.js shows each .wiz-step as its own page; elsewhere, and without
    JavaScript, the steps are plain wrappers and every field shows at once. #}
             <div class="wiz-step" data-step="question" data-title="Question">
+            {% if mode == "seed" %}
+            {# The guided answers on the start page (static/js/wizard.js) only steer the real fields
+               below; form="noPost" names no form, so they are never sent. #}
+            <fieldset class="sig-q wiz-only" id="askHow">
+                <legend>How would you like to ask?</legend>
+                <label><input type="radio" name="g_ask" value="help" form="noPost"><span>Help me find my question <small>Recommended for a first reading: a few short questions shape it for you</small></span></label>
+                <label><input type="radio" name="g_ask" value="own" form="noPost"><span>I know what I want to ask <small>Type it in your own words; tips appear as you type</small></span></label>
+                <label><input type="radio" name="g_ask" value="none" form="noPost"><span>No question, a general reading <small>Your AI reads the cards as they fall</small></span></label>
+            </fieldset>
+            {% endif %}
+            <div class="ask-own">
             <label for="topicInput">Question <span class="optional">(optional)</span></label>
             <textarea name="topic" id="topicInput" rows="2" maxlength="2000" placeholder="Transform yourself through what you learn?"></textarea>
+            </div>
 {% include "_question_helper.html" %}
             </div>
 
             <div class="wiz-step" data-step="spread" data-title="Spread">
 
+            {% if mode == "seed" %}
+            <div class="wiz-only" id="spreadGuide">
+                <fieldset class="sig-q" data-g="depth">
+                    <legend>How deep do you want to go?</legend>
+                    {% for answer, more in spread_depths %}
+                    <label><input type="radio" name="g_depth" value="{{ loop.index0 }}" form="noPost"><span>{{ answer }} <small>{{ more | safe }}</small></span></label>
+                    {% endfor %}
+                </fieldset>
+                <fieldset class="sig-q" data-g="spread" hidden>
+                    <legend>Which one fits your question?</legend>
+                    {% for level, name, keys, learn in spread_stages %}{% set depth = loop.index0 %}
+                    {% for key in keys %}{% set n = positions[key] | length %}
+                    <label data-depth="{{ depth }}"><input type="radio" name="g_spread" value="{{ key }}" form="noPost"><span>{{ spread_guide[key][1] }} <small>{{ spread_guide[key][0] }} · {{ n }} card{{ 's' if n != 1 }}{{ ' · good first reading' if key == default_spread }}<b class="g-suggested" hidden> · suggested from your question</b></small></span></label>
+                    {% endfor %}
+                    {% endfor %}
+                </fieldset>
+            </div>
+            {% endif %}
+            <div class="wiz-hide">
             <label for="spreadSelect">Spread</label>
             <select name="spread_key" id="spreadSelect">
                 {% for level, name, keys, learn in spread_stages %}
@@ -19,6 +50,7 @@
                 </optgroup>
                 {% endfor %}
             </select>
+            </div>
             <p class="hint wiz-only" id="spreadPreview" aria-live="polite"></p>
             </div>
 
@@ -111,20 +143,48 @@
             <details class="more" id="moreOptions">
                 <summary>More options <span class="more-sum" id="moreSummary"></span></summary>
                 {% if mode == "seed" %}
+                <fieldset class="sig-q wiz-only" data-g="seed">
+                    <legend>Have you drawn this reading before?</legend>
+                    <label><input type="radio" name="g_seed" value="new" form="noPost"><span>No, draw new cards</span></label>
+                    <label><input type="radio" name="g_seed" value="repeat" form="noPost"><span>Yes, repeat a past reading <small>Enter its seed: every report shows one</small></span></label>
+                </fieldset>
+                <div class="seed-box">
                 <label for="seedInput">Seed</label>
                 <div class="row">
                     <input type="text" name="seed" id="seedInput" maxlength="64" placeholder="blank = new seed" autocomplete="off">
                     <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
                 </div>
                 <p class="hint">The same seed and settings always draw the same cards.</p>
+                </div>
+                <fieldset class="sig-q wiz-only" data-g="mapping">
+                    <legend>Which tradition should the cards follow?</legend>
+                    <label><input type="radio" name="g_mapping" value="thoth" form="noPost"><span>Thoth, Crowley&rsquo;s deck <small>Recommended: matches the card pictures here. The Emperor is on the letter Tzaddi and the Star on Heh</small></span></label>
+                    <label><input type="radio" name="g_mapping" value="golden_dawn" form="noPost"><span>Golden Dawn, as in Rider-Waite style decks <small>The Emperor is on Heh and the Star on Tzaddi; everything else is the same</small></span></label>
+                    <label><input type="radio" name="g_mapping" value="french_egyptian" form="noPost"><span>French / Egyptian, as in L&eacute;vi, Papus and Wirth <small>The older French way of giving the trumps their Hebrew letters; court cards have none</small></span></label>
+                    <p class="hint">This changes the letters, paths and colours your AI is given, not which cards are drawn.</p>
+                </fieldset>
                 {% endif %}
+                <div class="wiz-hide">
                 <label for="mappingSelect">Mapping system</label>
                 <select name="mapping_system" id="mappingSelect">
                     <option value="thoth">Thoth / Crowley (Emperor on Tzaddi, Star on Heh)</option>
                     <option value="golden_dawn">Golden Dawn (Emperor on Heh, Star on Tzaddi)</option>
                     <option value="french_egyptian">French / Egyptian (Lévi / Papus / Wirth)</option>
                 </select>
+                </div>
 
+                {% if mode == "seed" %}
+                <fieldset class="sig-q wiz-only" data-g="framework">
+                    <legend>What kind of story should your AI tell?</legend>
+                    <label><input type="radio" name="g_framework" value="auto" form="noPost"><span>Let the cards decide <small>Auto, recommended: Everyday growth, unless the cards clearly run down or up the Tree of Life</small></span></label>
+                    <label><input type="radio" name="g_framework" value="life_path" form="noPost"><span>Everyday growth <small>3. Incarnational Life Path: most practical questions</small></span></label>
+                    <label><input type="radio" name="g_framework" value="light_descent" form="noPost"><span>Something coming into being <small>1. Divine Light Flow: a new start, idea or project taking shape</small></span></label>
+                    <label><input type="radio" name="g_framework" value="soul_formation" form="noPost"><span>The soul before birth <small>2. Soul Formation: purpose, and what you came here to do. Auto never picks it</small></span></label>
+                    <label><input type="radio" name="g_framework" value="post_mortem" form="noPost"><span>Letting go and returning <small>4. Post-Mortem Return: endings, grief, looking back over a life</small></span></label>
+                    <p class="hint">It only changes the angle your AI reads from, not the cards or the scores. <a href="/method#lens">More</a></p>
+                </fieldset>
+                {% endif %}
+                <div class="wiz-hide">
                 <label for="frameworkSelect">Framework</label>
                 <select name="framework" id="frameworkSelect">
                     <option value="auto">Auto-detect from the draw</option>
@@ -134,5 +194,6 @@
                     <option value="post_mortem">4. Post-Mortem Return (Book of the Dead)</option>
                 </select>
                 <p class="hint">The angle your AI is asked to read from. It does not change the cards or the scores. <a href="/method#lens">More</a></p>
+                </div>
             </details>
             </div>

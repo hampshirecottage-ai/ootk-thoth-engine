@@ -5,9 +5,6 @@
     const $ = id => document.getElementById(id);
     if (!$("askHelper")) return;
 
-    // What each intent asks for: the spread whose positions answer it best.
-    const INTENT_SPREAD = { focus: "1", decide: "2", heading: "3", blocked: "6", manifest: "5",
-                            wholelife: "9", spiritual: "7", full: "12" };
 
     // Per spread: the open question in its position terms, and what the positions answer.
     // Keys match ootk.spreads.SPREADS.
@@ -51,10 +48,16 @@
         const o = Array.from(sel.options).find(opt => opt.value === value);
         return o ? o.text : value;
     };
+    // The answers are radio buttons outside the form (form="noPost"), grouped by name.
+    const checked = name => document.querySelector(`#askHelper input[name="${name}"]:checked`);
+    const pick = name => { const r = checked(name); return r ? r.value : ""; };
+    const pickText = name => { const r = checked(name); return r ? r.nextElementSibling.firstChild.textContent.trim() : ""; };
 
-    // The spread: from the intent if one is chosen, otherwise whatever the form already has.
+    // The spread: from the intent if one is chosen (each answer names the spread whose
+    // positions answer it best), otherwise whatever the form already has.
     function spreadKey() {
-        return INTENT_SPREAD[$("askIntent").value] || $("spreadSelect").value;
+        const r = checked("askIntent");
+        return r ? r.dataset.spread : $("spreadSelect").value;
     }
 
     function rawHints(t) {
@@ -74,7 +77,7 @@
     function compose() {
         const key = spreadKey();
         const sq = SPREAD_QUESTIONS[key] || SPREAD_QUESTIONS["3"];
-        const focus = $("askFocus").value, other = val("askOther"), time = TIMES[$("askTime").value];
+        const focus = pick("askFocus") || "me", other = val("askOther"), time = TIMES[pick("askTime") || "open"];
         let q = sq.q(stripEnd(val("askSubject")) || "this situation");
         if ($("askPath").checked) q += ", as a step on my longer path";
         q += time[0];
@@ -82,15 +85,15 @@
         if (focus === "us") q += ", for both of us";
         q = q.charAt(0).toUpperCase() + q.slice(1) + "?";
 
-        const spiritual = $("askIntent").value === "spiritual" || $("askArea").value === "spirit";
+        const spiritual = pick("askIntent") === "spiritual" || pick("askArea") === "spirit";
         const framework = spiritual ? "light_descent" : $("askPath").checked ? "life_path" : "auto";
 
         const lines = [q];
         const raw = val("askRaw");
         if (raw) lines.push(`(First asked as: "${raw}")`);
         const ctx = [];
-        const area = $("askArea").value;
-        if (area && area !== "other") ctx.push(`Area of life: ${optionText($("askArea"), area).toLowerCase()}.`);
+        const area = pick("askArea");
+        if (area && area !== "other") ctx.push(`Area of life: ${pickText("askArea").toLowerCase()}.`);
         if (focus === "other") ctx.push(`This mainly concerns ${other || "another person"}; I want to understand my part in it.`);
         if (focus === "us") ctx.push(`This is about ${other ? "me and " + other : "a relationship"} together.`);
         if (time[1]) ctx.push(`Timeframe: ${time[1]}.`);
@@ -111,6 +114,13 @@
             return p;
         }));
         $("askOtherBox").hidden = r.focus === "me";
+        const area = pick("askArea");
+        let examples = false;
+        document.querySelectorAll("#askExamples [data-area]").forEach(g => {
+            g.hidden = g.dataset.area !== area;
+            examples = examples || !g.hidden;
+        });
+        $("askExamples").hidden = !examples;
         $("askQ").textContent = r.q;
 
         const sig = r.key === "8" || r.key === "12"
@@ -162,14 +172,34 @@
         if (e.key === "Enter" && e.target.tagName === "INPUT" && !e.isComposing) { e.preventDefault(); go(step + 1); }
     });
 
+    // An example question fills step 1, as if typed there, and moves on.
+    $("askExamples").addEventListener("click", e => {
+        const b = e.target.closest("button[data-q]");
+        if (!b) return;
+        $("askRaw").value = b.dataset.q;
+        $("askSubject").value = b.dataset.subject;
+        render();
+        go(step + 1);
+    });
+
     $("askUse").addEventListener("click", () => {
         const r = compose();
         $("topicInput").value = r.topic;
+        // The start page wizard marks this spread as the suggested one.
+        $("spreadSelect").dataset.suggested = r.key;
+        // A reading about someone else starts the significator questions on "Someone else",
+        // unless they have been answered already.
+        const about = document.querySelectorAll('input[name="sig_about"]');
+        if (about.length && !Array.from(about).some(a => a.checked) && r.focus !== "us") {
+            about.forEach(a => a.checked = a.value === (r.focus === "other" ? "other" : "me"));
+            about[0].dispatchEvent(new Event("change", { bubbles: true }));
+        }
         $("spreadSelect").value = r.key;
         $("frameworkSelect").value = r.framework;
         $("spreadSelect").dispatchEvent(new Event("change", { bubbles: true }));
         $("frameworkSelect").dispatchEvent(new Event("change", { bubbles: true }));
         $("askHelper").open = false;
+        $("askHelper").dispatchEvent(new CustomEvent("ask:used", { bubbles: true }));
         $("topicInput").focus();
     });
 

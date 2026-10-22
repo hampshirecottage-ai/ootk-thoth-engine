@@ -313,6 +313,56 @@ SPREAD_STAGES = [
      "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the "
      "houses, the signs and the 36 decans, and finally all four together."),
 ]
+# The start page's guided spread step: the answer to "How deep do you want to go?" for each
+# stage above (same order), then per spread a short name and when to pick it.
+SPREAD_DEPTHS = [
+    ("A quick look", "1 or 3 cards, a minute to read"),
+    ("How forces meet", "2 to 4 cards, elements in pairs"),
+    ("The whole picture", "7 or 10 cards on the hexagram or the Tree of Life"),
+    ("The Opening of the Key", "The Golden Dawn&rsquo;s long method, 12 to 75 cards"),
+]
+SPREAD_GUIDE = {
+    "1": ("Single card", "One theme to sit with today."),
+    "3": ("Triad", "Where this came from, where it is now, where it is heading."),
+    "2": ("Dyad", "Two sides pulling against each other, such as you and another person, or two options."),
+    "4": ("Sub-Elemental Cross", "How a single drive or plan plays out, in four shades of Fire."),
+    "5": ("Tetragrammaton", "How an idea becomes real, from first spark to result."),
+    "6": ("Hexagram", "Seven planetary forces around the matter: limits, luck, drive, love, mind, "
+                      "the core and what lies beneath."),
+    "7": ("Tree of Life", "The matter from its first impulse down to how it lands in daily life."),
+    "8": ("First Operation", "Start the Opening of the Key: what the question is really about. "
+                             "Needs a significator."),
+    "9": ("Second Operation", "Which areas of life are involved: self, money, home, love, work and more."),
+    "10": ("Third Operation", "How the matter develops, sign by sign."),
+    "11": ("Fourth Operation", "The fine detail, through all 36 decans."),
+    "12": ("Full Opening of the Key", "All four operations in one reading. Long: best attached to your "
+                                      "AI as a .md file. Needs a significator."),
+}
+# Example questions in the question helper, per area of life: (question, what it is about in a
+# few words). Open "what" and "how" questions, which the helper's hints never flag.
+ASK_EXAMPLES = {
+    "love": [("What do I need to understand about where this relationship is going?", "this relationship"),
+             ("What is keeping me from meeting the right person?", "finding a partner"),
+             ("How can I mend things after our argument?", "mending things after our argument")],
+    "work": [("What do I need to understand about the job offer?", "the job offer"),
+             ("What is holding my career back right now?", "my career"),
+             ("Where is my work heading this year?", "my work")],
+    "money": [("What would help me get on top of my finances?", "my finances"),
+              ("What should I weigh before this big purchase?", "this big purchase"),
+              ("How can I build more security for myself?", "building more security")],
+    "home": [("What does my family need from me right now?", "my family"),
+             ("What should I consider about moving house?", "moving house"),
+             ("How can I ease the tension at home?", "the tension at home")],
+    "health": [("What is my body asking of me at the moment?", "my health"),
+               ("What would help me rest and recover?", "rest and recovery"),
+               ("Which habit would serve me best to change?", "changing a habit")],
+    "creative": [("What is blocking my creative work?", "my creative work"),
+                 ("How do I bring this project to life?", "this project"),
+                 ("Which of my ideas deserves my time now?", "choosing between my ideas")],
+    "spirit": [("What is my next step on my spiritual path?", "my spiritual path"),
+               ("What is this period of my life teaching me?", "this period of my life"),
+               ("What practice would deepen my understanding?", "my practice")],
+}
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
 # Landing pages for search ads and searches: one per keyword theme, its headline worded like the
@@ -476,6 +526,8 @@ templates.env.globals.update(static_url=static_url, card_image_url=card_image_ur
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
+                             spread_depths=SPREAD_DEPTHS, spread_guide=SPREAD_GUIDE,
+                             ask_examples=ASK_EXAMPLES,
                              default_spread=DEFAULT_SPREAD)
 
 
