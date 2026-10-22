@@ -2474,3 +2474,16 @@ def test_question_helper_covers_every_spread():
     block = js[js.index("const SPREAD_QUESTIONS"):js.index("const TIMES")]
     for key in SPREADS:
         assert f'"{key}": {{ q:' in block, key
+
+
+def test_start_page_form_is_a_step_by_step_wizard(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
+    html = client.get("/").text
+    assert 'src="/static/js/wizard.js?v=' in html
+    steps = [s.split('"')[0] for s in html.split('class="wiz-step" data-step="')[1:]]
+    assert steps == ["question", "spread", "significator", "options", "review"]
+    # Without JavaScript the review step stays hidden and every field shows, as before.
+    assert 'data-step="review" data-title="Draw" hidden>' in html
+    # /pick shares the fields but keeps the one-page form.
+    pick = client.get("/pick").text
+    assert "wizard.js" not in pick and 'id="wizRail"' not in pick
