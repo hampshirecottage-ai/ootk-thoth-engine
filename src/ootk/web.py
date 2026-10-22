@@ -875,6 +875,11 @@ def settings_page(request: Request, name: str, mode: str):
             "positions": {key: spread_positions(key) for key in SPREADS},
             "sig_ranks": significator_methods.RANKS,
             "sig_suits": significator_methods.SUITS,
+            "sig_temperaments": significator_methods.TEMPERAMENTS,
+            "sig_topics": significator_methods.TOPICS,
+            "sig_stages": significator_methods.LIFE_STAGES,
+            "sig_previews": {title: dict(p, img=card_image_url(title, "small"), art=art_note(title))
+                             for title, p in significator_methods.court_previews().items()},
             "birth_spans": significator_methods.BIRTH_SPANS,
         }
     )

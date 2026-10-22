@@ -8,7 +8,8 @@ let activeCardList = [];
 // ---------- remembered settings (per browser) ----------
 // The draw mode is the page itself, so it is not part of the remembered settings.
 // The significator itself is worked out from the sig_* choices; the birth date is never kept.
-const SETTING_FIELDS = ["spread_key", "seed", "sig_method", "sig_rank", "sig_suit", "sig_any",
+const SETTING_FIELDS = ["spread_key", "seed", "sig_method", "sig_about", "sig_basis", "sig_rank", "sig_suit",
+                        "sig_topic", "sig_any",
                         "mapping_system", "framework"];
 const LAST_KEY = "ootk.lastSettings.v1";
 
@@ -55,9 +56,11 @@ $("moreOptions").addEventListener("input", updateMoreSummary);
 $("moreOptions").addEventListener("change", updateMoreSummary);
 
 // ---------- significator ----------
-// Seed mode: Book T description (rank by age and gender, suit by colouring), birth date,
-// or any card. Only the resulting card title is sent. On /pick it is the first card placed.
+// Seed mode: Book T description asked as a few questions (who it is about, person or matter,
+// temperament or topic for the suit, stage of life for the rank), birth date, or any card.
+// Only the resulting card title is sent. On /pick it is the first card placed.
 const birthSpans = manual ? [] : JSON.parse($("birthSpans").textContent);
+const sigPreviews = manual ? {} : JSON.parse($("sigPreviews").textContent);
 
 function birthCard(isoDate) {
     const [, m, d] = isoDate.split("-").map(Number);
@@ -66,14 +69,45 @@ function birthCard(isoDate) {
     return card;
 }
 
+const radioValue = name => form.elements[name] ? form.elements[name].value : "";
+function clearRadios(names) { names.forEach(n => form.elements[n].forEach(r => r.checked = false)); }
+
+// Shows each Describe question once the one before it is answered, worded for "me" or
+// "someone else". Returns the suit and rank chosen so far.
+function updateDescribe() {
+    // Settings saved before the questions existed have a rank and suit but no answers here.
+    if (!radioValue("sig_about") && (radioValue("sig_rank") || radioValue("sig_suit"))) {
+        form.elements["sig_about"].value = "me";
+        form.elements["sig_basis"].value = "person";
+    }
+    const about = radioValue("sig_about"), basis = radioValue("sig_basis");
+    const suit = basis === "matter" ? radioValue("sig_topic") : radioValue("sig_suit");
+    const show = { about: true, basis: !!about, suit: basis === "person", topic: basis === "matter", rank: !!suit };
+    document.querySelectorAll(".sig-q").forEach(q => q.hidden = !show[q.dataset.q]);
+    document.querySelectorAll("#sigPicker [data-me]").forEach(t => t.textContent = about === "other" ? t.dataset.other : t.dataset.me);
+    return { suit, rank: show.rank ? radioValue("sig_rank") : "" };
+}
+
 function chosenSignificator() {
     const method = form.elements["sig_method"].value;
     if (method === "describe") {
-        const rank = $("sigRank").value, suit = $("sigSuit").value;
+        const { rank, suit } = updateDescribe();
         return rank && suit ? `${rank} of ${suit}` : "";
     }
     if (method === "birthday") return $("sigBirthday").value ? birthCard($("sigBirthday").value) : "";
     return $("sigAny").value.trim();
+}
+
+function showPreview(card) {
+    const p = sigPreviews[card];
+    $("sigPreview").hidden = !p;
+    if (!p) return;
+    $("sigPreviewImg").src = p.img;
+    $("sigPreviewImg").alt = card;
+    $("sigPreviewTitle").textContent = card;
+    $("sigPreviewElement").textContent = p.element;
+    $("sigPreviewPlace").textContent = p.place;
+    $("sigPreviewArt").textContent = p.art;
 }
 
 function updateSignificator() {
@@ -91,9 +125,21 @@ function updateSignificator() {
         $("sigResult").append("Significator: ", strong);
         if (card && method === "birthday") $("sigResult").append(" (a birthday on the first or last day of a span may belong to the card next to it)");
     }
+    showPreview(card);
+    $("sigResult").hidden = !$("sigPreview").hidden;     // the preview names the card itself
 }
 
 if (!manual) {
+    // Change: back to the first question (Describe) or to the empty field.
+    $("sigRestart").addEventListener("click", () => {
+        const method = form.elements["sig_method"].value;
+        if (method === "describe") clearRadios(["sig_about", "sig_basis", "sig_suit", "sig_topic", "sig_rank"]);
+        else if (method === "birthday") $("sigBirthday").value = "";
+        else $("sigAny").value = "";
+        updateSignificator();
+        const first = $("sigPicker").querySelector(`[data-sig="${method}"] input`);
+        if (first) first.focus();
+    });
     $("sigPicker").addEventListener("input", updateSignificator);
     $("sigPicker").addEventListener("change", updateSignificator);
 }
