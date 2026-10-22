@@ -487,8 +487,8 @@ def generate_html_output(session_id, spread_name, query_prompt, analytical_promp
     <title>Spread Report - {safe_spread_name}</title>
     <style>
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; background: #121212; color: #e0e0e0; padding: 30px; line-height: 1.6; }}
-        h1, h2, h3 {{ color: #bb86fc; }}
-        .meta {{ background: #1f1f1f; padding: 20px; border-radius: 8px; border-left: 4px solid #03dac6; margin-bottom: 25px; }}
+        h1, h2, h3 {{ color: #6fcf97; }}
+        .meta {{ background: #1f1f1f; padding: 20px; border-radius: 8px; border-left: 4px solid #ffe0a0; margin-bottom: 25px; }}
         pre {{ background: #1e1e1e; color: #a9b7c6; padding: 20px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; font-family: "Fira Code", monospace; }}
     </style>
 </head>
