@@ -34,17 +34,42 @@
                         <label><input type="radio" name="sig_method" value="any"><span>Any card</span></label>
                     </div>
 
+                    {# Describe: a few questions, each shown once the one before is answered
+                       (static/js/index.js). Book T's own wording sits under each answer. #}
                     <div data-sig="describe">
-                        <label for="sigRank">Who is the reading for?</label>
-                        <select id="sigRank" name="sig_rank">
-                            <option value="">Choose…</option>
-                            {% for rank, who in sig_ranks.items() %}<option value="{{ rank }}">{{ who }}</option>{% endfor %}
-                        </select>
-                        <label for="sigSuit">Colouring</label>
-                        <select id="sigSuit" name="sig_suit">
-                            <option value="">Choose…</option>
-                            {% for suit, look in sig_suits.items() %}<option value="{{ suit }}">{{ look }}</option>{% endfor %}
-                        </select>
+                        <fieldset class="sig-q" data-q="about">
+                            <legend>Who is the reading about?</legend>
+                            <label><input type="radio" name="sig_about" value="me"><span>Me</span></label>
+                            <label><input type="radio" name="sig_about" value="other"><span>Someone else</span></label>
+                        </fieldset>
+
+                        <fieldset class="sig-q" data-q="basis" hidden>
+                            <legend>What should the card stand for?</legend>
+                            <label><input type="radio" name="sig_basis" value="person"><span><span data-me="Me, the person asking" data-other="The person the reading is about">Me, the person asking</span> <small>Book T, recommended</small></span></label>
+                            <label><input type="radio" name="sig_basis" value="matter"><span>The matter the question is about <small>A later custom: in a full Opening of the Key, the pile the significator falls in is what shows the matter</small></span></label>
+                        </fieldset>
+
+                        <fieldset class="sig-q" data-q="suit" hidden>
+                            <legend data-me="How do you usually meet life?" data-other="How do they usually meet life?">How do you usually meet life?</legend>
+                            {% for suit, how in sig_temperaments.items() %}
+                            <label><input type="radio" name="sig_suit" value="{{ suit }}"><span>{{ how }} <small>{{ suit }} · Book T: {{ sig_suits[suit].split(';')[0] | lower }}</small></span></label>
+                            {% endfor %}
+                        </fieldset>
+
+                        <fieldset class="sig-q" data-q="topic" hidden>
+                            <legend>What is the question mainly about?</legend>
+                            {% for suit, topic in sig_topics.items() %}
+                            <label><input type="radio" name="sig_topic" value="{{ suit }}"><span>{{ topic }} <small>{{ suit }}</small></span></label>
+                            {% endfor %}
+                        </fieldset>
+
+                        <fieldset class="sig-q" data-q="rank" hidden>
+                            <legend data-me="Which fits you best right now?" data-other="Which fits them best right now?">Which fits you best right now?</legend>
+                            {% for rank, stage in sig_stages.items() %}
+                            <label><input type="radio" name="sig_rank" value="{{ rank }}"><span>{{ stage }} <small>{{ rank }} · Book T: {{ sig_ranks[rank] | lower }}</small></span></label>
+                            {% endfor %}
+                        </fieldset>
+                        <p class="hint">A trump, such as the Lovers for a choice in love, is a modern habit: use Any card for that.</p>
                     </div>
 
                     <div data-sig="birthday" hidden>
@@ -62,10 +87,21 @@
 
                     <input type="hidden" name="significator" id="significatorInput">
                     <p class="sig-result" id="sigResult" aria-live="polite"></p>
+                    <div class="sig-preview" id="sigPreview" hidden>
+                        <img id="sigPreviewImg" alt="" width="110" height="190">
+                        <div>
+                            <p class="sig-preview-title" id="sigPreviewTitle"></p>
+                            <p id="sigPreviewElement"></p>
+                            <p id="sigPreviewPlace"></p>
+                            <p class="hint" id="sigPreviewArt"></p>
+                            <button type="button" class="btn-small" id="sigRestart">Change</button>
+                        </div>
+                    </div>
                 </div>
             </fieldset>
             </div>
             <script type="application/json" id="birthSpans">{{ birth_spans | tojson }}</script>
+            <script type="application/json" id="sigPreviews">{{ sig_previews | tojson }}</script>
             {% else %}
             <p class="hint sig-none" id="sigNone">The first card you place is the significator.</p>
             {% endif %}

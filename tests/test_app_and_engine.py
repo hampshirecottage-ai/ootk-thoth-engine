@@ -1209,7 +1209,8 @@ def test_cli_command_leaves_out_a_blank_significator():
 
 def test_start_page_has_the_picker_and_no_default_card(client):
     page = client.get("/").text
-    assert 'id="sigRank"' in page and 'id="birthSpans"' in page
+    assert 'name="sig_rank"' in page and 'id="birthSpans"' in page
+    assert 'name="sig_about"' in page and 'name="sig_topic"' in page and 'id="sigPreviews"' in page
     assert 'value="Knight of Swords"' not in page               # no preset significator
     assert 'name="sig_birthday"' not in page and 'id="sigBirthday"' in page   # date is never sent
     pick = client.get("/pick").text
@@ -1990,6 +1991,33 @@ def test_birth_spans_cover_the_twelve_dated_courts_once():
     cards = [c for _, c in significator.BIRTH_SPANS]
     assert len(set(cards)) == 12 and not any(c.startswith("Princess") for c in cards)
     assert [s for s, _ in significator.BIRTH_SPANS] == sorted(s for s, _ in significator.BIRTH_SPANS)
+
+
+def test_guided_questions_cover_every_rank_and_suit():
+    from ootk import significator
+    assert set(significator.TEMPERAMENTS) == set(significator.TOPICS) == set(significator.SUITS)
+    assert set(significator.LIFE_STAGES) == set(significator.RANKS)
+
+
+def test_court_previews():
+    from ootk import significator
+    previews = significator.court_previews()
+    assert len(previews) == 16
+    assert previews["Queen of Wands"] == {
+        "element": "Water of Fire",
+        "place": "21° Pisces to 20° Aries, birthdays about 11 March to 10 April"}
+    assert previews["Queen of Disks"]["place"].endswith("13 December to 9 January")   # wraps the year
+    assert previews["Princess of Cups"]["place"].startswith("Rules the Libra, Scorpio and Sagittarius")
+    # Each dated preview's first day gives that card by birthday.
+    for (month, day), card in significator.BIRTH_SPANS:
+        assert f"about {day} {significator.MONTHS[month - 1]} to" in previews[card]["place"]
+
+
+def test_start_page_previews_carry_the_court_picture(client):
+    page = client.get("/").text
+    data = json.loads(page.split('id="sigPreviews">')[1].split("</script>")[0])
+    assert "knight-of-wands.webp" in data["Knight of Wands"]["img"]
+    assert data["Knight of Wands"]["art"] == "Pictured: Rider-Waite-Smith King of Wands"
 
 
 # ---------- mapping systems: the Tzaddi/Heh swap ----------
