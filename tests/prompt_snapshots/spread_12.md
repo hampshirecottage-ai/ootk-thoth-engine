@@ -27,7 +27,7 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
-A decan position's name ends with that decan's own pip in brackets, for example "Saturn in Leo (5 of Wands)". The bracket names the place, not the card: the card that fell there is the Card Drawn.
+A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do). A decan's name ends with its own pip in brackets, for example "Saturn in Leo (5 of Wands)"; that pip is part of the place's name too.
 
 Each operation is dealt from its own fresh shuffle of the whole deck, so a card can appear in more than one operation, but never twice in the same one.
 

@@ -20,6 +20,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do).
+
 ### Position 1: 1. Aries
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
