@@ -33,8 +33,8 @@ The same command with the same database always draws the same cards. Everything 
 **Query/Intent Topic:** Example reading
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 12345
-**Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution (Arcana Progression)
-**Framework Basis:** auto: only 2 card(s) carry Sephirothic data (minimum 6); defaulted to Life Path
+**Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
+**Framework Basis:** auto: only 2 card(s) carry Sephirothic data (minimum 6), so the default Life Path lens is used
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 
 ---
@@ -120,7 +120,7 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 
 1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
-3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
+3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
 4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Icosahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5).
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.

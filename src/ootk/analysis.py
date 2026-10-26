@@ -540,10 +540,6 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     if not spread_results:
         return life_path, "auto: no cards drawn"
 
-    has_majors = any(item["card_data"].get("arcana_type") == "Major"
-                     for item in spread_results if item.get("card_data"))
-    default_name = life_path + (" (Arcana Progression)" if has_majors else "")
-
     series = []  # (position order, rank)
     for idx, item in enumerate(spread_results):
         rank = card_sephirothic_rank(item.get("card_data"))
@@ -552,8 +548,8 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
 
     n = len(series)
     if n < FRAMEWORK_MIN_CARDS:
-        return default_name, (f"auto: only {n} card(s) carry Sephirothic data "
-                              f"(minimum {FRAMEWORK_MIN_CARDS}); defaulted to Life Path")
+        return life_path, (f"auto: only {n} card(s) carry Sephirothic data "
+                           f"(minimum {FRAMEWORK_MIN_CARDS}), so the default Life Path lens is used")
 
     xs = [x for x, _ in series]
     ys = [y for _, y in series]
@@ -574,7 +570,9 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     if z <= -FRAMEWORK_TREND_Z:
         return (FRAMEWORK_NAMES["post_mortem"],
                 f"auto: rank falls toward Kether across the draw - {stats}")
-    return default_name, f"auto: no significant Sephirothic trend, default lens - {stats}"
+    return life_path, (f"auto: the trend test found no significant rise or fall on the Tree "
+                       f"(Sephirothic rank), so the default Life Path lens is used; the "
+                       f"cards did not choose it - {stats}")
 
 # Own-place check. On the house, sign and decan wheels a card can land on its own place: a pip
 # on its own decan, a sign Trump on its own sign, a card in the house of its sign (Aries the

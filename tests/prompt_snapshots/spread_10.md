@@ -5,8 +5,8 @@
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850
-**Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution (Arcana Progression)
-**Framework Basis:** auto: no significant Sephirothic trend, default lens - r=+0.21, z=+0.62 (needs |z| >= 1.64), n=9 cards with a Sephira or path of their own (Majors and pips; courts are left out: a court takes its Hebrew letter through its zodiac sign, a Princess through her element, not through a position on the Tree)
+**Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
+**Framework Basis:** auto: the trend test found no significant rise or fall on the Tree (Sephirothic rank), so the default Life Path lens is used; the cards did not choose it - r=+0.21, z=+0.62 (needs |z| >= 1.64), n=9 cards with a Sephira or path of their own (Majors and pips; courts are left out: a court takes its Hebrew letter through its zodiac sign, a Princess through her element, not through a position on the Tree)
 **Own-Place Check:** a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a Knight, Queen or Prince by the sign that gives it its letter) or its natural house (the house of that sign, Aries = 1st). The chance is exact for a random deal from the 78 cards.
   * Signs: 1 of 12 cards on their own sign: Pos 5 (XI - Lust) - expected 0.77 at random, z=+0.27; 1 or more happens in 54.7% of random draws (about 1 in 2)
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
@@ -19,6 +19,8 @@
 Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
+
+A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do).
 
 ### Position 1: 1. Aries
 - **Card Drawn**: Prince of Swords
@@ -247,9 +249,9 @@ _Sextile (60°) - Harmonic Alignment / Opportunity [Modifier: `+1`]_
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 
-1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header. Before reading any card, restate it in one or two sentences as an open question framed in this spread's terms: its positions (section 1) and the Incarnational Life Path & Psychological Evolution (Arcana Progression) lens. If it asks yes or no, or whether something will happen, turn it toward what the querent can understand or do. Keep the querent's subject and intent and change only the wording; show the reframed question first so the querent can correct it, then read each position as answering part of it.
+1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header. Before reading any card, restate it in one or two sentences as an open question framed in this spread's terms: its positions (section 1) and the Incarnational Life Path & Psychological Evolution lens. If it asks yes or no, or whether something will happen, turn it toward what the querent can understand or do. Keep the querent's subject and intent and change only the wording; show the reframed question first so the querent can correct it, then read each position as answering part of it.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
-3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution (Arcana Progression)**.
+3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
 4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5 and the aspects in section 6). Section 4 lists the neighbouring cards whose solids are duals (polyhedral inversions). The Own-Place Check in the header compares the cards on their own place with chance; give it weight only where it is marked unusual.
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Answer the reframed question directly. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
