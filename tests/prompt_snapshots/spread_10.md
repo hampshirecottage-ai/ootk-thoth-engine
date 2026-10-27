@@ -53,6 +53,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
+- **Element (used in scores)**: Earth (via Taurus)
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
@@ -63,6 +64,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`

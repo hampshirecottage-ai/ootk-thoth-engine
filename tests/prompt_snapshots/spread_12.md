@@ -72,6 +72,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
+- **Element (used in scores)**: Earth (via Taurus)
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
@@ -82,6 +83,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
@@ -225,6 +227,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
+- **Element (used in scores)**: Air (via Gemini)
 - **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 - **Platonic Solid**: `Octahedron`
@@ -243,6 +246,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
+- **Element (used in scores)**: Water (via Cancer)
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
@@ -287,6 +291,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Window (ה (Hé))
 - **Attribution**: Aquarius
+- **Element (used in scores)**: Air (via Aquarius)
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
@@ -307,6 +312,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
+- **Element (used in scores)**: Fire (via Sagittarius)
 - **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 - **Platonic Solid**: `Tetrahedron`
@@ -407,6 +413,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
+- **Element (used in scores)**: Air (via Gemini)
 - **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 - **Platonic Solid**: `Octahedron`
@@ -417,6 +424,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox Goad (ל (Lamed))
 - **Attribution**: Libra
+- **Element (used in scores)**: Air (via Libra)
 - **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `Cheth (ח)`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 - **Platonic Solid**: `Octahedron`
@@ -489,6 +497,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
+- **Element (used in scores)**: Water (via Cancer)
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
@@ -537,6 +546,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Tooth (ש (Shin))
 - **Attribution**: Fire / Spirit
+- **Element (used in scores)**: Fire (the element Fire itself; Spirit is a secondary quality only)
 - **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `Resh (ר)`
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 - **Platonic Solid**: `Tetrahedron`
@@ -547,6 +557,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Water (מ (Mem))
 - **Attribution**: Water
+- **Element (used in scores)**: Water (the element Water itself)
 - **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `Lamed (ל)`
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 - **Platonic Solid**: `Icosahedron`
@@ -565,6 +576,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
+- **Element (used in scores)**: Fire (via Aries)
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
@@ -632,6 +644,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox (א (Aleph))
 - **Attribution**: Air
+- **Element (used in scores)**: Air (the element Air itself)
 - **Comparative Hebrew Mapping**: Thoth: `א (Aleph)` | Golden Dawn: `א (Aleph)` | French/Egyptian: `Shin (ש)`
 - **Spatial Dimension**: `Mother_Axis` (Vertical Axis (above to below))
 - **Platonic Solid**: `Octahedron`
@@ -642,6 +655,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Back of head (ק (Qoph))
 - **Attribution**: Pisces
+- **Element (used in scores)**: Water (via Pisces)
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `Tzaddi (צ)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
@@ -686,6 +700,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
+- **Element (used in scores)**: Fire (via Sagittarius)
 - **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 - **Platonic Solid**: `Tetrahedron`
@@ -696,6 +711,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
