@@ -145,7 +145,7 @@
                 {% if mode == "seed" %}
                 <fieldset class="sig-q wiz-only" data-g="seed">
                     <legend>Which cards should be drawn?</legend>
-                    <label><input type="radio" name="g_seed" value="new" form="noPost"><span>New cards <small>A fresh random seed</small></span></label>
+                    <label><input type="radio" name="g_seed" value="new" form="noPost"><span>New cards <small>A fresh random shuffle</small></span></label>
                     <label><input type="radio" name="g_seed" value="repeat" form="noPost"><span>Repeat a past reading <small>Enter its seed: every report shows one</small></span></label>
                     <label><input type="radio" name="g_seed" value="own" form="noPost"><span>Choose my own seed <small>Any word, number or date, such as 2026-10-26. It shows on the report and in its share link, so keep it to something you don&rsquo;t mind sharing</small></span></label>
                 </fieldset>
@@ -155,7 +155,7 @@
                     <input type="text" name="seed" id="seedInput" maxlength="64" placeholder="blank = new seed" autocomplete="off">
                     <button type="button" class="btn-small" id="randomSeed" title="New random seed">🎲</button>
                 </div>
-                <p class="hint">The same seed and settings always draw the same cards.</p>
+                <p class="hint">The seed is the starting point for the shuffle: it decides which cards come up and in what order. Leave it blank for a new random shuffle. The same seed and settings always draw the same cards.</p>
                 </div>
                 <fieldset class="sig-q wiz-only" data-g="mapping">
                     <legend>Which tradition should the cards follow?</legend>
