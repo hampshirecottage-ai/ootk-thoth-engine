@@ -16,7 +16,7 @@
                 .ask-hints { display: flex; flex-direction: column; gap: 4px; margin: -6px 0 12px; }
                 .ask-hints p { margin: 0; font-size: 0.82em; padding: 5px 8px; border-radius: 4px; background: var(--panel-2); border-left: 3px solid var(--accent-2); }
                 .ask-hints p.warn { border-left-color: #c0562a; }
-                .ask-out { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px; }
+                .ask-out { margin-bottom: 4px; }
                 .ask-out h3 { font-size: 0.8em; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 4px; font-weight: 600; }
                 .ask-q { margin: 0 0 10px; font-size: 1em; line-height: 1.4; }
                 .ask-set { margin: 0 0 10px; font-size: 0.85em; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 10px; }
@@ -30,21 +30,18 @@
                 .ask-examples p.hint { margin: 0 0 4px; }
                 .ask-examples div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
                 .ask-examples button { text-align: left; white-space: normal; }
+                .ask-more-btn { margin: 0 0 12px; }
+                /* Short answers, two to a row, so the first question fits on a phone screen. */
+                #askArea { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+                #askArea label { margin: 0; }
+                .ask-lead { font-weight: 600; color: var(--text); margin: 0 0 6px; }
                 .ask-warn { color: #c0562a; font-size: 0.85em; margin: 0 0 8px; }
             </style>
             <details class="ask" id="askHelper">
                 <summary>Help me shape my question</summary>
-                <p class="hint" style="margin:0 0 10px">The cards don't depend on your question; your AI's reading does. Six short steps turn what's on your mind into an open question your spread's positions can answer.</p>
+                <p class="hint" style="margin:0 0 10px">The cards don't depend on your question; your AI's reading does.</p>
 
                 <div class="ask-step" data-ask-step="0">
-                    <label for="askRaw">Your question as it is now</label>
-                    <textarea id="askRaw" rows="2" maxlength="300" placeholder="e.g. Should I take the new job?"></textarea>
-                    <div class="ask-hints" id="askHints" aria-live="polite"></div>
-                    <label for="askSubject">What it's about, in a few words</label>
-                    <input type="text" id="askSubject" maxlength="120" placeholder="e.g. the job offer from the design studio" autocomplete="off">
-                </div>
-
-                <div class="ask-step" data-ask-step="1" hidden>
                     <fieldset class="sig-q" id="askArea">
                         <legend>Which part of life does it touch?</legend>
                         <label><input type="radio" name="askArea" value="love" form="noPost"><span>Love and relationships</span></label>
@@ -56,13 +53,21 @@
                         <label><input type="radio" name="askArea" value="spirit" form="noPost"><span>Spiritual path</span></label>
                         <label><input type="radio" name="askArea" value="other" form="noPost"><span>Something else</span></label>
                     </fieldset>
-                    {# Tapping an example fills step 1 with it (static/js/ask.js). #}
+                    {# Tapping an example fills the next step with it (static/js/ask.js). #}
                     <div class="ask-examples" id="askExamples" hidden>
                         <p class="hint">Or start from an example:</p>
                         {% for area, examples in ask_examples.items() %}
                         <div data-area="{{ area }}" hidden>{% for q, subject in examples %}<button type="button" class="btn-small" data-q="{{ q }}" data-subject="{{ subject }}">{{ q }}</button>{% endfor %}</div>
                         {% endfor %}
                     </div>
+                </div>
+
+                <div class="ask-step" data-ask-step="1" hidden>
+                    <label for="askRaw">In your own words</label>
+                    <textarea id="askRaw" rows="2" maxlength="300" placeholder="e.g. Should I take the new job?"></textarea>
+                    <div class="ask-hints" id="askHints" aria-live="polite"></div>
+                    <label for="askSubject">What it's about, in a few words</label>
+                    <input type="text" id="askSubject" maxlength="120" placeholder="e.g. the job offer from the design studio" autocomplete="off">
                 </div>
 
                 <div class="ask-step" data-ask-step="2" hidden>
@@ -92,9 +97,6 @@
                         <input type="text" id="askOther" maxlength="60" autocomplete="off">
                     </div>
                     <p class="hint">The reading speaks best to the person who can act, so a question about someone else asks about your part in it.</p>
-                </div>
-
-                <div class="ask-step" data-ask-step="4" hidden>
                     <fieldset class="sig-q" id="askTime">
                         <legend>Over what span of time?</legend>
                         <label><input type="radio" name="askTime" value="weeks" form="noPost"><span>The next few weeks</span></label>
@@ -105,23 +107,22 @@
                     <label class="ask-check"><input type="checkbox" id="askPath"> Frame it as a step on my longer path</label>
                 </div>
 
-                <div class="ask-step" data-ask-step="5" hidden>
-                    <label for="askSituation">The situation now <span class="optional">(optional)</span></label>
-                    <textarea id="askSituation" rows="2" maxlength="400"></textarea>
-                    <label for="askTried">What you've tried or decided <span class="optional">(optional)</span></label>
-                    <textarea id="askTried" rows="2" maxlength="300"></textarea>
-                    <label for="askUnsure">What you're most unsure about <span class="optional">(optional)</span></label>
-                    <textarea id="askUnsure" rows="2" maxlength="300"></textarea>
+                <div class="ask-step" data-ask-step="4" hidden>
+                    <p class="ask-lead">Anything your AI should know?</p>
+                    <button type="button" class="btn-small ask-more-btn" id="askMoreBtn" aria-expanded="false" aria-controls="askMore">Add some background (optional)</button>
+                    <div id="askMore" hidden>
+                        <label for="askSituation">The situation now</label>
+                        <textarea id="askSituation" rows="2" maxlength="400"></textarea>
+                        <label for="askTried">What you've tried or decided</label>
+                        <textarea id="askTried" rows="2" maxlength="300"></textarea>
+                        <label for="askUnsure">What you're most unsure about</label>
+                        <textarea id="askUnsure" rows="2" maxlength="300"></textarea>
+                    </div>
                     <label class="ask-check"><input type="checkbox" id="askCatchAll" checked> Also ask: what am I not asking that I should be?</label>
                 </div>
 
-                <div class="ask-nav">
-                    <button type="button" class="btn-small" id="askBack">Back</button>
-                    <span class="ask-count" id="askCount"></span>
-                    <button type="button" class="btn-small" id="askNext">Next</button>
-                </div>
-
-                <div class="ask-out" aria-live="polite">
+                {# The finished question, shown once every answer is in. #}
+                <div class="ask-step ask-out" data-ask-step="5" aria-live="polite" hidden>
                     <h3>Your question</h3>
                     <p class="ask-q" id="askQ"></p>
                     <dl class="ask-set" id="askSet"></dl>
@@ -129,5 +130,11 @@
                     <ul class="ask-pos" id="askPos"></ul>
                     <p class="ask-warn" id="askTooLong" hidden></p>
                     <button type="button" class="btn-small" id="askUse">Use this question</button>
+                </div>
+
+                <div class="ask-nav">
+                    <button type="button" class="btn-small" id="askBack">Back</button>
+                    <span class="ask-count" id="askCount"></span>
+                    <button type="button" class="btn-small" id="askNext">Next</button>
                 </div>
             </details>

@@ -66,11 +66,11 @@
         if (/^(will|should|is|are|does|do|did|can|could|am|would|has|have|was)\b/i.test(t))
             out.push(["warn", "A yes/no question boxes every card into one answer. The reframe asks how or what instead."]);
         if (/\bwhen\b/i.test(t))
-            out.push(["warn", "Timing is hard to read. Ask what needs to happen, and set a window in step 5."]);
+            out.push(["warn", "Timing is hard to read. Ask what needs to happen, and set a time window two steps on."]);
         if (/\b(he|she|they|him|her|them|his|hers|their)\b/i.test(t) && !/\b(i|me|my|we|us|our)\b/i.test(t))
-            out.push(["", "This centres someone else. In step 4, choose \"Mainly about someone else\" and it will ask about your part."]);
-        if (/\bor\b/i.test(t)) out.push(["", "Weighing options? \"Help me weigh a decision\" in step 3 suits this."]);
-        if (t.split(/\s+/).length < 5) out.push(["", "A short question gives your AI little to tie the cards to. Step 6 lets you add the situation."]);
+            out.push(["", "This centres someone else. Two steps on, choose \"Mainly about someone else\" and it will ask about your part."]);
+        if (/\bor\b/i.test(t)) out.push(["", "Weighing options? \"Help me weigh a decision\" in the next step suits this."]);
+        if (t.split(/\s+/).length < 5) out.push(["", "A short question gives your AI little to tie the cards to. The background step lets you add the situation."]);
         return out;
     }
 
@@ -145,18 +145,27 @@
         $("askTooLong").hidden = !tooLong;
         $("askTooLong").textContent = tooLong ? `That's ${r.topic.length} characters; the question box holds ${TOPIC_MAX}. Shorten the context a little.` : "";
         $("askUse").disabled = tooLong;
-        $("askNext").disabled = step === STEP_COUNT - 1 && tooLong;
     }
 
+    // The last step shows the finished question with its Use button; the others ask.
     function go(i) {
         step = Math.max(0, Math.min(STEP_COUNT - 1, i));
         document.querySelectorAll("[data-ask-step]").forEach(el => el.hidden = Number(el.dataset.askStep) !== step);
         $("askBack").disabled = step === 0;
-        // On the last step Next becomes the finish button, so it never sits there doing nothing.
-        $("askNext").textContent = step === STEP_COUNT - 1 ? "Use this question" : "Next";
-        $("askNext").disabled = step === STEP_COUNT - 1 && $("askUse").disabled;
+        $("askNext").hidden = step === STEP_COUNT - 1;
+        $("askNext").textContent = step === STEP_COUNT - 2 ? "See my question" : "Next";
         $("askCount").textContent = `Step ${step + 1} of ${STEP_COUNT}`;
+        // The start page wizard drives these steps with its own Back and Next.
+        $("askHelper").dispatchEvent(new CustomEvent("ask:step", { bubbles: true }));
     }
+    // For static/js/wizard.js.
+    window.ootkAsk = {
+        get step() { return step; },
+        count: STEP_COUNT,
+        go,
+        canUse: () => !$("askUse").disabled,
+        use: () => $("askUse").click(),
+    };
 
     // Opening the helper starts from whatever is already in the Question box.
     $("askHelper").addEventListener("toggle", () => {
@@ -166,13 +175,20 @@
     $("askHelper").addEventListener("input", render);
     $("askHelper").addEventListener("change", render);
     $("askBack").addEventListener("click", () => go(step - 1));
-    $("askNext").addEventListener("click", () => step === STEP_COUNT - 1 ? $("askUse").click() : go(step + 1));
+    $("askNext").addEventListener("click", () => go(step + 1));
+    // The background boxes stay folded unless asked for, or already filled in.
+    function showMore(open) {
+        $("askMore").hidden = !open;
+        $("askMoreBtn").hidden = open;
+        $("askMoreBtn").setAttribute("aria-expanded", String(open));
+    }
+    $("askMoreBtn").addEventListener("click", () => { showMore(true); $("askSituation").focus(); });
     // Enter in a one-line box moves on instead of drawing the cards.
     $("askHelper").addEventListener("keydown", e => {
         if (e.key === "Enter" && e.target.tagName === "INPUT" && !e.isComposing) { e.preventDefault(); go(step + 1); }
     });
 
-    // An example question fills step 1, as if typed there, and moves on.
+    // An example question fills the next step, as if typed there, and moves on to it.
     $("askExamples").addEventListener("click", e => {
         const b = e.target.closest("button[data-q]");
         if (!b) return;
@@ -203,6 +219,7 @@
         $("topicInput").focus();
     });
 
+    showMore(["askSituation", "askTried", "askUnsure"].some(val));
     go(0);
     render();
 })();

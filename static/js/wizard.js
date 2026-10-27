@@ -53,9 +53,23 @@
     radios("g_ask").forEach(r => r.addEventListener("change", () => {
         if (picked("g_ask") === "own") el("askHelper").open = false;
         syncAsk();
+        render();
     }));
-    // "Use this question" shows the finished question in the box, to read or edit.
-    el("askHelper").addEventListener("ask:used", () => { setPicked("g_ask", "own"); syncAsk(); });
+    // "Use this question" puts the finished question in the box and moves on to the spread it
+    // suggests; Back comes back to the box to read or edit it.
+    el("askHelper").addEventListener("ask:used", () => {
+        setPicked("g_ask", "own");
+        syncAsk();
+        go(stepIndex("spread"));
+    });
+    // While the helper is open, the wizard's Back and Next step through its questions, so
+    // there is only one pair of buttons (static/js/ask.js hides its own).
+    const ask = window.ootkAsk;
+    function inHelper() {
+        return !!ask && activeSteps()[current].dataset.step === "question" && picked("g_ask") === "help";
+    }
+    el("askHelper").addEventListener("ask:step", () => render());
+    el("askHelper").addEventListener("input", () => render());
 
     // Spread: how deep, then the spreads at that depth. Follows the select, which saved
     // settings, links and the question helper may have set; a new depth starts on its first spread.
@@ -85,15 +99,15 @@
 
     // Options: the seed box shows only for a repeat; mapping and framework follow their selects.
     function syncOptions() {
-        if (!picked("g_seed")) setPicked("g_seed", el("seedInput").value.trim() ? "repeat" : "new");
-        form.querySelector(".seed-box").hidden = picked("g_seed") !== "repeat";
+        if (!picked("g_seed")) setPicked("g_seed", el("seedInput").value.trim() ? "own" : "new");
+        form.querySelector(".seed-box").hidden = picked("g_seed") === "new";
         setPicked("g_mapping", el("mappingSelect").value);
         setPicked("g_framework", el("frameworkSelect").value);
     }
     radios("g_seed").forEach(r => r.addEventListener("change", () => {
         if (picked("g_seed") === "new") el("seedInput").value = "";
         syncOptions();
-        if (picked("g_seed") === "repeat") el("seedInput").focus({ preventScroll: true });
+        if (picked("g_seed") !== "new") el("seedInput").focus({ preventScroll: true });
     }));
     radios("g_mapping").forEach(r => r.addEventListener("change", () => setSelect("mappingSelect", r.value)));
     radios("g_framework").forEach(r => r.addEventListener("change", () => setSelect("frameworkSelect", r.value)));
@@ -115,7 +129,7 @@
         if (hasSigPosition()) rows.push(["Significator", el("significatorInput").value || "Not chosen yet", "significator"]);
         rows.push(["Tradition", answerText("g_mapping", el("mappingSelect").value), "options"],
                   ["Story", answerText("g_framework", fw) + (fw === "auto" ? " (Auto)" : ` (${smallText("g_framework", fw).split(":")[0]})`), "options"],
-                  ["Cards", seed ? `Repeat seed ${seed}` : "New cards", "options"]);
+                  ["Cards", seed ? `Seed ${seed}` : "New cards, random seed", "options"]);
         el("wizReview").replaceChildren(...rows.flatMap(([label, value, step]) => {
             const dt = document.createElement("dt"), dd = document.createElement("dd");
             const edit = document.createElement("button");
@@ -147,8 +161,12 @@
         const step = steps[current], last = current === steps.length - 1;
         allSteps.forEach(s => s.toggleAttribute("data-hidden", s !== step));
         form.classList.toggle("wiz-not-last", !last);
-        el("wizBack").disabled = current === 0;
-        el("wizCount").textContent = `Step ${current + 1} of ${steps.length}`;
+        const helper = inHelper(), helperLast = helper && ask.step === ask.count - 1;
+        el("wizBack").disabled = current === 0 && !(helper && ask.step > 0);
+        el("wizCount").textContent = helper ? `${ask.step + 1} of ${ask.count}` : `Step ${current + 1} of ${steps.length}`;
+        el("wizNext").textContent = !helper ? "Next" : helperLast ? "Use this question"
+            : ask.step === ask.count - 2 ? "See my question" : "Next";
+        el("wizNext").disabled = helperLast && !ask.canUse();
         el("wizRail").replaceChildren(...steps.map((s, i) => {
             const li = document.createElement("li"), b = document.createElement("button"), n = document.createElement("span");
             b.type = "button";
@@ -189,8 +207,15 @@
     form.querySelector('.wiz-step[data-step="review"]').hidden = false;
     el("moreOptions").open = true;
 
-    el("wizBack").addEventListener("click", () => go(current - 1));
-    el("wizNext").addEventListener("click", () => go(current + 1));
+    el("wizBack").addEventListener("click", () => {
+        if (inHelper() && ask.step > 0) { ask.go(ask.step - 1); form.scrollIntoView({ block: "nearest" }); }
+        else go(current - 1);
+    });
+    el("wizNext").addEventListener("click", () => {
+        if (!inHelper()) go(current + 1);
+        else if (ask.step < ask.count - 1) { ask.go(ask.step + 1); form.scrollIntoView({ block: "nearest" }); }
+        else ask.use();
+    });
     el("spreadSelect").addEventListener("change", () => { renderSpreadPreview(); render(); });
     el("mappingSelect").addEventListener("change", syncOptions);
     el("frameworkSelect").addEventListener("change", syncOptions);
