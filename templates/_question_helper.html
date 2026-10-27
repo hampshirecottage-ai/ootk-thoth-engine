@@ -26,10 +26,6 @@
                 .ask-pos { list-style: none; padding: 0; margin: 0 0 10px; font-size: 0.85em; }
                 .ask-pos li { padding: 3px 0; border-top: 1px solid var(--line); }
                 .ask-pos b { font-weight: 600; }
-                .ask-examples { margin: -6px 0 12px; }
-                .ask-examples p.hint { margin: 0 0 4px; }
-                .ask-examples div { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-                .ask-examples button { text-align: left; white-space: normal; }
                 .ask-more-btn { margin: 0 0 12px; }
                 /* Short answers, two to a row, so the first question fits on a phone screen. */
                 #askArea { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
@@ -53,13 +49,6 @@
                         <label><input type="radio" name="askArea" value="spirit" form="noPost"><span>Spiritual path</span></label>
                         <label><input type="radio" name="askArea" value="other" form="noPost"><span>Something else</span></label>
                     </fieldset>
-                    {# Tapping an example fills the next step with it (static/js/ask.js). #}
-                    <div class="ask-examples" id="askExamples" hidden>
-                        <p class="hint">Or start from an example:</p>
-                        {% for area, examples in ask_examples.items() %}
-                        <div data-area="{{ area }}" hidden>{% for q, subject in examples %}<button type="button" class="btn-small" data-q="{{ q }}" data-subject="{{ subject }}">{{ q }}</button>{% endfor %}</div>
-                        {% endfor %}
-                    </div>
                 </div>
 
                 <div class="ask-step" data-ask-step="1" hidden>

@@ -2513,7 +2513,7 @@ def test_question_helper_is_on_both_pages_and_posts_nothing(client, monkeypatch)
         for tag in re.findall(r"<[^>]* name=[^>]*>", helper):
             assert 'form="noPost"' in tag, (path, tag)
     assert 'id="noPost"' not in client.get("/").text
-    # Area of life (with its examples) comes first, the finished question last.
+    # Area of life comes first, the finished question last.
     html = client.get("/").text
     steps = re.findall(r'<div class="ask-step[^"]*" data-ask-step="(\d)"', html)
     assert steps == [str(i) for i in range(6)]
@@ -2538,14 +2538,6 @@ def test_guided_options_post_nothing_and_cover_every_choice(client, monkeypatch)
     # /pick has no wizard, so it keeps the plain selects only.
     assert 'name="g_' not in client.get("/pick").text
 
-
-def test_example_questions_are_open_questions():
-    for area, examples in app_module.ASK_EXAMPLES.items():
-        assert len(examples) == 3, area
-        for q, subject in examples:
-            # The helper warns about yes/no openings; its own examples never trip that warning.
-            assert not re.match(r"(will|should|is|are|does|do|did|can|could|am|would|has|have|was)\b", q, re.I), q
-            assert q.endswith("?") and subject and " when " not in q.lower(), q
 
 
 def test_question_helper_covers_every_spread():

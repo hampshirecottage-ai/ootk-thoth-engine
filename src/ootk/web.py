@@ -371,31 +371,6 @@ def spread_label(key: str) -> str:
     """The short spread name visitors see on the site. The longer technical name in SPREADS
     stays in the prompt and as the Library's subtitle."""
     return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else SPREADS[key]["name"]
-# Example questions in the question helper, per area of life: (question, what it is about in a
-# few words). Open "what" and "how" questions, which the helper's hints never flag.
-ASK_EXAMPLES = {
-    "love": [("What do I need to understand about where this relationship is going?", "this relationship"),
-             ("What is keeping me from meeting the right person?", "finding a partner"),
-             ("How can I mend things after our argument?", "mending things after our argument")],
-    "work": [("What do I need to understand about the job offer?", "the job offer"),
-             ("What is holding my career back right now?", "my career"),
-             ("Where is my work heading this year?", "my work")],
-    "money": [("What would help me get on top of my finances?", "my finances"),
-              ("What should I weigh before this big purchase?", "this big purchase"),
-              ("How can I build more security for myself?", "building more security")],
-    "home": [("What does my family need from me right now?", "my family"),
-             ("What should I consider about moving house?", "moving house"),
-             ("How can I ease the tension at home?", "the tension at home")],
-    "health": [("What is my body asking of me at the moment?", "my health"),
-               ("What would help me rest and recover?", "rest and recovery"),
-               ("Which habit would serve me best to change?", "changing a habit")],
-    "creative": [("What is blocking my creative work?", "my creative work"),
-                 ("How do I bring this project to life?", "this project"),
-                 ("Which of my ideas deserves my time now?", "choosing between my ideas")],
-    "spirit": [("What is my next step on my spiritual path?", "my spiritual path"),
-               ("What is this period of my life teaching me?", "this period of my life"),
-               ("What practice would deepen my understanding?", "my practice")],
-}
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
 # Landing pages for search ads and searches: one per keyword theme, its headline worded like the
@@ -563,7 +538,6 @@ templates.env.globals.update(static_url=static_url, card_image_url=card_image_ur
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
                              spread_depths=SPREAD_DEPTHS, spread_guide=SPREAD_GUIDE,
                              spread_label=spread_label,
-                             ask_examples=ASK_EXAMPLES,
                              default_spread=DEFAULT_SPREAD)
 
 

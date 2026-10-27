@@ -114,13 +114,6 @@
             return p;
         }));
         $("askOtherBox").hidden = r.focus === "me";
-        const area = pick("askArea");
-        let examples = false;
-        document.querySelectorAll("#askExamples [data-area]").forEach(g => {
-            g.hidden = g.dataset.area !== area;
-            examples = examples || !g.hidden;
-        });
-        $("askExamples").hidden = !examples;
         $("askQ").textContent = r.q;
 
         const sig = r.key === "8" || r.key === "12"
@@ -186,16 +179,6 @@
     // Enter in a one-line box moves on instead of drawing the cards.
     $("askHelper").addEventListener("keydown", e => {
         if (e.key === "Enter" && e.target.tagName === "INPUT" && !e.isComposing) { e.preventDefault(); go(step + 1); }
-    });
-
-    // An example question fills the next step, as if typed there, and moves on to it.
-    $("askExamples").addEventListener("click", e => {
-        const b = e.target.closest("button[data-q]");
-        if (!b) return;
-        $("askRaw").value = b.dataset.q;
-        $("askSubject").value = b.dataset.subject;
-        render();
-        go(step + 1);
     });
 
     $("askUse").addEventListener("click", () => {
