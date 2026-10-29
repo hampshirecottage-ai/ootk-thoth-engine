@@ -1,7 +1,7 @@
 """Builds the analytical report (Markdown prompt) and its HTML export."""
 import html
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
@@ -12,6 +12,7 @@ from ootk.analysis import (
 )
 from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.shuffle import operation_number
+from ootk.sky import sky_line
 from ootk.spreads import SPREADS, ZODIAC_SIGNS
 
 # The report header and the web form both name the systems from here, so the label always
@@ -65,7 +66,8 @@ def _solid_legend(spread_results):
     return {k: v for k, v in legend.items() if k not in mixed}
 
 def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
-                    framework="auto", mapping_system="thoth", withheld=None, significator_places=None):
+                    framework="auto", mapping_system="thoth", withheld=None, significator_places=None,
+                    drawn_at=None, local_zone=None):
     """Every analysis of a drawn spread, then its prompt. The command line and the web site both
     call this, so the same draw always gives the same prompt from either."""
     element_counts = analyze_elemental_balance(spread_results)
@@ -79,7 +81,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
         dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework,
         mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
-        significator_places=significator_places,
+        significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -96,7 +98,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None):
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     mapping_note = MAPPING_NOTES.get(mapping_system)
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
@@ -106,7 +108,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     header_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists {_positions(len(spread_results))} and its very last line is `{end_marker}`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
-**Operation/Spread:** {spread_name}
+{reading_time_markdown(drawn_at, local_zone)}**Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
 {significator_places_markdown(significator_places)}**PRNG Seed:** {seed_val or 'Manual Entry'}
@@ -129,6 +131,42 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     prompt_md += f"\n{end_marker}\n"
     # The header keeps the querent's own text exactly as typed.
     return header_md + strip_hebrew_points(prompt_md)
+
+def drawn_now():
+    """This minute in UTC: the time a new reading is drawn, as the prompt gives it."""
+    return datetime.now(timezone.utc).replace(second=0, microsecond=0)
+
+def this_computer_zone():
+    """This computer's own time zone, for a reading drawn at the command line."""
+    return datetime.now().astimezone().tzinfo
+
+def time_stamp(when):
+    """'20261029T2200Z': how settings and share links carry a reading's time (ISO 8601, UTC)."""
+    return f"{when.astimezone(timezone.utc):%Y%m%dT%H%M}Z"
+
+def reading_time_markdown(drawn_at, local_zone=None):
+    """The header lines for when the reading was drawn and where the Sun and Moon stood then,
+    or "" for a reading with no time (a sample, an old share link). `drawn_at` is an aware
+    datetime; `local_zone` a tzinfo for the querent's own clock, or None for UTC only."""
+    if drawn_at is None:
+        return ""
+    utc = drawn_at.astimezone(timezone.utc)
+    when = f"{_long_date(utc)}, {utc:%H:%M} UTC"
+    local = drawn_at.astimezone(local_zone) if local_zone is not None else utc
+    name = getattr(local_zone, "key", None)
+    if (name or local.tzname()) not in _UTC_NAMES:
+        zone = f"{local.tzname()} ({name})" if name and name != local.tzname() else local.tzname()
+        when = f"{_long_date(local)}, {local:%H:%M} {zone} | {utc:%H:%M} UTC"
+        if local.date() != utc.date():
+            when += f" on {_long_date(utc)}"
+    return (f"**Date and Time of Reading:** {when}\n"
+            f"**Sun and Moon at that Moment:** {sky_line(utc)} (tropical zodiac; context only, "
+            f"not used in any score)\n")
+
+_UTC_NAMES = {"UTC", "Etc/UTC", "Etc/GMT", "GMT", "Universal", "Zulu"}
+
+def _long_date(when):
+    return f"{when:%A} {when.day} {when:%B %Y}"
 
 _DECAN_POSITION = re.compile(r"\bDecan \d+: ")
 _OP_PREFIX = re.compile(r"^\[Op \d+\] ")

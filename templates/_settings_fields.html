@@ -1,6 +1,9 @@
 {# Settings shared by both pages; `mode` is "seed" or "manual". On the start page
    static/js/wizard.js shows each .wiz-step as its own page; elsewhere, and without
    JavaScript, the steps are plain wrappers and every field shows at once. #}
+            {# The visitor's time zone, filled in by static/js/index.js, so the prompt can give the
+               time of the reading on their own clock. Left blank, the prompt gives UTC only. #}
+            <input type="hidden" name="tz" value="">
             <div class="wiz-step" data-step="question" data-title="Question">
             {% if mode == "seed" %}
             {# The guided answers on the start page (static/js/wizard.js) only steer the real fields

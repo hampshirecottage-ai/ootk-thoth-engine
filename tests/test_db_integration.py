@@ -7,6 +7,8 @@ Skipped unless OOTK_TEST_DB=1, so the default suite stays database-free. To run:
 import json
 import os
 import re
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -383,6 +385,8 @@ def test_command_line_and_web_give_the_same_prompt(monkeypatch, spread, signific
     real = cli.analyze_reading
     monkeypatch.setattr(cli, "analyze_reading", lambda *a, **k: seen.setdefault("r", real(*a, **k)))
     monkeypatch.setattr(cli, "save_spread_session", lambda *a, **k: None)
+    monkeypatch.setattr(cli, "drawn_now", lambda: datetime(2026, 10, 29, 22, 0, tzinfo=timezone.utc))
+    monkeypatch.setattr(cli, "this_computer_zone", lambda: ZoneInfo("Europe/London"))
     argv = ["ootk", "--spread", spread, "--seed", "4242", "--topic", "parity check",
             "--mapping", mapping, "--framework", framework]
     if significator:
@@ -391,7 +395,8 @@ def test_command_line_and_web_give_the_same_prompt(monkeypatch, spread, signific
     cli.run_spread_session()
 
     settings = {"spread_key": spread, "seed": "4242", "topic": "parity check", "significator": significator or "",
-                "framework": framework, "mapping_system": mapping}
+                "framework": framework, "mapping_system": mapping,
+                "drawn_at": "20261029T2200Z", "tz": "Europe/London"}
     deck = web.reference_deck()
     titles, label = web.seeded_draw(deck, "4242", spread, significator or "")
     assert web.run_reading(settings, titles, label, deck)["analytical_prompt"] == seen["r"]["analytical_prompt"]

@@ -14,6 +14,7 @@ import shlex
 import time
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from urllib.parse import urlencode, urlsplit
 
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -33,7 +34,7 @@ from ootk.db import (
     session_has_testimonial, set_testimonial_approved, waiting_testimonials,
 )
 from ootk.lockout import FailedLogins
-from ootk.report import MAPPING_LABELS, analyze_reading
+from ootk.report import MAPPING_LABELS, analyze_reading, drawn_now, time_stamp
 from ootk.rules import element_dignity
 from ootk import atlas
 from ootk import busy
@@ -51,6 +52,8 @@ VALID_FRAMEWORKS = {"auto", "light_descent", "soul_formation", "life_path", "pos
 VALID_DRAW_MODES = {"seed", "manual"}
 TOPIC_MAX = 2000
 SHARED_SEED_MAX = 64
+# The longest IANA time zone name is about 30 characters (America/Argentina/ComodRivadavia).
+TIME_ZONE_MAX = 64
 # Every other field is a short name (a spread key, a system, a card title); the card list is at
 # most a whole deck of titles.
 FIELD_MAX = 64
@@ -918,6 +921,9 @@ def share_path(settings) -> str:
         params["framework"] = settings["framework"]
     if settings["significator"]:
         params["significator"] = settings["significator"]
+    # The draw time but not the time zone, which would hint at where the querent lives.
+    if settings.get("drawn_at"):
+        params["drawn"] = settings["drawn_at"]
     return "/reading?" + urlencode(params)
 
 
@@ -1188,6 +1194,7 @@ def generate_report(
     selected_cards: str = Form(""),
     draw_mode: str = Form("manual"),
     seed: str = Form(""),
+    tz: str = Form(""),
 ):
     """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
 
@@ -1255,6 +1262,8 @@ def generate_report(
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
         "seed": seed,
         "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
+        # When the cards were drawn, and the visitor's own zone (from the browser) to show it in.
+        "drawn_at": time_stamp(drawn_now()), "tz": tz.strip() if time_zone(tz.strip()) else "",
     }
     reading = run_reading(settings, card_titles, significator_label, deck)
 
@@ -1298,31 +1307,34 @@ SYSTEM_ALIASES = {"gd": "golden_dawn", "fe": "french_egyptian"}
 
 @app.get("/reading", response_class=HTMLResponse)
 def shared_reading(request: Request, seed: str = "", spread: str = "",
-                   system: str = DEFAULT_MAPPING, framework: str = "auto", significator: str = ""):
+                   system: str = DEFAULT_MAPPING, framework: str = "auto", significator: str = "",
+                   drawn: str = ""):
     """A seeded reading rebuilt from its link, e.g. /reading?seed=918851&spread=12&system=thoth.
 
     The same seed and settings always draw the same cards, so the link alone is the reading.
     Nothing is saved, and no saved reading can be reached this way: those keep their random
     /report/<link> addresses.
     """
-    settings, reading = shared_reading_parts(seed, spread, system, framework, significator)
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn)
     return render_report(request, None, settings, reading, shared=True,
                          json_url="/reading/json?" + request.url.query)
 
 
 @app.get("/reading/json")
 def shared_reading_json(seed: str = "", spread: str = "", system: str = DEFAULT_MAPPING,
-                        framework: str = "auto", significator: str = ""):
+                        framework: str = "auto", significator: str = "", drawn: str = ""):
     """The report's JSON download for a shared reading: the same link, drawn again."""
-    settings, reading = shared_reading_parts(seed, spread, system, framework, significator)
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn)
     return reading_json_response(settings, reading)
 
 
-def shared_reading_parts(seed, spread, system, framework, significator):
+def shared_reading_parts(seed, spread, system, framework, significator, drawn=""):
     """The settings and run_reading() result for a shared link's parameters."""
     seed, spread, framework, significator = seed.strip(), spread.strip(), framework.strip(), significator.strip()
+    drawn = drawn.strip()
     system = SYSTEM_ALIASES.get(system.strip().lower(), system.strip().lower())
-    check_lengths(spread=spread, system=system, framework=framework, significator=significator)
+    check_lengths(spread=spread, system=system, framework=framework, significator=significator,
+                  drawn=drawn)
     if not seed:
         raise HTTPException(status_code=400, detail="This link has no seed, so there are no cards to draw.")
     if len(seed) > SHARED_SEED_MAX:
@@ -1336,6 +1348,7 @@ def shared_reading_parts(seed, spread, system, framework, significator):
     settings = {
         "spread_key": spread, "topic": "", "significator": significator, "framework": framework,
         "mapping_system": system, "draw_mode": "seed", "seed": seed, "selected_cards": "",
+        "drawn_at": time_stamp(parse_drawn_at(drawn)) if drawn else "",
     }
     deck = reference_deck()
     card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
@@ -1683,6 +1696,9 @@ def saved_reading_parts(link):
         if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
             stored["mapping_system"] = "thoth"
         saved_at = stored.pop("saved_at", None)
+        if not stored.get("drawn_at") and saved_at is not None:
+            # Saved before the draw time was kept: the save is the same moment, to the second.
+            stored["drawn_at"] = time_stamp(saved_at)
         seed_redraws = (stored.pop("draw_version", 1) >= DRAW_VERSION
                         or not reshuffles(stored["spread_key"])
                         or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
@@ -1721,6 +1737,30 @@ def seeded_significator_places(settings, card_titles, deck):
     return significator_places(deck, settings["seed"], positions, sig_card)
 
 
+def parse_drawn_at(text):
+    """settings['drawn_at'] or a link's drawn= ('20261029T2200Z') as an aware UTC datetime;
+    None if blank. Any ISO 8601 form is accepted; one without a zone is read as UTC."""
+    if not text:
+        return None
+    try:
+        when = datetime.fromisoformat(str(text))
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"{quoted(text)} is not a date and time. "
+                                                    f"Use the form 20261029T2200Z.")
+    return (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+
+
+def time_zone(name):
+    """The visitor's time zone from its IANA name (what the browser reports), or None when
+    blank or unknown, so the prompt then gives the time in UTC only."""
+    if not name or len(name) > TIME_ZONE_MAX:
+        return None
+    try:
+        return ZoneInfo(name)
+    except (KeyError, ValueError, OSError):    # unknown name, bad path, a folder like "Europe"
+        return None
+
+
 def run_reading(settings, card_titles, significator_label, deck=None):
     """Looks up the drawn cards and runs every analysis. Returns the pieces the report needs."""
     spread_key, mapping_system = settings["spread_key"], settings["mapping_system"]
@@ -1748,6 +1788,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         settings["seed"] or "Graphical Selection", spread_results,
         framework=settings["framework"], mapping_system=mapping_system, withheld=withheld,
         significator_places=seeded_significator_places(settings, card_titles, deck),
+        drawn_at=parse_drawn_at(settings.get("drawn_at")), local_zone=time_zone(settings.get("tz")),
     )
     return {
         "spread_name": selected_spread["name"], "significator_label": significator_label,
