@@ -6,6 +6,7 @@ import json
 import re
 import time
 from contextlib import nullcontext
+from datetime import datetime, timezone
 from pathlib import Path
 
 import psycopg
@@ -1085,11 +1086,12 @@ def test_seed_mode_needs_a_significator_only_where_the_spread_has_one(seeded_cli
 
 # ---------- shareable links and card of the day ----------
 
-def test_report_share_link_redraws_the_same_cards_without_the_topic(seeded_client):
+def test_report_share_link_redraws_the_same_cards_without_the_topic(seeded_client, monkeypatch):
+    monkeypatch.setattr(app_module, "drawn_now", lambda: datetime(2026, 10, 29, 22, 0, tzinfo=timezone.utc))
     r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
              significator="Knight of Swords", mapping_system="golden_dawn", topic="private question")
     drawn = seeded_client.lookups[-1]
-    path = "/reading?seed=918851&spread=12&system=golden_dawn&significator=Knight+of+Swords"
+    path = "/reading?seed=918851&spread=12&system=golden_dawn&significator=Knight+of+Swords&drawn=20261029T2200Z"
     assert f'data-path="{path.replace("&", "&amp;")}"' in r.text
     saves = seeded_client.saved["count"]
     shared = seeded_client.get(path)
@@ -1097,6 +1099,57 @@ def test_report_share_link_redraws_the_same_cards_without_the_topic(seeded_clien
     assert seeded_client.lookups[-1] == drawn and seeded_client.systems[-1] == "golden_dawn"
     assert "private question" not in shared.text and "Shared reading" in shared.text
     assert seeded_client.saved["count"] == saves                 # opening a link saves nothing
+
+
+# ---------- the time of a reading ----------
+
+FIXED_DRAW = datetime(2026, 10, 29, 22, 0, tzinfo=timezone.utc)
+
+
+def test_reading_time_lines_give_the_local_clock_utc_and_the_sky():
+    from zoneinfo import ZoneInfo
+    from ootk.report import reading_time_markdown
+    assert reading_time_markdown(None) == ""
+    utc_only = reading_time_markdown(FIXED_DRAW)
+    assert utc_only.startswith("**Date and Time of Reading:** Thursday 29 October 2026, 22:00 UTC\n")
+    assert ("**Sun and Moon at that Moment:** Sun 6° Scorpio, decan 1 (5 of Cups) | "
+            "Moon 27° Gemini, decan 3 (10 of Swords) | Moon waning gibbous, 81% lit") in utc_only
+    assert "not used in any score" in utc_only
+    assert reading_time_markdown(FIXED_DRAW, ZoneInfo("UTC")) == utc_only
+    assert ("Thursday 29 October 2026, 22:00 GMT (Europe/London) | 22:00 UTC\n"
+            in reading_time_markdown(FIXED_DRAW, ZoneInfo("Europe/London")))
+    # Past midnight on the querent's clock: the UTC date is given too.
+    assert ("Friday 30 October 2026, 09:00 AEDT (Australia/Sydney) | 22:00 UTC on Thursday 29 October 2026\n"
+            in reading_time_markdown(FIXED_DRAW, ZoneInfo("Australia/Sydney")))
+
+
+def test_new_reading_gives_its_time_on_the_visitors_clock_and_keeps_it(seeded_client, monkeypatch):
+    monkeypatch.setattr(app_module, "drawn_now", lambda: FIXED_DRAW)
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", tz="America/New_York")
+    assert "Thursday 29 October 2026, 18:00 EDT (America/New_York) | 22:00 UTC" in r.text
+    stored = seeded_client.saved["report_settings"]
+    assert stored["drawn_at"] == "20261029T2200Z" and stored["tz"] == "America/New_York"
+    # Reopened later, the saved report still gives the time it was drawn.
+    monkeypatch.setattr(app_module, "drawn_now", lambda: datetime(2027, 1, 1, tzinfo=timezone.utc))
+    again = seeded_client.get(f"/report/{stored['link']}")
+    assert "Thursday 29 October 2026, 18:00 EDT" in again.text
+
+
+@pytest.mark.parametrize("tz", ["", "Nowhere/Special", "Europe", "../../etc/passwd", "x" * 200])
+def test_unknown_time_zone_gives_utc_only(seeded_client, monkeypatch, tz):
+    monkeypatch.setattr(app_module, "drawn_now", lambda: FIXED_DRAW)
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", tz=tz)
+    assert r.status_code == 200
+    assert "Date and Time of Reading:** Thursday 29 October 2026, 22:00 UTC\n" in r.text
+    assert seeded_client.saved["report_settings"]["tz"] == ""
+
+
+def test_share_link_gives_the_draw_time_in_utc_and_old_links_none(seeded_client):
+    r = seeded_client.get("/reading?seed=1&spread=3&drawn=20261029T2200Z")
+    assert "Date and Time of Reading:** Thursday 29 October 2026, 22:00 UTC\n" in r.text
+    assert "Date and Time of Reading" not in seeded_client.get("/reading?seed=1&spread=3").text
+    bad = seeded_client.get("/reading?seed=1&spread=3&drawn=yesterday")
+    assert bad.status_code == 400 and "not a date and time" in bad.json()["detail"]
 
 
 def test_share_link_accepts_short_system_names_and_the_start_page_forwards(seeded_client):

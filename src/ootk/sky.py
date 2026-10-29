@@ -104,3 +104,16 @@ def todays_sky(day, rows):
     phase, lit = moon_phase(sun, moon)
     return {"sun": place(sun, rows), "moon": place(moon, rows), "phase": phase, "lit": lit}
 
+
+
+def sky_line(when):
+    """'Sun 6° Scorpio, decan 1 (5 of Cups) | Moon 14° Gemini, decan 2 (9 of Swords) |
+    waxing gibbous, 78% lit' at `when` (an aware datetime), for the prompt header."""
+    sun, moon = sun_longitude(when), moon_longitude(when)
+    phase, lit = moon_phase(sun, moon)
+
+    def body(name, lon):
+        sign_i, deg = divmod(lon, 30)
+        suit, n = decan_pip(int(lon // 10))
+        return f"{name} {int(deg)}° {SIGNS[int(sign_i)]}, decan {int(deg // 10) + 1} ({n} of {suit})"
+    return f"{body('Sun', sun)} | {body('Moon', moon)} | Moon {phase.lower()}, {lit}% lit"

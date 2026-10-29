@@ -7,7 +7,7 @@ import psycopg
 from ootk.db import (
     CardNotFound, DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
-from ootk.report import analyze_reading, generate_html_output
+from ootk.report import analyze_reading, drawn_now, generate_html_output, this_computer_zone
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
     significator_places,
@@ -181,6 +181,7 @@ def run_spread_session():
             selected_spread["name"], spread_choice, query_prompt, significator_label, args.seed,
             spread_results, framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             significator_places=significator_places(cards, args.seed, target_positions, sig_card),
+            drawn_at=drawn_now(), local_zone=this_computer_zone(),
         )
         analytical_prompt = reading["analytical_prompt"]
 

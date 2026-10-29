@@ -5,6 +5,9 @@ const $ = id => document.getElementById(id);
 const manual = form.elements["draw_mode"].value === "manual";
 let activeCardList = [];
 
+// The visitor's time zone (e.g. "Europe/London") for the prompt's time of reading.
+try { form.elements["tz"].value = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) { /* UTC only */ }
+
 // ---------- remembered settings (per browser) ----------
 // The draw mode is the page itself, so it is not part of the remembered settings.
 // The significator itself is worked out from the sig_* choices; the birth date is never kept.
