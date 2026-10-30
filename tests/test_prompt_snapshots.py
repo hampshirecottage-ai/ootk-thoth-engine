@@ -86,18 +86,28 @@ def test_thoth_prompt_explains_the_swapped_cards_edges():
 def test_planetary_majors_say_which_sign_gives_their_element():
     """Venus rules Taurus (Earth) and Libra (Air); without a note an AI that reads Venus by Libra
     takes the Empress's Earth scores as a mistake."""
-    from ootk.analysis import MAJOR_ELEMENTS, PLANETARY_ELEMENT_NOTES, PLANETARY_MAJORS, planetary_element_note
+    from ootk.analysis import PLANETARY_ELEMENT_NOTES, PLANETARY_MAJORS, major_element_note
     assert set(PLANETARY_ELEMENT_NOTES) == PLANETARY_MAJORS
     empress = {"arcana_type": "Major", "title": "III - The Empress"}
-    assert planetary_element_note(empress) == "Earth (Venus via Taurus; Libra would make it Air)"
-    assert planetary_element_note({"arcana_type": "Major", "title": "XI - Lust"}) is None
-    assert planetary_element_note({"arcana_type": "Minor", "title": "3 of Swords - Sorrow"}) is None
-    for name in PLANETARY_MAJORS:
-        assert planetary_element_note({"arcana_type": "Major", "title": f"X - {name}"}).startswith(MAJOR_ELEMENTS[name])
+    assert major_element_note(empress) == "Earth (Venus via Taurus; Libra would make it Air)"
+    assert major_element_note({"arcana_type": "Minor", "title": "3 of Swords - Sorrow"}) is None
+
+
+def test_every_major_states_its_element():
+    """An AI saw no element line on the Emperor, Fool, Hermit, Hanged Man and Lovers and had to
+    work their elements out from the pair scores, so every Major now says its element."""
+    from ootk.analysis import MAJOR_ELEMENT_NOTES, MAJOR_ELEMENTS, ZODIAC_ELEMENTS, SIGN_ELEMENT_NOTES, major_element_note
+    assert set(MAJOR_ELEMENT_NOTES) == set(MAJOR_ELEMENTS)
+    for name, sign in SIGN_ELEMENT_NOTES.items():
+        assert ZODIAC_ELEMENTS[sign.lower()] == MAJOR_ELEMENTS[name]
+    for name in MAJOR_ELEMENTS:
+        assert major_element_note({"arcana_type": "Major", "title": f"X - {name}"}).startswith(MAJOR_ELEMENTS[name] + " (")
+    assert major_element_note({"arcana_type": "Major", "title": "IV - The Emperor"}) == "Fire (via Aries)"
+    assert major_element_note({"arcana_type": "Major", "title": "0 - The Fool"}) == "Air (the element Air itself)"
     prompt = build_prompt("12")
     assert prompt.count("- **Element (used in scores)**:") == sum(
         1 for line in prompt.splitlines()
-        if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in PLANETARY_MAJORS)
+        if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in MAJOR_ELEMENTS)
 
 
 def test_courts_say_they_have_no_french_letter():

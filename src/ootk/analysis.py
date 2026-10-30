@@ -74,12 +74,29 @@ PLANETARY_ELEMENT_NOTES = {
     "The Universe": "Saturn via Capricorn, also the card's own Earth; Aquarius would make it Air",
 }
 
-def planetary_element_note(card_data):
-    """'Earth (Venus via Taurus; Libra would make it Air)' for a planetary Major, else None."""
+# The other fifteen Majors: twelve take their sign's element, three are the element itself.
+# Stated in the prompt too, so the AI never has to work an element back out of the scores.
+SIGN_ELEMENT_NOTES = {
+    "The Emperor": "Aries", "The Hierophant": "Taurus", "The Lovers": "Gemini",
+    "The Chariot": "Cancer", "Lust": "Leo", "The Hermit": "Virgo", "Adjustment": "Libra",
+    "Death": "Scorpio", "Art": "Sagittarius", "The Devil": "Capricorn",
+    "The Star": "Aquarius", "The Moon": "Pisces",
+}
+ELEMENT_MAJOR_NOTES = {
+    "The Fool": "the element Air itself",
+    "The Hanged Man": "the element Water itself",
+    "The Aeon": "the element Fire itself; Spirit is a secondary quality only",
+}
+MAJOR_ELEMENT_NOTES = {**PLANETARY_ELEMENT_NOTES, **ELEMENT_MAJOR_NOTES,
+                       **{name: f"via {sign}" for name, sign in SIGN_ELEMENT_NOTES.items()}}
+
+def major_element_note(card_data):
+    """'Earth (Venus via Taurus; Libra would make it Air)', 'Fire (via Aries)' and so on for
+    any Major, else None."""
     data = card_data or {}
     if data.get("arcana_type") != "Major":
         return None
-    note = PLANETARY_ELEMENT_NOTES.get(major_name(data))
+    note = MAJOR_ELEMENT_NOTES.get(major_name(data))
     return f"{MAJOR_ELEMENTS[major_name(data)]} ({note})" if note else None
 
 def card_solid(card_data):

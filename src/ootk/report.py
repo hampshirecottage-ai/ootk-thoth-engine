@@ -8,7 +8,7 @@ from ootk.analysis import (
     SUIT_ELEMENTS, analyze_elemental_balance, analyze_hebrew_spatial_distribution,
     analyze_platonic_topology, analyze_spatial_vectors, calculate_elemental_dignities, card_home,
     derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
-    planetary_element_note, spirit_bearing_cards,
+    major_element_note, spirit_bearing_cards,
 )
 from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.shuffle import operation_number
@@ -212,7 +212,7 @@ def _cards_md(spread_results, legend):
         md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
         md += f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
         md += f"- **Attribution**: {data['attribution']}\n"
-        element_note = planetary_element_note(data)
+        element_note = major_element_note(data)
         if element_note:
             md += f"- **Element (used in scores)**: {element_note}\n"
         minor = data['arcana_type'] == 'Minor'
