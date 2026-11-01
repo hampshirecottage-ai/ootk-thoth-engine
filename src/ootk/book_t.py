@@ -182,11 +182,12 @@ def operation_four(deck, sig_card, facing=None):
                       wrapped=at + OP4_RING >= len(deck))
 
 
-def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=True):
+def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=False):
     """All five operations, each from its own shuffle of the whole deck (the same shuffles
-    as shuffle.draw_spread's master pipeline), stopping after an abandoned operation as
-    Book T does. With strict=False no operation stops the reading: a missed one reads the
-    pile that holds the significator and is marked 'missed'.
+    as shuffle.draw_spread's master pipeline). By default (the owner's choice, 2026-11-01) no
+    operation stops the reading: a missed place reads the pile that holds the significator
+    and is marked 'missed', so the prompt can say Book T would stop there. strict=True stops
+    after an abandoned operation, as Book T does.
 
     `expected` = {"pack": 0-3, "house": (expected, cognate or None), "sign": (expected,
     cognate or None), "sephira": 0-9}, all 0-based. Returns the operations read, in order."""

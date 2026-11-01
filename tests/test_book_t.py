@@ -92,8 +92,8 @@ def test_strict_reading_stops_where_book_t_abandons():
     sig = card("Queen of Cups")
     statuses = set()
     for seed in range(300):
-        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT)
-        assert ops == book_t.opening_of_the_key(DECK, str(seed), sig, EXPECT)   # same seed, same reading
+        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT, strict=True)
+        assert ops == book_t.opening_of_the_key(DECK, str(seed), sig, EXPECT, strict=True)   # same seed, same reading
         assert all(o["status"] == "read" for o in ops[:-1])
         if ops[-1]["status"] == "abandoned":
             assert ops[-1]["op"] in (1, 2, 3)
@@ -113,7 +113,7 @@ def test_strict_reading_stops_where_book_t_abandons():
 def test_lenient_reading_reads_every_operation_and_marks_the_misses():
     sig = card("Queen of Cups")
     for seed in range(100):
-        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT, strict=False)
+        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT)   # the default reads on
         assert [o["op"] for o in ops] == [1, 2, 3, 4, 5]
         assert all(o["status"] in ("read", "missed") for o in ops)
         for o in ops:
