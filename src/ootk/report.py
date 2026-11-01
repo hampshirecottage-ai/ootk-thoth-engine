@@ -7,10 +7,10 @@ from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import (
     SUIT_ELEMENTS, analyze_elemental_balance, analyze_hebrew_spatial_distribution,
     analyze_platonic_topology, analyze_spatial_vectors, calculate_elemental_dignities, card_home,
-    derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
+    book_t_counts, derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
     major_element_note, spirit_bearing_cards,
 )
-from ootk.rules import ASPECTS, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
+from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.shuffle import operation_number
 from ootk.sky import sky_line
 from ootk.spreads import SPREADS, ZODIAC_SIGNS
@@ -82,6 +82,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework,
         mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
         significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
+        book_t=book_t_counts(spread_results, spread_key),
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -98,7 +99,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None):
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     mapping_note = MAPPING_NOTES.get(mapping_system)
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
@@ -118,14 +119,14 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     legend = _solid_legend(spread_results)
     sections = (                     # in the order of the numbers above
         _cards_md(spread_results, legend),
-        _elements_md(spread_results, element_counts, withheld),
+        _elements_md(spread_results, element_counts, withheld, book_t),
         _hebrew_md(spatial_dist),
         _solids_md(solid_counts, legend, dual_pairings),
         _dignity_md(dignity_matrix),
         _spatial_md(spatial_matrix),
         _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
                          spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
-                         significator_places),
+                         significator_places, book_t),
     )
     prompt_md = "".join(f"\n---\n\n## {n}. {body}" for n, body in enumerate(sections, start=1))
     prompt_md += f"\n{end_marker}\n"
@@ -212,6 +213,9 @@ def _cards_md(spread_results, legend):
         md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
         md += f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
         md += f"- **Attribution**: {data['attribution']}\n"
+        figure = GEOMANTIC_FIGURES.get(data['attribution']) if data['arcana_type'] == 'Major' else None
+        if figure:
+            md += f"- **Geomantic Figure**: {figure} (Golden Dawn, by {data['attribution']})\n"
         element_note = major_element_note(data)
         if element_note:
             md += f"- **Element (used in scores)**: {element_note}\n"
@@ -235,7 +239,7 @@ def _cards_md(spread_results, legend):
         md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
     return md
 
-def _elements_md(spread_results, element_counts, withheld):
+def _elements_md(spread_results, element_counts, withheld, book_t=None):
     total_cards = sum(element_counts.values()) or 1
     md = "ELEMENTAL VECTOR DISTRIBUTION\n"
     secondary = spirit_bearing_cards(spread_results)
@@ -254,8 +258,29 @@ def _elements_md(spread_results, element_counts, withheld):
             cards = ", ".join(f"Pos {p} ({t})" for p, t in secondary)
             line += f" | secondary on {len(secondary)}: {cards}"
         md += line + "\n"
+    if book_t:
+        md += book_t_markdown(book_t)
     if withheld:
         md += withheld_markdown(withheld)
+    return md
+
+_COUNT_WORDS = {3: "Three", 4: "Four"}
+
+def _plural(n, one, many):
+    return f"{n} {one if n == 1 else many}"
+
+def book_t_markdown(book_t):
+    """The Book T counts (analysis.book_t_counts) as lines under the element counts."""
+    md = ("\n**Book T Counts** (Book T reads three or four cards of one rank, and a lead of "
+          "Trumps, court cards, Aces or one suit; suits count the small and court cards):\n")
+    for seg in book_t:
+        line = (f"{_plural(seg['total'], 'card', 'cards')}: {_plural(seg['majors'], 'Trump', 'Trumps')}, "
+                f"{_plural(seg['courts'], 'court card', 'court cards')}, {_plural(seg['aces'], 'Ace', 'Aces')} | "
+                + ", ".join(f"{suit} {n}" for suit, n in seg["suits"].items()))
+        kinds = [f"{_COUNT_WORDS.get(n, n)} {rank} ({', '.join(suits)})" for rank, n, suits in seg["kinds"]]
+        line += " | " + ("; ".join(kinds) if kinds else "no rank three or more times")
+        name = (seg["segment_name"] or "").split(":")[0]     # "Operation 2: OOTK - ..." -> "Operation 2"
+        md += f"* {name + ': ' if name else ''}{line}\n"
     return md
 
 def _hebrew_md(spatial_dist):
@@ -356,7 +381,7 @@ def _spatial_md(spatial_matrix):
 
 def _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
                      spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
-                     significator_places=None):
+                     significator_places=None, book_t=None):
     """What the AI is asked to do. Each rule names only what this reading contains."""
     operations = len({d["segment_name"] for d in dignity_matrix if d.get("segment_name")})
     aspects = {}
@@ -444,7 +469,9 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
                           sorted(aspects.items(), key=lambda kv: [x.name for x in ASPECTS].index(kv[0])))
         key.append(f"* `Modifier` (section {SPATIAL}) is the weight of the aspect itself ({named}). It "
                    f"describes the two positions, not the cards, and is not added to the dignity score.")
-    key.append(f"* Section {ELEMENTS} counts each card once, under its primary element.")
+    key.append(f"* Section {ELEMENTS} counts each card once, under its primary element."
+               + (" Its Book T Counts are per operation, never across one." if book_t and
+                  len(book_t) > 1 else ""))
     md += "\n**How to read the numbers:**\n" + "\n".join(key) + "\n"
     return md
 

@@ -53,6 +53,9 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 * **Air   **: ████ 2 (66.7%)
 * **Earth **:  0 (0.0%)
 
+**Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
+* 3 cards: 0 Trumps, 1 court card, 0 Aces | Wands 0, Cups 1, Swords 2, Disks 0 | no rank three or more times
+
 ---
 
 ## 3. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)

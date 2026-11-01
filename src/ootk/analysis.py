@@ -3,7 +3,9 @@ import functools
 import math
 import re
 
-from ootk.rules import aspect_label, element_dignity, find_aspect, separation
+from ootk.rules import (
+    RANK_PLURALS, SUIT_ORDER, aspect_label, element_dignity, find_aspect, separation,
+)
 from ootk.spreads import (
     DECAN_START, HEAP_LAYOUTS, HEAP_PAIRS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
     TREE_LAYOUTS, spread_segments,
@@ -778,3 +780,40 @@ def card_is_dignified(index, dignity_matrix):
         if index in (d["from_index"], d["to_index"])
     ]
     return sum(touching) >= 0 if touching else True
+
+
+def _suit_rank(suit):
+    return SUIT_ORDER.index(suit) if suit in SUIT_ORDER else len(SUIT_ORDER)
+
+def book_t_counts(spread_results, spread_key):
+    """Book T's counts for each operation (or the whole spread when it has one): how many
+    Trumps, court cards and Aces, the cards in each suit, and any rank drawn three or four
+    times. A list of dicts, one per segment; spreads of fewer than three cards give []."""
+    found = []
+    for _, start, end, name in spread_segments(spread_results, spread_key):
+        cards = [item["card_data"] for item in spread_results[start:end]]
+        if len(cards) < 3:
+            continue
+        suits = {s: 0 for s in SUIT_ORDER}
+        ranks = {}
+        for data in cards:
+            if data.get("arcana_type") == "Major":
+                continue
+            suit = (data.get("suit") or "").title()
+            if suit == "Pentacles":
+                suit = "Disks"
+            if suit in suits:
+                suits[suit] += 1
+            rank = str(data.get("number_or_rank") or "")
+            if rank in RANK_PLURALS:
+                ranks.setdefault(rank, []).append(suit)
+        kinds = [(RANK_PLURALS[r], len(s), sorted(s, key=_suit_rank)) for r, s in
+                 sorted(ranks.items(), key=lambda kv: list(RANK_PLURALS).index(kv[0]))
+                 if len(s) >= 3]
+        found.append({
+            "segment_name": name, "total": len(cards),
+            "majors": sum(1 for d in cards if d.get("arcana_type") == "Major"),
+            "courts": sum(1 for d in cards if d.get("arcana_type") == "Court"),
+            "aces": len(ranks.get("1", [])), "suits": suits, "kinds": kinds,
+        })
+    return found
