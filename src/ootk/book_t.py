@@ -182,11 +182,12 @@ def operation_four(deck, sig_card, facing=None):
                       wrapped=at + OP4_RING >= len(deck))
 
 
-def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=True):
+def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=False):
     """All five operations, each from its own shuffle of the whole deck (the same shuffles
-    as shuffle.draw_spread's master pipeline), stopping after an abandoned operation as
-    Book T does. With strict=False no operation stops the reading: a missed one reads the
-    pile that holds the significator and is marked 'missed'.
+    as shuffle.draw_spread's master pipeline). By default (the owner's choice, 2026-11-01) no
+    operation stops the reading: a missed place reads the pile that holds the significator
+    and is marked 'missed', so the prompt can say Book T would stop there. strict=True stops
+    after an abandoned operation, as Book T does.
 
     `expected` = {"pack": 0-3, "house": (expected, cognate or None), "sign": (expected,
     cognate or None), "sephira": 0-9}, all 0-based. Returns the operations read, in order."""
@@ -210,3 +211,112 @@ def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=True
         if result["status"] == "abandoned":
             break
     return ops
+
+
+# ---------- Turning the operations into reading positions ----------
+
+HOUSE_NAMES = ("1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th", "11th", "12th")
+SIGN_NAMES = ("Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio",
+              "Sagittarius", "Capricorn", "Aquarius", "Pisces")
+SEPHIRA_NAMES = ("Kether", "Chokmah", "Binah", "Chesed", "Geburah", "Tiphareth", "Netzach",
+                 "Hod", "Yesod", "Malkuth")
+
+
+def place_name(op, index):
+    """The plain name of stack `index` in operation `op` ('the 7th house', 'Cancer', ...)."""
+    if op == 1:
+        pack = IHVH_PACKS[index]
+        return f"the {pack['letter']} pack ({pack['subject']})"
+    if op == 2:
+        return f"the {HOUSE_NAMES[index]} house"
+    if op == 3:
+        return SIGN_NAMES[index]
+    if op == 5:
+        return f"{index + 1}. {SEPHIRA_NAMES[index]}"
+    return "the Significator and the 36 cards after it"
+
+
+def _place_index(o):
+    return o["place"]["index"] if isinstance(o["place"], dict) else o["place"]
+
+
+def positions(ops):
+    """Reading positions for the operations read: [(position name, card)], each operation
+    starting with the Significator and going rightwards round its pile (see
+    spreads.BOOK_T_KEY), with each operation's chain, pairs and leftover renumbered to match
+    (keys 'chain_at', 'stop_at', 'leftover_at', 0-based within the operation)."""
+    out = []
+    for o in ops:
+        if o["status"] == "abandoned":
+            continue
+        pile, start, n = o["pile"], o["start"], len(o["pile"])
+        place = place_name(o["op"], _place_index(o)) if o["op"] != 4 else "the ring of 36"
+        place = place[0].upper() + place[1:]
+        for k in range(n):
+            where = "the Significator" if k == 0 else f"{k} to the right of the Significator"
+            out.append((f"[Op {o['op']}] {place}: {where}", pile[(start + k) % n]))
+        o["chain_at"] = [(i - start) % n for i in o["chain"]]
+        o["stop_at"] = None if o["stopped_on"] is None else (o["stopped_on"] - start) % n
+        o["leftover_at"] = None if o["leftover"] is None else (o["leftover"] - start) % n
+    return out
+
+
+def status_line(o):
+    """One sentence on where the Significator was looked for and found."""
+    op = o["op"]
+    if op == 1:
+        found = place_name(1, o["place"]["index"])
+        if o["status"] == "read":
+            return f"The Significator is in {found}, the pack this question is about."
+        return (f"The question is about {place_name(1, o['expected']['index'])}, but the Significator "
+                f"is in {found}. Book T says to abandon the divination here; this site reads on "
+                f"with {found}, so treat this operation with caution.")
+    if op == 4:
+        return ("Book T sets the Significator down and lets the 36 cards that follow it in the "
+                "deck form a ring round it." + (" Fewer than 36 followed it, so the ring carries "
+                "on from the top of the deck." if o.get("wrapped") else ""))
+    expected = place_name(op, o["expected"])
+    found = place_name(op, o["place"])
+    if op == 5:
+        if o["as_expected"]:
+            return f"The Significator is in {found}, the Sephira expected for this question."
+        return (f"The Significator was expected in {expected} but is in {found}. Book T says a "
+                f"miss here need not mean the divination has gone astray, so {found} is read.")
+    if o["status"] == "read" and o["found_in"] == "expected":
+        return f"The Significator is in {found}, the place expected for this question."
+    if o["status"] == "read":
+        return (f"The Significator was not in {expected}, the place expected, but is in "
+                f"{found}, the related place tried next, as Book T allows.")
+    tried = expected + (f" or {place_name(op, o['cognate'])}" if o.get("cognate") is not None else "")
+    return (f"The Significator was not in {tried}. Book T says to abandon the divination here; "
+            f"this site reads on with {found}, where it is, so treat this operation with caution.")
+
+
+EXPECT_HELP = ("pack,house,sign,sephira, counted from 1: pack 1-4 (Yod fire/work, Heh love, Vau "
+               "trouble/loss, Heh final money), house 1-12, sign 1-12 (1 = Aries), Sephira 1-10 "
+               "(1 = Kether); a house or sign may add a related one to try next after a slash, "
+               "e.g. '1,10/6,10,6'")
+
+
+def parse_expect(text):
+    """The expected places typed as EXPECT_HELP describes, as opening_of_the_key's
+    `expected` (0-based). Raises ValueError with a plain message if anything is off."""
+    parts = [p.strip() for p in (text or "").split(",")]
+    if len(parts) != 4:
+        raise ValueError(f"Expected places need four parts: {EXPECT_HELP}.")
+
+    def number(s, top, what):
+        if not s.isdigit() or not 1 <= int(s) <= top:
+            raise ValueError(f"The {what} must be a number from 1 to {top}, not {s!r}.")
+        return int(s) - 1
+
+    def with_cognate(s, what):
+        first, _, second = s.partition("/")
+        exp = number(first.strip(), 12, what)
+        cog = number(second.strip(), 12, f"related {what}") if second.strip() else None
+        if cog == exp:
+            raise ValueError(f"The related {what} must differ from the expected one.")
+        return exp, cog
+
+    return {"pack": number(parts[0], 4, "pack"), "house": with_cognate(parts[1], "house"),
+            "sign": with_cognate(parts[2], "sign"), "sephira": number(parts[3], 10, "Sephira")}

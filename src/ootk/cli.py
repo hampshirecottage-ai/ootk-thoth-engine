@@ -1,5 +1,7 @@
 """Command-line entry point: `ootk` (or `python -m ootk`)."""
 import argparse
+import copy
+import secrets
 import sys
 
 import psycopg
@@ -12,8 +14,9 @@ from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
     significator_places,
 )
+from ootk import book_t
 from ootk.significator import RANKS, SUITS, book_t_card
-from ootk.spreads import SPREADS, spread_positions
+from ootk.spreads import BOOK_T_KEY, BOOK_T_SPREAD, SPREADS, spread_positions
 from ootk.visual import art_name_hint
 
 class CliError(Exception):
@@ -26,7 +29,10 @@ def parse_args():
     parser.add_argument("--seed", type=str, help="PRNG numeric seed for deterministic draws", default=None)
     parser.add_argument("--significator", type=str, default=None,
                         help="Significator card title, pinned to position 1 of OOTK Op 1 (e.g. 'Queen of Cups')")
-    parser.add_argument("--spread", type=str, help="Spread key (1-12)", default=None)
+    parser.add_argument("--spread", type=str, default=None,
+                        help="Spread key (1-12, or 13 for the full Book T Opening of the Key)")
+    parser.add_argument("--expect", type=str, default=None,
+                        help=f"Spread 13 only: where the Significator is expected, {book_t.EXPECT_HELP}")
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
     parser.add_argument("--mapping", type=str, choices=MAPPING_SYSTEMS, default=DEFAULT_MAPPING, help="Tarot-Kabbalah mapping scheme: thoth keeps Crowley's swap (Emperor on Tzaddi, Star on Heh), golden_dawn undoes it")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
@@ -63,9 +69,17 @@ def run_spread_session():
     args = parse_args()
     # The web form strips the seed, so ' 42' must draw what 42 draws there.
     args.seed = (args.seed or "").strip() or None
-    if args.spread is not None and args.spread.strip() not in SPREADS:
-        raise CliError(f"Unknown spread {args.spread!r}. Use a number from 1 to {len(SPREADS)}.")
+    if args.spread is not None and args.spread.strip() not in SPREADS and args.spread.strip() != BOOK_T_KEY:
+        raise CliError(f"Unknown spread {args.spread!r}. Use a number from 1 to {len(SPREADS)}, "
+                       f"or {BOOK_T_KEY} for the full Book T Opening of the Key.")
     args.spread = args.spread.strip() if args.spread else None
+    if args.expect and args.spread != BOOK_T_KEY:
+        raise CliError(f"--expect is only for --spread {BOOK_T_KEY}.")
+    if args.expect:
+        try:   # checked before the database is opened, so a typo fails fast
+            book_t.parse_expect(args.expect)
+        except ValueError as e:
+            raise CliError(str(e)) from e
 
     # Two short connections, not one held open while the questions below wait for answers:
     # a hosted database (Neon) can drop a connection that sits idle, and the save would fail.
@@ -77,6 +91,9 @@ def run_spread_session():
     print("==================================================")
     print("       THOTH TAROT & LIBER 777 ENGINE           ")
     print("==================================================")
+
+    if args.spread == BOOK_T_KEY:
+        return run_book_t_session(args, cards)
 
     if args.spread:
         spread_choice = args.spread
@@ -191,6 +208,51 @@ def run_spread_session():
 
         if args.html:
             generate_html_output(session_id, selected_spread["name"], query_prompt, analytical_prompt)
+
+
+def run_book_t_session(args, cards):
+    """Spread 13: the whole Book T Opening of the Key, five operations from the whole deck
+    with counting and pairing (ootk.book_t). Cards come from the seed only: Book T works from
+    the order of the whole deck, so there is no typing in cards one by one."""
+    print(f"\n---> Selected Spread: {BOOK_T_SPREAD['name']}\n")
+    seed = args.seed or str(secrets.randbelow(900000) + 100000)
+    query_prompt = args.topic if args.topic else (input("Enter Query / Intent Prompt (optional, press ENTER to skip): ").strip() or None)
+    significator = args.significator or ask_significator()
+    sig_card = resolve_significator(cards, significator)
+    if sig_card is None:
+        raise CliError(" ".join(filter(None, [
+            f"Significator '{significator}' not found in thoth_cards.",
+            art_name_hint(significator, [c["title"] for c in cards])])))
+    expect_text = args.expect
+    while True:
+        if not expect_text:
+            expect_text = input(f"Where is the Significator expected? ({book_t.EXPECT_HELP}): ").strip()
+        try:
+            expected = book_t.parse_expect(expect_text)
+            break
+        except ValueError as e:   # only typed answers get here: --expect was checked already
+            print(e)
+            expect_text = None
+
+    ops = book_t.opening_of_the_key(cards, seed, sig_card, expected)
+    placed = book_t.positions(ops)
+    titles = [card["title"] for _, card in placed]
+    with get_db_connection() as conn:
+        rows = load_cards_data(conn, titles, args.mapping)
+        spread_results = [{"position_number": i, "position_name": name, "card_data": copy.deepcopy(row)}
+                          for i, ((name, _), row) in enumerate(zip(placed, rows), start=1)]
+        withheld = load_withheld(conn, cards, titles, args.mapping)
+        reading = analyze_reading(
+            BOOK_T_SPREAD["name"], BOOK_T_KEY, query_prompt, sig_card["title"], seed, spread_results,
+            framework=args.framework, mapping_system=args.mapping, withheld=withheld,
+            drawn_at=drawn_now(), local_zone=this_computer_zone(), book_t_ops=ops,
+        )
+        analytical_prompt = reading["analytical_prompt"]
+        print("\n" + analytical_prompt)
+        session_id = save_spread_session(conn, BOOK_T_SPREAD["name"], query_prompt, f"PRNG Seed: {seed}",
+                                         sig_card["title"], spread_results, reading["dignity_matrix"])
+        if args.html:
+            generate_html_output(session_id, BOOK_T_SPREAD["name"], query_prompt, analytical_prompt)
 
 
 def main():

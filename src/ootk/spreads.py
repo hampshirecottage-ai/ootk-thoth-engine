@@ -219,6 +219,27 @@ TREE_LAYOUTS = {"7"}
 
 OP_TAG = re.compile(r"^\[Op (\d+)\]")
 
+# Book T's own Opening of the Key (ootk.book_t): five operations, each reading only the pile
+# that holds the Significator, so its positions depend on the draw and it is kept out of
+# SPREADS (whose positions are fixed). Each operation's positions start with the
+# Significator and go rightwards round the pile, so Book T's pairs (the cards either side
+# of the Significator, then those outside them) depend only on the pile's size.
+BOOK_T_KEY = "13"
+BOOK_T_SPREAD = {"name": "Book T Opening of the Key (counting and pairing, 5 operations)"}
+BOOK_T_LAYOUT = "book_t"
+BOOK_T_OP_NAMES = {
+    1: "Operation 1: The Four Packs (I H V H)",
+    2: "Operation 2: The Twelve Houses",
+    3: "Operation 3: The Twelve Signs",
+    4: "Operation 4: The Ring of Thirty-Six",
+    5: "Operation 5: The Ten Sephiroth",
+}
+
+def book_t_pairs(n):
+    """Book T's pairs in a pile of n laid out from the Significator (0) rightwards: the cards
+    either side of it, then those outside them. (left, right) index pairs."""
+    return [(n - k, k) for k in range(1, n) if k < n - k]
+
 def spread_segments(spread_results, spread_key):
     """Splits a drawn spread into independent segments: (layout_key, start, end, name).
 
@@ -226,6 +247,16 @@ def spread_segments(spread_results, spread_key):
     keyed to that operation's own spread so pairings and geometry never cross operation
     boundaries. Any other spread is a single segment.
     """
+    if spread_key == BOOK_T_KEY:
+        segments = []
+        for idx, item in enumerate(spread_results):
+            m = OP_TAG.match(item["position_name"])
+            name = BOOK_T_OP_NAMES.get(int(m.group(1)) if m else 0)
+            if segments and segments[-1][3] == name:
+                segments[-1][2] = idx + 1
+            else:
+                segments.append([BOOK_T_LAYOUT, idx, idx + 1, name])
+        return [tuple(s_) for s_ in segments]
     ops = SPREADS.get(spread_key, {}).get("operations")
     if not ops:
         return [(spread_key, 0, len(spread_results), None)]

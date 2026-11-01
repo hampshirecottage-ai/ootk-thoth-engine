@@ -92,8 +92,8 @@ def test_strict_reading_stops_where_book_t_abandons():
     sig = card("Queen of Cups")
     statuses = set()
     for seed in range(300):
-        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT)
-        assert ops == book_t.opening_of_the_key(DECK, str(seed), sig, EXPECT)   # same seed, same reading
+        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT, strict=True)
+        assert ops == book_t.opening_of_the_key(DECK, str(seed), sig, EXPECT, strict=True)   # same seed, same reading
         assert all(o["status"] == "read" for o in ops[:-1])
         if ops[-1]["status"] == "abandoned":
             assert ops[-1]["op"] in (1, 2, 3)
@@ -113,7 +113,7 @@ def test_strict_reading_stops_where_book_t_abandons():
 def test_lenient_reading_reads_every_operation_and_marks_the_misses():
     sig = card("Queen of Cups")
     for seed in range(100):
-        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT, strict=False)
+        ops = book_t.opening_of_the_key(DECK, seed, sig, EXPECT)   # the default reads on
         assert [o["op"] for o in ops] == [1, 2, 3, 4, 5]
         assert all(o["status"] in ("read", "missed") for o in ops)
         for o in ops:
@@ -123,3 +123,40 @@ def test_lenient_reading_reads_every_operation_and_marks_the_misses():
 def test_significator_must_be_in_the_deck():
     with pytest.raises(ValueError):
         book_t.opening_of_the_key(DECK[1:], 1, DECK[0], EXPECT)
+
+
+def test_positions_start_each_operation_at_the_significator():
+    # The hand-worked ring above, read as Operation 5 in the 6th Sephira.
+    o = book_t._read_pile(5, 5, PILE, card("Queen of Cups"), {"Queen of Cups": "right"}, expected=5, as_expected=True)
+    placed = book_t.positions([o])
+    assert [c["title"] for _, c in placed] == [PILE[(1 + k) % 7]["title"] for k in range(7)]
+    assert placed[0][0] == "[Op 5] 6. Tiphareth: the Significator"
+    assert placed[3][0] == "[Op 5] 6. Tiphareth: 3 to the right of the Significator"
+    # Chain [1,4,5,0,2,6] stopping on 2, renumbered from the Queen (index 1 -> 0).
+    assert o["chain_at"] == [0, 3, 4, 6, 1, 5] and o["stop_at"] == 1 and o["leftover_at"] is None
+    # Pairs then depend only on the pile's size: either side of position 0 first.
+    from ootk.spreads import book_t_pairs
+    assert book_t_pairs(7) == [(6, 1), (5, 2), (4, 3)]
+    assert book_t_pairs(8) == [(7, 1), (6, 2), (5, 3)]       # 4 is left over
+
+
+def test_status_lines_say_what_book_t_would_do():
+    sig = card("Queen of Cups")
+    ops = book_t.opening_of_the_key(DECK, "408850", sig,
+                                    {"pack": 1, "house": (9, 5), "sign": (9, None), "sephira": 5})
+    lines = [book_t.status_line(o) for o in ops]
+    assert lines[0].startswith("The question is about the Heh pack (love, marriage, pleasure), but")
+    assert "abandon" in lines[0] and "the 10th house or the 6th house" in lines[1]
+    assert lines[2].startswith("The Significator was not in Capricorn.")
+    assert lines[3].startswith("Book T sets the Significator down")
+    assert lines[4] == "The Significator is in 6. Tiphareth, the Sephira expected for this question."
+    hit = dict(ops[1], status="read", found_in="cognate")
+    assert "the related place tried next" in book_t.status_line(hit)
+
+
+def test_expected_places_are_typed_from_one():
+    assert book_t.parse_expect("2, 7/1, 4, 6") == {"pack": 1, "house": (6, 0), "sign": (3, None),
+                                                   "sephira": 5}
+    for bad in ("1,2,3", "0,1,1,1", "1,13,1,1", "1,1,1,11", "1,7/7,1,1", "x,1,1,1", ""):
+        with pytest.raises(ValueError):
+            book_t.parse_expect(bad)
