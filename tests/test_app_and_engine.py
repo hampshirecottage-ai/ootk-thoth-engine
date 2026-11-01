@@ -2613,3 +2613,42 @@ def test_start_page_form_is_a_step_by_step_wizard(client, monkeypatch):
     # /pick shares the fields but keeps the one-page form.
     pick = client.get("/pick").text
     assert "wizard.js" not in pick and 'id="wizRail"' not in pick
+
+
+def _card(title, arcana, suit=None, rank=None, attribution=None):
+    return {"title": title, "arcana_type": arcana, "suit": suit, "number_or_rank": rank,
+            "attribution": attribution}
+
+
+def test_book_t_counts_name_ranks_drawn_three_or_four_times():
+    cards = [_card("5 of Cups", "Minor", "Cups", "5"), _card("Queen of Disks", "Court", "Disks", "Queen"),
+             _card("5 of Wands", "Minor", "Wands", "5"), _card("XI - Lust", "Major", attribution="Leo"),
+             _card("Ace of Swords", "Minor", "Swords", "1"), _card("5 of Disks", "Minor", "Disks", "5")]
+    results = [{"position_number": i + 1, "position_name": f"Pos {i+1}", "card_data": c}
+               for i, c in enumerate(cards)]
+    [seg] = analysis.book_t_counts(results, "7")
+    assert (seg["total"], seg["majors"], seg["courts"], seg["aces"]) == (6, 1, 1, 1)
+    assert seg["suits"] == {"Wands": 1, "Cups": 1, "Swords": 1, "Disks": 2}
+    assert seg["kinds"] == [("Fives", 3, ["Wands", "Cups", "Disks"])]
+    md = report.book_t_markdown([seg])
+    assert "* 6 cards: 1 Trump, 1 court card, 1 Ace | Wands 1, Cups 1, Swords 1, Disks 2 | Three Fives (Wands, Cups, Disks)" in md
+    assert analysis.book_t_counts(results[:2], "2") == []        # too few cards to count
+
+
+def test_book_t_counts_stay_inside_each_operation():
+    positions = spreads.spread_positions("12")
+    cards = ([_card(f"Knight {i}", "Court", s, "Knight") for i, s in enumerate(["Wands", "Cups", "Swords"])]
+             + [_card(f"2 of {i}", "Minor", "Wands", "2") for i in range(len(positions) - 3)])
+    results = [{"position_number": i + 1, "position_name": p, "card_data": c}
+               for i, (p, c) in enumerate(zip(positions, cards))]
+    segs = analysis.book_t_counts(results, "12")
+    assert len(segs) == 4 and ("Knights", 3, ["Wands", "Cups", "Swords"]) in segs[0]["kinds"]
+    assert all(s["kinds"] == [("Twos", s["total"], ["Wands"] * s["total"])] for s in segs[1:])
+    md = report.book_t_markdown(segs)
+    assert "* Operation 1: 15 cards:" in md and "* Operation 4: 36 cards:" in md
+
+
+def test_sign_trumps_carry_their_golden_dawn_geomantic_figure():
+    from ootk.rules import GEOMANTIC_FIGURES
+    assert len(GEOMANTIC_FIGURES) == 12 and set(GEOMANTIC_FIGURES) == set(spreads.ZODIAC_SIGNS)
+    assert GEOMANTIC_FIGURES["Aries"] == "Puer" and GEOMANTIC_FIGURES["Aquarius"] == "Tristitia"

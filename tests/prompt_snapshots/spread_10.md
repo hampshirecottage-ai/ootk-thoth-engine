@@ -53,6 +53,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
+- **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
@@ -64,6 +65,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
@@ -138,6 +140,9 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 * **Water **: ██████ 3 (25.0%)
 * **Air   **: ████████ 4 (33.3%)
 * **Earth **: ████ 2 (16.7%)
+
+**Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
+* 12 cards: 2 Trumps, 3 court cards, 0 Aces | Wands 2, Cups 3, Swords 4, Disks 1 | no rank three or more times
 
 ---
 

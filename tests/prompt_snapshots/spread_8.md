@@ -61,6 +61,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
+- **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
@@ -72,6 +73,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
@@ -166,6 +168,9 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 * **Water **: ██████ 3 (20.0%)
 * **Air   **: ████████████ 6 (40.0%)
 * **Earth **: ████ 2 (13.3%)
+
+**Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
+* 15 cards: 4 Trumps, 3 court cards, 0 Aces | Wands 2, Cups 3, Swords 5, Disks 1 | no rank three or more times
 
 ---
 

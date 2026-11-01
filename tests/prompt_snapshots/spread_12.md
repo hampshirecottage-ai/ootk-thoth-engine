@@ -72,6 +72,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
+- **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
@@ -83,6 +84,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
@@ -227,6 +229,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
+- **Geomantic Figure**: Albus (Golden Dawn, by Gemini)
 - **Element (used in scores)**: Air (via Gemini)
 - **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
@@ -246,6 +249,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
+- **Geomantic Figure**: Populus and Via (Golden Dawn, by Cancer)
 - **Element (used in scores)**: Water (via Cancer)
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
@@ -291,6 +295,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Window (ה (Hé))
 - **Attribution**: Aquarius
+- **Geomantic Figure**: Tristitia (Golden Dawn, by Aquarius)
 - **Element (used in scores)**: Air (via Aquarius)
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
@@ -312,6 +317,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
+- **Geomantic Figure**: Acquisitio (Golden Dawn, by Sagittarius)
 - **Element (used in scores)**: Fire (via Sagittarius)
 - **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
@@ -413,6 +419,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
+- **Geomantic Figure**: Albus (Golden Dawn, by Gemini)
 - **Element (used in scores)**: Air (via Gemini)
 - **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
@@ -424,6 +431,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox Goad (ל (Lamed))
 - **Attribution**: Libra
+- **Geomantic Figure**: Puella (Golden Dawn, by Libra)
 - **Element (used in scores)**: Air (via Libra)
 - **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `Cheth (ח)`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
@@ -497,6 +505,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
+- **Geomantic Figure**: Populus and Via (Golden Dawn, by Cancer)
 - **Element (used in scores)**: Water (via Cancer)
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
@@ -576,6 +585,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
+- **Geomantic Figure**: Puer (Golden Dawn, by Aries)
 - **Element (used in scores)**: Fire (via Aries)
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
@@ -655,6 +665,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Back of head (ק (Qoph))
 - **Attribution**: Pisces
+- **Geomantic Figure**: Laetitia (Golden Dawn, by Pisces)
 - **Element (used in scores)**: Water (via Pisces)
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `Tzaddi (צ)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
@@ -700,6 +711,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
+- **Geomantic Figure**: Acquisitio (Golden Dawn, by Sagittarius)
 - **Element (used in scores)**: Fire (via Sagittarius)
 - **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
@@ -711,6 +723,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
+- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
@@ -744,6 +757,12 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 * **Air   **: ██████████████████████████████████████████████████████ 27 (36.0%)
 * **Earth **: ████████████████████████ 12 (16.0%)
 * **Spirit**: secondary quality only, on 1: Pos 56 (XX - The Aeon)
+
+**Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
+* Operation 1: 15 cards: 4 Trumps, 3 court cards, 0 Aces | Wands 2, Cups 3, Swords 5, Disks 1 | no rank three or more times
+* Operation 2: 12 cards: 3 Trumps, 2 court cards, 0 Aces | Wands 0, Cups 2, Swords 4, Disks 3 | no rank three or more times
+* Operation 3: 12 cards: 4 Trumps, 2 court cards, 1 Ace | Wands 1, Cups 1, Swords 3, Disks 3 | no rank three or more times
+* Operation 4: 36 cards: 13 Trumps, 9 court cards, 1 Ace | Wands 6, Cups 5, Swords 8, Disks 4 | Three Queens (Wands, Cups, Swords); Four Princes (Wands, Cups, Swords, Disks)
 
 ---
 
@@ -1151,6 +1170,6 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 **How to read the numbers:**
 * `Score` in section 5 (and `cards:` in section 6) is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
 * `Modifier` (section 6) is the weight of the aspect itself (Sextile +1, Square -2, Trine +2, Opposition -1). It describes the two positions, not the cards, and is not added to the dignity score.
-* Section 2 counts each card once, under its primary element.
+* Section 2 counts each card once, under its primary element. Its Book T Counts are per operation, never across one.
 
 END OF OOTK PROMPT (75 positions)

@@ -76,3 +76,23 @@ def find_aspect(angle_deg, context, allowed=None):
 def aspect_label(aspect):
     """'Trine (120°)'."""
     return f"{aspect.name} ({aspect.angle:g}°)"
+
+# ---------- Geomantic figures (Golden Dawn) ----------
+# The Golden Dawn's figure for each sign, as in Liber 777's "Lineal Figures and Geomancy"
+# column. Caput and Cauda Draconis take no sign, so no card carries them.
+GEOMANTIC_FIGURES = {
+    "Aries": "Puer", "Taurus": "Amissio", "Gemini": "Albus", "Cancer": "Populus and Via",
+    "Leo": "Fortuna Major and Fortuna Minor", "Virgo": "Conjunctio", "Libra": "Puella",
+    "Scorpio": "Rubeus", "Sagittarius": "Acquisitio", "Capricorn": "Carcer",
+    "Aquarius": "Tristitia", "Pisces": "Laetitia",
+}
+
+# ---------- Book T counts ----------
+# Book T reads three or four cards of one rank in a reading, and a lead of Trumps, court
+# cards, Aces or one suit. These are the rank names the counts use (Thoth court titles).
+RANK_PLURALS = {
+    "1": "Aces", "2": "Twos", "3": "Threes", "4": "Fours", "5": "Fives", "6": "Sixes",
+    "7": "Sevens", "8": "Eights", "9": "Nines", "10": "Tens",
+    "Knight": "Knights", "Queen": "Queens", "Prince": "Princes", "Princess": "Princesses",
+}
+SUIT_ORDER = ("Wands", "Cups", "Swords", "Disks")
