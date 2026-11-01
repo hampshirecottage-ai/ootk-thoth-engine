@@ -12,10 +12,11 @@ import os
 
 import pytest
 
+from ootk import book_t
 from ootk.analysis import withheld_summary
 from ootk.report import analyze_reading
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator, significator_places
-from ootk.spreads import SPREADS, spread_positions
+from ootk.spreads import BOOK_T_KEY, BOOK_T_OP_NAMES, BOOK_T_SPREAD, SPREADS, spread_positions
 
 HERE = os.path.dirname(__file__)
 SEED = "408850"
@@ -47,15 +48,38 @@ def build_prompt(spread_key, mapping_system="thoth"):
     return reading["analytical_prompt"]
 
 
+# Book T (spread 13): expected in the Yod pack (work), the 10th house or else the 6th,
+# Capricorn, and Tiphareth. With this seed the first three operations miss, which is the
+# common case and exercises the "Book T would abandon here" wording.
+BOOK_T_EXPECT = "1,10/6,10,6"
+
+
+def build_book_t_prompt():
+    """The same steps as cli.run_book_t_session, from the saved card rows."""
+    deck = REFERENCE["deck"]
+    sig_card = resolve_significator(deck, SIGNIFICATOR)
+    ops = book_t.opening_of_the_key(deck, SEED, sig_card, book_t.parse_expect(BOOK_T_EXPECT))
+    placed = book_t.positions(ops)
+    titles = [c["title"] for _, c in placed]
+    spread_results = [
+        {"position_number": i, "position_name": name, "card_data": copy.deepcopy(REFERENCE["rows"][c["title"]])}
+        for i, (name, c) in enumerate(placed, start=1)
+    ]
+    withheld = withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles)
+    reading = analyze_reading(BOOK_T_SPREAD["name"], BOOK_T_KEY, TOPIC, sig_card["title"], SEED,
+                              spread_results, withheld=withheld, book_t_ops=ops)
+    return reading["analytical_prompt"]
+
+
 def test_fixture_covers_the_whole_deck():
     assert len(REFERENCE["deck"]) == 78
     assert {c["title"] for c in REFERENCE["deck"]} == set(REFERENCE["rows"])
     assert has_significator_position(spread_positions("8"))
 
 
-@pytest.mark.parametrize("spread_key", SPREAD_KEYS)
+@pytest.mark.parametrize("spread_key", SPREAD_KEYS + (BOOK_T_KEY,))
 def test_prompt_matches_saved_copy(spread_key):
-    prompt = build_prompt(spread_key)
+    prompt = build_book_t_prompt() if spread_key == BOOK_T_KEY else build_prompt(spread_key)
     path = os.path.join(HERE, "prompt_snapshots", f"spread_{spread_key}.md")
     if os.getenv("OOTK_UPDATE_SNAPSHOTS") == "1":
         with open(path, "w", encoding="utf-8") as f:
@@ -117,3 +141,16 @@ def test_courts_say_they_have_no_french_letter():
     assert "The French/Egyptian system gives courts no path letter" in prompt
     assert "French/Egyptian: `none`" in prompt
     assert "French/Egyptian: `N/A`" not in prompt
+
+
+def test_book_t_prompt_counts_and_pairs_each_operation():
+    """Every operation read gets its status line, a Count and its Pairs, and the prompt stays
+    well under the ~78k characters where Gemini stops reading (see the shorter-prompt work)."""
+    prompt = build_book_t_prompt()
+    for name in BOOK_T_OP_NAMES.values():
+        assert f"**{name}**" in prompt, name
+    assert prompt.count("**Count** (towards the left") == 5
+    assert prompt.count("**Pairs:**") == 5
+    assert "Book T says to abandon the divination here" in prompt
+    assert "Counting numbers (Book T)" in prompt
+    assert len(prompt) < 70000

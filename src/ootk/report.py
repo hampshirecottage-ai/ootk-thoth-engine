@@ -11,9 +11,10 @@ from ootk.analysis import (
     major_element_note, spirit_bearing_cards,
 )
 from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
+from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
 from ootk.sky import sky_line
-from ootk.spreads import SPREADS, ZODIAC_SIGNS
+from ootk.spreads import BOOK_T_KEY, SPREADS, ZODIAC_SIGNS, spread_segments
 
 # The report header and the web form both name the systems from here, so the label always
 # says which way the Tzaddi/Heh swap goes (see db.fetch_cards_correspondences).
@@ -67,7 +68,7 @@ def _solid_legend(spread_results):
 
 def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
                     framework="auto", mapping_system="thoth", withheld=None, significator_places=None,
-                    drawn_at=None, local_zone=None):
+                    drawn_at=None, local_zone=None, book_t_ops=None):
     """Every analysis of a drawn spread, then its prompt. The command line and the web site both
     call this, so the same draw always gives the same prompt from either."""
     element_counts = analyze_elemental_balance(spread_results)
@@ -83,6 +84,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
         significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
         book_t=book_t_counts(spread_results, spread_key),
+        book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -99,7 +101,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None):
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     mapping_note = MAPPING_NOTES.get(mapping_system)
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
@@ -122,11 +124,11 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         _elements_md(spread_results, element_counts, withheld, book_t),
         _hebrew_md(spatial_dist),
         _solids_md(solid_counts, legend, dual_pairings),
-        _dignity_md(dignity_matrix),
+        _dignity_md(dignity_matrix, book_t_notes),
         _spatial_md(spatial_matrix),
         _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
                          spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
-                         significator_places, book_t),
+                         significator_places, book_t, book_t_notes),
     )
     prompt_md = "".join(f"\n---\n\n## {n}. {body}" for n, body in enumerate(sections, start=1))
     prompt_md += f"\n{end_marker}\n"
@@ -264,6 +266,27 @@ def _elements_md(spread_results, element_counts, withheld, book_t=None):
         md += withheld_markdown(withheld)
     return md
 
+def book_t_notes(spread_results, ops):
+    """{operation name: Markdown} for each Book T operation read: where the Significator
+    fell, the Count and any card left over from the pairs (see book_t.positions)."""
+    read = [o for o in ops if o["status"] != "abandoned"]
+    notes = {}
+    for o, (_, start, _end, name) in zip(read, spread_segments(spread_results, BOOK_T_KEY)):
+        def pos(k):
+            item = spread_results[start + k]
+            return f"Pos {item['position_number']} ({item['card_data']['title']})"
+        steps = " → ".join(f"{pos(k)} [{count_value(spread_results[start + k]['card_data'])}]"
+                           for k in o["chain_at"])
+        end = (f"; the next count lands on {pos(o['stop_at'])} again, so the count stops"
+               if o["stop_at"] is not None else
+               "; the last card counts round the whole pile back to itself, so the count stops")
+        md = (f"{status_line(o)}\n\n**Count** (towards the {o['direction']}, numbers in brackets): "
+              f"{steps}{end}.\n")
+        if o["leftover_at"] is not None:
+            md += f"\n{pos(o['leftover_at'])} is left over after pairing and is read on its own.\n"
+        notes[name] = md
+    return notes
+
 _COUNT_WORDS = {3: "Three", 4: "Four"}
 
 def _plural(n, one, many):
@@ -313,8 +336,14 @@ def _solids_md(solid_counts, legend, dual_pairings):
             md += f"* {dp}\n"
     return md
 
-def _dignity_md(dignity_matrix):
+def _dignity_md(dignity_matrix, book_t_notes=None):
     md = "PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    if book_t_notes:
+        md += ("Book T reads each operation in two passes. The **Count** starts at the Significator "
+               "and counts round its pile, each card counting itself as one, and makes the story. "
+               "The **Pairs** below it are the cards either side of the Significator, then those "
+               "outside them, which fill in what the count leaves out; each pair has its elemental "
+               "dignity.\n")
     if not dignity_matrix:
         return md + "* Only one card was drawn, so there are no pairs to score.\n"
     last_segment = None
@@ -322,6 +351,8 @@ def _dignity_md(dignity_matrix):
         if d.get("segment_name") and d["segment_name"] != last_segment:
             md += f"\n**{d['segment_name']}**\n\n"
             last_segment = d["segment_name"]
+            if book_t_notes and last_segment in book_t_notes:
+                md += book_t_notes[last_segment] + "\n**Pairs:**\n"
         md += f"* **{d['pair']}**: `Score: {_signed(d['score'])}` | {d['relationship']}\n"
     return md
 
@@ -381,7 +412,7 @@ def _spatial_md(spatial_matrix):
 
 def _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
                      spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
-                     significator_places=None, book_t=None):
+                     significator_places=None, book_t=None, book_t_notes=None):
     """What the AI is asked to do. Each rule names only what this reading contains."""
     operations = len({d["segment_name"] for d in dignity_matrix if d.get("segment_name")})
     aspects = {}
@@ -417,6 +448,13 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
                  + ").")
         if operations > 1:
             order += " Take the operations one at a time, in order, then draw them together."
+    if book_t_notes:
+        order = (f"Take the operations in order. In each, start with where the Significator falls "
+                 f"(the first line under the operation in section {DIGNITY}), then read the Count as "
+                 f"the story, then the Pairs to fill in its details. Where an operation says Book T "
+                 f"would abandon the divination, say so plainly and weigh that operation lightly. "
+                 f"Then draw the operations together, with the overall balance in sections "
+                 f"{ELEMENTS}-{SOLIDS}.")
     notes = []
     if dual_pairings:
         notes.append(f"Section {SOLIDS} lists the neighbouring cards whose solids are duals (polyhedral inversions).")
@@ -472,6 +510,10 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     key.append(f"* Section {ELEMENTS} counts each card once, under its primary element."
                + (" Its Book T Counts are per operation, never across one." if book_t and
                   len(book_t) > 1 else ""))
+    if book_t_notes:
+        key.append("* Counting numbers (Book T): Knights, Queens and Princes 4; Princesses 7; Aces "
+                   "11; small cards their own number; Trumps 3 (elements), 9 (planets), 12 (signs). "
+                   "Where Book T is silent this site's rules are: " + "; ".join(SITE_RULES.values()) + ".")
     md += "\n**How to read the numbers:**\n" + "\n".join(key) + "\n"
     return md
 

@@ -8,7 +8,7 @@ from ootk.rules import (
 )
 from ootk.spreads import (
     DECAN_START, HEAP_LAYOUTS, HEAP_PAIRS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
-    TREE_LAYOUTS, spread_segments,
+    BOOK_T_LAYOUT, TREE_LAYOUTS, book_t_pairs, spread_segments,
 )
 
 ELEMENT_WORDS = {"fire": "Fire", "water": "Water", "air": "Air", "earth": "Earth"}
@@ -173,6 +173,8 @@ def segment_pairs(layout_key, seg_len):
     - a heap (HEAP_PAIRS) pairs its named pairs instead of following deal order;
     - a Tree of Life layout (TREE_LAYOUTS) pairs Sephiroth joined by a path.
     """
+    if layout_key == BOOK_T_LAYOUT:
+        return book_t_pairs(seg_len)
     if layout_key in HEAP_PAIRS:
         return [(a, b) for a, b in HEAP_PAIRS[layout_key] if b < seg_len]
     if layout_key in TREE_LAYOUTS:
