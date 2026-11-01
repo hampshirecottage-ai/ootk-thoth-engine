@@ -279,6 +279,7 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
 | `add_testimonials.sql` | Testimonials (without it the start page shows none and the testimonial pages ask for the update); lists the approve queries |
 | `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
+| `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 
