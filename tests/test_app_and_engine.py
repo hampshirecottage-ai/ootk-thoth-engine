@@ -2715,3 +2715,56 @@ def test_book_t_is_offered_from_a_seed_only(client):
     assert 'id="bookTBox"' in client.get("/").text and '<option value="13"' in client.get("/").text
     assert '<option value="13"' not in client.get("/pick").text
     assert 'id="book-t"' in client.get("/method").text
+
+
+# ---------- Parts of the AI prompt (report.COMPONENTS) ----------
+
+def test_start_page_offers_every_prompt_part_switched_on(client):
+    page = client.get("/").text
+    assert 'id="promptParts"' in page and 'name="parts_shown" value="1"' in page
+    for key in app_module.COMPONENTS:
+        assert f'name="include" value="{key}" checked' in page
+    assert 'name="include" value="astrology" checked' in client.get("/pick").text
+
+
+def test_form_without_the_switches_leaves_nothing_out(seeded_client):
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", selected_cards="")
+    assert "Components Left Out" not in r.text and "Left out of the AI prompt" not in r.text
+    assert seeded_client.saved["report_settings"]["without"] == ""
+
+
+def test_switched_off_parts_leave_the_prompt_and_stay_with_the_reading(seeded_client):
+    on = [k for k in app_module.COMPONENTS if k not in ("astrology", "geometry")]
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", selected_cards="",
+             parts_shown="1", include=on)
+    assert r.status_code == 200
+    assert "**Components Left Out:** Astrology, Geometry" in r.text
+    assert "Left out of the AI prompt</span>Astrology, Geometry (Cube of Space, solids, aspects)" in r.text
+    stored = seeded_client.saved["report_settings"]
+    assert stored["without"] == "astrology,geometry"
+    assert "without=astrology%2Cgeometry" in r.text                      # the share link keeps them
+    assert "--without astrology,geometry" in r.text                     # and so does the command
+    again = seeded_client.get(f"/report/{stored['link']}")
+    assert "**Components Left Out:** Astrology, Geometry" in again.text
+
+
+def test_share_link_leaves_out_its_parts_and_redraws_the_same_cards(seeded_client):
+    full = seeded_client.get("/reading?seed=7&spread=3")
+    drawn = seeded_client.lookups[-1]
+    r = seeded_client.get("/reading?seed=7&spread=3&without=Hebrew, tree")
+    assert r.status_code == 200 and seeded_client.lookups[-1] == drawn
+    assert "**Components Left Out:** Hebrew letters, Tree of Life" in r.text
+    assert "Components Left Out" not in full.text
+    assert seeded_client.get("/reading/json?seed=7&spread=3&without=hebrew").status_code == 200
+
+
+@pytest.mark.parametrize("bad", [{"include": ["astrology", "runes"]}, {"include": ["x" * 500]}])
+def test_unknown_prompt_part_is_refused(seeded_client, bad):
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", selected_cards="",
+             parts_shown="1", **bad)
+    assert r.status_code == 400
+
+
+def test_share_link_with_unknown_part_is_refused(seeded_client):
+    r = seeded_client.get("/reading?seed=7&spread=3&without=runes")
+    assert r.status_code == 400 and "runes" in r.json()["detail"]

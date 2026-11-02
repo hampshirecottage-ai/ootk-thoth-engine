@@ -135,6 +135,8 @@
         rows.push(["Tradition", answerText("g_mapping", el("mappingSelect").value), "options"],
                   ["Story", answerText("g_framework", fw) + (fw === "auto" ? " (Auto)" : ` (${smallText("g_framework", fw).split(":")[0]})`), "options"],
                   ["Cards", seed ? `Seed ${seed}` : "New cards, random seed", "options"]);
+        const off = promptPartsOff();
+        if (off.length) rows.push(["Left out of the prompt", off.join(", "), "options"]);
         el("wizReview").replaceChildren(...rows.flatMap(([label, value, step]) => {
             const dt = document.createElement("dt"), dd = document.createElement("dd");
             const edit = document.createElement("button");

@@ -230,5 +230,17 @@
                 </select>
                 <p class="hint">The angle your AI is asked to read from. It does not change the cards or the scores. <a href="/method#lens">More</a></p>
                 </div>
+                {# Every part is on unless switched off here. parts_shown tells the server the
+                   switches were sent, so a form without them (or an older one) leaves nothing out. #}
+                <details class="parts" id="promptParts">
+                    <summary>Parts of the AI prompt <span class="parts-sum" id="partsSummary">· all on</span></summary>
+                    <input type="hidden" name="parts_shown" value="1">
+                    <p class="hint">All on gives the full reading. Switch a part off to see what your AI makes of the reading without it. The cards drawn stay the same, and the prompt tells your AI what was left out.</p>
+                    <fieldset class="sig-q">
+                    {% for key, name, hint in prompt_parts %}
+                    <label><input type="checkbox" name="include" value="{{ key }}" checked><span>{{ name }} <small>{{ hint }}</small></span></label>
+                    {% endfor %}
+                    </fieldset>
+                </details>
             </details>
             </div>

@@ -34,7 +34,9 @@ from ootk.db import (
     session_has_testimonial, set_testimonial_approved, waiting_testimonials,
 )
 from ootk.lockout import FailedLogins
-from ootk.report import MAPPING_LABELS, analyze_reading, drawn_now, time_stamp
+from ootk.report import (
+    COMPONENTS, MAPPING_LABELS, analyze_reading, components_param, drawn_now, time_stamp, without_components,
+)
 from ootk.rules import element_dignity
 from ootk import atlas
 from ootk import book_t
@@ -564,7 +566,20 @@ async def unexpected_error_page(request: Request, exc: Exception):
                       "may work; if it keeps happening, please report it.", retry=True)
 
 
-templates.env.globals.update(static_url=static_url, card_image_url=card_image_url, art_note=art_note, element_colors=ELEMENT_COLORS,
+# The "Parts of the AI prompt" switches on the settings form: (key, name, what it adds).
+PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
+    ("elements", "Element counts and the dignity scores of each pair of cards"),
+    ("astrology", "Each card's planet, sign or decan, the own-place check, and the Sun and Moon"),
+    ("hebrew", "Each card's Hebrew letter and the letter totals"),
+    ("tree", "Each card's path or Sephira on the Tree of Life and its King Scale colour"),
+    ("courts", "A court card's element of an element, such as Fire of Water"),
+    ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks"),
+    ("geomancy", "The geomantic figure on each sign Trump"),
+    ("geometry", "The Cube of Space, the Platonic solids and the aspects between positions"),
+))
+assert [k for k, _, _ in PROMPT_PARTS] == list(COMPONENTS)
+
+templates.env.globals.update(prompt_parts=PROMPT_PARTS, static_url=static_url, card_image_url=card_image_url, art_note=art_note, element_colors=ELEMENT_COLORS,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
@@ -683,10 +698,13 @@ def new_seed() -> str:
     return str(secrets.randbelow(900000) + 100000)
 
 
-def cli_command(spread_key, seed, mapping_system, framework, significator, topic, expect="") -> str:
+def cli_command(spread_key, seed, mapping_system, framework, significator, topic, expect="",
+                without="") -> str:
     """The `ootk` command that repeats a seeded reading from the terminal."""
     parts = ["ootk", "--spread", spread_key, "--seed", seed, "--mapping", mapping_system,
              "--framework", framework]
+    if without:
+        parts += ["--without", without]
     if significator:
         parts += ["--significator", significator]
     if expect:
@@ -993,6 +1011,8 @@ def share_path(settings) -> str:
         params["significator"] = settings["significator"]
     if settings.get("expect"):
         params["expect"] = settings["expect"]
+    if settings.get("without"):
+        params["without"] = settings["without"]
     # The draw time but not the time zone, which would hint at where the querent lives.
     if settings.get("drawn_at"):
         params["drawn"] = settings["drawn_at"]
@@ -1278,12 +1298,16 @@ def generate_report(
     bt_sign: str = Form("10"),
     bt_sign2: str = Form(""),
     bt_sephira: str = Form("8"),
+    include: list[str] = Form([]),
+    parts_shown: str = Form(""),
 ):
     """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
 
     draw_mode 'seed' draws the cards from `seed` exactly as `ootk --seed` does (a blank seed
     gets a fresh one); 'manual' uses the comma-separated `selected_cards`. The bt_* fields are
     where spread 13 (Book T) expects the significator, counted from 1 (book_t.EXPECT_HELP).
+    `include` holds the COMPONENTS switched on in the form's "Parts of the AI prompt" fold; it
+    counts only when `parts_shown` says the fold was sent, so a form without it leaves nothing out.
     """
     topic = topic.strip()
     significator = significator.strip()
@@ -1313,6 +1337,7 @@ def generate_report(
     if len(topic) > TOPIC_MAX:
         raise HTTPException(status_code=400, detail=f"The question can be at most {TOPIC_MAX} characters; "
                                                     f"this one has {len(topic)}.")
+    without = left_out(include, parts_shown)
 
     expect = ""
     if spread_key == BOOK_T_KEY:
@@ -1351,7 +1376,7 @@ def generate_report(
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-        "seed": seed, "expect": expect,
+        "seed": seed, "expect": expect, "without": without,
         "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
         # When the cards were drawn, and the visitor's own zone (from the browser) to show it in.
         "drawn_at": time_stamp(drawn_now()), "tz": tz.strip() if time_zone(tz.strip()) else "",
@@ -1392,6 +1417,27 @@ def generate_report(
     return render_report(request, session_id, settings, reading, unsaved=not session_id)
 
 
+def left_out(include, parts_shown):
+    """The components_param() string for the components the form did not switch on."""
+    if not parts_shown:
+        return ""
+    if len(include) > len(COMPONENTS) or any(len(k) > FIELD_MAX for k in include):
+        raise HTTPException(status_code=400, detail="The list of prompt parts is too long.")
+    unknown = [k for k in include if k not in COMPONENTS]
+    if unknown:
+        raise HTTPException(status_code=400, detail=f"Unknown prompt part: {quoted(unknown[0])}.")
+    return components_param(set(COMPONENTS) - set(include))
+
+
+def without_param(without):
+    """A share link's without= value as components_param() writes it, or 400."""
+    check_lengths(without=without)
+    try:
+        return components_param(without_components(without))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 # Short names accepted in shared links, e.g. ?system=gd.
 SYSTEM_ALIASES = {"gd": "golden_dawn", "fe": "french_egyptian"}
 
@@ -1399,27 +1445,30 @@ SYSTEM_ALIASES = {"gd": "golden_dawn", "fe": "french_egyptian"}
 @app.get("/reading", response_class=HTMLResponse)
 def shared_reading(request: Request, seed: str = "", spread: str = "",
                    system: str = DEFAULT_MAPPING, framework: str = "auto", significator: str = "",
-                   drawn: str = "", expect: str = ""):
+                   drawn: str = "", expect: str = "", without: str = ""):
     """A seeded reading rebuilt from its link, e.g. /reading?seed=918851&spread=12&system=thoth.
 
     The same seed and settings always draw the same cards, so the link alone is the reading.
     Nothing is saved, and no saved reading can be reached this way: those keep their random
     /report/<link> addresses.
     """
-    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn, expect)
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn, expect,
+                                             without)
     return render_report(request, None, settings, reading, shared=True,
                          json_url="/reading/json?" + request.url.query)
 
 
 @app.get("/reading/json")
 def shared_reading_json(seed: str = "", spread: str = "", system: str = DEFAULT_MAPPING,
-                        framework: str = "auto", significator: str = "", drawn: str = "", expect: str = ""):
+                        framework: str = "auto", significator: str = "", drawn: str = "", expect: str = "",
+                        without: str = ""):
     """The report's JSON download for a shared reading: the same link, drawn again."""
-    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn, expect)
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn, expect,
+                                             without)
     return reading_json_response(settings, reading)
 
 
-def shared_reading_parts(seed, spread, system, framework, significator, drawn="", expect=""):
+def shared_reading_parts(seed, spread, system, framework, significator, drawn="", expect="", without=""):
     """The settings and run_reading() result for a shared link's parameters."""
     seed, spread, framework, significator = seed.strip(), spread.strip(), framework.strip(), significator.strip()
     drawn, expect = drawn.strip(), expect.strip()
@@ -1450,6 +1499,7 @@ def shared_reading_parts(seed, spread, system, framework, significator, drawn=""
         "spread_key": spread, "topic": "", "significator": significator, "framework": framework,
         "mapping_system": system, "draw_mode": "seed", "seed": seed, "selected_cards": "",
         "drawn_at": time_stamp(parse_drawn_at(drawn)) if drawn else "", "expect": expect,
+        "without": without_param(without),
     }
     deck = reference_deck()
     card_titles, significator_label = seeded_draw(deck, seed, spread, significator, expect)
@@ -1901,6 +1951,8 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         significator_places=seeded_significator_places(settings, card_titles, deck),
         drawn_at=parse_drawn_at(settings.get("drawn_at")), local_zone=time_zone(settings.get("tz")),
         book_t_ops=ops,
+        # A saved reading from before the switches has no "without": nothing left out.
+        without=without_components(settings.get("without", "")),
     )
     return {
         "book_t": book_t_view(ops, spread_results) if ops else None,
@@ -1977,6 +2029,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "spread_name": spread_label(spread_key),
             "topic": settings["topic"],
             "prompt": r["analytical_prompt"],
+            "left_out": [COMPONENTS[k] for k in COMPONENTS if k in without_components(settings.get("without", ""))],
             "spread_results": r["spread_results"],
             "dignity_matrix": r["dignity_matrix"],
             "element_counts": r["element_counts"],
@@ -1990,7 +2043,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "share_path": share_path(settings) if redraw else "",
             "cli_command": cli_command(spread_key, seed, mapping_system, framework,
                                        settings["significator"], settings["topic"],
-                                       settings.get("expect", "")) if redraw else "",
+                                       settings.get("expect", ""), settings.get("without", "")) if redraw else "",
             "seed_redraws": seed_redraws,
             "spatial_details": r["spatial_details"],
             "spatial_dist": r["spatial_dist"],
