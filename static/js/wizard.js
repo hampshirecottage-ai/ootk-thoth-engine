@@ -120,13 +120,18 @@
     }
 
     function renderReview() {
-        const key = el("spreadSelect").value, n = (positionsData[key] || []).length;
+        const key = el("spreadSelect").value;
         const fw = el("frameworkSelect").value, seed = el("seedInput").value.trim();
         const rows = [
             ["Question", (!el("topicInput").disabled && el("topicInput").value.trim()) || "None: a general reading", "question"],
-            ["Spread", `${smallText("g_spread", key).split(" · ")[0]}, ${n} card${n === 1 ? "" : "s"}`, "spread"],
+            // "Triad · 3 cards", as the spread list words it.
+            ["Spread", smallText("g_spread", key).split(" · ").slice(0, 2).join(", "), "spread"],
         ];
         if (hasSigPosition()) rows.push(["Significator", el("significatorInput").value || "Not chosen yet", "significator"]);
+        if (!el("bookTBox").hidden) {
+            const opt = id => el(id).options[el(id).selectedIndex].text.split(":")[0];
+            rows.push(["Expected in", `${opt("btPack")} pack, ${opt("btHouse")}, ${opt("btSign")}, ${opt("btSephira").replace(/^\d+\.\s*/, "")}`, "significator"]);
+        }
         rows.push(["Tradition", answerText("g_mapping", el("mappingSelect").value), "options"],
                   ["Story", answerText("g_framework", fw) + (fw === "auto" ? " (Auto)" : ` (${smallText("g_framework", fw).split(":")[0]})`), "options"],
                   ["Cards", seed ? `Seed ${seed}` : "New cards, random seed", "options"]);

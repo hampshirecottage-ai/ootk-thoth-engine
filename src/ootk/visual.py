@@ -16,7 +16,8 @@ from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import (
-    HEAP_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS, spread_segments,
+    BOOK_T_LAYOUT, HEAP_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
+    spread_segments,
 )
 
 ELEMENTS = ("Fire", "Water", "Air", "Earth", "Spirit")
@@ -386,11 +387,53 @@ def _wheel_drawing(layout_key, cards, aspects, pairs=()):
     }
 
 
-def segment_drawing(layout_key, cards, aspects, pairs=()):
+def _book_t_drawing(cards, pairs, book_t):
+    """A Book T pile as a ring: the Significator at the top and the cards going round to the
+    right (clockwise), as they lie after it. Each pair is a straight chord across the ring
+    (the pairs work outwards from the Significator, so they stack down the ring), and each
+    counted card carries its step number in the count."""
+    n = len(cards)
+    w, h = (60, 100) if n <= 12 else (40, 66)
+    r_card = max(150.0, n * (w + 14) / (2 * math.pi))
+    angles = [90.0 - k * 360.0 / n for k in range(n)]
+    slots = []
+    for card, ang in zip(cards, angles):
+        cx, cy = _svg_point(r_card, ang)
+        slots.append(dict(card, x=round(cx - w / 2, 2), y=round(cy - h / 2, 2), cx=cx, cy=cy, w=w, h=h))
+    r_chord = r_card - h / 2 - 8
+    pair_links = []
+    for p in pairs:
+        (x1, y1), (x2, y2) = _svg_point(r_chord, angles[p["a"]]), _svg_point(r_chord, angles[p["b"]])
+        pair_links.append(_pair_link(p, f"M{x1:.1f},{y1:.1f} L{x2:.1f},{y2:.1f}",
+                                     (round((x1 + x2) / 2, 1), round((y1 + y2) / 2, 1))))
+    steps = []
+    for step, k in enumerate((book_t or {}).get("chain", []), start=1):
+        s_ = slots[k]
+        steps.append({"x": round(s_["x"] + s_["w"] - 2, 1), "y": round(s_["y"] + s_["h"] - 2, 1),
+                      "n": step, "r": 9 if w < 50 else 11})
+    r = r_card + h / 2 + w / 2 + PAD
+    return {
+        "kind": "layout",
+        "pair_links": pair_links,
+        "badge_r": 9 if n > 12 else 10,
+        "viewbox": f"{-r:.0f} {-r:.0f} {2 * r:.0f} {2 * r:.0f}",
+        "width": round(2 * r),
+        "frame": "",
+        "ring_r": round(r_card, 1),
+        "count_steps": steps,
+        "slots": slots,
+        "lines": [],
+    }
+
+
+def segment_drawing(layout_key, cards, aspects, pairs=(), book_t=None):
     """Pixel geometry for one segment, or a plain card row when it has no layout.
 
-    `pairs` are the segment's element pairs ({a, b, score}, segment-local indices).
+    `pairs` are the segment's element pairs ({a, b, score}, segment-local indices); `book_t`
+    is the operation's count for a Book T segment (web.book_t_view).
     """
+    if layout_key == BOOK_T_LAYOUT:
+        return _book_t_drawing(cards, pairs, book_t)
     coords = SPREAD_DEFAULT_COORDINATES.get(layout_key)
     if not coords or len(coords) < len(cards):
         return {"kind": "row", "slots": cards, "lines": [], "pair_links": []}
@@ -598,7 +641,7 @@ def link_view(layout_key, cards, aspects, pairs):
 
 def build_report_view(spread_key, spread_results, element_counts, dignity_matrix, spatial_matrix,
                       macro_framework, framework_basis, sign_carriers=None, own_place=None,
-                      significator_places=None):
+                      significator_places=None, book_t=None):
     """Everything report.html needs beyond the raw prompt: summary first, then segments."""
     cards = [_card_view(item, i, dignity_matrix) for i, item in enumerate(spread_results)]
     all_aspects = []
@@ -619,7 +662,8 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             for i in (a["a"] + start, a["b"] + start):
                 aspects_by_card.setdefault(i, []).append(f"{a['label']} ({a['score_text']}): {a['pair']}")
         seg_elements = Counter(c["element"] for c in seg_cards)
-        drawing = segment_drawing(layout_key, seg_cards, seg_aspects, seg_pairs)
+        seg_book_t = book_t[number - 1] if book_t and number <= len(book_t) else None
+        drawing = segment_drawing(layout_key, seg_cards, seg_aspects, seg_pairs, seg_book_t)
         segments.append({
             "id": f"op{number}",
             "name": name or "Spread",
@@ -631,7 +675,8 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
             "aspect_counts": _aspect_counts(seg_aspects),
             "ill_dignified": [c for c in seg_cards if not c["dignified"]],
             "drawing": drawing,
-            "how": link_explainer(layout_key, len(seg_cards), drawing["kind"] != "row"),
+            "how": (seg_book_t["lines"] if seg_book_t else
+                    link_explainer(layout_key, len(seg_cards), drawing["kind"] != "row")),
             "links": link_view(layout_key, seg_cards, seg_aspects, seg_pairs),
         })
 

@@ -39,6 +39,9 @@ function applySettings(s) {
             els.value = s[f];
         }
     });
+    // A spread this page doesn't offer (Book T is drawn from a seed only, so /pick has no
+    // option for it) leaves the select blank: fall back to its first spread.
+    if (!$("spreadSelect").value) $("spreadSelect").selectedIndex = 0;
     updateSpread();
 }
 // Remember settings for next time, but not the seed: a new visit draws fresh cards.
@@ -46,7 +49,7 @@ function rememberSettings() { writeStore(LAST_KEY, Object.assign(readStore(LAST_
 
 function spreadPositions() { return positionsData[$("spreadSelect").value]; }
 function hasSigPosition() { const p = spreadPositions(); return p.length > 0 && /significator/i.test(p[0]); }
-function updateSpread() { if (manual) updateSlots(); updateSignificator(); updateMoreSummary(); }
+function updateSpread() { if (manual) updateSlots(); updateSignificator(); updateBookT(); updateMoreSummary(); }
 
 // ---------- More options: a one-line summary of what is folded away ----------
 function updateMoreSummary() {
@@ -147,6 +150,57 @@ if (!manual) {
     });
     $("sigPicker").addEventListener("input", updateSignificator);
     $("sigPicker").addEventListener("change", updateSignificator);
+}
+
+// ---------- Book T (spread 13): where the significator is expected ----------
+// The subject is suggested from the question's words (book_t.SUBJECTS, the same words and
+// rule as book_t.suggest_subject) until the visitor picks one; it then fills the five places,
+// each of which can still be changed.
+const BOOK_T_KEY = "13";
+const btSubjects = manual ? [] : JSON.parse($("btSubjects").textContent);
+let btSubjectPicked = false;
+
+function suggestSubject(topic) {
+    const text = " " + topic.toLowerCase().replace(/\s+/g, " ") + " ";
+    let best = null, hits = 0;
+    btSubjects.forEach(s => {
+        const n = s.words.reduce((sum, w) => {
+            const esc = w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+            return sum + (text.match(new RegExp("(?<![a-z])" + esc, "g")) || []).length;
+        }, 0);
+        if (n > hits) { best = s.key; hits = n; }
+    });
+    return best;
+}
+
+function fillBookTPlaces(key) {
+    const s = btSubjects.find(x => x.key === key);
+    if (!s) return;
+    $("btPack").value = String(s.pack + 1);
+    $("btHouse").value = String(s.house[0] + 1);
+    $("btHouse2").value = s.house[1] === null ? "" : String(s.house[1] + 1);
+    $("btSign").value = String(s.sign[0] + 1);
+    $("btSign2").value = s.sign[1] === null ? "" : String(s.sign[1] + 1);
+    $("btSephira").value = String(s.sephira + 1);
+}
+
+function updateBookT() {
+    if (manual) return;
+    const on = $("spreadSelect").value === BOOK_T_KEY;
+    $("bookTBox").hidden = !on;
+    if (!on || btSubjectPicked) return;
+    const key = suggestSubject($("topicInput").value);
+    $("btSuggested").hidden = !key;
+    if (key && key !== $("btSubject").value) { $("btSubject").value = key; fillBookTPlaces(key); }
+}
+
+if (!manual) {
+    $("btSubject").addEventListener("change", () => {
+        btSubjectPicked = true;
+        $("btSuggested").hidden = true;
+        fillBookTPlaces($("btSubject").value);
+    });
+    $("topicInput").addEventListener("input", updateBookT);
 }
 
 // ---------- start page: draw from a seed ----------

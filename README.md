@@ -183,7 +183,7 @@ ootk \
 
 | Flag | Description | Default |
 |---|---|---|
-| `--spread` | Spread key, 1-12, or 13 for the full Book T Opening of the Key (five operations from the whole deck, with counting and pairing; CLI only for now) | asks interactively |
+| `--spread` | Spread key, 1-12, or 13 for the full Book T Opening of the Key (five operations from the whole deck, with counting and pairing) | asks interactively |
 | `--seed` | Seed for deterministic draws (any number or text). Omit it to enter cards by hand | manual entry |
 | `--significator` | Significator card title, pinned to position 1 of OOTK Op 1 (spreads 8 and 12) | asks with the Book T questions when the spread needs one |
 | `--expect` | Spread 13 only: where the significator is expected, `pack,house,sign,sephira` counted from 1 (pack 1-4 = Yod, Heh, Vau, Heh final; sign 1 = Aries; Sephira 1 = Kether). A house or sign can add a related one to try next after a slash, e.g. `1,10/6,10,6` | asks interactively |

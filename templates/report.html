@@ -511,6 +511,8 @@
                         {% for l in d.labels %}{% if l.sub %}<text x="{{ l.x }}" y="{{ l.y - 6 * l.sub | length }}" font-size="{{ d.label_size }}" font-weight="600" text-anchor="middle" dominant-baseline="central">{{ l.text }}{% for line in l.sub %}<tspan x="{{ l.x }}" dy="{{ 16 if loop.first else 13 }}" font-size="12" font-weight="400">{{ line }}</tspan>{% endfor %}</text>{% else %}<text x="{{ l.x }}" y="{{ l.y }}" font-size="{{ d.label_size }}" text-anchor="middle" dominant-baseline="central">{{ l.text }}</text>{% endif %}{% endfor %}
                     {% elif d.frame %}
                         <polygon class="w-face" points="{{ d.frame }}" stroke-dasharray="6 6"/>
+                    {% elif d.ring_r %}
+                        <circle class="w-rule" r="{{ d.ring_r }}" fill="none" stroke-dasharray="6 6"/>
                     {% endif %}
 
                     {% set lines_svg %}
@@ -542,6 +544,11 @@
                     <g class="pair-badges" pointer-events="none">
                     {% for p in d.pair_links %}<g class="pair-badge" data-a="{{ p.a }}" data-b="{{ p.b }}"><circle cx="{{ p.bx }}" cy="{{ p.by }}" r="{{ d.badge_r }}" fill="{{ p.color }}"/><text x="{{ p.bx }}" y="{{ p.by }}" font-size="{{ d.badge_r }}" font-weight="700" text-anchor="middle" dominant-baseline="central">{{ p.score_text }}</text></g>{% endfor %}
                     </g>
+                    {% if d.count_steps %}
+                    <g class="count-steps" pointer-events="none">
+                    {% for st in d.count_steps %}<g><circle cx="{{ st.x }}" cy="{{ st.y }}" r="{{ st.r }}" fill="#f2c14e" stroke="#0d2617" stroke-width="1.5"/><text x="{{ st.x }}" y="{{ st.y }}" font-size="{{ st.r }}" font-weight="700" fill="#0d2617" text-anchor="middle" dominant-baseline="central">{{ st.n }}</text></g>{% endfor %}
+                    </g>
+                    {% endif %}
                     <g class="badges" pointer-events="none">
                     {% for c in d.slots %}
                         <circle cx="{{ c.x + 2 }}" cy="{{ c.y + 2 }}" r="{{ 8 if c.w < 50 else 10 }}" class="badge" stroke="{{ c.color }}"/>
@@ -549,7 +556,7 @@
                     {% endfor %}
                     </g>
                 </svg>
-                <p class="muted" style="font-size:0.8em; margin:6px 0 0">Card borders show the element; a dashed border marks an ill-dignified card. Tap a card to see everything it is linked to.</p>
+                <p class="muted" style="font-size:0.8em; margin:6px 0 0">Card borders show the element; a dashed border marks an ill-dignified card.{% if d.count_steps %} Gold badges at the foot of a card number the steps of the count; the score badges on the lines across the ring are the pairs.{% endif %} Tap a card to see everything it is linked to.</p>
             {% endif %}
             </div>
             {% if seg.links.cards | length > 1 %}

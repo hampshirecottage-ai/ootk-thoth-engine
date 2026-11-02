@@ -37,6 +37,7 @@ from ootk.lockout import FailedLogins
 from ootk.report import MAPPING_LABELS, analyze_reading, drawn_now, time_stamp
 from ootk.rules import element_dignity
 from ootk import atlas
+from ootk import book_t
 from ootk import busy
 from ootk import sky
 from ootk import significator as significator_methods
@@ -44,7 +45,7 @@ from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
     significator_places,
 )
-from ootk.spreads import SPREADS, spread_positions, spread_segments
+from ootk.spreads import BOOK_T_KEY, BOOK_T_SPREAD, SPREADS, spread_positions, spread_segments
 from ootk.visual import ASPECT_TYPES, ELEMENT_COLORS, art_name_hint, art_note, build_report_view, card_image_url, card_srcset, short_card_name, withheld_view
 
 VALID_MAPPINGS = set(MAPPING_SYSTEMS)
@@ -339,9 +340,10 @@ SPREAD_STAGES = [
     ("Stage 3", "Whole layouts", ["6", "7"],
      "Cards placed on the planets of the hexagram and the Sephiroth of the Tree of Life, and how "
      "each position relates to the others."),
-    ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12"],
+    ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12", BOOK_T_KEY],
      "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the "
-     "houses, the signs and the 36 decans, and finally all four together."),
+     "houses, the signs and the 36 decans, and finally all four together. Last, the whole "
+     "method as Book T gives it, counting and pairing from the significator."),
 ]
 # The start page's guided spread step: the answer to "How deep do you want to go?" for each
 # stage above (same order), then per spread a short name and when to pick it.
@@ -349,7 +351,7 @@ SPREAD_DEPTHS = [
     ("A quick look", "1 or 3 cards, a minute to read"),
     ("How forces meet", "2 to 4 cards, elements in pairs"),
     ("The whole picture", "7 or 10 cards on the hexagram or the Tree of Life"),
-    ("The Opening of the Key", "The Golden Dawn&rsquo;s long method, 12 to 75 cards"),
+    ("The Opening of the Key", "The Golden Dawn&rsquo;s long method, 12 to about 80 cards"),
 ]
 SPREAD_GUIDE = {
     "1": ("Single card", "One theme to sit with today."),
@@ -367,13 +369,40 @@ SPREAD_GUIDE = {
     "11": ("Fourth Operation", "The fine detail, through all 36 decans."),
     "12": ("Full Opening of the Key", "All four operations in one reading. Long: best attached to your "
                                       "AI as a .md file. Needs a significator."),
+    BOOK_T_KEY: ("Book T Opening of the Key", "The whole method as the Golden Dawn wrote it: five "
+                                              "operations from the whole deck, counting and pairing "
+                                              "from the significator. Long; needs a significator."),
 }
+# Spread 13 deals the whole deck five times and reads only the pile the significator lands in,
+# so its size depends on the draw: about a quarter of the deck, two small stacks, the ring of
+# 37 and a Sephira's pack. The form shows these place names before anything is drawn.
+BOOK_T_PREVIEW = ["[Op 1] The Significator's pack (I H V H)", "[Op 2] The Significator's house",
+                  "[Op 3] The Significator's sign", "[Op 4] The ring of 36 round the Significator",
+                  "[Op 5] The Significator's Sephira"]
+
+
+def is_spread(key: str) -> bool:
+    """A spread the site can draw: one of SPREADS, or the Book T Opening of the Key."""
+    return key in SPREADS or key == BOOK_T_KEY
+
+
+def spread_name(key: str) -> str:
+    """The spread's full name, as the prompt and the saved session give it."""
+    return BOOK_T_SPREAD["name"] if key == BOOK_T_KEY else SPREADS[key]["name"]
+
+
+def spread_size_text(key: str) -> str:
+    """'3 cards', or for Book T (whose size depends on the draw) 'about 78 cards'."""
+    if key == BOOK_T_KEY:
+        return "about 78 cards"
+    n = len(spread_positions(key))
+    return f"{n} card{'s' if n != 1 else ''}"
 
 
 def spread_label(key: str) -> str:
     """The short spread name visitors see on the site. The longer technical name in SPREADS
     stays in the prompt and as the Library's subtitle."""
-    return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else SPREADS[key]["name"]
+    return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else spread_name(key)
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
 # Landing pages for search ads and searches: one per keyword theme, its headline worded like the
@@ -540,7 +569,8 @@ templates.env.globals.update(static_url=static_url, card_image_url=card_image_ur
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
                              spread_depths=SPREAD_DEPTHS, spread_guide=SPREAD_GUIDE,
-                             spread_label=spread_label,
+                             spread_label=spread_label, spread_size_text=spread_size_text,
+                             book_t_key=BOOK_T_KEY,
                              default_spread=DEFAULT_SPREAD)
 
 
@@ -653,12 +683,14 @@ def new_seed() -> str:
     return str(secrets.randbelow(900000) + 100000)
 
 
-def cli_command(spread_key, seed, mapping_system, framework, significator, topic) -> str:
+def cli_command(spread_key, seed, mapping_system, framework, significator, topic, expect="") -> str:
     """The `ootk` command that repeats a seeded reading from the terminal."""
     parts = ["ootk", "--spread", spread_key, "--seed", seed, "--mapping", mapping_system,
              "--framework", framework]
     if significator:
         parts += ["--significator", significator]
+    if expect:
+        parts += ["--expect", expect]
     if topic:
         parts += ["--topic", topic]
     return " ".join(shlex.quote(p) for p in parts)
@@ -883,9 +915,12 @@ def sample_reading(deck):
     return sample
 
 
-def seeded_draw(deck, seed, spread_key, significator):
+def seeded_draw(deck, seed, spread_key, significator, expect=""):
     """The cards `seed` draws for the spread, exactly as `ootk --seed` does.
     Returns (card_titles, significator_label)."""
+    if spread_key == BOOK_T_KEY:
+        titles, _, _ = book_t_draw(deck, seed, significator, expect)
+        return titles, resolve_significator(deck, significator)["title"]
     positions = spread_positions(spread_key)
     sig_card = resolve_significator(deck, significator)
     if significator and sig_card is None:
@@ -907,8 +942,43 @@ def seeded_draw(deck, seed, spread_key, significator):
     return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
 
 
+def book_t_draw(deck, seed, significator, expect):
+    """Spread 13, exactly as `ootk --spread 13 --seed ... --expect ...` draws it:
+    (card titles, position names, the operations from book_t.opening_of_the_key)."""
+    sig_card = resolve_significator(deck, significator)
+    if sig_card is None:
+        hint = art_name_hint(significator, [c["title"] for c in deck]) if significator else ""
+        raise HTTPException(status_code=400, detail=(
+            f"Significator {quoted(significator)} was not found in the deck. " + (hint or "")
+            if significator else f"{BOOK_T_SPREAD['name']} needs a significator. "
+                                 f"Choose one under Significator on the start page.").strip())
+    try:
+        expected = book_t.parse_expect(expect)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    try:
+        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected)
+    except ValueError as e:                 # a card table that is empty or only partly loaded
+        log.warning("cannot draw: %s", e)
+        raise HTTPException(status_code=503, detail="The card database is incomplete, so no cards "
+                                                    "can be drawn. Please try again later.") from e
+    placed = book_t.positions(ops)
+    return [c["title"] for _, c in placed], [name for name, _ in placed], ops
+
+
+def book_t_expect(pack, house, house2, sign, sign2, sephira) -> str:
+    """The form's expected-place fields as `--expect` text, checked: 400 if any is off."""
+    text = book_t.expect_text(*(v.strip() for v in (pack, house, house2, sign, sign2, sephira)))
+    try:
+        return book_t.expect_from_parsed(book_t.parse_expect(text))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
 def reshuffles(spread_key) -> bool:
     """True for a spread dealt over several operations, each from its own shuffle."""
+    if spread_key == BOOK_T_KEY:
+        return True
     return len({operation_number(p) for p in spread_positions(spread_key)}) > 1
 
 
@@ -921,6 +991,8 @@ def share_path(settings) -> str:
         params["framework"] = settings["framework"]
     if settings["significator"]:
         params["significator"] = settings["significator"]
+    if settings.get("expect"):
+        params["expect"] = settings["expect"]
     # The draw time but not the time zone, which would hint at where the querent lives.
     if settings.get("drawn_at"):
         params["drawn"] = settings["drawn_at"]
@@ -940,7 +1012,12 @@ def settings_page(request: Request, name: str, mode: str):
             "testimonial": testimonial,
             "show_testimonials": mode == "seed",
             "spreads": SPREADS,
-            "positions": {key: spread_positions(key) for key in SPREADS},
+            "positions": dict({key: spread_positions(key) for key in SPREADS}, **{BOOK_T_KEY: BOOK_T_PREVIEW}),
+            "book_t_subjects": book_t.SUBJECTS,
+            "book_t_places": {"packs": [f"{p['letter']}: {p['subject']}" for p in book_t.IHVH_PACKS],
+                              "houses": [f"{h} house" for h in book_t.HOUSE_NAMES],
+                              "signs": list(book_t.SIGN_NAMES),
+                              "sephiroth": [f"{i}. {n}" for i, n in enumerate(book_t.SEPHIRA_NAMES, 1)]},
             "sig_ranks": significator_methods.RANKS,
             "sig_suits": significator_methods.SUITS,
             "sig_temperaments": significator_methods.TEMPERAMENTS,
@@ -1090,7 +1167,7 @@ def start_here(request: Request):
         log.warning("Start here without the sample: %s", e)
         sample = None
     return guide_page(request, "start.html", sample=sample,
-                      sizes={key: len(spread_positions(key)) for key in SPREADS})
+                      sizes={key: spread_size_text(key) for key in list(SPREADS) + [BOOK_T_KEY]})
 
 
 @app.get("/history", response_class=HTMLResponse)
@@ -1195,11 +1272,18 @@ def generate_report(
     draw_mode: str = Form("manual"),
     seed: str = Form(""),
     tz: str = Form(""),
+    bt_pack: str = Form("1"),
+    bt_house: str = Form("10"),
+    bt_house2: str = Form(""),
+    bt_sign: str = Form("10"),
+    bt_sign2: str = Form(""),
+    bt_sephira: str = Form("8"),
 ):
     """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
 
     draw_mode 'seed' draws the cards from `seed` exactly as `ootk --seed` does (a blank seed
-    gets a fresh one); 'manual' uses the comma-separated `selected_cards`.
+    gets a fresh one); 'manual' uses the comma-separated `selected_cards`. The bt_* fields are
+    where spread 13 (Book T) expects the significator, counted from 1 (book_t.EXPECT_HELP).
     """
     topic = topic.strip()
     significator = significator.strip()
@@ -1211,11 +1295,12 @@ def generate_report(
 
     # --- Domain Input Validation ---
     check_lengths(spread_key=spread_key, significator=significator, framework=framework,
-                  mapping_system=mapping_system, draw_mode=draw_mode)
+                  mapping_system=mapping_system, draw_mode=draw_mode, bt_pack=bt_pack, bt_house=bt_house,
+                  bt_house2=bt_house2, bt_sign=bt_sign, bt_sign2=bt_sign2, bt_sephira=bt_sephira)
     refuse_nul(topic=topic, seed=seed, significator=significator, selected_cards=selected_cards)
     if len(selected_cards) > SELECTED_CARDS_MAX:
         raise HTTPException(status_code=400, detail="The list of cards is longer than a whole deck.")
-    if spread_key not in SPREADS:
+    if not is_spread(spread_key):
         raise HTTPException(status_code=400, detail=f"Unknown spread key: {quoted(spread_key)}.")
     if mapping_system not in VALID_MAPPINGS:
         raise HTTPException(status_code=400, detail=f"Unknown mapping system: {quoted(mapping_system)}.")
@@ -1229,15 +1314,21 @@ def generate_report(
         raise HTTPException(status_code=400, detail=f"The question can be at most {TOPIC_MAX} characters; "
                                                     f"this one has {len(topic)}.")
 
-    selected_spread = SPREADS[spread_key]
-    positions = spread_positions(spread_key)
+    expect = ""
+    if spread_key == BOOK_T_KEY:
+        if draw_mode != "seed":
+            raise HTTPException(status_code=400, detail=f"{BOOK_T_SPREAD['name']} works from the order of "
+                                                        f"the whole deck, so its cards are drawn from a seed.")
+        expect = book_t_expect(bt_pack, bt_house, bt_house2, bt_sign, bt_sign2, bt_sephira)
+    selected_spread = {"name": spread_name(spread_key)}
+    positions = [] if spread_key == BOOK_T_KEY else spread_positions(spread_key)
     significator_label = significator
 
     deck = None
     if draw_mode == "seed":
         seed = seed or new_seed()
         deck = reference_deck()
-        card_titles, significator_label = seeded_draw(deck, seed, spread_key, significator)
+        card_titles, significator_label = seeded_draw(deck, seed, spread_key, significator, expect)
     else:
         seed = ""
         card_titles = [c.strip() for c in selected_cards.split(",") if c.strip()]
@@ -1260,7 +1351,7 @@ def generate_report(
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-        "seed": seed,
+        "seed": seed, "expect": expect,
         "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
         # When the cards were drawn, and the visitor's own zone (from the browser) to show it in.
         "drawn_at": time_stamp(drawn_now()), "tz": tz.strip() if time_zone(tz.strip()) else "",
@@ -1308,39 +1399,49 @@ SYSTEM_ALIASES = {"gd": "golden_dawn", "fe": "french_egyptian"}
 @app.get("/reading", response_class=HTMLResponse)
 def shared_reading(request: Request, seed: str = "", spread: str = "",
                    system: str = DEFAULT_MAPPING, framework: str = "auto", significator: str = "",
-                   drawn: str = ""):
+                   drawn: str = "", expect: str = ""):
     """A seeded reading rebuilt from its link, e.g. /reading?seed=918851&spread=12&system=thoth.
 
     The same seed and settings always draw the same cards, so the link alone is the reading.
     Nothing is saved, and no saved reading can be reached this way: those keep their random
     /report/<link> addresses.
     """
-    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn)
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn, expect)
     return render_report(request, None, settings, reading, shared=True,
                          json_url="/reading/json?" + request.url.query)
 
 
 @app.get("/reading/json")
 def shared_reading_json(seed: str = "", spread: str = "", system: str = DEFAULT_MAPPING,
-                        framework: str = "auto", significator: str = "", drawn: str = ""):
+                        framework: str = "auto", significator: str = "", drawn: str = "", expect: str = ""):
     """The report's JSON download for a shared reading: the same link, drawn again."""
-    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn)
+    settings, reading = shared_reading_parts(seed, spread, system, framework, significator, drawn, expect)
     return reading_json_response(settings, reading)
 
 
-def shared_reading_parts(seed, spread, system, framework, significator, drawn=""):
+def shared_reading_parts(seed, spread, system, framework, significator, drawn="", expect=""):
     """The settings and run_reading() result for a shared link's parameters."""
     seed, spread, framework, significator = seed.strip(), spread.strip(), framework.strip(), significator.strip()
-    drawn = drawn.strip()
+    drawn, expect = drawn.strip(), expect.strip()
     system = SYSTEM_ALIASES.get(system.strip().lower(), system.strip().lower())
     check_lengths(spread=spread, system=system, framework=framework, significator=significator,
-                  drawn=drawn)
+                  drawn=drawn, expect=expect)
     if not seed:
         raise HTTPException(status_code=400, detail="This link has no seed, so there are no cards to draw.")
     if len(seed) > SHARED_SEED_MAX:
         raise HTTPException(status_code=400, detail=f"A seed can be at most {SHARED_SEED_MAX} characters.")
-    if spread not in SPREADS:
-        raise HTTPException(status_code=400, detail=f"Unknown spread: {quoted(spread)}. Use a number from 1 to {len(SPREADS)}.")
+    if not is_spread(spread):
+        raise HTTPException(status_code=400, detail=f"Unknown spread: {quoted(spread)}. Use a number from 1 to {BOOK_T_KEY}.")
+    if spread == BOOK_T_KEY:
+        if not expect:
+            raise HTTPException(status_code=400, detail="This Book T link has no expect=, so it is not "
+                                                        "known where the significator was expected.")
+        try:
+            expect = book_t.expect_from_parsed(book_t.parse_expect(expect))
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
+    else:
+        expect = ""
     if system not in VALID_MAPPINGS:
         raise HTTPException(status_code=400, detail=f"Unknown system: {quoted(system)}. Use thoth, gd or french_egyptian.")
     if framework not in VALID_FRAMEWORKS:
@@ -1348,10 +1449,10 @@ def shared_reading_parts(seed, spread, system, framework, significator, drawn=""
     settings = {
         "spread_key": spread, "topic": "", "significator": significator, "framework": framework,
         "mapping_system": system, "draw_mode": "seed", "seed": seed, "selected_cards": "",
-        "drawn_at": time_stamp(parse_drawn_at(drawn)) if drawn else "",
+        "drawn_at": time_stamp(parse_drawn_at(drawn)) if drawn else "", "expect": expect,
     }
     deck = reference_deck()
-    card_titles, significator_label = seeded_draw(deck, seed, spread, significator)
+    card_titles, significator_label = seeded_draw(deck, seed, spread, significator, expect)
     return settings, run_reading(settings, card_titles, significator_label, deck)
 
 
@@ -1723,7 +1824,9 @@ def load_sign_carriers(deck, system):
 def seeded_significator_places(settings, card_titles, deck):
     """Where the significator falls in each operation (shuffle.significator_places), only when
     the reading's seed still draws exactly these cards: not for cards picked by hand, nor for a
-    reading saved under an older draw."""
+    reading saved under an older draw. Book T says where it fell in its own words instead."""
+    if settings["spread_key"] == BOOK_T_KEY:
+        return []
     positions = spread_positions(settings["spread_key"])
     sig_card = resolve_significator(deck, settings.get("significator"))
     if not (settings.get("seed") and sig_card):
@@ -1764,8 +1867,17 @@ def time_zone(name):
 def run_reading(settings, card_titles, significator_label, deck=None):
     """Looks up the drawn cards and runs every analysis. Returns the pieces the report needs."""
     spread_key, mapping_system = settings["spread_key"], settings["mapping_system"]
-    selected_spread = SPREADS[spread_key]
-    positions = spread_positions(spread_key)
+    selected_spread = {"name": spread_name(spread_key)}
+    deck = deck or reference_deck()
+    ops = None
+    if spread_key == BOOK_T_KEY:
+        # Position names and counts depend on the draw; the seed always gives the same ones.
+        titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
+                                             settings.get("expect", ""))
+        if titles != list(card_titles):
+            raise HTTPException(status_code=500, detail="This Book T reading no longer redraws its cards.")
+    else:
+        positions = spread_positions(spread_key)
     spread_results = []
     rows = card_rows(card_titles, mapping_system)
     for idx, title in enumerate(card_titles):
@@ -1781,7 +1893,6 @@ def run_reading(settings, card_titles, significator_label, deck=None):
             "card_data": card_data
         })
 
-    deck = deck or reference_deck()
     withheld = withheld_cards(deck, card_titles, mapping_system)
     reading = analyze_reading(
         selected_spread["name"], spread_key, settings["topic"], significator_label,
@@ -1789,8 +1900,10 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         framework=settings["framework"], mapping_system=mapping_system, withheld=withheld,
         significator_places=seeded_significator_places(settings, card_titles, deck),
         drawn_at=parse_drawn_at(settings.get("drawn_at")), local_zone=time_zone(settings.get("tz")),
+        book_t_ops=ops,
     )
     return {
+        "book_t": book_t_view(ops, spread_results) if ops else None,
         "spread_name": selected_spread["name"], "significator_label": significator_label,
         "spread_results": spread_results, "withheld": withheld,
         "sign_carriers": load_sign_carriers(deck, mapping_system), **reading,
@@ -1801,7 +1914,32 @@ def report_view(settings, r):
     return build_report_view(settings["spread_key"], r["spread_results"], r["element_counts"],
                              r["dignity_matrix"], r["spatial_matrix"], r["macro_framework"],
                              r["framework_basis"], r.get("sign_carriers"), r.get("own_place"),
-                             r.get("significator_places"))
+                             r.get("significator_places"), r.get("book_t"))
+
+
+def book_t_view(ops, spread_results):
+    """For each Book T operation read, what the report shows beside its ring: where the
+    Significator fell, the count and any card left over (segment-local indices)."""
+    out = []
+    read = [o for o in ops if o["status"] != "abandoned"]
+    for o, (_, start, _end, _name) in zip(read, spread_segments(spread_results, BOOK_T_KEY)):
+        def short(k):
+            return short_card_name(spread_results[start + k]["card_data"]["title"])
+        steps = [f"{k + 1}. {short(k)} ({book_t.count_value(spread_results[start + k]['card_data'])})"
+                 for k in o["chain_at"]]
+        end = (f"then lands on {o['stop_at'] + 1}. {short(o['stop_at'])} again, so it stops"
+               if o["stop_at"] is not None else "then comes round to itself, so it stops")
+        lines = [book_t.status_line(o),
+                 f"The count goes towards the {o['direction']}, each card counting itself as one, "
+                 f"by each card's number (in brackets): {' → '.join(steps)}; {end}.",
+                 "The pairs work outwards from the Significator: the cards either side of it, then "
+                 "the next two out, and so on. Each pair gets an element score."]
+        if o["leftover_at"] is not None:
+            lines.append(f"{o['leftover_at'] + 1}. {short(o['leftover_at'])} is left over after "
+                         f"pairing and is read on its own.")
+        out.append({"lines": lines, "chain": o["chain_at"], "stop": o["stop_at"],
+                    "leftover": o["leftover_at"], "missed": o["status"] == "missed"})
+    return out
 
 
 def export_reading(settings, r, view):
@@ -1851,7 +1989,8 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "unsaved": unsaved,
             "share_path": share_path(settings) if redraw else "",
             "cli_command": cli_command(spread_key, seed, mapping_system, framework,
-                                       settings["significator"], settings["topic"]) if redraw else "",
+                                       settings["significator"], settings["topic"],
+                                       settings.get("expect", "")) if redraw else "",
             "seed_redraws": seed_redraws,
             "spatial_details": r["spatial_details"],
             "spatial_dist": r["spatial_dist"],

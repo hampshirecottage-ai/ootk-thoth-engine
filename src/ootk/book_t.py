@@ -44,12 +44,24 @@ SITE_RULES = {
     "ring": "Operation 4's ring wraps round to the top of the deck when fewer than 36 cards follow",
     "stop": "counting stops on reaching a card already counted",
     "leftover": "a card left over when pairing is read on its own",
-    "facing": "a significator facing straight out, or not a court card, is counted from right to left",
+    "facing": ("each court card faces the way it looks on the Thoth card, read from the deck; "
+               "one facing straight out, or a significator that is not a court card, is counted "
+               "from right to left"),
 }
 
-# Which way each court figure looks on the card, 'left' or 'right' as you look at it, or
-# 'front'. Book T gives no list; the owner fills this in from the deck. Missing = 'front'.
-COURT_FACING = {}
+# Which way each court figure looks on the Thoth card, 'left' or 'right' as you look at it,
+# or 'front'. Book T gives no list; the owner read these from the deck (2026-11-01). Any card
+# not listed (a Trump or pip used as significator) counts as 'front'.
+COURT_FACING = {
+    "Knight of Wands": "right", "Queen of Wands": "front", "Prince of Wands": "right",
+    "Princess of Wands": "front",
+    "Knight of Cups": "left", "Queen of Cups": "left", "Prince of Cups": "left",
+    "Princess of Cups": "right",
+    "Knight of Swords": "right", "Queen of Swords": "right", "Prince of Swords": "right",
+    "Princess of Swords": "right",
+    "Knight of Disks": "right", "Queen of Disks": "right", "Prince of Disks": "left",
+    "Princess of Disks": "front",
+}
 
 
 def count_value(card):
@@ -320,3 +332,64 @@ def parse_expect(text):
 
     return {"pack": number(parts[0], 4, "pack"), "house": with_cognate(parts[1], "house"),
             "sign": with_cognate(parts[2], "sign"), "sephira": number(parts[3], 10, "Sephira")}
+
+
+# ---------- Expected places suggested from the question (the web form) ----------
+
+# What a question is about, and where the Significator is then expected: Book T's own pack
+# subjects for Operation 1; for the rest this site's suggestion (the house that rules the
+# matter and a related one, that house's sign and the related house's sign, and the Sephira
+# of the matching planet). The querent can change every one. `words` are matched against
+# the question, lower-cased, at the start of a word.
+SUBJECTS = (
+    {"key": "work", "label": "Work, career or business", "pack": 0, "house": (9, 5), "sign": (9, 5),
+     "sephira": 7, "words": ("work", "job", "career", "business", "boss", "employ", "promot",
+                             "project", "office", "company", "client", "colleague", "retire")},
+    {"key": "love", "label": "Love, marriage or pleasure", "pack": 1, "house": (6, 4), "sign": (6, 4),
+     "sephira": 6, "words": ("love", "marr", "partner", "relationship", "dating", "date ", "romance",
+                             "husband", "wife", "boyfriend", "girlfriend", "crush", "wedding")},
+    {"key": "trouble", "label": "Trouble, loss or a quarrel", "pack": 2, "house": (11, 7),
+     "sign": (11, 7), "sephira": 4, "words": ("quarrel", "argu", "fight", "conflict", "loss", "lost",
+                                              "lose", "scandal", "enemy", "lawsuit", "court case",
+                                              "trouble", "danger", "betray")},
+    {"key": "money", "label": "Money, goods or property", "pack": 3, "house": (1, 7), "sign": (1, 7),
+     "sephira": 3, "words": ("money", "financ", "debt", "loan", "invest", "salary", "pay", "buy",
+                             "sell", "house", "property", "rent", "inherit", "savings", "afford")},
+    {"key": "health", "label": "Health", "pack": 2, "house": (5, 11), "sign": (5, 11), "sephira": 5,
+     "words": ("health", "ill", "sick", "heal", "doctor", "surgery", "diagnos", "recover", "body")},
+    {"key": "home", "label": "Home or family", "pack": 3, "house": (3, 9), "sign": (3, 9), "sephira": 8,
+     "words": ("home", "family", "mother", "father", "parent", "child", "son", "daughter", "move",
+               "moving", "sister", "brother")},
+    {"key": "study", "label": "Study, travel or beliefs", "pack": 0, "house": (8, 2), "sign": (8, 2),
+     "sephira": 7, "words": ("study", "school", "university", "exam", "degree", "learn", "travel",
+                             "abroad", "journey", "trip", "faith", "spiritual", "religio", "teach")},
+)
+
+
+def suggest_subject(topic):
+    """The SUBJECTS key the question's words point to most, or None when none match."""
+    import re
+    text = " " + re.sub(r"\s+", " ", (topic or "").lower()) + " "
+    best, hits = None, 0
+    for s in SUBJECTS:
+        n = sum(len(re.findall(r"(?<![a-z])" + re.escape(w), text)) for w in s["words"])
+        if n > hits:
+            best, hits = s["key"], n
+    return best
+
+
+def expect_text(pack, house, house2, sign, sign2, sephira):
+    """The web form's six fields (each 1-based text, the related ones may be blank) as the
+    `--expect` text parse_expect reads, so the form, share links and the CLI share one form."""
+    def part(a, b):
+        return f"{a}/{b}" if b else f"{a}"
+    return f"{pack},{part(house, house2)},{part(sign, sign2)},{sephira}"
+
+
+def expect_from_parsed(expected):
+    """opening_of_the_key's `expected` back as `--expect` text (1-based)."""
+    def part(pair):
+        exp, cog = pair
+        return f"{exp + 1}/{cog + 1}" if cog is not None else f"{exp + 1}"
+    return (f"{expected['pack'] + 1},{part(expected['house'])},{part(expected['sign'])},"
+            f"{expected['sephira'] + 1}")
