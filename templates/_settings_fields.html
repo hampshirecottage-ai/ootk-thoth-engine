@@ -35,8 +35,8 @@
                 <fieldset class="sig-q" data-g="spread" hidden>
                     <legend>Which one fits your question?</legend>
                     {% for level, name, keys, learn in spread_stages %}{% set depth = loop.index0 %}
-                    {% for key in keys %}{% set n = positions[key] | length %}
-                    <label data-depth="{{ depth }}"><input type="radio" name="g_spread" value="{{ key }}" form="noPost"><span>{{ spread_guide[key][1] }} <small>{{ spread_guide[key][0] }} · {{ n }} card{{ 's' if n != 1 }}{{ ' · good first reading' if key == default_spread }}<b class="g-suggested" hidden> · suggested from your question</b></small></span></label>
+                    {% for key in keys %}
+                    <label data-depth="{{ depth }}"><input type="radio" name="g_spread" value="{{ key }}" form="noPost"><span>{{ spread_guide[key][1] }} <small>{{ spread_guide[key][0] }} · {{ spread_size_text(key) }}{{ ' · good first reading' if key == default_spread }}<b class="g-suggested" hidden> · suggested from your question</b></small></span></label>
                     {% endfor %}
                     {% endfor %}
                 </fieldset>
@@ -47,8 +47,9 @@
             <select name="spread_key" id="spreadSelect">
                 {% for level, name, keys, learn in spread_stages %}
                 <optgroup label="{{ level }} · {{ name }}">
-                    {% for key in keys %}{% set n = positions[key] | length %}
-                    <option value="{{ key }}"{{ ' selected' if key == default_spread }}>{{ spread_label(key) }} · {{ n }} card{{ 's' if n != 1 }}</option>
+                    {% for key in keys if not (mode == "manual" and key == book_t_key) %}
+                    {# Book T reads from the order of the whole deck, so it is drawn from a seed only. #}
+                    <option value="{{ key }}"{{ ' selected' if key == default_spread }}>{{ spread_label(key) }} · {{ spread_size_text(key) }}</option>
                     {% endfor %}
                 </optgroup>
                 {% endfor %}
@@ -133,6 +134,36 @@
                         </div>
                     </div>
                 </div>
+            </fieldset>
+
+            {# Book T (spread 13) only, shown by static/js/index.js: where the significator is
+               expected in each operation. Suggested from the question; every one can be changed. #}
+            <fieldset id="bookTBox" hidden>
+                <legend>Where should the significator fall?</legend>
+                <p class="hint">Book T has you choose, before the cards are dealt, where the significator should turn up in each operation for the answer to be about your question. If it turns up somewhere else, Book T would stop; this site reads on and tells your AI. These are suggested from your question; change any of them.</p>
+                <label for="btSubject">The question is about</label>
+                <select id="btSubject" form="noPost">
+                    {% for s in book_t_subjects %}<option value="{{ s.key }}">{{ s.label }}</option>{% endfor %}
+                </select>
+                <p class="hint" id="btSuggested" hidden>Suggested from your question.</p>
+                <script type="application/json" id="btSubjects">{{ book_t_subjects | tojson }}</script>
+                <div class="bt-grid">
+                    <label for="btPack">1. Pack (Book T&rsquo;s own subjects)</label>
+                    <select name="bt_pack" id="btPack">{% for p in book_t_places.packs %}<option value="{{ loop.index }}">{{ p }}</option>{% endfor %}</select>
+                    <label for="btHouse">2. House, then a related one to try</label>
+                    <div class="row">
+                        <select name="bt_house" id="btHouse">{% for h in book_t_places.houses %}<option value="{{ loop.index }}"{{ ' selected' if loop.index == 10 }}>{{ h }}</option>{% endfor %}</select>
+                        <select name="bt_house2" id="btHouse2" aria-label="Related house"><option value="">none</option>{% for h in book_t_places.houses %}<option value="{{ loop.index }}"{{ ' selected' if loop.index == 6 }}>{{ h }}</option>{% endfor %}</select>
+                    </div>
+                    <label for="btSign">3. Sign, then a related one to try</label>
+                    <div class="row">
+                        <select name="bt_sign" id="btSign">{% for z in book_t_places.signs %}<option value="{{ loop.index }}"{{ ' selected' if loop.index == 10 }}>{{ z }}</option>{% endfor %}</select>
+                        <select name="bt_sign2" id="btSign2" aria-label="Related sign"><option value="">none</option>{% for z in book_t_places.signs %}<option value="{{ loop.index }}"{{ ' selected' if loop.index == 6 }}>{{ z }}</option>{% endfor %}</select>
+                    </div>
+                    <label for="btSephira">5. Sephira</label>
+                    <select name="bt_sephira" id="btSephira">{% for e in book_t_places.sephiroth %}<option value="{{ loop.index }}"{{ ' selected' if loop.index == 8 }}>{{ e }}</option>{% endfor %}</select>
+                </div>
+                <p class="hint">Operation 4, the ring of 36, has no place to choose. <a href="/method#book-t">How Book T works</a></p>
             </fieldset>
             </div>
             <script type="application/json" id="birthSpans">{{ birth_spans | tojson }}</script>

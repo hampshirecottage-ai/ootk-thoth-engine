@@ -160,3 +160,13 @@ def test_expected_places_are_typed_from_one():
     for bad in ("1,2,3", "0,1,1,1", "1,13,1,1", "1,1,1,11", "1,7/7,1,1", "x,1,1,1", ""):
         with pytest.raises(ValueError):
             book_t.parse_expect(bad)
+
+
+def test_every_court_card_has_the_owners_facing():
+    courts = [c for c in DECK if c["arcana_type"] == "Court"]
+    assert sorted(book_t.COURT_FACING) == sorted(c["title"] for c in courts)
+    assert set(book_t.COURT_FACING.values()) <= {"left", "right", "front"}
+    assert book_t.direction(card("Knight of Wands")) == 1         # faces right: counts rightwards
+    assert book_t.direction(card("Queen of Cups")) == -1          # faces left
+    assert book_t.direction(card("Queen of Wands")) == -1         # front: right to left
+    assert book_t.direction(card("0 - The Fool")) == -1           # not a court card

@@ -534,7 +534,9 @@ def test_start_here_links_preselect_each_spread(client):
 
 def test_spread_picker_groups_every_spread_by_stage_and_starts_on_three_cards(client):
     staged = [key for _, _, keys, _ in app_module.SPREAD_STAGES for key in keys]
-    assert sorted(staged) == sorted(app_module.SPREADS)                  # each spread once
+    # Each spread once, and the Book T Opening of the Key (not in SPREADS: its positions
+    # depend on the draw) in the last stage.
+    assert sorted(staged) == sorted(list(app_module.SPREADS) + [app_module.BOOK_T_KEY])
     page = client.get("/").text
     assert page.count("<optgroup") == len(app_module.SPREAD_STAGES)
     assert f'<option value="{app_module.DEFAULT_SPREAD}" selected>' in page
@@ -2582,7 +2584,7 @@ def test_guided_options_post_nothing_and_cover_every_choice(client, monkeypatch)
     for tag in re.findall(r'<input[^>]* name="g_[^>]*>', html):
         assert 'form="noPost"' in tag, tag
     guided = lambda name: set(re.findall(rf'name="{name}" value="([^"]+)"', html))
-    assert guided("g_spread") == set(spreads.SPREADS)
+    assert guided("g_spread") == set(spreads.SPREADS) | {spreads.BOOK_T_KEY}
     assert guided("g_depth") == {str(i) for i in range(len(app_module.SPREAD_STAGES))}
     assert guided("g_mapping") == set(re.findall(r'<option value="([^"]+)"', html[html.index('id="mappingSelect"'):html.index("</select>", html.index('id="mappingSelect"'))]))
     assert guided("g_framework") == {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
@@ -2652,3 +2654,64 @@ def test_sign_trumps_carry_their_golden_dawn_geomantic_figure():
     from ootk.rules import GEOMANTIC_FIGURES
     assert len(GEOMANTIC_FIGURES) == 12 and set(GEOMANTIC_FIGURES) == set(spreads.ZODIAC_SIGNS)
     assert GEOMANTIC_FIGURES["Aries"] == "Puer" and GEOMANTIC_FIGURES["Aquarius"] == "Tristitia"
+
+
+# ---------- Book T Opening of the Key (spread 13) ----------
+
+REFERENCE = json.loads((Path(__file__).parent / "fixtures" / "reference_cards.json").read_text())
+REFERENCE_DECK = REFERENCE["deck"]
+
+
+@pytest.fixture
+def book_t_client(client, monkeypatch):
+    """Book T counts by each card's real rank, so it draws from the real 78 titles."""
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: REFERENCE_DECK)
+
+    def rows(titles, system="thoth"):
+        client.lookups.append(list(titles))
+        return {t: dict(REFERENCE["rows"][t]) for t in titles}
+
+    monkeypatch.setattr(app_module, "card_rows", rows)
+    monkeypatch.setattr(app_module, "withheld_cards", lambda deck, titles, system="thoth":
+                        analysis.withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles))
+    return client
+
+
+def book_t_post(client, follow=True, **over):
+    data = dict(spread_key="13", draw_mode="seed", seed="1568", selected_cards="", significator="Knight of Wands",
+                bt_pack="1", bt_house="10", bt_house2="6", bt_sign="10", bt_sign2="", bt_sephira="8")
+    data.update(over)
+    return post(client, follow=follow, **data)
+
+
+def test_book_t_draws_like_the_cli_and_shares_its_expected_places(book_t_client):
+    from ootk import book_t
+    sig = next(c for c in REFERENCE_DECK if c["title"] == "Knight of Wands")
+    ops = book_t.opening_of_the_key(REFERENCE_DECK, "1568", sig, book_t.parse_expect("1,10/6,10,8"))
+    expected = [c["title"] for _, c in book_t.positions(ops)]
+    r = book_t_post(book_t_client)
+    assert r.status_code == 200
+    assert book_t_client.lookups[-1] == expected
+    assert book_t_client.saved["report_settings"]["expect"] == "1,10/6,10,8"
+    assert "ootk --spread 13 --seed 1568" in r.text and "--expect 1,10/6,10,8" in r.text
+    # The share link carries the expected places and redraws the same cards.
+    link = html.unescape(re.search(r"/reading\?[^\"<]+", r.text).group(0))
+    assert "expect=1%2C10%2F6%2C10%2C8" in link
+    assert book_t_client.get(link).status_code == 200 and book_t_client.lookups[-1] == expected
+    # The report draws each pile as a ring with the count numbered.
+    assert r.text.count('class="count-steps"') == len(ops)
+    assert "The count goes towards the right" in r.text        # the Knight of Wands faces right
+
+
+def test_book_t_refuses_bad_expected_places_and_hand_picked_cards(book_t_client):
+    assert book_t_post(book_t_client, bt_pack="5").status_code == 400
+    assert book_t_post(book_t_client, bt_house2="10").status_code == 400     # same as the house
+    assert book_t_post(book_t_client, draw_mode="manual", selected_cards="A,B").status_code == 400
+    assert book_t_post(book_t_client, significator="").status_code == 400
+    assert book_t_client.get("/reading?seed=1&spread=13&significator=Knight+of+Wands").status_code == 400
+
+
+def test_book_t_is_offered_from_a_seed_only(client):
+    assert 'id="bookTBox"' in client.get("/").text and '<option value="13"' in client.get("/").text
+    assert '<option value="13"' not in client.get("/pick").text
+    assert 'id="book-t"' in client.get("/method").text

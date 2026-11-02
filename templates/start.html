@@ -108,7 +108,7 @@
                     <p>{{ learn | safe }}</p>
                     <ul>
                         {% for key in keys %}
-                        <li><a href="/?spread={{ key }}#readingForm">{{ spread_label(key) }}</a> <span class="muted">({{ sizes[key] }} card{{ 's' if sizes[key] != 1 }})</span></li>
+                        <li><a href="/?spread={{ key }}#readingForm">{{ spread_label(key) }}</a> <span class="muted">({{ sizes[key] }})</span></li>
                         {% endfor %}
                     </ul>
                 </div>
