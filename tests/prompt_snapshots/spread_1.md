@@ -8,7 +8,7 @@
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Framework Basis:** auto: only 0 card(s) carry Sephirothic data (minimum 6), so the default Life Path lens is used
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -24,7 +24,13 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
+
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+
+| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
+|---|---|---|---|---|---|---|
+| Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
+| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
 
 ---

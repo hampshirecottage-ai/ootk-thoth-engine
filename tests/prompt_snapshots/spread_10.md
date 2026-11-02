@@ -10,7 +10,7 @@
 **Own-Place Check:** a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a Knight, Queen or Prince by the sign that gives it its letter) or its natural house (the house of that sign, Aries = 1st). The chance is exact for a random deal from the 78 cards.
   * Signs: 1 of 12 cards on their own sign: Pos 5 (XI - Lust) - expected 0.77 at random, z=+0.27; 1 or more happens in 54.7% of random draws (about 1 in 2)
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -30,7 +30,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 2: 2. Taurus
 - **Card Drawn**: 4 of Swords - Truce
@@ -38,7 +37,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 3: 3. Gemini
 - **Card Drawn**: 7 of Cups - Debauch
@@ -46,7 +44,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 4: 4. Cancer
 - **Card Drawn**: V - The Hierophant
@@ -58,7 +55,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Red orange
 
 ### Position 5: 5. Leo
 - **Card Drawn**: XI - Lust
@@ -70,7 +66,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow, greenish
 
 ### Position 6: 6. Virgo
 - **Card Drawn**: 2 of Wands - Dominion
@@ -78,7 +73,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 7: 7. Libra
 - **Card Drawn**: Queen of Cups
@@ -88,7 +82,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 8: 8. Scorpio
 - **Card Drawn**: Knight of Cups
@@ -98,7 +91,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Crimson (ultra violet)
 
 ### Position 9: 9. Sagittarius
 - **Card Drawn**: 2 of Swords - Peace
@@ -106,7 +98,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Moon in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 10: 10. Capricorn
 - **Card Drawn**: 7 of Swords - Futility
@@ -114,7 +105,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Moon in Aquarius
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Amber
 
 ### Position 11: 11. Aquarius
 - **Card Drawn**: 10 of Wands - Oppression
@@ -122,7 +112,6 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Saturn in Sagittarius
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow
 
 ### Position 12: 12. Pisces
 - **Card Drawn**: 3 of Disks - Works
@@ -130,7 +119,22 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Crimson
+
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+
+| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
+|---|---|---|---|---|---|---|
+| Sephira 2 Wisdom | Illuminating Intelligence | Pure soft blue | Grey | Blue pearl grey, like mother-of-pearl | White, flecked red, blue, and yellow | 6, 9 |
+| Sephira 3 Understanding | Sanctifying Intelligence | Crimson | Black | Dark brown | Grey flecked pink | 12 |
+| Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 2 |
+| Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 3, 10 |
+| Sephira 10 Kingdom | Resplendent Intelligence | Yellow | Citrine, olive, russet and black | As Queen scale, but flecked with gold | Black rayed yellow | 11 |
+| Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
+| Path 16 Nail | Triumphal or Eternal Intelligence | Red orange | Deep indigo | Deep warm olive | Rich brown | 4 |
+| Path 18 Fence | Intelligence of the House of Influence | Amber | Maroon | Rich bright russet | Dark greenish brown | 7 |
+| Path 19 Serpent | Intelligence of all the Activities of the Spiritual Being | Yellow, greenish | Deep purple | Grey | Reddish amber | 5 |
+| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
+| Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8 |
 
 
 ---

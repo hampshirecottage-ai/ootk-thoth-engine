@@ -230,6 +230,8 @@ DETAIL_FIELDS = (
     ("Hebrew letter", "hebrew_letter"), ("Spatial type", "spatial_type"),
     ("Platonic solid", "platonic_solid"), ("Dual solid", "dual_solid"),
     ("Topological role", "topological_role"), ("King Scale colour", "king_scale_color"),
+    ("Queen Scale colour", "queen_scale_color"), ("Prince Scale colour", "prince_scale_color"),
+    ("Princess Scale colour", "princess_scale_color"), ("Yetziratic title", "yetziratic_title"),
 )
 
 

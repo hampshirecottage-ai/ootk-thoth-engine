@@ -8,7 +8,7 @@
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Framework Basis:** auto: only 2 card(s) carry Sephirothic data (minimum 6), so the default Life Path lens is used
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -26,7 +26,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 2: Present / Active Dynamics
 - **Card Drawn**: 4 of Swords - Truce
@@ -34,7 +33,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 3: Future / Manifest Result
 - **Card Drawn**: 7 of Cups - Debauch
@@ -42,7 +40,15 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
+
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+
+| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
+|---|---|---|---|---|---|---|
+| Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 2 |
+| Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 3 |
+| Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
+| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
 
 ---

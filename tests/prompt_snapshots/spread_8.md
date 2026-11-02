@@ -10,7 +10,7 @@
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Framework Basis:** auto: the trend test found no significant rise or fall on the Tree (Sephirothic rank), so the default Life Path lens is used; the cards did not choose it - r=-0.00, z=-0.00 (needs |z| >= 1.64), n=12 cards with a Sephira or path of their own (Majors and pips; courts are left out: a court takes its Hebrew letter through its zodiac sign, a Princess through her element, not through a position on the Tree)
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -28,7 +28,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 2: 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
@@ -38,7 +37,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 3: 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -46,7 +44,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 4: 4. Further Outcome (Right Pair A)
 - **Card Drawn**: 7 of Cups - Debauch
@@ -54,7 +51,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 5: 5. Further Outcome (Right Pair B)
 - **Card Drawn**: V - The Hierophant
@@ -66,7 +62,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Red orange
 
 ### Position 6: 6. Unexpected / External Factors (Center Pair A)
 - **Card Drawn**: XI - Lust
@@ -78,7 +73,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow, greenish
 
 ### Position 7: 7. Unexpected / External Factors (Center Pair B)
 - **Card Drawn**: 2 of Wands - Dominion
@@ -86,7 +80,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 8: 8. Psychological / Subconscious Basis (Base Left A)
 - **Card Drawn**: Knight of Cups
@@ -96,7 +89,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Crimson (ultra violet)
 
 ### Position 9: 9. Psychological / Subconscious Basis (Base Left B)
 - **Card Drawn**: 2 of Swords - Peace
@@ -104,7 +96,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Moon in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 10: 10. Environmental / Material Basis (Base Right A)
 - **Card Drawn**: 7 of Swords - Futility
@@ -112,7 +103,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Moon in Aquarius
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Amber
 
 ### Position 11: 11. Environmental / Material Basis (Base Right B)
 - **Card Drawn**: 10 of Wands - Oppression
@@ -120,7 +110,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Saturn in Sagittarius
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow
 
 ### Position 12: 12. Final Synthesis / Karma (Top Apex A)
 - **Card Drawn**: 3 of Disks - Works
@@ -128,7 +117,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Crimson
 
 ### Position 13: 13. Final Synthesis / Karma (Top Apex B)
 - **Card Drawn**: XVI - The Tower
@@ -139,7 +127,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Scarlet
 
 ### Position 14: 14. Key Counter-Balance / Receptivity
 - **Card Drawn**: 3 of Swords - Sorrow
@@ -147,7 +134,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Crimson
 
 ### Position 15: 15. Ultimate Climax / Resolution
 - **Card Drawn**: I - The Magus
@@ -158,7 +144,24 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Yellow
+
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+
+| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
+|---|---|---|---|---|---|---|
+| Sephira 2 Wisdom | Illuminating Intelligence | Pure soft blue | Grey | Blue pearl grey, like mother-of-pearl | White, flecked red, blue, and yellow | 7, 9 |
+| Sephira 3 Understanding | Sanctifying Intelligence | Crimson | Black | Dark brown | Grey flecked pink | 12, 14 |
+| Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 3 |
+| Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 4, 10 |
+| Sephira 10 Kingdom | Resplendent Intelligence | Yellow | Citrine, olive, russet and black | As Queen scale, but flecked with gold | Black rayed yellow | 11 |
+| Path 12 House | Intelligence of Transparency | Yellow | Purple | Grey | Indigo rayed violet | 15 |
+| Path 15 Window | Constituting Intelligence |  |  |  |  | 2 (title) |
+| Path 16 Nail | Triumphal or Eternal Intelligence | Red orange | Deep indigo | Deep warm olive | Rich brown | 5 |
+| Path 18 Fence | Intelligence of the House of Influence | Amber | Maroon | Rich bright russet | Dark greenish brown | 1 |
+| Path 19 Serpent | Intelligence of all the Activities of the Spiritual Being | Yellow, greenish | Deep purple | Grey | Reddish amber | 6 |
+| Path 27 Mouth | Exciting Intelligence | Scarlet | Red | Venetian red | Bright red, rayed azure or emerald | 13 |
+| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 2 (colours) |
+| Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8 |
 
 
 ---

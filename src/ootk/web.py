@@ -571,7 +571,7 @@ PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
     ("elements", "Element counts and the dignity scores of each pair of cards"),
     ("astrology", "Each card's planet, sign or decan, the own-place check, and the Sun and Moon"),
     ("hebrew", "Each card's Hebrew letter and the letter totals"),
-    ("tree", "Each card's path or Sephira on the Tree of Life and its King Scale colour"),
+    ("tree", "Each card's path or Sephira on the Tree of Life, its four Liber 777 colour scales and its Yetziratic title"),
     ("courts", "A court card's element of an element, such as Fire of Water"),
     ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks"),
     ("geomancy", "The geomantic figure on each sign Trump"),

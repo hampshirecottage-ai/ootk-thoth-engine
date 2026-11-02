@@ -152,6 +152,20 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
         CASE WHEN g.key_scale IS NOT NULL THEN g.attributions ELSE gd.attributions END
             ->> 'king_scale_hex' AS king_scale_hex,
         c.attributions,
+        -- The other three Liber 777 colour scales come from the same row as the King Scale
+        -- (the sign's), and the Yetziratic title from the row of the path the card is shown on.
+        CASE WHEN g.key_scale IS NOT NULL THEN g.key_scale ELSE gd.key_scale END AS colour_key_scale,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.name ELSE gd.name END AS colour_row_name,
+        NULLIF(CASE WHEN g.key_scale IS NOT NULL THEN g.attributions ELSE gd.attributions END
+            ->> 'queen_scale_colors', '...') AS queen_scale_color,
+        NULLIF(CASE WHEN g.key_scale IS NOT NULL THEN g.attributions ELSE gd.attributions END
+            ->> 'emperor_scale_colors', '...') AS prince_scale_color,
+        NULLIF(CASE WHEN g.key_scale IS NOT NULL THEN g.attributions ELSE gd.attributions END
+            ->> 'empress_scale_colors', '...') AS princess_scale_color,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.key_scale ELSE c.key_scale END AS title_key_scale,
+        CASE WHEN g.key_scale IS NOT NULL THEN g.name ELSE c.name END AS title_row_name,
+        NULLIF(CASE WHEN g.key_scale IS NOT NULL THEN g.attributions ELSE c.attributions END
+            ->> 'paths_of_sepher_yetzirah', '...') AS yetziratic_title,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_type ELSE c.spatial_type END AS spatial_type,
         CASE WHEN g.key_scale IS NOT NULL THEN g.spatial_dimension ELSE gd.spatial_dimension END AS spatial_dimension,
         tc.attribution AS card_attribution
