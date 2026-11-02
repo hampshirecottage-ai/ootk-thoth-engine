@@ -9,7 +9,7 @@ import psycopg
 from ootk.db import (
     CardNotFound, DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
-from ootk.report import analyze_reading, drawn_now, generate_html_output, this_computer_zone
+from ootk.report import COMPONENTS, analyze_reading, drawn_now, generate_html_output, this_computer_zone, without_components
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
     significator_places,
@@ -36,6 +36,9 @@ def parse_args():
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
     parser.add_argument("--mapping", type=str, choices=MAPPING_SYSTEMS, default=DEFAULT_MAPPING, help="Tarot-Kabbalah mapping scheme: thoth keeps Crowley's swap (Emperor on Tzaddi, Star on Heh), golden_dawn undoes it")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
+    parser.add_argument("--without", type=str, default=None, metavar="PARTS",
+                        help="Leave Thoth components out of the AI prompt, to test what each adds: a "
+                             f"comma-separated list of {', '.join(COMPONENTS)}. The cards drawn do not change.")
     return parser.parse_args()
 
 def ask_significator():
@@ -73,6 +76,10 @@ def run_spread_session():
         raise CliError(f"Unknown spread {args.spread!r}. Use a number from 1 to {len(SPREADS)}, "
                        f"or {BOOK_T_KEY} for the full Book T Opening of the Key.")
     args.spread = args.spread.strip() if args.spread else None
+    try:
+        args.without = without_components(args.without)
+    except ValueError as e:
+        raise CliError(str(e)) from e
     if args.expect and args.spread != BOOK_T_KEY:
         raise CliError(f"--expect is only for --spread {BOOK_T_KEY}.")
     if args.expect:
@@ -198,7 +205,7 @@ def run_spread_session():
             selected_spread["name"], spread_choice, query_prompt, significator_label, args.seed,
             spread_results, framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             significator_places=significator_places(cards, args.seed, target_positions, sig_card),
-            drawn_at=drawn_now(), local_zone=this_computer_zone(),
+            drawn_at=drawn_now(), local_zone=this_computer_zone(), without=args.without,
         )
         analytical_prompt = reading["analytical_prompt"]
 
@@ -246,6 +253,7 @@ def run_book_t_session(args, cards):
             BOOK_T_SPREAD["name"], BOOK_T_KEY, query_prompt, sig_card["title"], seed, spread_results,
             framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             drawn_at=drawn_now(), local_zone=this_computer_zone(), book_t_ops=ops,
+            without=args.without,
         )
         analytical_prompt = reading["analytical_prompt"]
         print("\n" + analytical_prompt)

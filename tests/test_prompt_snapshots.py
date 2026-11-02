@@ -30,7 +30,7 @@ with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-
     REFERENCE = json.load(f)
 
 
-def build_prompt(spread_key, mapping_system="thoth"):
+def build_prompt(spread_key, mapping_system="thoth", without=frozenset()):
     """The same steps as cli.run_spread_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     positions = spread_positions(spread_key)
@@ -44,7 +44,8 @@ def build_prompt(spread_key, mapping_system="thoth"):
     significator = sig_card["title"] if pinned else "None (spread has no significator position)"
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, TOPIC, significator, SEED,
                               spread_results, withheld=withheld, mapping_system=mapping_system,
-                              significator_places=significator_places(deck, SEED, positions, sig_card))
+                              significator_places=significator_places(deck, SEED, positions, sig_card),
+                              without=without)
     return reading["analytical_prompt"]
 
 
@@ -54,7 +55,7 @@ def build_prompt(spread_key, mapping_system="thoth"):
 BOOK_T_EXPECT = "1,10/6,10,6"
 
 
-def build_book_t_prompt():
+def build_book_t_prompt(without=frozenset()):
     """The same steps as cli.run_book_t_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     sig_card = resolve_significator(deck, SIGNIFICATOR)
@@ -67,7 +68,7 @@ def build_book_t_prompt():
     ]
     withheld = withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles)
     reading = analyze_reading(BOOK_T_SPREAD["name"], BOOK_T_KEY, TOPIC, sig_card["title"], SEED,
-                              spread_results, withheld=withheld, book_t_ops=ops)
+                              spread_results, withheld=withheld, book_t_ops=ops, without=without)
     return reading["analytical_prompt"]
 
 
