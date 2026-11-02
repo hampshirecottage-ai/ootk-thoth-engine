@@ -191,6 +191,7 @@ ootk \
 | `--mapping` | `thoth`, `golden_dawn` or `french_egyptian` | `thoth` |
 | `--framework` | `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem` | `auto` |
 | `--html` | Write an HTML report to `output/` | off |
+| `--without` | Leave Thoth components out of the AI prompt to test what each one adds, comma-separated: `elements`, `astrology`, `hebrew`, `tree`, `courts`, `numerology`, `geomancy`, `geometry`. The cards drawn stay the same and the prompt header names what was left out | all included |
 
 View the latest saved report in the terminal (needs `rich`: `pip install -e ".[viewer]"`, already part of `[dev]`):
 

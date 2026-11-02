@@ -44,6 +44,43 @@ MAPPING_NOTES = {
     ),
 }
 
+# The Thoth components a reading's prompt can leave out, to test which of them help (see
+# without_components). Card symbolism has no switch: the card's title carries it, and a prompt
+# without the tables (scripts/ai_check.py "cards only") is the baseline. Opening of the Key has
+# none either: it is the spread chosen. Leaving a component out never changes the cards drawn.
+COMPONENTS = {
+    "elements": "Elemental dignities",
+    "astrology": "Astrology",
+    "hebrew": "Hebrew letters",
+    "tree": "Tree of Life",
+    "courts": "Court card detail",
+    "numerology": "Numerology (Book T counts)",
+    "geomancy": "Geomantic figures",
+    "geometry": "Geometry (Cube of Space, solids, aspects)",
+}
+def without_components(text):
+    """frozenset of COMPONENTS keys from "astrology,geometry" (spaces and case ignored).
+    Raises ValueError naming the keys allowed for anything else."""
+    keys = [k.strip().lower() for k in re.split(r"[,\s]+", text or "") if k.strip()]
+    unknown = [k for k in keys if k not in COMPONENTS]
+    if unknown:
+        raise ValueError(f"Unknown component {', '.join(map(repr, unknown))}. "
+                         f"Use any of: {', '.join(COMPONENTS)}.")
+    return frozenset(keys)
+
+def components_off_markdown(off):
+    """The header line naming what this prompt leaves out, so the AI does not fill it in."""
+    if not off:
+        return ""
+    names = ", ".join(COMPONENTS[k] for k in COMPONENTS if k in off)
+    return (f"**Components Left Out:** {names}. They were switched off for this reading to test "
+            "what each part adds. Do not bring them in from your own knowledge, even where a "
+            "card's name or position hints at them; read only what is listed here.\n")
+
+def _left_out(*keys):
+    return ("* Left out on purpose: " + " and ".join(COMPONENTS[k] for k in keys)
+            + " (see Components Left Out in the header).\n")
+
 # Hebrew vowel points and cantillation marks. Every Hebrew name in the prompt carries its
 # transliteration, so dropping the points loses nothing and saves many tokens.
 _HEBREW_POINTS = re.compile("[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]")
@@ -68,9 +105,10 @@ def _solid_legend(spread_results):
 
 def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
                     framework="auto", mapping_system="thoth", withheld=None, significator_places=None,
-                    drawn_at=None, local_zone=None, book_t_ops=None):
+                    drawn_at=None, local_zone=None, book_t_ops=None, without=frozenset()):
     """Every analysis of a drawn spread, then its prompt. The command line and the web site both
-    call this, so the same draw always gives the same prompt from either."""
+    call this, so the same draw always gives the same prompt from either. `without` is a set of
+    COMPONENTS keys the prompt leaves out; the analyses themselves always run."""
     element_counts = analyze_elemental_balance(spread_results)
     dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
     spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
@@ -85,6 +123,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
         book_t=book_t_counts(spread_results, spread_key),
         book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
+        without=without,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -101,9 +140,19 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=frozenset()):
+    off = frozenset(without or ())
+    unknown = off - set(COMPONENTS)
+    if unknown:
+        raise ValueError(f"Unknown component(s): {', '.join(sorted(unknown))}")
+    if "numerology" in off:
+        book_t = None
+    if "astrology" in off:
+        own_place = None
+    if "tree" in off:
+        framework_basis = None
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
-    mapping_note = MAPPING_NOTES.get(mapping_system)
+    mapping_note = MAPPING_NOTES.get(mapping_system) if not off & {"hebrew", "tree"} else None
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
 
@@ -111,24 +160,24 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     header_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists {_positions(len(spread_results))} and its very last line is `{end_marker}`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
-{reading_time_markdown(drawn_at, local_zone)}**Operation/Spread:** {spread_name}
+{reading_time_markdown(drawn_at, local_zone, sky="astrology" not in off)}**Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
 {significator_places_markdown(significator_places)}**PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
-{mapping_note_line}"""
+{mapping_note_line}{components_off_markdown(off)}"""
     legend = _solid_legend(spread_results)
     sections = (                     # in the order of the numbers above
-        _cards_md(spread_results, legend),
-        _elements_md(spread_results, element_counts, withheld, book_t),
-        _hebrew_md(spatial_dist),
-        _solids_md(solid_counts, legend, dual_pairings),
-        _dignity_md(dignity_matrix, book_t_notes),
-        _spatial_md(spatial_matrix),
+        _cards_md(spread_results, legend, off),
+        _elements_md(spread_results, element_counts, withheld, book_t, off),
+        _hebrew_md(spatial_dist, off),
+        _solids_md(solid_counts, legend, dual_pairings, off),
+        _dignity_md(dignity_matrix, book_t_notes, off),
+        _spatial_md(spatial_matrix, off),
         _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
                          spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
-                         significator_places, book_t, book_t_notes),
+                         significator_places, book_t, book_t_notes, off),
     )
     prompt_md = "".join(f"\n---\n\n## {n}. {body}" for n, body in enumerate(sections, start=1))
     prompt_md += f"\n{end_marker}\n"
@@ -147,7 +196,7 @@ def time_stamp(when):
     """'20261029T2200Z': how settings and share links carry a reading's time (ISO 8601, UTC)."""
     return f"{when.astimezone(timezone.utc):%Y%m%dT%H%M}Z"
 
-def reading_time_markdown(drawn_at, local_zone=None):
+def reading_time_markdown(drawn_at, local_zone=None, sky=True):
     """The header lines for when the reading was drawn and where the Sun and Moon stood then,
     or "" for a reading with no time (a sample, an old share link). `drawn_at` is an aware
     datetime; `local_zone` a tzinfo for the querent's own clock, or None for UTC only."""
@@ -162,6 +211,8 @@ def reading_time_markdown(drawn_at, local_zone=None):
         when = f"{_long_date(local)}, {local:%H:%M} {zone} | {utc:%H:%M} UTC"
         if local.date() != utc.date():
             when += f" on {_long_date(utc)}"
+    if not sky:
+        return f"**Date and Time of Reading:** {when}\n"
     return (f"**Date and Time of Reading:** {when}\n"
             f"**Sun and Moon at that Moment:** {sky_line(utc)} (tropical zodiac; context only, "
             f"not used in any score)\n")
@@ -176,13 +227,31 @@ _OP_PREFIX = re.compile(r"^\[Op \d+\] ")
 # Positions that name a place on the house, sign or decan wheel (Ops 2-4 of the OOTK).
 _WHEEL_POSITIONS = {p for key in ("9", "10", "11") for p in SPREADS[key]["positions"]}
 
-def _cards_md(spread_results, legend):
+def _attribution(data, off):
+    """The card's Attribution line value, less what `off` leaves out, or None for no line.
+    A court's is "Fire of Water - 20° Gemini to 20° Cancer": its elemental combination, then
+    its zodiac span; a numbered pip's and a Major's are astrology ("Saturn in Leo", "Aries");
+    an Ace's ("Root of the Powers of Fire") is neither, so it always stays."""
+    text = data.get("attribution")
+    if data.get("arcana_type") == "Court":
+        combo, _, span = (text or "").partition(" - ")
+        parts = [p for p, key in ((combo, "courts"), (span, "astrology")) if p and key not in off]
+        return " - ".join(parts) or None
+    if "astrology" in off and not str(data.get("title", "")).startswith("Ace"):
+        return None
+    return text
+
+def _cards_md(spread_results, legend, off=frozenset()):
     md = "CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
-    if any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
-        md += ("Minor (pip) cards sit on the same Sephira in every mapping system and are nodal "
-               "Sephira points on the Cube of Space, so their entries name the Sephira once "
-               "and leave out the spatial dimension.\n\n")
-    if any(item["card_data"]["arcana_type"] == "Court" for item in spread_results):
+    if "tree" not in off and any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
+        if "geometry" in off:
+            md += ("Minor (pip) cards sit on the same Sephira in every mapping system, so their "
+                   "entries name the Sephira once.\n\n")
+        else:
+            md += ("Minor (pip) cards sit on the same Sephira in every mapping system and are nodal "
+                   "Sephira points on the Cube of Space, so their entries name the Sephira once "
+                   "and leave out the spatial dimension.\n\n")
+    if "hebrew" not in off and any(item["card_data"]["arcana_type"] == "Court" for item in spread_results):
         md += ("Court cards take their Hebrew letter through their sign (a Princess through her "
                "element), a Golden Dawn and Thoth practice. The French/Egyptian system gives "
                "courts no path letter, so `none` there is by design, not missing data.\n\n")
@@ -190,7 +259,8 @@ def _cards_md(spread_results, legend):
     if any(name in _WHEEL_POSITIONS for name in names):
         md += ("A house, sign or decan position's name is the place on the wheel, not the card: "
                "the card that fell there is the Card Drawn, and it usually does not belong to that "
-               "house, sign or decan (the Own-Place Check in the header counts the ones that do).")
+               "house, sign or decan" + (" (the Own-Place Check in the header counts the ones that do)."
+                                          if "astrology" not in off else "."))
         if any(_DECAN_POSITION.search(name) for name in names):
             md += (" A decan's name ends with its own pip in brackets, for example \"Saturn in "
                    "Leo (5 of Wands)\"; that pip is part of the place's name too.")
@@ -202,49 +272,79 @@ def _cards_md(spread_results, legend):
     for item in spread_results:
         data = item["card_data"]
         letter_val = data.get('hebrew_letter')
-        letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' else ""
+        letter_str = f" ({letter_val})" if letter_val and letter_val != 'N/A' and "hebrew" not in off else ""
 
         gd_letter = data.get('gd_hebrew_letter') or 'N/A'
         thoth_letter = data.get('thoth_hebrew_letter') or gd_letter
         french_letter = data.get('french_hebrew_letter') or 'N/A'
         if data['arcana_type'] == 'Court' and french_letter == 'N/A':
             french_letter = 'none'
+        minor = data['arcana_type'] == 'Minor'
 
         md += f"### Position {item['position_number']}: {item['position_name']}\n"
         md += f"- **Card Drawn**: {data['title']}\n"
         md += f"- **Arcana/Suit**: {data['arcana_type']} | {data['suit'] or 'N/A'}\n"
-        md += f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
-        md += f"- **Attribution**: {data['attribution']}\n"
+        md += _place_line(data, letter_str, off)
+        attribution = _attribution(data, off)
+        if attribution:
+            md += f"- **Attribution**: {attribution}\n"
         figure = GEOMANTIC_FIGURES.get(data['attribution']) if data['arcana_type'] == 'Major' else None
-        if figure:
-            md += f"- **Geomantic Figure**: {figure} (Golden Dawn, by {data['attribution']})\n"
-        element_note = major_element_note(data)
+        if figure and "geomancy" not in off:
+            by = f" (Golden Dawn, by {data['attribution']})" if "astrology" not in off else " (Golden Dawn)"
+            md += f"- **Geomantic Figure**: {figure}{by}\n"
+        element_note = major_element_note(data) if "elements" not in off else None
         if element_note:
+            if "astrology" in off:
+                element_note = element_note.split(" (")[0]     # "Earth (Venus via Taurus...)" -> "Earth"
             md += f"- **Element (used in scores)**: {element_note}\n"
-        minor = data['arcana_type'] == 'Minor'
-        if minor:
-            if gd_letter != letter_val:
-                md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
-        else:
-            md += f"- **Comparative Hebrew Mapping**: Thoth: `{thoth_letter}` | Golden Dawn: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
-        stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
-        if not stype and minor:
-            stype, sdim = _MINOR_SPATIAL
-        if not (minor and (stype, sdim) == _MINOR_SPATIAL):
-            md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
-        solid = data.get('platonic_solid', 'N/A')
-        if solid in legend:
-            md += f"- **Platonic Solid**: `{solid}`\n"
-        else:
-            md += f"- **Platonic Topology**: `{solid}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
-            md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
-        md += f"- **King Scale Color**: {data['king_scale_color']}\n\n"
+        if "hebrew" not in off:
+            if minor:
+                if gd_letter != letter_val and "tree" not in off:
+                    md += f"- **Sephira (both systems)**: `{gd_letter}`\n"
+            else:
+                md += f"- **Comparative Hebrew Mapping**: Thoth: `{thoth_letter}` | Golden Dawn: `{gd_letter}` | French/Egyptian: `{french_letter}`\n"
+        if "geometry" not in off:
+            stype, sdim = data.get('spatial_type'), data.get('spatial_dimension')
+            if not stype and minor:
+                stype, sdim = _MINOR_SPATIAL
+            if not (minor and (stype, sdim) == _MINOR_SPATIAL):
+                md += f"- **Spatial Dimension**: `{stype or 'N/A'}` ({sdim or 'N/A'})\n"
+            solid = data.get('platonic_solid', 'N/A')
+            if solid in legend:
+                md += f"- **Platonic Solid**: `{solid}`\n"
+            else:
+                md += f"- **Platonic Topology**: `{solid}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
+                md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
+        if "tree" not in off:
+            md += f"- **King Scale Color**: {data['king_scale_color']}\n"
+        md += "\n"
     return md
 
-def _elements_md(spread_results, element_counts, withheld, book_t=None):
+def _place_line(data, letter_str, off):
+    """The card's place on the Tree with its letter: a pip's Sephira, a Major's path, a court's
+    letter (named through its sign). With the Tree left out a Major or court keeps only its
+    letter, and a pip (whose letter is its Sephira's name) has no line; with the letters left
+    out a court has none."""
+    kind = data['arcana_type']
+    tree, hebrew = "tree" not in off, "hebrew" not in off
+    if kind == "Court":
+        if not hebrew:
+            return ""
+        label = _path_label(data) if "astrology" not in off else "Hebrew Letter"
+        return f"- **{label}**: {data['path_or_sephira']}{letter_str}\n"
+    if tree:
+        return f"- **{_path_label(data)}**: {data['path_or_sephira']}{letter_str}\n"
+    if kind == "Major" and hebrew and letter_str:
+        return f"- **Hebrew Letter**: {letter_str.strip(' ()')}\n"
+    return ""
+
+def _elements_md(spread_results, element_counts, withheld, book_t=None, off=frozenset()):
     total_cards = sum(element_counts.values()) or 1
     md = "ELEMENTAL VECTOR DISTRIBUTION\n"
     secondary = spirit_bearing_cards(spread_results)
+    if "elements" in off:
+        md += _left_out("elements")
+        element_counts = {}
     for elem, count in element_counts.items():
         if elem == "Spirit" and not count:
             # Every card counts under one of the four elements, so Spirit is only ever a
@@ -263,7 +363,7 @@ def _elements_md(spread_results, element_counts, withheld, book_t=None):
     if book_t:
         md += book_t_markdown(book_t)
     if withheld:
-        md += withheld_markdown(withheld)
+        md += withheld_markdown(withheld, off)
     return md
 
 def book_t_notes(spread_results, ops):
@@ -306,8 +406,11 @@ def book_t_markdown(book_t):
         md += f"* {name + ': ' if name else ''}{line}\n"
     return md
 
-def _hebrew_md(spatial_dist):
+def _hebrew_md(spatial_dist, off=frozenset()):
     # Totals only: each card's letter and spatial type are in its section 1 entry.
+    gone = [k for k in ("hebrew", "geometry") if k in off]
+    if gone:
+        return "HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n" + _left_out(*gone)
     return ("HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
             f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
             f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
@@ -315,8 +418,10 @@ def _hebrew_md(spatial_dist):
             f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n"
             f"\nSection {CARDS} gives each card's letter and spatial type.\n")
 
-def _solids_md(solid_counts, legend, dual_pairings):
+def _solids_md(solid_counts, legend, dual_pairings, off=frozenset()):
     md = "PLATONIC SOLID TOPOLOGY MATRIX\n"
+    if "geometry" in off:
+        return md + _left_out("geometry")
     for solid, count in solid_counts.items():
         if count:
             md += f"* **{solid:20s}**: `{count}`\n"
@@ -336,14 +441,20 @@ def _solids_md(solid_counts, legend, dual_pairings):
             md += f"* {dp}\n"
     return md
 
-def _dignity_md(dignity_matrix, book_t_notes=None):
+def _dignity_md(dignity_matrix, book_t_notes=None, off=frozenset()):
     md = "PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
+    scored = "elements" not in off
+    if not scored and not book_t_notes:
+        return md + _left_out("elements")
     if book_t_notes:
         md += ("Book T reads each operation in two passes. The **Count** starts at the Significator "
                "and counts round its pile, each card counting itself as one, and makes the story. "
                "The **Pairs** below it are the cards either side of the Significator, then those "
                "outside them, which fill in what the count leaves out; each pair has its elemental "
                "dignity.\n")
+        if not scored:
+            md += _left_out("elements") + ("The Count and the Pairs are Book T's method and stay, "
+                                           "without their dignity scores.\n")
     if not dignity_matrix:
         return md + "* Only one card was drawn, so there are no pairs to score.\n"
     last_segment = None
@@ -353,14 +464,17 @@ def _dignity_md(dignity_matrix, book_t_notes=None):
             last_segment = d["segment_name"]
             if book_t_notes and last_segment in book_t_notes:
                 md += book_t_notes[last_segment] + "\n**Pairs:**\n"
-        md += f"* **{d['pair']}**: `Score: {_signed(d['score'])}` | {d['relationship']}\n"
+        md += (f"* **{d['pair']}**: `Score: {_signed(d['score'])}` | {d['relationship']}\n" if scored
+               else f"* **{d['pair']}**\n")
     return md
 
 def _is_heap(s):
     return s.get("pair_mode") != "aspect" and s["delta_angle"] is None
 
-def _spatial_md(spatial_matrix):
+def _spatial_md(spatial_matrix, off=frozenset()):
     md = "SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
+    if "geometry" in off:
+        return md + _left_out("geometry")
     # A pair touching a centre card has no angle, and a heap's drawing coordinates are not a
     # wheel, so neither says anything about the reading: they are left out.
     shown = [s for s in spatial_matrix or () if s.get("aspect") != "Centre Node"]
@@ -372,8 +486,9 @@ def _spatial_md(spatial_matrix):
                      f"and there is no geometry to report. The cards' pairs are scored in section {DIGNITY}.\n")
     if any(s.get("pair_mode") == "aspect" for s in shown):
         md += ("\nOn the house, sign and decan wheels the aspect between two positions is "
-               "fixed by the layout and is the same in every reading; the `cards:` part "
-               "(the elemental dignity of the two cards drawn there) is this reading's.\n")
+               "fixed by the layout and is the same in every reading" + (
+                   "; the `cards:` part (the elemental dignity of the two cards drawn there) is "
+                   "this reading's.\n" if "elements" not in off else ".\n"))
     if any(s.get("pair_mode") == "consecutive" and s["delta_angle"] is not None for s in shown):
         md += ("\nThe aspects below come from where the positions sit in the spread's layout, "
                "not from the cards, so they are the same in every reading of this spread. "
@@ -396,7 +511,8 @@ def _spatial_md(spatial_matrix):
             if s["aspect"] != last_aspect:
                 md += f"\n_{s['aspect']} - {s['description']} [Modifier: `{mod_str}`]_\n\n"
                 last_aspect = s["aspect"]
-            cards = f"{_signed(s['card_score'])} {s['card_relationship']}" if "card_score" in s else ""
+            cards = (f"{_signed(s['card_score'])} {s['card_relationship']}"
+                     if "card_score" in s and "elements" not in off else "")
             md += f"* {s['pair']}" + (f" | cards: {cards}" if cards else "") + "\n"
         elif _is_heap(s):
             # One sentence per heap instead of its pairs' drawing distances.
@@ -412,8 +528,10 @@ def _spatial_md(spatial_matrix):
 
 def _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
                      spatial_matrix, solid_counts, dual_pairings, withheld, own_place,
-                     significator_places=None, book_t=None, book_t_notes=None):
+                     significator_places=None, book_t=None, book_t_notes=None, off=frozenset()):
     """What the AI is asked to do. Each rule names only what this reading contains."""
+    if "geometry" in off:
+        spatial_matrix, dual_pairings = (), None
     operations = len({d["segment_name"] for d in dignity_matrix if d.get("segment_name")})
     aspects = {}
     for s in spatial_matrix or ():
@@ -437,15 +555,19 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     else:
         question = "No question was given, so describe the forces the reading shows in general."
         summary_answer = ""
+    balance = _balance_words(off, solids)
     if len(spread_results) == 1:
-        order = (f"Start with the card in section {CARDS} and its correspondences, then its element, "
-                 f"letter and solid (sections {ELEMENTS}-{SOLIDS}).")
+        order = (f"Start with the card in section {CARDS} and its correspondences"
+                 + (f", then its {balance[1]} (sections {ELEMENTS}-{SOLIDS})." if balance else "."))
     else:
-        order = (f"First the overall balance of elements, Cube of Space letters and solids "
-                 f"({', '.join(solids) or 'none mapped'}) in sections {ELEMENTS}-{SOLIDS}; then each "
-                 f"position in turn (its name says what it stands for, and section {CARDS} says which "
-                 f"card fell there); then the strongest and most strained pairs (section {DIGNITY}" + (f" and the aspects in section {SPATIAL}" if aspects else "")
-                 + ").")
+        order = ((f"First the overall balance of {balance[0]} in sections {ELEMENTS}-{SOLIDS}; then each "
+                  if balance else "Take each ")
+                 + f"position in turn (its name says what it stands for, and section {CARDS} says which "
+                 f"card fell there)"
+                 + (f"; then the strongest and most strained pairs (section {DIGNITY}"
+                    + (f" and the aspects in section {SPATIAL}" if aspects else "") + ")."
+                    if "elements" not in off else
+                    (f"; then the aspects in section {SPATIAL}." if aspects else ".")))
         if operations > 1:
             order += " Take the operations one at a time, in order, then draw them together."
     if book_t_notes:
@@ -453,8 +575,8 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
                  f"(the first line under the operation in section {DIGNITY}), then read the Count as "
                  f"the story, then the Pairs to fill in its details. Where an operation says Book T "
                  f"would abandon the divination, say so plainly and weigh that operation lightly. "
-                 f"Then draw the operations together, with the overall balance in sections "
-                 f"{ELEMENTS}-{SOLIDS}.")
+                 f"Then draw the operations together"
+                 + (f", with the overall balance in sections {ELEMENTS}-{SOLIDS}." if balance else "."))
     notes = []
     if dual_pairings:
         notes.append(f"Section {SOLIDS} lists the neighbouring cards whose solids are duals (polyhedral inversions).")
@@ -493,7 +615,7 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     md += "".join(f"{i}. **{name}:** {text}\n" for i, (name, text) in enumerate(rules, start=1))
 
     key = []
-    if dignity_matrix:
+    if dignity_matrix and "elements" not in off:
         key.append(f"* `Score` in section {DIGNITY}" + (f" (and `cards:` in section {SPATIAL})" if any(
             "card_score" in s for s in spatial_matrix or ()) else "")
                    + f" is the pair's Book T elemental dignity: {_signed(DIGNITY_SAME)} same element (strong), "
@@ -507,15 +629,35 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
                           sorted(aspects.items(), key=lambda kv: [x.name for x in ASPECTS].index(kv[0])))
         key.append(f"* `Modifier` (section {SPATIAL}) is the weight of the aspect itself ({named}). It "
                    f"describes the two positions, not the cards, and is not added to the dignity score.")
-    key.append(f"* Section {ELEMENTS} counts each card once, under its primary element."
-               + (" Its Book T Counts are per operation, never across one." if book_t and
-                  len(book_t) > 1 else ""))
+    if "elements" not in off:
+        key.append(f"* Section {ELEMENTS} counts each card once, under its primary element."
+                   + (" Its Book T Counts are per operation, never across one." if book_t and
+                      len(book_t) > 1 else ""))
+    elif book_t and len(book_t) > 1:
+        key.append(f"* Section {ELEMENTS}'s Book T Counts are per operation, never across one.")
     if book_t_notes:
         key.append("* Counting numbers (Book T): Knights, Queens and Princes 4; Princesses 7; Aces "
                    "11; small cards their own number; Trumps 3 (elements), 9 (planets), 12 (signs). "
                    "Where Book T is silent this site's rules are: " + "; ".join(SITE_RULES.values()) + ".")
-    md += "\n**How to read the numbers:**\n" + "\n".join(key) + "\n"
+    if key:
+        md += "\n**How to read the numbers:**\n" + "\n".join(key) + "\n"
     return md
+
+def _balance_words(off, solids):
+    """("elements, Cube of Space letters and solids (Cube)", "element, letter and solid") for
+    the parts of sections 2-4 this prompt keeps, or None when it keeps none of them."""
+    parts = []
+    if "elements" not in off:
+        parts.append(("elements", "element"))
+    if not off & {"hebrew", "geometry"}:
+        parts.append(("Cube of Space letters", "letter"))
+    if "geometry" not in off:
+        parts.append((f"solids ({', '.join(solids) or 'none mapped'})", "solid"))
+    if not parts:
+        return None
+    def join(words):
+        return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
+    return join([p for p, _ in parts]), join([w for _, w in parts])
 
 OWN_PLACE_INTRO = ("a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a "
                    "Knight, Queen or Prince by the sign that gives it its letter) or its natural "
@@ -583,12 +725,17 @@ def withheld_sentence(withheld):
             f"counts above are the whole deck's ({totals}) minus these. The counts barely move "
             f"between readings; the withheld cards and where each drawn card fell carry the signal.")
 
-def withheld_markdown(withheld):
+def withheld_markdown(withheld, off=frozenset()):
     cards = withheld["cards"]
     md = f"\n### Withheld ({len(cards)} card{'s' if len(cards) != 1 else ''} not drawn)\n"
     for row in cards:
-        md += (f"- **{row['title']}**: {derive_primary_element(row)} | {row.get('attribution') or 'N/A'}"
-               f" | {row.get('platonic_solid') or 'N/A'}\n")
+        fields = [derive_primary_element(row) if "elements" not in off else None,
+                  _attribution(row, off) or ("N/A" if not off & {"astrology", "courts"} else None),
+                  (row.get('platonic_solid') or 'N/A') if "geometry" not in off else None]
+        fields = [f for f in fields if f]
+        md += f"- **{row['title']}**" + (f": {' | '.join(fields)}" if fields else "") + "\n"
+    if "elements" in off:
+        return md
     by_elem = ", ".join(f"{e} {c}" for e, c in withheld["elements"].items() if c)
     md += f"\nWithheld by element: {by_elem}. {withheld_sentence(withheld)}\n"
     return md
