@@ -120,6 +120,24 @@ SPREADS = {
     "12": {
         "name": "Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline",
         "operations": ["8", "9", "10", "11"]
+    },
+    # Key 13 is Book T (BOOK_T_KEY below), kept out of SPREADS.
+    # A.E. Waite's "Ancient Celtic Method" (The Pictorial Key to the Tarot, 1911): the cross of
+    # six round the matter, then the staff of four laid upwards on its right.
+    "14": {
+        "name": "Celtic Cross (Waite, 10 cards)",
+        "positions": [
+            "1. What Covers (the matter now and its atmosphere)",
+            "2. What Crosses (the obstacle or opposing force)",
+            "3. What Crowns (the aim, or the best that can come of it)",
+            "4. What Is Beneath (the foundation, what is already in hand)",
+            "5. What Is Behind (the influence now passing)",
+            "6. What Is Before (the influence coming next)",
+            "7. The Querent (their own attitude and part)",
+            "8. Their House (surroundings and other people)",
+            "9. Hopes and Fears",
+            "10. What Will Come (the outcome)"
+        ]
     }
 }
 
@@ -179,6 +197,16 @@ SPREAD_DEFAULT_COORDINATES = {
     # OOTK Op 4: 36 decans, 10 deg apart, counter-clockwise from 0 deg, where decan 1 (0 deg Leo)
     # sits. Only the angles between positions are scored, so where the ring starts is free.
     "11": _ring(36, start_deg=0.0, step_deg=10.0),
+    # Celtic Cross: card 2 lies across card 1 (drawn a little lower and to the right so both
+    # show), the crown above, the foundation below, the past on the left, the future on the
+    # right, and the staff (7 at the bottom to 10 at the top) on the far right.
+    # A drawing convention only: the cross's pairs are named, not angled (NAMED_PAIR_LAYOUTS).
+    "14": [
+        (0.0, 0.0), (0.3, -0.3),
+        (0.0, 1.4), (0.0, -1.4),
+        (-1.2, 0.0), (1.2, 0.0),
+        (2.6, -1.95), (2.6, -0.65), (2.6, 0.65), (2.6, 1.95)
+    ],
 }
 
 # Ring layouts (houses, zodiac, decans) are paired by aspect, not by neighbour: consecutive
@@ -209,9 +237,24 @@ HEAP_LAYOUTS = {"8"}   # OOTK Op 1
 # is scored as one; the significator is scored with the two single cards that answer it, the
 # Counter-Balance (14) and the Climax (15). Deal order alone would also join cards of
 # different groups (3 with 4, 5 with 6, ...).
+#
+# The Celtic Cross is read the same way: the card that covers with the card that crosses it,
+# the crown with what is beneath (the vertical axis), what is behind with what is before (the
+# time axis), the staff from 7 up to 10, and the matter now (1) with what will come (10).
+# Deal order would join unrelated places (2 with 3, 4 with 5, 6 with 7).
 HEAP_PAIRS = {
     "8": ((1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (0, 13), (0, 14)),
+    "14": ((0, 1), (2, 3), (4, 5), (6, 7), (7, 8), (8, 9), (0, 9)),
 }
+
+# Layouts whose pairs are named (HEAP_PAIRS) rather than measured: their drawing coordinates
+# are not a wheel, so their pairs keep their distance but take no aspect and no modifier.
+# Value: the (aspect name, description) their pairs carry in the spatial section.
+NAMED_PAIR_LAYOUTS = {
+    "8": ("Heap Pair", "Paired in the heap; a heap has no angular relation"),
+    "14": ("Cross Pair", "Paired in the Celtic Cross; its places make no angular relation"),
+}
+CELTIC_CROSS_KEY = "14"
 
 # Tree of Life layouts: positions are the ten Sephiroth in order, so cards are scored along
 # the 22 paths that join them (Binah and Chesed, 3 and 4, share no path).

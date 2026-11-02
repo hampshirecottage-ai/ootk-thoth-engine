@@ -741,6 +741,38 @@ def test_spatial_empty_for_uncoordinated_spreads():
         assert analysis.analyze_spatial_vectors(results_for(*cards), key) == []
 
 
+def test_celtic_cross_pairs_are_its_named_pairs():
+    # Waite's cross: 1 with 2, crown with beneath, behind with before, the staff 7 up to 10,
+    # and the matter now with the outcome. Deal order would join 2-3, 4-5, 6-7.
+    assert len(spreads.spread_positions("14")) == 10 == len(spreads.SPREAD_DEFAULT_COORDINATES["14"])
+    assert analysis.segment_pairs("14", 10) == [(0, 1), (2, 3), (4, 5), (6, 7), (7, 8), (8, 9), (0, 9)]
+    cards = [fake_card(f"C{i}") for i in range(10)]
+    dignity = analysis.calculate_elemental_dignities(results_for(*cards), "14")
+    assert [(d["from_index"], d["to_index"]) for d in dignity] == analysis.segment_pairs("14", 10)
+    out = analysis.analyze_spatial_vectors(results_for(*cards), "14")
+    assert [(o["from_index"], o["to_index"]) for o in out] == analysis.segment_pairs("14", 10)
+    assert all(o["aspect"] == "Cross Pair" and o["aspect_name"] is None for o in out)
+    assert all(o["score_modifier"] == 0 and o["delta_angle"] is None for o in out)
+
+
+def test_celtic_cross_report_and_web(seeded_client):
+    from ootk import visual
+    results, dignity, spatial = _spread_parts("14", [fake_card(f"C{i}") for i in range(10)])
+    view = visual.build_report_view("14", results, analysis.analyze_elemental_balance(results),
+                                    dignity, spatial, "x", "y")
+    assert view["segments"][0]["drawing"]["kind"] == "layout"
+    assert not any(c["aspects"] for c in view["card_details"])   # named pairs, no aspect lines
+    counts = analysis.analyze_elemental_balance(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, _, duals = analysis.analyze_platonic_topology(results, "14")
+    prompt = report.build_analytical_prompt(spreads.SPREADS["14"]["name"], "", "", "1", results, counts,
+                                            dignity, spatial, sdist, solids, duals)
+    assert "The Celtic Cross is not a wheel" in prompt and "heap" not in prompt.lower()
+    r = post(seeded_client, spread_key="14", draw_mode="seed", seed="1568", selected_cards="")
+    assert r.status_code == 200 and "Celtic Cross" in r.text
+    assert "Celtic Cross" in seeded_client.get("/tarot/celtic-cross-spread").text
+
+
 def test_spatial_centre_node_has_no_fake_aspect():
     cards = [fake_card(f"C{i}") for i in range(3)]
     out = analysis.analyze_spatial_vectors(results_for(*cards), "3")
