@@ -14,7 +14,7 @@ from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, DIGNITY_CONTRARY, DIGNITY_FRI
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
 from ootk.sky import sky_line
-from ootk.spreads import BOOK_T_KEY, SPREADS, ZODIAC_SIGNS, spread_segments
+from ootk.spreads import BOOK_T_KEY, CELTIC_CROSS_KEY, SPREADS, ZODIAC_SIGNS, spread_segments
 
 # The report header and the web form both name the systems from here, so the label always
 # says which way the Tzaddi/Heh swap goes (see db.fetch_cards_correspondences).
@@ -177,7 +177,8 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         _cards_md(spread_results, legend, off),
         _elements_md(spread_results, element_counts, withheld, book_t, off),
         _hebrew_md(spatial_dist, off),
-        _solids_md(solid_counts, legend, dual_pairings, off),
+        _solids_md(solid_counts, legend, dual_pairings, off,
+                   "in a Celtic Cross" if spread_name == SPREADS[CELTIC_CROSS_KEY]["name"] else "in a heap"),
         _dignity_md(dignity_matrix, book_t_notes, off),
         _spatial_md(spatial_matrix, off),
         _instructions_md(query_prompt, mapping_label, macro_framework, spread_results, dignity_matrix,
@@ -482,7 +483,7 @@ def _hebrew_md(spatial_dist, off=frozenset()):
             f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n"
             f"\nSection {CARDS} gives each card's letter and spatial type.\n")
 
-def _solids_md(solid_counts, legend, dual_pairings, off=frozenset()):
+def _solids_md(solid_counts, legend, dual_pairings, off=frozenset(), named="in a heap"):
     md = "PLATONIC SOLID TOPOLOGY MATRIX\n"
     if "geometry" in off:
         return md + _left_out("geometry")
@@ -500,7 +501,7 @@ def _solids_md(solid_counts, legend, dual_pairings, off=frozenset()):
 
     if dual_pairings:
         md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
-        md += f"These are the pairs scored in section {DIGNITY} (in a heap, only its named pairs).\n"
+        md += f"These are the pairs scored in section {DIGNITY} ({named}, only its named pairs).\n"
         for dp in dual_pairings:
             md += f"* {dp}\n"
     return md
@@ -531,6 +532,10 @@ def _dignity_md(dignity_matrix, book_t_notes=None, off=frozenset()):
         md += (f"* **{d['pair']}**: `Score: {_signed(d['score'])}` | {d['relationship']}\n" if scored
                else f"* **{d['pair']}**\n")
     return md
+
+_CROSS_NOTE = ("\n* The Celtic Cross is not a wheel: its places make no angles. Its named pairs "
+               "(1 with 2, 3 with 4, 5 with 6, the staff from 7 up to 10, and 1 with 10) are "
+               "scored in section {dignity}.\n")
 
 def _is_heap(s):
     return s.get("pair_mode") != "aspect" and s["delta_angle"] is None
@@ -582,8 +587,9 @@ def _spatial_md(spatial_matrix, off=frozenset()):
             # One sentence per heap instead of its pairs' drawing distances.
             if last_segment not in heaps_noted:
                 heaps_noted.add(last_segment)
-                md += (f"\n* A heap is not a wheel: its cards make no angles. Its named pairs are "
-                       f"scored in section {DIGNITY}.\n")
+                md += (_CROSS_NOTE if s.get("aspect") == "Cross Pair" else
+                       "\n* A heap is not a wheel: its cards make no angles. Its named pairs are "
+                       "scored in section {dignity}.\n").format(dignity=DIGNITY)
         else:
             md += ("\n" if first_in_segment else "") + f"* **{s['pair']}**:\n"
             md += f"  - Spatial Distance: `{s['distance']}` units | Angular Delta: `{s['delta_angle']}°`\n"

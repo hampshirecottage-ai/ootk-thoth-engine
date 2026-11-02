@@ -339,9 +339,9 @@ SPREAD_STAGES = [
     ("Stage 2", "Elements in pairs", ["2", "4", "5"],
      "Elemental dignities: whether neighbouring cards strengthen or weaken each other, and the "
      "four worlds of the Tetragrammaton."),
-    ("Stage 3", "Whole layouts", ["6", "7"],
-     "Cards placed on the planets of the hexagram and the Sephiroth of the Tree of Life, and how "
-     "each position relates to the others."),
+    ("Stage 3", "Whole layouts", ["6", "7", "14"],
+     "Cards placed on the planets of the hexagram, the Sephiroth of the Tree of Life and the "
+     "places of Waite&rsquo;s Celtic Cross, and how each position relates to the others."),
     ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12", BOOK_T_KEY],
      "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the "
      "houses, the signs and the 36 decans, and finally all four together. Last, the whole "
@@ -352,7 +352,7 @@ SPREAD_STAGES = [
 SPREAD_DEPTHS = [
     ("A quick look", "1 or 3 cards, a minute to read"),
     ("How forces meet", "2 to 4 cards, elements in pairs"),
-    ("The whole picture", "7 or 10 cards on the hexagram or the Tree of Life"),
+    ("The whole picture", "7 or 10 cards on the hexagram, the Tree of Life or the Celtic Cross"),
     ("The Opening of the Key", "The Golden Dawn&rsquo;s long method, 12 to about 80 cards"),
 ]
 SPREAD_GUIDE = {
@@ -364,6 +364,9 @@ SPREAD_GUIDE = {
     "6": ("Hexagram", "Seven planetary forces around the matter: limits, luck, drive, love, mind, "
                       "the core and what lies beneath."),
     "7": ("Tree of Life", "The matter from its first impulse down to how it lands in daily life."),
+    "14": ("Celtic Cross", "The best-known ten-card spread: the matter, what crosses it, its roots "
+                           "and aim, past and next, then you, your surroundings, hopes and fears "
+                           "and the outcome."),
     "8": ("First Operation", "Start the Opening of the Key: what the question is really about. "
                              "Needs a significator."),
     "9": ("Second Operation", "Which areas of life are involved: self, money, home, love, work and more."),
@@ -456,6 +459,16 @@ LANDING_PAGES = {
                  "the Tree of Life with each card’s Hebrew letter, path and King Scale "
                  "colour, and how each position relates to the others.",
         "spread": "7"},
+    "celtic-cross-spread": {
+        "title": "Celtic Cross Tarot Spread",
+        "tagline": "Waite’s ten-card Celtic Cross with the Thoth deck.",
+        "description": "A Celtic Cross tarot spread online with the Thoth deck: ten cards in Waite's "
+                       "places, with their dignities and Liber 777 correspondences.",
+        "intro": "Lay the ten cards of the Celtic Cross as Waite gave it: what covers and what "
+                 "crosses the matter, its crown and foundation, what is passing and what comes "
+                 "next, then the staff of four. The report pairs the cards the way the cross is "
+                 "read and gives each card’s attribution, element and King Scale colour.",
+        "spread": "14"},
 }
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = (["/", "/pick", "/start", "/history", "/examples", "/library", "/maps", "/method"]

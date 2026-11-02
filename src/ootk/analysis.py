@@ -7,7 +7,7 @@ from ootk.rules import (
     RANK_PLURALS, SUIT_ORDER, aspect_label, element_dignity, find_aspect, separation,
 )
 from ootk.spreads import (
-    DECAN_START, HEAP_LAYOUTS, HEAP_PAIRS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
+    DECAN_START, HEAP_PAIRS, NAMED_PAIR_LAYOUTS, RING_ASPECTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES,
     BOOK_T_LAYOUT, TREE_LAYOUTS, book_t_pairs, spread_segments,
 )
 
@@ -170,7 +170,8 @@ def segment_pairs(layout_key, seg_len):
     whom. Neighbours are consecutive positions, except:
     - on a full ring (houses, signs, decans) the last position also neighbours the first
       (twelfth house <-> first house), closing the circle;
-    - a heap (HEAP_PAIRS) pairs its named pairs instead of following deal order;
+    - a heap or the Celtic Cross (HEAP_PAIRS) pairs its named pairs instead of following deal
+      order;
     - a Tree of Life layout (TREE_LAYOUTS) pairs Sephiroth joined by a path.
     """
     if layout_key == BOOK_T_LAYOUT:
@@ -286,8 +287,9 @@ def analyze_spatial_vectors(spread_results, spread_key):
     Master pipelines are analysed one operation at a time against that operation's own layout,
     so no pair spans two operations. Ring layouts (see RING_LAYOUT_ASPECTS) are paired by
     exact aspect between any two positions; all other layouts pair consecutive positions.
-    Heap layouts (HEAP_LAYOUTS, Op 1) link the same pairs as their dignities (HEAP_PAIRS), by
-    distance only, with no aspect: their drawing coordinates are not a wheel.
+    Named-pair layouts (NAMED_PAIR_LAYOUTS: the Op 1 heap, the Celtic Cross) link the same
+    pairs as their dignities (HEAP_PAIRS), by distance only, with no aspect: their drawing
+    coordinates are not a wheel.
     Segments without a defined layout are skipped (no fake geometry). A position sitting on
     the centroid has no direction, so consecutive pairs involving it are reported as a
     centre/axis node.
@@ -340,7 +342,7 @@ def analyze_spatial_vectors(spread_results, spread_key):
                 })
             continue
 
-        links = (segment_pairs(layout_key, seg_len) if layout_key in HEAP_LAYOUTS
+        links = (segment_pairs(layout_key, seg_len) if layout_key in NAMED_PAIR_LAYOUTS
                  else [(j, j + 1) for j in range(seg_len - 1)])
         for j, k in links:
             item1, item2 = spread_results[seg_start + j], spread_results[seg_start + k]
@@ -348,10 +350,10 @@ def analyze_spatial_vectors(spread_results, spread_key):
             dist = math.hypot(x2 - x1, y2 - y1)
 
             a1, a2 = polar(coords[j]), polar(coords[k])
-            if layout_key in HEAP_LAYOUTS:
+            if layout_key in NAMED_PAIR_LAYOUTS:
                 delta_angle = None
-                aspect_name, aspect_desc, modifier = (
-                    "Heap Pair", "Paired in the heap; a heap has no angular relation", 0)
+                aspect_name, aspect_desc = NAMED_PAIR_LAYOUTS[layout_key]
+                modifier = 0
                 short = None
             elif a1 is None or a2 is None:
                 delta_angle = 0.0

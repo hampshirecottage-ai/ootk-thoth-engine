@@ -16,7 +16,7 @@ from ootk.atlas import card_atlas
 from ootk.report import withheld_sentence
 from ootk.rules import ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import (
-    BOOK_T_LAYOUT, HEAP_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
+    BOOK_T_LAYOUT, HEAP_LAYOUTS, NAMED_PAIR_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
     spread_segments,
 )
 
@@ -576,13 +576,21 @@ def link_explainer(layout_key, n_cards, has_layout):
         first = (f"The {n_cards} cards are laid out in a heap around the significator. Each named pair "
                  f"is linked (2 with 3, 4 with 5, and so on to 12 with 13), and the significator is "
                  f"linked with the Counter-Balance (14) and the Climax (15).")
+    elif layout_key == "14":
+        first = (f"The {n_cards} cards are laid out as Waite's Celtic Cross and linked in its named "
+                 f"pairs: what covers with what crosses (1 with 2), the crown with what is beneath "
+                 f"(3 with 4), what is behind with what is before (5 with 6), the staff from 7 up "
+                 f"to 10, and the matter now with what will come (1 with 10).")
     elif layout_key in TREE_LAYOUTS:
         first = ("The cards sit on the ten Sephiroth and are linked along the paths of the Tree of "
                  "Life: two cards are linked when a path joins their Sephiroth.")
     else:
         first = "The cards are linked in the order they were laid out: 1 with 2, 2 with 3, and so on."
     lines = [first, f"Each pair gets an element score. {SCORE_RULE}"]
-    if layout_key in HEAP_LAYOUTS:
+    if layout_key == "14":
+        lines.append("The cross is not a wheel, so these pairs get no astrological aspect: the "
+                     "places in the drawing only show where each card lies.")
+    elif layout_key in HEAP_LAYOUTS:
         lines.append("A heap is not a wheel, so these pairs get no astrological aspect: the "
                      "places in the drawing only show where each card lies.")
     elif has_layout:
@@ -652,9 +660,10 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
     for number, (layout_key, start, end, name) in enumerate(
             spread_segments(spread_results, spread_key), start=1):
         seg_cards = [dict(c, index=c["index"] - start) for c in cards[start:end]]
-        # A heap's "Heap Pair" entries carry no aspect (its links are its element pairs), so
-        # they are left out of every aspect count, list and drawing.
-        seg_aspects = [] if layout_key in HEAP_LAYOUTS else [
+        # A heap's "Heap Pair" (and a Celtic Cross's "Cross Pair") entries carry no aspect (its
+        # links are its element pairs), so they are left out of every aspect count, list and
+        # drawing.
+        seg_aspects = [] if layout_key in NAMED_PAIR_LAYOUTS else [
             _aspect_view(s, start) for s in spatial_matrix if start <= s["from_index"] < end]
         seg_dignity = [d for d in dignity_matrix if start <= d["from_index"] < end]
         seg_pairs = [{"a": d["from_index"] - start, "b": d["to_index"] - start, "score": d["score"]}
