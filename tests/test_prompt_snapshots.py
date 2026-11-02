@@ -14,7 +14,7 @@ import pytest
 
 from ootk import book_t
 from ootk.analysis import withheld_summary
-from ootk.report import analyze_reading
+from ootk.report import analyze_reading, liber_777_markdown
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator, significator_places
 from ootk.spreads import BOOK_T_KEY, BOOK_T_OP_NAMES, BOOK_T_SPREAD, SPREADS, spread_positions
 
@@ -155,3 +155,40 @@ def test_book_t_prompt_counts_and_pairs_each_operation():
     assert "Book T says to abandon the divination here" in prompt
     assert "Counting numbers (Book T)" in prompt
     assert len(prompt) < 70000
+
+
+def test_liber_777_rows_list_every_card_once_per_part():
+    """Each card's four colour scales and Yetziratic title are given once per 777 row, with the
+    card's position on it. Under the Thoth swap the Emperor, the Star and their courts take the
+    colours from their sign's row and the title from their path's row, and say so."""
+    prompt = build_prompt("12")
+    table = prompt.split("| 777 Row |", 1)[1].split("\n\n", 1)[0]
+    rows = [r for r in table.splitlines()[2:] if r.startswith("| ")]
+    cells = [[c.strip() for c in r.strip("|").split("|")] for r in rows]
+    listed = [p for row in cells for p in row[-1].split(", ")]
+    colours = [p.split(" (")[0] for p in listed if not p.endswith("(title)")]
+    titles = [p.split(" (")[0] for p in listed if not p.endswith("(colours)")]
+    assert sorted(map(int, colours)) == sorted(map(int, titles)) == list(range(1, 76))
+    by_row = {row[0]: row for row in cells}
+    star = REFERENCE["rows"]["XVII - The Star"]
+    assert star["yetziratic_title"] == "Constituting Intelligence"              # Heh, path 15
+    assert (star["king_scale_color"], star["queen_scale_color"]) == ("Violet", "Sky blue")  # Aquarius
+    assert by_row["Path 28 Fish-hook"][1:6] == ["Natural Intelligence", "Violet", "Sky blue",
+                                               "Bluish mauve", "White tinged purple"]
+    assert "(colours)" in by_row["Path 28 Fish-hook"][-1] and "(title)" in by_row["Path 15 Window"][-1]
+    assert "King Scale Color" not in prompt         # the King Scale is in the table now
+
+
+def test_a_card_on_one_row_has_no_split_note():
+    """A pip takes its colours and title from its Sephira's row, so it needs no (colours)/(title) mark."""
+    item = {"position_number": 1, "position_name": "Card",
+            "card_data": copy.deepcopy(REFERENCE["rows"]["6 of Swords - Science"])}
+    md = liber_777_markdown([item])
+    assert "(colours)" not in md
+    assert "| Sephira 6 Beauty | Intelligence of the Mediating Influence | Clear pink rose |" in md
+
+
+def test_ootk_prompt_leaves_room_under_the_gemini_limit():
+    """Gemini stops reading near 78,600 characters and a question may be 2,000; the 777 table
+    must not push the full Opening of the Key past that."""
+    assert len(build_prompt("12")) + 2000 < 78600

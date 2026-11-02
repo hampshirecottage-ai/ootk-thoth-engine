@@ -21,7 +21,7 @@ It places the Hebrew letters and the Platonic solids in three-dimensional space 
   - Operation 4: 36 decans counted from 0° Leo as in Book T, each labelled with its ruler, sign and pip (Decan 1: Saturn in Leo (5 of Wands))
   - Each operation reshuffles the whole deck (Operation 1 keeps the seed's own order), and a card may appear in more than one operation
   - **Where the significator falls**: for a seeded draw, each operation's whole shuffled deck is also laid out as Book T does (cut into four I H V H packs for Operation 1, then dealt round into 12, 12 and 36 packs), and the prompt and report say which pack holds the significator. The cards shown are the first dealt to each house, sign or decan, so this changes no draw
-- **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Crowley swapped letters, not signs, so King Scale colours and Cube of Space edges stay with the sign: under both `thoth` and `golden_dawn` the Emperor and the Queen of Wands (Aries) are Scarlet on the North-East edge, and the Star and the Prince of Swords (Aquarius) Violet on the Upper-South edge. `french_egyptian` Majors take the colour of their French path.
+- **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Crowley swapped letters, not signs, so the Liber 777 colour scales and Cube of Space edges stay with the sign (a card's Yetziratic title stays with the path it sits on): under both `thoth` and `golden_dawn` the Emperor and the Queen of Wands (Aries) are Scarlet on the North-East edge, and the Star and the Prince of Swords (Aquarius) Violet on the Upper-South edge. `french_egyptian` Majors take the colour of their French path.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
 - **PostgreSQL persistence** of sessions, spreads, card pulls and testimonials.
@@ -240,7 +240,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Summary first.** Then come a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
 - **Drawings.** Operation 1 is drawn as the 15-card heap inside a triangle (its cards are compared by element only: side-by-side cards in a heap take no astrological aspect), houses and signs as 12-segment wheels (the houses with each house's meaning), and decans as a 36-segment ring, with card images. Switch between **Aspect lines** and **Element pairs**. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **How the cards are linked.** Each operation explains in plain words which cards are compared. Tap a card in a drawing to see its element pairs and aspects, each with its score and reason, in an inspector beside the drawing (below it on phones); tap a partner to jump to it.
-- **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, King Scale colour, small maps of where it sits (as on `/maps`), and every aspect and dignity it takes part in. Escape closes it.
+- **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, its four Liber 777 colour scales (King, Queen, Prince, Princess) and Yetziratic title, small maps of where it sits (as on `/maps`), and every aspect and dignity it takes part in. Escape closes it.
 - **Save.** The **Save** menu prints or saves a PDF with every section expanded, downloads the prompt as Markdown, or the whole reading as JSON. Each drawing also downloads as an SVG (card images link back to the running server).
 
 ### Docker, Render and Hugging Face Spaces
@@ -340,7 +340,7 @@ The repository holds only the engine and reference data. Your own readings stay 
 | Table | Purpose |
 |---|---|
 | `thoth_cards` | The 78 cards (title, arcana, suit, rank, key scale, attribution) |
-| `correspondences` | Hebrew letter, path/sephira, element/planet/sign, King Scale colour, Cube of Space place, and the French/Egyptian letters and paths |
+| `correspondences` | Hebrew letter, path/sephira, element/planet/sign, King Scale colour (the other 777 columns, including the Queen, Prince and Princess scales and the Yetziratic titles, are in `attributions`), Cube of Space place, and the French/Egyptian letters and paths |
 | `tarot_sessions` | One row per reading (operation, significator, notes, and `report_settings` with the report link) |
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |

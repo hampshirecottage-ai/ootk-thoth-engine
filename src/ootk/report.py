@@ -29,8 +29,8 @@ MAPPING_LABELS = {
 MAPPING_NOTES = {
     "thoth": (
         "Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of "
-        "Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale "
-        "colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's "
+        "Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales "
+        "and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's "
         "edge (North-East, Aries) and the reverse."
     ),
     "french_egyptian": (
@@ -320,10 +320,69 @@ def _cards_md(spread_results, legend, off=frozenset()):
             else:
                 md += f"- **Platonic Topology**: `{solid}` (Faces: {data.get('solid_faces', 'N/A')}, Vertices: {data.get('solid_vertices', 'N/A')}) | Dual: `{data.get('dual_solid', 'N/A')}`\n"
                 md += f"- **Topological Role**: {data.get('topological_role', 'N/A')}\n"
-        if "tree" not in off:
+        if "tree" not in off and data.get('colour_key_scale') is None:
             md += f"- **King Scale Color**: {data['king_scale_color']}\n"
         md += "\n"
+    if "tree" not in off:
+        md += liber_777_markdown(spread_results)
     return md
+
+def _row_label(key_scale, name):
+    kind = "Sephira" if key_scale <= 10 else "Path"
+    return f"{kind} {key_scale} {name}" if name else f"{kind} {key_scale}"
+
+def liber_777_markdown(spread_results):
+    """The four Liber 777 colour scales (King, Queen, Prince, Princess) and the Yetziratic
+    title of each 777 row the drawn cards use, once per row with the positions on it, so a long
+    spread does not repeat them on every card (the OOTK prompt must stay under ~78k characters). The colours come from the King Scale's row (the sign's) and the title
+    from the path the card is shown on; under the Thoth swap those differ for the Emperor, the
+    Star and their courts, and the table marks which part each of those positions takes."""
+    rows = {}                                   # key_scale -> {"label", "colours", "title", "pos"}
+    for item in spread_results:
+        data, pos = item["card_data"], item["position_number"]
+        ck, tk = data.get("colour_key_scale"), data.get("title_key_scale")
+        has_colours = any(data.get(k) for k in ("king_scale_color", "queen_scale_color", "prince_scale_color",
+                                                "princess_scale_color"))
+        parts = []
+        if ck is not None and has_colours:
+            parts.append((ck, data.get("colour_row_name"), "colours"))
+        if tk is not None and data.get("yetziratic_title"):
+            parts.append((tk, data.get("title_row_name"), "title"))
+        if not parts:
+            continue
+        both = len({k for k, _, _ in parts}) == 1 and len(parts) == 2
+        for key, name, part in parts:
+            row = rows.setdefault(key, {"label": _row_label(key, name), "colours": None,
+                                        "title": None, "pos": []})
+            if part == "colours":
+                row["colours"] = (data.get("king_scale_color"), data.get("queen_scale_color"), data.get("prince_scale_color"),
+                                  data.get("princess_scale_color"))
+            else:
+                row["title"] = data.get("yetziratic_title")
+            mark = "" if both else f" ({part})"
+            if both and part == "title":
+                continue                        # listed once, under colours
+            if f"{pos}{mark}" not in row["pos"]:
+                row["pos"].append(f"{pos}{mark}")
+    if not rows:
+        return ""
+    split = any("(" in p for row in rows.values() for p in row["pos"])
+    md = ("**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher "
+          "Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four "
+          "scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or "
+          "Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or "
+          "element, as its letter does.")
+    if split:
+        md += (" A position marked (colours) takes only the colours from that row, one marked (title) "
+               "only the title: the colours follow the sign and the title follows the card's path.")
+    md += ("\n\n| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |\n"
+           "|---|---|---|---|---|---|---|\n")
+    for key in sorted(rows):
+        row = rows[key]
+        scales = " | ".join(c or "" for c in (row["colours"] or ("",) * 4))
+        md += (f"| {row['label']} | {row['title'] or ''} | {scales} | "
+               f"{', '.join(row['pos'])} |\n")
+    return md + "\n"
 
 def _place_line(data, letter_str, off):
     """The card's place on the Tree with its letter: a pip's Sephira, a Major's path, a court's

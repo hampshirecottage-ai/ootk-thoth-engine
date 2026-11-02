@@ -487,3 +487,28 @@ def test_prompt_snapshot_fixture_matches_the_database(conn):
             f.write("\n")
     with open(path, encoding="utf-8") as f:
         assert json.load(f) == json.loads(json.dumps(current))
+
+
+@pytest.mark.parametrize("system,title,colour_row,queen,prince,princess,title_row,yetziratic", [
+    ("thoth", "XVII - The Star", 28, "Sky blue", "Bluish mauve", "White tinged purple", 15, "Constituting Intelligence"),
+    ("thoth", "IV - The Emperor", 15, "Red", "Brilliant flame", "Glowing red", 28, "Natural Intelligence"),
+    ("golden_dawn", "XVII - The Star", 28, "Sky blue", "Bluish mauve", "White tinged purple", 28, "Natural Intelligence"),
+    ("french_egyptian", "XVII - The Star", 27, "Red", "Venetian red", "Bright red, rayed azure or emerald", 27, "Exciting Intelligence"),
+    ("thoth", "Ace of Cups", 1, "White brilliance", "White brilliance", "White flecked gold", 1, "Admirable or Hidden Intelligence"),
+    ("thoth", "Princess of Disks", 32, "Black", "Blue black", "Black rayed blue", 32, "Administrative Intelligence"),
+])
+def test_other_colour_scales_follow_the_sign_and_the_title_follows_the_path(
+        conn, system, title, colour_row, queen, prince, princess, title_row, yetziratic):
+    card = fetch(conn, title, system)
+    assert (card["colour_key_scale"], card["queen_scale_color"], card["prince_scale_color"],
+            card["princess_scale_color"]) == (colour_row, queen, prince, princess)
+    assert (card["title_key_scale"], card["yetziratic_title"]) == (title_row, yetziratic)
+
+
+@pytest.mark.parametrize("system", ["thoth", "golden_dawn", "french_egyptian"])
+def test_every_card_has_all_four_scales_and_a_title(conn, system):
+    rows = db.fetch_cards_correspondences(conn, [c["title"] for c in db.fetch_all_cards(conn)], system=system)
+    for title, card in rows.items():
+        for key in ("king_scale_color", "queen_scale_color", "prince_scale_color",
+                    "princess_scale_color", "yetziratic_title"):
+            assert card[key] and card[key] != "...", (title, key)

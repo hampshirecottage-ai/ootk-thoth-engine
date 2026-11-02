@@ -17,7 +17,7 @@
   * Op 3 (signs): none of 12 cards on their own sign - expected 0.77 at random, z=-0.90
   * Op 4 (decans): none of 36 cards on their own decan - expected 0.46 at random, z=-0.68
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their King Scale colour and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -39,7 +39,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 2: [Op 1] 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
@@ -49,7 +48,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 3: [Op 1] 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -57,7 +55,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 4: [Op 1] 4. Further Outcome (Right Pair A)
 - **Card Drawn**: 7 of Cups - Debauch
@@ -65,7 +62,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 5: [Op 1] 5. Further Outcome (Right Pair B)
 - **Card Drawn**: V - The Hierophant
@@ -77,7 +73,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Red orange
 
 ### Position 6: [Op 1] 6. Unexpected / External Factors (Center Pair A)
 - **Card Drawn**: XI - Lust
@@ -89,7 +84,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow, greenish
 
 ### Position 7: [Op 1] 7. Unexpected / External Factors (Center Pair B)
 - **Card Drawn**: 2 of Wands - Dominion
@@ -97,7 +91,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 8: [Op 1] 8. Psychological / Subconscious Basis (Base Left A)
 - **Card Drawn**: Knight of Cups
@@ -107,7 +100,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Crimson (ultra violet)
 
 ### Position 9: [Op 1] 9. Psychological / Subconscious Basis (Base Left B)
 - **Card Drawn**: 2 of Swords - Peace
@@ -115,7 +107,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Moon in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 10: [Op 1] 10. Environmental / Material Basis (Base Right A)
 - **Card Drawn**: 7 of Swords - Futility
@@ -123,7 +114,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Moon in Aquarius
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Amber
 
 ### Position 11: [Op 1] 11. Environmental / Material Basis (Base Right B)
 - **Card Drawn**: 10 of Wands - Oppression
@@ -131,7 +121,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Saturn in Sagittarius
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow
 
 ### Position 12: [Op 1] 12. Final Synthesis / Karma (Top Apex A)
 - **Card Drawn**: 3 of Disks - Works
@@ -139,7 +128,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Crimson
 
 ### Position 13: [Op 1] 13. Final Synthesis / Karma (Top Apex B)
 - **Card Drawn**: XVI - The Tower
@@ -150,7 +138,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Scarlet
 
 ### Position 14: [Op 1] 14. Key Counter-Balance / Receptivity
 - **Card Drawn**: 3 of Swords - Sorrow
@@ -158,7 +145,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Crimson
 
 ### Position 15: [Op 1] 15. Ultimate Climax / Resolution
 - **Card Drawn**: I - The Magus
@@ -169,7 +155,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Yellow
 
 ### Position 16: [Op 2] 1. First House (Ascendant / Physical Self)
 - **Card Drawn**: 8 of Swords - Interference
@@ -177,7 +162,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet purple
 
 ### Position 17: [Op 2] 2. Second House (Finances & Values)
 - **Card Drawn**: 5 of Swords - Defeat
@@ -185,7 +169,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Venus in Aquarius
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Orange
 
 ### Position 18: [Op 2] 3. Third House (Local Mind & Travel)
 - **Card Drawn**: Knight of Cups
@@ -195,7 +178,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Crimson (ultra violet)
 
 ### Position 19: [Op 2] 4. Fourth House (Home & Roots)
 - **Card Drawn**: X - Fortune
@@ -206,7 +188,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `כ (Kaph)` | Golden Dawn: `כ (Kaph)` | French/Egyptian: `Yod (י)`
 - **Spatial Dimension**: `Double_Direction` (West)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Violet
 
 ### Position 20: [Op 2] 5. Fifth House (Creativity & Will)
 - **Card Drawn**: 6 of Cups - Pleasure
@@ -214,7 +195,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Sun in Scorpio
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Clear pink rose
 
 ### Position 21: [Op 2] 6. Sixth House (Health & Work)
 - **Card Drawn**: 2 of Disks - Change
@@ -222,7 +202,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Pure soft blue
 
 ### Position 22: [Op 2] 7. Seventh House (Partnerships)
 - **Card Drawn**: VI - The Lovers
@@ -234,7 +213,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Orange
 
 ### Position 23: [Op 2] 8. Eighth House (Shared Assets & Death)
 - **Card Drawn**: 10 of Swords - Ruin
@@ -242,7 +220,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Sun in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Yellow
 
 ### Position 24: [Op 2] 9. Ninth House (Philosophy & Higher Mind)
 - **Card Drawn**: VII - The Chariot
@@ -254,7 +231,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 25: [Op 2] 10. Tenth House (Career & Public Standing)
 - **Card Drawn**: 7 of Disks - Failure
@@ -262,7 +238,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Saturn in Taurus
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Amber
 
 ### Position 26: [Op 2] 11. Eleventh House (Alliances & Hopes)
 - **Card Drawn**: 9 of Swords - Cruelty
@@ -270,7 +245,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Mars in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Indigo
 
 ### Position 27: [Op 2] 12. Twelfth House (Subconscious & Hidden)
 - **Card Drawn**: Queen of Disks
@@ -280,7 +254,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ע (Ayin)` | Golden Dawn: `ע (Ayin)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-West Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Indigo
 
 ### Position 28: [Op 3] 1. Aries
 - **Card Drawn**: 5 of Disks - Worry
@@ -288,7 +261,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Mercury in Taurus
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Orange
 
 ### Position 29: [Op 3] 2. Taurus
 - **Card Drawn**: XVII - The Star
@@ -300,7 +272,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 30: [Op 3] 3. Gemini
 - **Card Drawn**: Prince of Swords
@@ -310,7 +281,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 31: [Op 3] 4. Cancer
 - **Card Drawn**: XIV - Art
@@ -322,7 +292,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Blue
 
 ### Position 32: [Op 3] 5. Leo
 - **Card Drawn**: XVI - The Tower
@@ -333,7 +302,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Scarlet
 
 ### Position 33: [Op 3] 6. Virgo
 - **Card Drawn**: Ace of Cups
@@ -341,7 +309,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Crown (כתר (Kether))
 - **Attribution**: Root of the Powers of Water
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Brilliance
 
 ### Position 34: [Op 3] 7. Libra
 - **Card Drawn**: 4 of Wands - Completion
@@ -349,7 +316,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 35: [Op 3] 8. Scorpio
 - **Card Drawn**: Knight of Disks
@@ -359,7 +325,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `י (Yod)` | Golden Dawn: `י (Yod)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-North Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Green, yellowish
 
 ### Position 36: [Op 3] 9. Sagittarius
 - **Card Drawn**: 4 of Swords - Truce
@@ -367,7 +332,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 37: [Op 3] 10. Capricorn
 - **Card Drawn**: 10 of Swords - Ruin
@@ -375,7 +339,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Sun in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Yellow
 
 ### Position 38: [Op 3] 11. Aquarius
 - **Card Drawn**: I - The Magus
@@ -386,7 +349,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Yellow
 
 ### Position 39: [Op 3] 12. Pisces
 - **Card Drawn**: 6 of Disks - Success
@@ -394,7 +356,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Moon in Taurus
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Clear pink rose
 
 ### Position 40: [Op 4] Decan 1: Saturn in Leo (5 of Wands)
 - **Card Drawn**: Prince of Wands
@@ -404,7 +365,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow, greenish
 
 ### Position 41: [Op 4] Decan 2: Jupiter in Leo (6 of Wands)
 - **Card Drawn**: 5 of Disks - Worry
@@ -412,7 +372,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Mercury in Taurus
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Orange
 
 ### Position 42: [Op 4] Decan 3: Mars in Leo (7 of Wands)
 - **Card Drawn**: VI - The Lovers
@@ -424,7 +383,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Orange
 
 ### Position 43: [Op 4] Decan 4: Sun in Virgo (8 of Disks)
 - **Card Drawn**: VIII - Adjustment
@@ -436,7 +394,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `Cheth (ח)`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Emerald green
 
 ### Position 44: [Op 4] Decan 5: Venus in Virgo (9 of Disks)
 - **Card Drawn**: Prince of Cups
@@ -446,7 +403,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `נ (Nun)` | Golden Dawn: `נ (Nun)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (South-West Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Green blue
 
 ### Position 45: [Op 4] Decan 6: Mercury in Virgo (10 of Disks)
 - **Card Drawn**: 3 of Swords - Sorrow
@@ -454,7 +410,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Crimson
 
 ### Position 46: [Op 4] Decan 7: Moon in Libra (2 of Swords)
 - **Card Drawn**: 6 of Cups - Pleasure
@@ -462,7 +417,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Sun in Scorpio
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Clear pink rose
 
 ### Position 47: [Op 4] Decan 8: Saturn in Libra (3 of Swords)
 - **Card Drawn**: Ace of Wands
@@ -470,7 +424,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Crown (כתר (Kether))
 - **Attribution**: Root of the Powers of Fire
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Brilliance
 
 ### Position 48: [Op 4] Decan 9: Jupiter in Libra (4 of Swords)
 - **Card Drawn**: Princess of Cups
@@ -480,7 +433,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Deep blue
 
 ### Position 49: [Op 4] Decan 10: Mars in Scorpio (5 of Cups)
 - **Card Drawn**: Queen of Cups
@@ -490,7 +442,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 50: [Op 4] Decan 11: Sun in Scorpio (6 of Cups)
 - **Card Drawn**: 2 of Swords - Peace
@@ -498,7 +449,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Moon in Libra
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Pure soft blue
 
 ### Position 51: [Op 4] Decan 12: Venus in Scorpio (7 of Cups)
 - **Card Drawn**: VII - The Chariot
@@ -510,7 +460,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Amber
 
 ### Position 52: [Op 4] Decan 13: Mercury in Sagittarius (8 of Wands)
 - **Card Drawn**: 8 of Swords - Interference
@@ -518,7 +467,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet purple
 
 ### Position 53: [Op 4] Decan 14: Moon in Sagittarius (9 of Wands)
 - **Card Drawn**: XIX - The Sun
@@ -529,7 +477,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ר (Resh)` | Golden Dawn: `ר (Resh)` | French/Egyptian: `Qoph (ק)`
 - **Spatial Dimension**: `Double_Direction` (South)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Orange
 
 ### Position 54: [Op 4] Decan 15: Saturn in Sagittarius (10 of Wands)
 - **Card Drawn**: 9 of Swords - Cruelty
@@ -537,7 +484,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Mars in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Indigo
 
 ### Position 55: [Op 4] Decan 16: Jupiter in Capricorn (2 of Disks)
 - **Card Drawn**: XVI - The Tower
@@ -548,7 +494,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Scarlet
 
 ### Position 56: [Op 4] Decan 17: Mars in Capricorn (3 of Disks)
 - **Card Drawn**: XX - The Aeon
@@ -559,7 +504,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `Resh (ר)`
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Glowing orange scarlet
 
 ### Position 57: [Op 4] Decan 18: Sun in Capricorn (4 of Disks)
 - **Card Drawn**: XII - The Hanged Man
@@ -570,7 +514,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `Lamed (ל)`
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Deep blue
 
 ### Position 58: [Op 4] Decan 19: Venus in Aquarius (5 of Swords)
 - **Card Drawn**: 3 of Disks - Works
@@ -578,7 +521,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Crimson
 
 ### Position 59: [Op 4] Decan 20: Mercury in Aquarius (6 of Swords)
 - **Card Drawn**: IV - The Emperor
@@ -590,7 +532,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Scarlet
 
 ### Position 60: [Op 4] Decan 21: Moon in Aquarius (7 of Swords)
 - **Card Drawn**: 4 of Wands - Completion
@@ -598,7 +539,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Deep violet
 
 ### Position 61: [Op 4] Decan 22: Saturn in Pisces (8 of Cups)
 - **Card Drawn**: Prince of Swords
@@ -608,7 +548,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Violet
 
 ### Position 62: [Op 4] Decan 23: Jupiter in Pisces (9 of Cups)
 - **Card Drawn**: 10 of Wands - Oppression
@@ -616,7 +555,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Saturn in Sagittarius
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow
 
 ### Position 63: [Op 4] Decan 24: Mars in Pisces (10 of Cups)
 - **Card Drawn**: Prince of Disks
@@ -626,7 +564,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Red orange
 
 ### Position 64: [Op 4] Decan 25: Mars in Aries (2 of Wands)
 - **Card Drawn**: Princess of Wands
@@ -636,7 +573,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Glowing orange scarlet
 
 ### Position 65: [Op 4] Decan 26: Sun in Aries (3 of Wands)
 - **Card Drawn**: X - Fortune
@@ -647,7 +583,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `כ (Kaph)` | Golden Dawn: `כ (Kaph)` | French/Egyptian: `Yod (י)`
 - **Spatial Dimension**: `Double_Direction` (West)
 - **Platonic Solid**: `Dodecahedron`
-- **King Scale Color**: Violet
 
 ### Position 66: [Op 4] Decan 27: Venus in Aries (4 of Wands)
 - **Card Drawn**: 0 - The Fool
@@ -658,7 +593,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `א (Aleph)` | Golden Dawn: `א (Aleph)` | French/Egyptian: `Shin (ש)`
 - **Spatial Dimension**: `Mother_Axis` (Vertical Axis (above to below))
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Bright pale yellow
 
 ### Position 67: [Op 4] Decan 28: Mercury in Taurus (5 of Disks)
 - **Card Drawn**: XVIII - The Moon
@@ -670,7 +604,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `Tzaddi (צ)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Crimson (ultra violet)
 
 ### Position 68: [Op 4] Decan 29: Moon in Taurus (6 of Disks)
 - **Card Drawn**: Queen of Swords
@@ -680,7 +613,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Emerald green
 
 ### Position 69: [Op 4] Decan 30: Saturn in Taurus (7 of Disks)
 - **Card Drawn**: 10 of Swords - Ruin
@@ -688,7 +620,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Sun in Gemini
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Yellow
 
 ### Position 70: [Op 4] Decan 31: Jupiter in Gemini (8 of Swords)
 - **Card Drawn**: 9 of Cups - Happiness
@@ -696,7 +627,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Jupiter in Pisces
 - **Platonic Solid**: `Icosahedron`
-- **King Scale Color**: Indigo
 
 ### Position 71: [Op 4] Decan 32: Mars in Gemini (9 of Swords)
 - **Card Drawn**: 2 of Disks - Change
@@ -704,7 +634,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
 - **Platonic Solid**: `Hexahedron (Cube)`
-- **King Scale Color**: Pure soft blue
 
 ### Position 72: [Op 4] Decan 33: Sun in Gemini (10 of Swords)
 - **Card Drawn**: XIV - Art
@@ -716,7 +645,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Blue
 
 ### Position 73: [Op 4] Decan 34: Venus in Cancer (2 of Cups)
 - **Card Drawn**: XI - Lust
@@ -728,7 +656,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Yellow, greenish
 
 ### Position 74: [Op 4] Decan 35: Mercury in Cancer (3 of Cups)
 - **Card Drawn**: Queen of Wands
@@ -738,7 +665,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
-- **King Scale Color**: Scarlet
 
 ### Position 75: [Op 4] Decan 36: Moon in Cancer (4 of Cups)
 - **Card Drawn**: 5 of Swords - Defeat
@@ -746,7 +672,40 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Venus in Aquarius
 - **Platonic Solid**: `Octahedron`
-- **King Scale Color**: Orange
+
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+
+| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
+|---|---|---|---|---|---|---|
+| Sephira 1 Crown | Admirable or Hidden Intelligence | Brilliance | White brilliance | White brilliance | White flecked gold | 33, 47 |
+| Sephira 2 Wisdom | Illuminating Intelligence | Pure soft blue | Grey | Blue pearl grey, like mother-of-pearl | White, flecked red, blue, and yellow | 7, 9, 21, 50, 71 |
+| Sephira 3 Understanding | Sanctifying Intelligence | Crimson | Black | Dark brown | Grey flecked pink | 12, 14, 45, 58 |
+| Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 3, 34, 36, 60 |
+| Sephira 5 Strength | Radical Intelligence | Orange | Scarlet red | Bright scarlet | Red flecked black | 17, 28, 41, 75 |
+| Sephira 6 Beauty | Intelligence of the Mediating Influence | Clear pink rose | Yellow (gold) | Rich salmon | Gold amber | 20, 39, 46 |
+| Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 4, 10, 25 |
+| Sephira 8 Splendour | Absolute (Perfect) Intelligence | Violet purple | Orange | Red-russet | Yellow-brown flecked white | 16, 52 |
+| Sephira 9 Foundation | Pure (Clear) Intelligence | Indigo | Violet | Very dark purple | Citrine flecked azure | 26, 54, 70 |
+| Sephira 10 Kingdom | Resplendent Intelligence | Yellow | Citrine, olive, russet and black | As Queen scale, but flecked with gold | Black rayed yellow | 11, 23, 37, 62, 69 |
+| Path 11 Ox | Scintillating Intelligence | Bright pale yellow | Sky blue | Blue emerald green | Emerald flecked gold | 66 |
+| Path 12 House | Intelligence of Transparency | Yellow | Purple | Grey | Indigo rayed violet | 15, 38 |
+| Path 15 Window | Constituting Intelligence | Scarlet | Red | Brilliant flame | Glowing red | 2 (title), 29 (title), 30 (title), 59 (colours), 61 (title), 74 (colours) |
+| Path 16 Nail | Triumphal or Eternal Intelligence | Red orange | Deep indigo | Deep warm olive | Rich brown | 5, 63 |
+| Path 17 Sword | Disposing Intelligence | Orange | Pale Mauve | New yellow leather | Reddish grey inclined to mauve | 22, 42 |
+| Path 18 Fence | Intelligence of the House of Influence | Amber | Maroon | Rich bright russet | Dark greenish brown | 1, 24, 49, 51 |
+| Path 19 Serpent | Intelligence of all the Activities of the Spiritual Being | Yellow, greenish | Deep purple | Grey | Reddish amber | 6, 40, 73 |
+| Path 20 Hand | Intelligence of Will | Green, yellowish | Slate grey | Green grey | Plum colour | 35 |
+| Path 21 Palm | Intelligence of Conciliation | Violet | Blue | Rich purple | Bright blue rayed yellow | 19, 65 |
+| Path 22 Ox Goad | Faithful Intelligence | Emerald green | Blue | Deep blue-green | Pale green | 43, 68 |
+| Path 23 Water | Stable Intelligence | Deep blue | Sea-green | Deep olive-green | White flecked purple | 48, 57 |
+| Path 24 Fish | Imaginative Intelligence | Green blue | Dull brown | Very dark brown | Livid indigo brown (like a black beetle) | 44 |
+| Path 25 Prop | Intelligence of Probation (Tentative) | Blue | Yellow | Green | Dark vivid blue | 31, 72 |
+| Path 26 Eye | Renovating Intelligence | Indigo | Black | Blue black | Cold dark grey near black | 27 |
+| Path 27 Mouth | Exciting Intelligence | Scarlet | Red | Venetian red | Bright red, rayed azure or emerald | 13, 32, 55 |
+| Path 28 Fish-hook | Natural Intelligence | Violet | Sky blue | Bluish mauve | White tinged purple | 2 (colours), 29 (colours), 30 (colours), 59 (title), 61 (colours), 74 (title) |
+| Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8, 18, 67 |
+| Path 30 Head | Collecting Intelligence | Orange | Gold Yellow | Rich amber | Amber rayed red | 53 |
+| Path 31 Tooth | Perpetual Intelligence | Glowing orange scarlet | Vermillion | Scarlet, flecked gold | Vermillion flecked crimson & emerald | 56, 64 |
 
 
 ---

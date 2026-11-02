@@ -94,6 +94,7 @@ def test_hebrew_off(spread_key):
 def test_tree_off(spread_key):
     text = prompt(spread_key, "tree")
     assert "Path/Sephira" not in text and "King Scale Color" not in text
+    assert "Liber 777 Rows" not in text and "Intelligence" not in text
     assert "Framework Basis" not in text and "Sephira (both systems)" not in text
     if spread_key != BOOK_T_KEY:      # the Majors keep their letter
         assert lines(text, "Hebrew Letter")
