@@ -56,10 +56,20 @@ function updateMoreSummary() {
     const short = el => el.options[el.selectedIndex].text.split(" (")[0].replace(/^\d+\.\s*/, "");
     const parts = [short($("mappingSelect")), $("frameworkSelect").value === "auto" ? "" : short($("frameworkSelect"))];
     if (!manual && $("seedInput").value.trim()) parts.unshift(`seed ${$("seedInput").value.trim()}`);
+    const off = promptPartsOff();
+    if (off.length) parts.push(`${off.length} prompt part${off.length === 1 ? "" : "s"} off`);
     $("moreSummary").textContent = "· " + parts.filter(Boolean).join(" · ");
+    $("partsSummary").textContent = off.length ? `· ${off.length} off` : "· all on";
 }
 $("moreOptions").addEventListener("input", updateMoreSummary);
 $("moreOptions").addEventListener("change", updateMoreSummary);
+
+// ---------- Parts of the AI prompt: the names of the ones switched off ----------
+function promptPartsOff() {
+    return Array.from(form.querySelectorAll('#promptParts input[name="include"]'))
+        .filter(box => !box.checked)
+        .map(box => box.nextElementSibling.firstChild.textContent.trim());
+}
 
 // ---------- significator ----------
 // Seed mode: Book T description asked as a few questions (who it is about, person or matter,

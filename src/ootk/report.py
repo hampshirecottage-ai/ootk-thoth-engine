@@ -68,6 +68,11 @@ def without_components(text):
                          f"Use any of: {', '.join(COMPONENTS)}.")
     return frozenset(keys)
 
+def components_param(off):
+    """"astrology,geometry": the keys in COMPONENTS order, for a share link, a saved reading and
+    `ootk --without`; "" when nothing is left out."""
+    return ",".join(k for k in COMPONENTS if k in off)
+
 def components_off_markdown(off):
     """The header line naming what this prompt leaves out, so the AI does not fill it in."""
     if not off:

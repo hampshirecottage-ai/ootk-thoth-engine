@@ -643,6 +643,7 @@
             {% if not significator.startswith('None') %}<div><span>Significator</span>{{ significator }}</div>{% endif %}
             <div><span>Mapping</span>{{ mapping_label }}</div>
             <div><span>Framework</span>{{ S.framework }}<div class="muted" style="font-size:0.85em">{{ S.framework_basis }}</div></div>
+            {% if left_out %}<div><span>Left out of the AI prompt</span>{{ left_out | join(", ") }}<div class="muted" style="font-size:0.85em">Switched off for this reading; the cards are the same.</div></div>{% endif %}
             <div>
                 <span>Seed</span>
                 {% if seed %}
