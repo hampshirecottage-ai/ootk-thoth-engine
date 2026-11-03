@@ -1877,6 +1877,11 @@ def journal_entry_or_404(conn, entry_id):
     return entry
 
 
+def journal_entry_page(entry):
+    """Back to an entry's page, by the id stored with the entry (not the one in the URL)."""
+    return RedirectResponse(f"/admin/journal/{int(entry['entry_id'])}", status_code=303)
+
+
 @app.get("/admin/journal", response_class=HTMLResponse)
 def admin_journal(request: Request):
     """Every journal entry, the score so far, and the form for a new entry."""
@@ -1986,7 +1991,7 @@ def admin_journal_answers(request: Request, entry_id: int, answer_a: str = Form(
         if journal.stage(entry) != "answers":
             raise HTTPException(status_code=409, detail="This entry's answers are already saved.")
         update_journal_entry(conn, entry_id, answer_a=answer_a, answer_b=answer_b)
-    return RedirectResponse(f"/admin/journal/{entry_id}", status_code=303)
+    return journal_entry_page(entry)
 
 
 @app.post("/admin/journal/{entry_id}/outcome")
@@ -2004,7 +2009,7 @@ def admin_journal_outcome(request: Request, entry_id: int, outcome: str = Form("
             raise HTTPException(status_code=409, detail="This entry isn't waiting for its outcome.")
         update_journal_entry(conn, entry_id, outcome=outcome, outcome_at=datetime.now(timezone.utc),
                              real_shown_first=secrets.randbelow(2) == 0)
-    return RedirectResponse(f"/admin/journal/{entry_id}", status_code=303)
+    return journal_entry_page(entry)
 
 
 @app.post("/admin/journal/{entry_id}/judge")
@@ -2029,7 +2034,7 @@ def admin_journal_judge(request: Request, entry_id: int, pick: str = Form(""),
         rated = dict(zip(order, ratings))
         update_journal_entry(conn, entry_id, picked=order[int(pick) - 1], rating_real=rated["real"],
                              rating_decoy=rated["decoy"], judged_at=datetime.now(timezone.utc))
-    return RedirectResponse(f"/admin/journal/{entry_id}", status_code=303)
+    return journal_entry_page(entry)
 
 
 @app.post("/admin/journal/{entry_id}/delete")
