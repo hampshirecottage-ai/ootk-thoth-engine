@@ -30,12 +30,15 @@ from ootk.analysis import WITHHELD_MAX, derive_primary_element, king_scale_hex, 
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
-    connect, list_sessions, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
+    connect, create_journal_entry, delete_journal_entry, get_journal_entry, list_journal_entries,
+    update_journal_entry, list_sessions, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
     session_has_testimonial, set_testimonial_approved, waiting_testimonials,
 )
 from ootk.lockout import FailedLogins
+from ootk import journal
 from ootk.report import (
-    COMPONENTS, MAPPING_LABELS, analyze_reading, components_param, drawn_now, time_stamp, without_components,
+    COMPONENTS, MAPPING_LABELS, analyze_reading, components_param, drawn_now, end_of_prompt_marker, time_stamp,
+    without_components,
 )
 from ootk.rules import element_dignity
 from ootk import atlas
@@ -1824,6 +1827,222 @@ def admin_testimonial(request: Request, testimonial_id: int, action: str = Form(
             set_testimonial_approved(conn, testimonial_id, action == "approve")
     _testimonial_cache.clear()          # the front page picks the change up straight away
     return RedirectResponse("/admin", status_code=303)
+
+
+# ---------- admin: the private prediction journal (ootk.journal) ----------
+
+# A journal reading has no significator to choose, so the spreads that need one are left out.
+JOURNAL_SPREADS = tuple(k for k in SPREADS if not has_significator_position(spread_positions(k)))
+JOURNAL_DEFAULT_SPREAD = "3"
+JOURNAL_MAX_DAYS = 5 * 366
+
+
+def require_admin(request: Request):
+    if not is_admin(request):
+        raise HTTPException(status_code=403, detail="Sign in at /admin first.")
+
+
+def journal_settings(entry, seed):
+    """The run_reading() settings for one of an entry's two readings."""
+    return {"spread_key": entry["spread_key"], "topic": entry["question"], "significator": "",
+            "framework": entry["framework"], "mapping_system": entry["mapping_system"],
+            "draw_mode": "seed", "seed": seed, "selected_cards": "", "expect": "",
+            "drawn_at": entry["drawn_at"], "tz": "", "without": entry["without"]}
+
+
+def journal_reading(entry, seed, deck=None):
+    deck = deck or reference_deck()
+    titles, label = seeded_draw(deck, seed, entry["spread_key"], "")
+    return run_reading(journal_settings(entry, seed), titles, label, deck)
+
+
+def journal_prompts(entry):
+    """{"a": prompt, "b": prompt}: the two readings as the journal sends them, A and B in the
+    order fixed when the entry was made."""
+    deck = reference_deck()
+    seeds = ((entry["real_seed"], entry["decoy_seed"]) if entry["real_is_a"]
+             else (entry["decoy_seed"], entry["real_seed"]))
+    prompts = {}
+    for name, seed in zip("ab", seeds):
+        r = journal_reading(entry, seed, deck)
+        prompts[name] = journal.journal_prompt(r["analytical_prompt"], entry["settle_by"],
+                                               end_of_prompt_marker(len(r["spread_results"])))
+    return prompts
+
+
+def journal_entry_or_404(conn, entry_id):
+    entry = get_journal_entry(conn, entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="There is no journal entry with this number.")
+    return entry
+
+
+def journal_entry_page(entry):
+    """Back to an entry's page, by the id stored with the entry (not the one in the URL)."""
+    return RedirectResponse(f"/admin/journal/{int(entry['entry_id'])}", status_code=303)
+
+
+@app.get("/admin/journal", response_class=HTMLResponse)
+def admin_journal(request: Request):
+    """Every journal entry, the score so far, and the form for a new entry."""
+    if not is_admin(request):
+        return admin_page(request, signed_in=False)
+    with get_db_connection() as conn:
+        entries = list_journal_entries(conn)
+    for e in entries:
+        e["stage"] = journal.stage(e)
+    return admin_page(request, signed_in=True, view="journal", entries=entries,
+                      results=journal.results(entries), journal_spreads=JOURNAL_SPREADS,
+                      default_spread=JOURNAL_DEFAULT_SPREAD, today=utc_today(),
+                      mapping_labels=MAPPING_LABELS)
+
+
+@app.post("/admin/journal")
+def admin_journal_new(request: Request, question: str = Form(""), settle_by: str = Form(""),
+                      spread_key: str = Form(JOURNAL_DEFAULT_SPREAD),
+                      mapping_system: str = Form(DEFAULT_MAPPING), framework: str = Form("auto"),
+                      include: list[str] = Form([]), parts_shown: str = Form("")):
+    """A new entry: the real reading's seed and a decoy's, drawn now, with A and B in a random
+    order. Nothing about either reading is shown until the answers are in."""
+    require_admin(request)
+    question, spread_key = question.strip(), spread_key.strip()
+    check_lengths(settle_by=settle_by, spread_key=spread_key, mapping_system=mapping_system,
+                  framework=framework)
+    refuse_nul(question=question)
+    if not question or len(question) > TOPIC_MAX:
+        raise HTTPException(status_code=400, detail=f"Write the question (at most {TOPIC_MAX} characters).")
+    try:
+        settle = date.fromisoformat(settle_by.strip())
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Give the date the question will be settled by.") from None
+    if not utc_today() <= settle <= utc_today() + timedelta(days=JOURNAL_MAX_DAYS):
+        raise HTTPException(status_code=400, detail="The settle-by date must be from today to five years ahead.")
+    if spread_key not in JOURNAL_SPREADS:
+        raise HTTPException(status_code=400, detail=f"Unknown spread: {quoted(spread_key)}.")
+    if mapping_system not in VALID_MAPPINGS:
+        raise HTTPException(status_code=400, detail=f"Unknown mapping system: {quoted(mapping_system)}.")
+    if framework not in VALID_FRAMEWORKS:
+        raise HTTPException(status_code=400, detail=f"Unknown framework: {quoted(framework)}.")
+    real_seed = new_seed()
+    decoy_seed = new_seed()
+    while decoy_seed == real_seed:
+        decoy_seed = new_seed()
+    with get_db_connection() as conn:
+        entry_id = create_journal_entry(
+            conn, question=question, settle_by=settle, spread_key=spread_key,
+            mapping_system=mapping_system, framework=framework, without=left_out(include, parts_shown),
+            drawn_at=time_stamp(drawn_now()), real_seed=real_seed, decoy_seed=decoy_seed,
+            real_is_a=secrets.randbelow(2) == 0)
+    return RedirectResponse(f"/admin/journal/{entry_id}", status_code=303)
+
+
+@app.get("/admin/journal/{entry_id}", response_class=HTMLResponse)
+def admin_journal_entry(request: Request, entry_id: int):
+    """One entry, at whatever stage it has reached (journal.stage)."""
+    if not is_admin(request):
+        return admin_page(request, signed_in=False)
+    with get_db_connection() as conn:
+        entry = journal_entry_or_404(conn, entry_id)
+    stage = journal.stage(entry)
+    context = {"entry": entry, "stage": stage, "today": utc_today(),
+               "spread": spread_label(entry["spread_key"])}
+    if stage == "answers":
+        context["prompts"] = journal_prompts(entry)
+    if stage in ("judge", "done"):
+        roles = journal.answers_by_role(entry)
+        order = ("real", "decoy") if entry["real_shown_first"] else ("decoy", "real")
+        context["shown"] = [{"role": role, "answer": roles[role],
+                             "statements": journal.statements(roles[role])} for role in order]
+    if stage == "done":
+        deck = reference_deck()
+        context["cards"] = {role: [item["card_data"]["title"] for item in
+                                   journal_reading(entry, entry[f"{role}_seed"], deck)["spread_results"]]
+                            for role in ("real", "decoy")}
+    return admin_page(request, signed_in=True, view="journal_entry", **context)
+
+
+@app.get("/admin/journal/{entry_id}/prompt/{which}.md")
+def admin_journal_prompt(request: Request, entry_id: int, which: str):
+    """Reading A or B's prompt as a Markdown file, to attach to an AI chat."""
+    require_admin(request)
+    if which not in ("a", "b"):
+        raise HTTPException(status_code=404, detail="There is no such prompt.")
+    with get_db_connection() as conn:
+        entry = journal_entry_or_404(conn, entry_id)
+    if journal.stage(entry) != "answers":
+        raise HTTPException(status_code=409, detail="This entry's answers are saved; its prompts are hidden.")
+    text = journal_prompts(entry)[which]
+    return Response(text, media_type="text/markdown; charset=utf-8", headers={
+        "Content-Disposition": f'attachment; filename="journal_{entry_id}_reading_{which.upper()}.md"',
+        "Cache-Control": "no-store"})
+
+
+@app.post("/admin/journal/{entry_id}/answers")
+def admin_journal_answers(request: Request, entry_id: int, answer_a: str = Form(""), answer_b: str = Form("")):
+    require_admin(request)
+    answer_a, answer_b = answer_a.strip(), answer_b.strip()
+    refuse_nul(answer_a=answer_a, answer_b=answer_b)
+    if not answer_a or not answer_b:
+        raise HTTPException(status_code=400, detail="Paste both answers, A and B.")
+    if max(len(answer_a), len(answer_b)) > journal.ANSWER_MAX:
+        raise HTTPException(status_code=400, detail=f"An answer can be at most {journal.ANSWER_MAX} characters.")
+    with get_db_connection() as conn:
+        entry = journal_entry_or_404(conn, entry_id)
+        if journal.stage(entry) != "answers":
+            raise HTTPException(status_code=409, detail="This entry's answers are already saved.")
+        update_journal_entry(conn, entry_id, answer_a=answer_a, answer_b=answer_b)
+    return journal_entry_page(entry)
+
+
+@app.post("/admin/journal/{entry_id}/outcome")
+def admin_journal_outcome(request: Request, entry_id: int, outcome: str = Form("")):
+    """What happened, written before the answers are shown again. Also fixes the random order
+    the two answers are shown in for the pick."""
+    require_admin(request)
+    outcome = outcome.strip()
+    refuse_nul(outcome=outcome)
+    if not outcome or len(outcome) > journal.OUTCOME_MAX:
+        raise HTTPException(status_code=400, detail=f"Write what happened (at most {journal.OUTCOME_MAX} characters).")
+    with get_db_connection() as conn:
+        entry = journal_entry_or_404(conn, entry_id)
+        if journal.stage(entry) != "waiting":
+            raise HTTPException(status_code=409, detail="This entry isn't waiting for its outcome.")
+        update_journal_entry(conn, entry_id, outcome=outcome, outcome_at=datetime.now(timezone.utc),
+                             real_shown_first=secrets.randbelow(2) == 0)
+    return journal_entry_page(entry)
+
+
+@app.post("/admin/journal/{entry_id}/judge")
+def admin_journal_judge(request: Request, entry_id: int, pick: str = Form(""),
+                        rating_1: str = Form(""), rating_2: str = Form("")):
+    """The blind pick: which of the two answers (1 = shown first) fits what happened, and a
+    1-5 rating for each."""
+    require_admin(request)
+    if pick not in ("1", "2"):
+        raise HTTPException(status_code=400, detail="Pick the answer that fits better.")
+    try:
+        ratings = [int(r) if r else None for r in (rating_1, rating_2)]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Ratings are 1 to 5.") from None
+    if any(r is not None and not 1 <= r <= 5 for r in ratings):
+        raise HTTPException(status_code=400, detail="Ratings are 1 to 5.")
+    with get_db_connection() as conn:
+        entry = journal_entry_or_404(conn, entry_id)
+        if journal.stage(entry) != "judge":
+            raise HTTPException(status_code=409, detail="This entry isn't ready for its pick.")
+        order = ("real", "decoy") if entry["real_shown_first"] else ("decoy", "real")
+        rated = dict(zip(order, ratings))
+        update_journal_entry(conn, entry_id, picked=order[int(pick) - 1], rating_real=rated["real"],
+                             rating_decoy=rated["decoy"], judged_at=datetime.now(timezone.utc))
+    return journal_entry_page(entry)
+
+
+@app.post("/admin/journal/{entry_id}/delete")
+def admin_journal_delete(request: Request, entry_id: int):
+    require_admin(request)
+    with get_db_connection() as conn:
+        delete_journal_entry(conn, entry_id)
+    return RedirectResponse("/admin/journal", status_code=303)
 
 
 NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "

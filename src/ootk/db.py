@@ -334,6 +334,49 @@ def delete_testimonial(conn, testimonial_id):
     with conn.transaction(), conn.cursor() as cur:
         cur.execute("DELETE FROM testimonials WHERE testimonial_id = %s;", (testimonial_id,))
 
+# ---------- the private prediction journal (/admin/journal) ----------
+
+JOURNAL_FIELDS = ("question", "settle_by", "spread_key", "mapping_system", "framework", "without",
+                  "drawn_at", "real_seed", "decoy_seed", "real_is_a")
+# What later steps may set: the two AI answers, the outcome, then the blind pick.
+JOURNAL_UPDATES = {"answer_a", "answer_b", "outcome", "outcome_at", "real_shown_first", "picked",
+                   "rating_real", "rating_decoy", "judged_at"}
+
+def create_journal_entry(conn, **fields):
+    """Saves a new journal entry from JOURNAL_FIELDS and returns its entry_id."""
+    cols = list(JOURNAL_FIELDS)
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute(f"INSERT INTO journal_entries ({', '.join(cols)}) "
+                    f"VALUES ({', '.join(['%s'] * len(cols))}) RETURNING entry_id;",
+                    [fields[c] for c in cols])
+        return cur.fetchone()["entry_id"]
+
+def list_journal_entries(conn):
+    """Every journal entry, newest first."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT * FROM journal_entries ORDER BY entry_id DESC;")
+        return [dict(row) for row in cur.fetchall()]
+
+def get_journal_entry(conn, entry_id):
+    with conn.cursor() as cur:
+        cur.execute("SELECT * FROM journal_entries WHERE entry_id = %s;", (entry_id,))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+def update_journal_entry(conn, entry_id, **fields):
+    """Sets some of JOURNAL_UPDATES on one entry."""
+    unknown = set(fields) - JOURNAL_UPDATES
+    if unknown or not fields:
+        raise ValueError(f"Cannot set {sorted(unknown) or 'nothing'} on a journal entry.")
+    cols = sorted(fields)
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute(f"UPDATE journal_entries SET {', '.join(f'{c} = %s' for c in cols)} "
+                    "WHERE entry_id = %s;", [fields[c] for c in cols] + [entry_id])
+
+def delete_journal_entry(conn, entry_id):
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM journal_entries WHERE entry_id = %s;", (entry_id,))
+
 def list_sessions(conn, limit, offset=0):
     """(rows, total) for the admin Sessions list, newest first: created_at (UTC), question,
     spread and report link. Web readings keep the question in report_settings; command-line
