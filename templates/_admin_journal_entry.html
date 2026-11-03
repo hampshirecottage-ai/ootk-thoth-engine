@@ -1,0 +1,93 @@
+{# /admin/journal/<n>: one entry at its stage (journal.stage). The A/B and pick orders are random
+   and stored, so nothing on this page says which reading is the real one until the pick. #}
+            <p><a href="/admin/journal">&larr; All entries</a></p>
+            <div class="item">
+                <p class="meta">#{{ entry.entry_id }} · {{ spread }} · settled by {{ entry.settle_by.strftime('%-d %B %Y') }}{% if entry.without %} · left out: {{ entry.without }}{% endif %}</p>
+                <blockquote>{{ entry.question }}</blockquote>
+            </div>
+
+            {% if stage == "answers" %}
+            <h3>1. Send both readings to your AI</h3>
+            <p class="note">Use a new chat for each, and the same AI for both. Attach each one as a file (the + button) or paste it. Each asks for 3 to 5 checkable statements at the end.</p>
+            <div class="pair">
+                {% for name in ("a", "b") %}
+                <div class="item">
+                    <strong>Reading {{ name | upper }}</strong>
+                    <p class="actions">
+                        <a href="/admin/journal/{{ entry.entry_id }}/prompt/{{ name }}.md" download>Save as Markdown</a>
+                        <button type="button" class="secondary" data-copy="prompt{{ name }}">Copy prompt</button>
+                    </p>
+                    <textarea class="prompt" id="prompt{{ name }}" readonly>{{ prompts[name] }}</textarea>
+                </div>
+                {% endfor %}
+            </div>
+            <h3>2. Paste the two answers back</h3>
+            <form method="post" action="/admin/journal/{{ entry.entry_id }}/answers">
+                <label for="answerA">Answer to Reading A</label>
+                <textarea id="answerA" name="answer_a" required maxlength="60000"></textarea>
+                <label for="answerB">Answer to Reading B</label>
+                <textarea id="answerB" name="answer_b" required maxlength="60000"></textarea>
+                <p class="actions"><button type="submit">Save both answers</button></p>
+            </form>
+            <p class="note">Once saved, the answers stay hidden until you have written what happened.</p>
+
+            {% elif stage == "waiting" %}
+            {% if entry.settle_by > today %}
+            <p>Both answers are saved and hidden. Come back on <strong>{{ entry.settle_by.strftime('%-d %B %Y') }}</strong>, or earlier if the question settles before then.</p>
+            {% else %}
+            <p><strong>This question is due.</strong></p>
+            {% endif %}
+            <h3>What happened?</h3>
+            <p class="note">Write it down plainly before you look at the answers again. Stick to what happened, not what the readings said.</p>
+            <form method="post" action="/admin/journal/{{ entry.entry_id }}/outcome">
+                <label for="outcome">What happened</label>
+                <textarea id="outcome" name="outcome" required maxlength="10000"></textarea>
+                <p class="actions"><button type="submit">Save and show the answers</button></p>
+            </form>
+
+            {% else %}
+            <div class="item">
+                <p class="meta">What happened, written {{ entry.outcome_at.strftime('%-d %b %Y') }}</p>
+                <blockquote>{{ entry.outcome }}</blockquote>
+            </div>
+            {% if stage == "judge" %}
+            <h3>Which answer fits what happened better?</h3>
+            <p class="note">These are shown in a new random order, so Answer 1 isn't necessarily Reading A. One is your reading, one is the decoy.</p>
+            <form method="post" action="/admin/journal/{{ entry.entry_id }}/judge">
+            {% else %}
+            <h3>Result: you picked {{ "your reading" if entry.picked == "real" else "the decoy" }}</h3>
+            {% endif %}
+            <div class="pair">
+                {% for s in shown %}
+                <div class="item">
+                    <strong>Answer {{ loop.index }}{% if stage == "done" %}: {{ "your reading" if s.role == "real" else "the decoy" }}{% if entry.picked == s.role %} (picked){% endif %}{% endif %}</strong>
+                    <div class="answer">{{ s.statements }}</div>
+                    <details><summary>Whole answer</summary><div class="answer">{{ s.answer }}</div></details>
+                    {% if stage == "judge" %}
+                    <fieldset>
+                        <label class="check"><input type="radio" name="pick" value="{{ loop.index }}" required> This one fits better</label>
+                        <label for="rating{{ loop.index }}">How well it fits, 1 to 5 (optional)</label>
+                        <select id="rating{{ loop.index }}" name="rating_{{ loop.index }}"><option value="">–</option>{% for n in range(1, 6) %}<option>{{ n }}</option>{% endfor %}</select>
+                    </fieldset>
+                    {% else %}
+                    <p class="meta">Rated {{ (entry.rating_real if s.role == "real" else entry.rating_decoy) or "–" }} · cards: {{ cards[s.role] | join(", ") }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% if stage == "judge" %}
+            <p class="actions"><button type="submit">Save my pick</button></p>
+            </form>
+            {% endif %}
+            {% endif %}
+
+            <form method="post" action="/admin/journal/{{ entry.entry_id }}/delete" class="inline" onsubmit="return confirm('Delete this journal entry for good?');"><p class="actions"><button type="submit" class="danger">Delete entry</button></p></form>
+            {% if stage == "answers" %}
+            <script src="{{ static_url('js/copy.js') }}"></script>
+            <script>
+                document.querySelectorAll("[data-copy]").forEach(btn => btn.addEventListener("click", () => {
+                    const box = document.getElementById(btn.dataset.copy);
+                    ootkCopyButton(btn, box.value, box);
+                }));
+            </script>
+            {% endif %}

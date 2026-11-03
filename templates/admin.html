@@ -1,7 +1,8 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Admin" %}
 {% set page_description = "Site admin." %}
-{% set tagline = "Sessions" if view == "sessions" else "Testimonials" %}
+{% set titles = {"sessions": "Sessions", "journal": "Journal", "journal_entry": "Journal"} %}
+{% set tagline = titles.get(view, "Testimonials") %}
 {% set active = "" %}
 {% block head %}
     <meta name="robots" content="noindex, nofollow">
@@ -26,6 +27,18 @@
         .admin td.question { overflow-wrap: anywhere; white-space: pre-line; min-width: 14em; }
         .admin td.empty { color: var(--muted); font-style: italic; }
         .admin .pager { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+        .admin textarea { width: 100%; min-height: 9em; font: inherit; font-size: 0.92em; box-sizing: border-box; }
+        .admin textarea.prompt { min-height: 6em; font-family: var(--mono, monospace); font-size: 0.8em; }
+        .admin .score { display: grid; grid-template-columns: repeat(auto-fit, minmax(9em, 1fr)); gap: 8px; margin: 0 0 14px; }
+        .admin .score div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel-3); }
+        .admin .score b { display: block; font-size: 1.4em; }
+        .admin .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .admin .answer { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 0.92em; }
+        .admin .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+        .admin fieldset { border: none; padding: 0; margin: 0 0 10px; }
+        .admin label.check { display: flex; gap: 8px; align-items: center; text-transform: none; letter-spacing: 0; font-size: 0.95em; color: var(--text); margin: 8px 0; cursor: pointer; }
+        .admin label.check input { width: auto; margin: 0; flex: none; }
+        @media (max-width: 640px) { .admin .pair { grid-template-columns: 1fr; } }
         @media (max-width: 640px) {
             .admin thead { display: none; }
             .admin tr, .admin td { display: block; }
@@ -48,14 +61,19 @@
             </form>
             {% else %}
             <div class="top-row">
-                <h2 id="adminTitle">{{ "Sessions" if view == "sessions" else "Testimonials" }}</h2>
+                <h2 id="adminTitle">{{ tagline }}</h2>
                 <form method="post" action="/admin/logout" class="inline"><button type="submit" class="secondary">Sign out</button></form>
             </div>
             <nav class="tabs" aria-label="Admin">
-                <a href="/admin"{% if view != "sessions" %} aria-current="page"{% endif %}>Testimonials</a>
+                <a href="/admin"{% if view == "testimonials" %} aria-current="page"{% endif %}>Testimonials</a>
                 <a href="/admin/sessions"{% if view == "sessions" %} aria-current="page"{% endif %}>Sessions</a>
+                <a href="/admin/journal"{% if view in ("journal", "journal_entry") %} aria-current="page"{% endif %}>Journal</a>
             </nav>
-            {% if view == "sessions" %}
+            {% if view == "journal" %}
+            {% include "_admin_journal.html" %}
+            {% elif view == "journal_entry" %}
+            {% include "_admin_journal_entry.html" %}
+            {% elif view == "sessions" %}
             <p class="note">{{ total }} saved reading{{ "" if total == 1 else "s" }}, newest first. Dates are UTC. Questions are private: don't share this page.</p>
             {% if sessions %}
             <div class="table-wrap">

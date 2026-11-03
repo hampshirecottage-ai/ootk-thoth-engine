@@ -6,7 +6,7 @@ import json
 import re
 import time
 from contextlib import nullcontext
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import psycopg
@@ -2800,3 +2800,133 @@ def test_unknown_prompt_part_is_refused(seeded_client, bad):
 def test_share_link_with_unknown_part_is_refused(seeded_client):
     r = seeded_client.get("/reading?seed=7&spread=3&without=runes")
     assert r.status_code == 400 and "runes" in r.json()["detail"]
+
+
+# ---------- admin: the private prediction journal ----------
+
+import ootk.db as app_module_db  # noqa: E402
+from ootk import journal as journal_module  # noqa: E402
+
+
+@pytest.fixture
+def journal_client(seeded_client, monkeypatch):
+    """Signed in to /admin, with journal entries kept in a dict instead of the database."""
+    store = {}
+
+    def create(conn, **fields):
+        entry_id = len(store) + 1
+        store[entry_id] = dict(fields, entry_id=entry_id, answer_a=None, answer_b=None, outcome=None,
+                               outcome_at=None, real_shown_first=None, picked=None, rating_real=None,
+                               rating_decoy=None, judged_at=None)
+        return entry_id
+
+    def update(conn, entry_id, **fields):
+        assert set(fields) <= app_module_db.JOURNAL_UPDATES
+        store[entry_id].update(fields)
+
+    monkeypatch.setattr(app_module, "create_journal_entry", create)
+    monkeypatch.setattr(app_module, "update_journal_entry", update)
+    monkeypatch.setattr(app_module, "get_journal_entry", lambda conn, i: dict(store[i]) if i in store else None)
+    monkeypatch.setattr(app_module, "list_journal_entries",
+                        lambda conn: [dict(e) for e in sorted(store.values(), key=lambda e: -e["entry_id"])])
+    monkeypatch.setattr(app_module, "delete_journal_entry", lambda conn, i: store.pop(i, None))
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    seeded_client.post("/admin/login", data={"password": "secret"})
+    seeded_client.journal = store
+    return seeded_client
+
+
+
+SETTLE = (date.today() + timedelta(days=30)).isoformat()
+
+
+def new_entry(client, **over):
+    data = {"question": "Will the house sale finish?", "settle_by": SETTLE, "spread_key": "3"}
+    data.update(over)
+    return client.post("/admin/journal", data=data, follow_redirects=False)
+
+
+def test_journal_is_behind_the_admin_password(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    assert 'name="password"' in client.get("/admin/journal").text
+    assert client.post("/admin/journal", data={"question": "q", "settle_by": SETTLE}).status_code == 403
+    assert client.get("/admin/journal/1/prompt/a.md").status_code == 403
+    monkeypatch.delenv("ADMIN_PASSWORD")
+    assert client.get("/admin/journal").status_code == 404
+
+
+def test_journal_entry_runs_from_draw_to_blind_pick(journal_client):
+    c = journal_client
+    r = new_entry(c)
+    assert r.status_code == 303 and r.headers["location"] == "/admin/journal/1"
+    e = c.journal[1]
+    assert e["real_seed"] != e["decoy_seed"] and e["without"] == ""
+    page = c.get("/admin/journal/1").text
+    assert "Reading A" in page and "Reading B" in page
+    for seed in (e["real_seed"], e["decoy_seed"]):          # nothing says which reading is real
+        assert seed not in page
+    md = c.get("/admin/journal/1/prompt/a.md")
+    assert md.status_code == 200 and "attachment" in md.headers["content-disposition"]
+    assert "Checkable statements" in md.text and "hidden for a blind check" in md.text
+    assert md.text.rstrip().endswith("END OF OOTK PROMPT (3 positions)")
+    assert "Will the house sale finish?" in md.text
+
+    c.post("/admin/journal/1/answers", data={"answer_a": "Long A.\n\n## Checkable statements\n1. A says yes",
+                                             "answer_b": "Long B.\n\nCheckable statements:\n1. B says no"})
+    page = c.get("/admin/journal/1").text
+    assert "A says yes" not in page and "B says no" not in page   # hidden until the outcome
+    assert c.get("/admin/journal/1/prompt/a.md").status_code == 409
+    assert c.post("/admin/journal/1/answers", data={"answer_a": "x", "answer_b": "y"}).status_code == 409
+
+    c.post("/admin/journal/1/outcome", data={"outcome": "It went through on the 3rd."})
+    page = c.get("/admin/journal/1").text
+    assert "It went through" in page and "A says yes" in page and "B says no" in page
+    assert "Result:" not in page and ": your reading" not in page and ": the decoy" not in page
+    real_first = c.journal[1]["real_shown_first"]
+    c.post("/admin/journal/1/judge", data={"pick": "1", "rating_1": "4", "rating_2": "2"})
+    e = c.journal[1]
+    assert e["picked"] == ("real" if real_first else "decoy")
+    assert (e["rating_real"], e["rating_decoy"]) == ((4, 2) if real_first else (2, 4))
+    page = c.get("/admin/journal/1").text
+    assert "Result: you picked" in page and "cards:" in page
+    overview = c.get("/admin/journal").text
+    assert "Done" in overview and ">1<" in overview
+
+
+def test_journal_refuses_bad_entries(journal_client):
+    c = journal_client
+    assert new_entry(c, question="").status_code == 400
+    assert new_entry(c, settle_by="soon").status_code == 400
+    assert new_entry(c, settle_by="2000-01-01").status_code == 400
+    assert new_entry(c, spread_key="12").status_code == 400          # needs a significator
+    assert new_entry(c, spread_key="nope").status_code == 400
+    assert c.journal == {}
+    new_entry(c)
+    assert c.post("/admin/journal/1/outcome", data={"outcome": "too early"}).status_code == 409
+    assert c.post("/admin/journal/1/judge", data={"pick": "1"}).status_code == 409
+    assert c.post("/admin/journal/1/answers", data={"answer_a": "only one"}).status_code == 400
+    assert c.get("/admin/journal/99").status_code == 404
+
+
+def test_journal_entry_can_leave_prompt_parts_out_and_be_deleted(journal_client):
+    c = journal_client
+    on = [k for k in app_module.COMPONENTS if k != "geometry"]
+    new_entry(c, parts_shown="1", include=on)
+    assert c.journal[1]["without"] == "geometry"
+    assert "**Components Left Out:** Geometry" in c.get("/admin/journal/1/prompt/b.md").text
+    c.post("/admin/journal/1/delete")
+    assert c.journal == {}
+
+
+def test_journal_score_and_chance():
+    assert journal_module.p_value(0, 0) == 1.0
+    assert journal_module.p_value(5, 5) == 1 / 32
+    assert round(journal_module.p_value(44, 67), 3) == 0.007
+    entries = [{"picked": "real", "rating_real": 4, "rating_decoy": 2, "answer_a": "a", "answer_b": "b", "outcome": "o"},
+               {"picked": "decoy", "rating_real": 2, "rating_decoy": None, "answer_a": "a", "answer_b": "b", "outcome": "o"},
+               {"picked": None, "answer_a": None, "answer_b": None, "outcome": None}]
+    r = journal_module.results(entries)
+    assert (r["judged"], r["real_picked"], r["rate"], r["p_value"]) == (2, 1, 0.5, 0.75)
+    assert (r["rating_real"], r["rating_decoy"], r["open"]) == (3.0, 2.0, 1)
+    assert journal_module.statements("intro\n**Checkable Statements**\n- x") == "**Checkable Statements**\n- x"
+    assert journal_module.statements("no section") == "no section"
