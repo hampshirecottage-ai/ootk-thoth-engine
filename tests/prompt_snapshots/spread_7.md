@@ -124,6 +124,10 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 
 **Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Laviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24); 2 of Wands: Vehuel (49) and Daniel (50); 2 of Swords: Yezalel (13) and Mebahel (14); 7 of Swords: Hahahel (41) and Mikael (42).
 
+**Gods (Liber 777)** (Egyptian, column XIX / Greek, column XXXIV, from the row the card's colours follow; [ ] and [[ ]] are 777's later additions): V - The Hierophant (row 16): Asar, Ameshet, Apis / Here; XI - Lust (row 19): Ra-Hoor-Khuit, Pasht, Sekhet, Mau / Demeter.
+
+**Court Hexagrams** (Crowley, Book of Thoth: the rank's trigram over the suit's; Fire thunder, Water lake, Air wind, Earth mountain): Prince of Swords: 57 Sun, The Gentle; Queen of Cups: 58 Tui, The Joyous; Knight of Cups: 54 Kuei Mei, The Marrying Maiden.
+
 
 ---
 
