@@ -12,6 +12,8 @@ from ootk.analysis import (
     major_element_note, spirit_bearing_cards,
 )
 from ootk.birth_cards import birth_cards_markdown
+from ootk.decans import angels_markdown, dates_markdown, day_ruler, solar_year
+from ootk.titles import titles_markdown
 from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
@@ -60,7 +62,15 @@ COMPONENTS = {
     "geomancy": "Geomantic figures",
     "geometry": "Geometry (Cube of Space, solids, aspects)",
     "gematria": "Gematria (letter values)",
+    "titles": "Book T titles",
+    "angels": "Angels of the decans",
+    "timing": "Decan dates and day ruler",
 }
+# Added after the first nine. A prompt that would be longer than PROMPT_BUDGET characters
+# leaves these out, in this order, until it fits, and its header says so: some AIs stop
+# reading at about 78,600 characters (Gemini), so the end-of-prompt marker would be lost.
+FIT_ORDER = ("angels", "timing", "titles")
+PROMPT_BUDGET = 77_500
 def without_components(text):
     """frozenset of COMPONENTS keys from "astrology,geometry" (spaces and case ignored).
     Raises ValueError naming the keys allowed for anything else."""
@@ -84,6 +94,24 @@ def components_off_markdown(off):
     return (f"**Components Left Out:** {names}. They were switched off for this reading to test "
             "what each part adds. Do not bring them in from your own knowledge, even where a "
             "card's name or position hints at them; read only what is listed here.\n")
+
+def fitted_markdown(fitted):
+    """The header line for the parts left out only because the prompt would be too long."""
+    if not fitted:
+        return ""
+    names = ", ".join(COMPONENTS[k] for k in COMPONENTS if k in fitted)
+    return (f"**Left Out to Fit:** {names}. This reading is long, so these were dropped to keep "
+            "the prompt short enough for every AI to read to the end. Do not bring them in from "
+            "your own knowledge.\n")
+
+def day_ruler_markdown(drawn_at, local_zone=None):
+    """The header line for the planet ruling the day of the reading, or "" with no time."""
+    if drawn_at is None:
+        return ""
+    local = drawn_at.astimezone(local_zone) if local_zone is not None else drawn_at.astimezone(timezone.utc)
+    day, planet = day_ruler(local)
+    return (f"**Day Ruler:** {day}, ruled by {planet} (the planetary day, by the querent's own "
+            "clock; context only, not used in any score)\n")
 
 def _left_out(*keys):
     return ("* Left out on purpose: " + " and ".join(COMPONENTS[k] for k in keys)
@@ -125,15 +153,22 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
     solid_counts, topology_details, dual_pairings = analyze_platonic_topology(spread_results, spread_key)
     macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
     own_place = own_place_check(spread_results, spread_key)
-    analytical_prompt = build_analytical_prompt(
-        spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
-        dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework,
-        mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
-        significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
-        book_t=book_t_counts(spread_results, spread_key),
-        book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
-        without=without, birth_cards=birth_cards,
-    )
+    off, fitted = frozenset(without or ()), []
+    while True:
+        analytical_prompt = build_analytical_prompt(
+            spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
+            dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework,
+            mapping_system=mapping_system, framework_basis=framework_basis, withheld=withheld, own_place=own_place,
+            significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
+            book_t=book_t_counts(spread_results, spread_key),
+            book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
+            without=off, birth_cards=birth_cards, fitted=tuple(fitted),
+        )
+        left = [k for k in FIT_ORDER if k not in off]
+        if len(analytical_prompt) <= PROMPT_BUDGET or not left:
+            break
+        fitted.append(left[0])
+        off = off | {left[0]}
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
         "spatial_matrix": spatial_matrix, "spatial_dist": spatial_dist,
@@ -141,7 +176,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         "topology_details": topology_details, "dual_pairings": dual_pairings,
         "macro_framework": macro_framework, "framework_basis": framework_basis,
         "own_place": own_place, "significator_places": significator_places or [],
-        "analytical_prompt": analytical_prompt,
+        "analytical_prompt": analytical_prompt, "left_out_to_fit": fitted,
     }
 
 # Section numbers, so the notes that point from one section to another stay right if the
@@ -149,7 +184,9 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=frozenset(), birth_cards=""):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=frozenset(), birth_cards="", fitted=()):
+    """`fitted` are the components in `without` that analyze_reading left out only to keep the
+    prompt short enough; the header names them apart from the ones switched off."""
     off = frozenset(without or ())
     unknown = off - set(COMPONENTS)
     if unknown:
@@ -161,6 +198,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     if "tree" in off:
         framework_basis = None
     birth_line = birth_cards_markdown(birth_cards, spread_results) if "numerology" not in off else ""
+    day_ruler_line = day_ruler_markdown(drawn_at, local_zone) if "timing" not in off else ""
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     mapping_note = MAPPING_NOTES.get(mapping_system) if not off & {"hebrew", "tree"} else None
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
@@ -176,10 +214,10 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 {significator_places_markdown(significator_places)}{birth_line}**PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
-{mapping_note_line}{components_off_markdown(off)}"""
+{mapping_note_line}{day_ruler_line}{components_off_markdown(off - set(fitted))}{fitted_markdown(fitted)}"""
     legend = _solid_legend(spread_results)
     sections = (                     # in the order of the numbers above
-        _cards_md(spread_results, legend, off),
+        _cards_md(spread_results, legend, off, drawn_at),
         _elements_md(spread_results, element_counts, withheld, book_t, off),
         _hebrew_md(spatial_dist, off, spread_results),
         _solids_md(solid_counts, legend, dual_pairings, off,
@@ -252,7 +290,7 @@ def _attribution(data, off):
         return None
     return text
 
-def _cards_md(spread_results, legend, off=frozenset()):
+def _cards_md(spread_results, legend, off=frozenset(), drawn_at=None):
     md = "CARD-BY-CARD CORRESPONDENCE MATRIX\n\n"
     if "tree" not in off and any(item["card_data"]["arcana_type"] == "Minor" for item in spread_results):
         if "geometry" in off:
@@ -339,6 +377,12 @@ def _cards_md(spread_results, legend, off=frozenset()):
         md += "\n"
     if "tree" not in off:
         md += liber_777_markdown(spread_results)
+    if "titles" not in off:
+        md += titles_markdown(spread_results)
+    if "angels" not in off:
+        md += angels_markdown(spread_results)
+    if "timing" not in off and drawn_at is not None:
+        md += dates_markdown(spread_results, solar_year(drawn_at))
     return md
 
 def _row_label(key_scale, name):

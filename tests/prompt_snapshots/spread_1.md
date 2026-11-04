@@ -32,6 +32,8 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 | Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
 | Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
+**Book T Titles** (the Golden Dawn's own names for the cards, first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariots of the Winds.
+
 
 ---
 

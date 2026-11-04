@@ -1,0 +1,110 @@
+"""Book T titles, decan angels, decan dates and day ruler, and leaving them out to fit."""
+import copy
+import json
+import os
+from datetime import datetime, timezone
+
+from ootk import report
+from ootk.decans import (ANGELS, _equinox, day_ruler, decan_angels, decan_dates, pip_decan,
+                         solar_year)
+from ootk.report import FIT_ORDER, PROMPT_BUDGET, analyze_reading
+from ootk.titles import COURT_TITLES, TRUMP_TITLES, full_title, short_title
+
+HERE = os.path.dirname(__file__)
+with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-8") as f:
+    ROWS = json.load(f)["rows"]
+
+
+# ---------- titles ----------
+
+def test_every_card_but_the_aces_has_a_title():
+    missing = [t for t in ROWS if full_title(t) is None]
+    assert sorted(missing) == ["Ace of Cups", "Ace of Disks", "Ace of Swords", "Ace of Wands"]
+    assert len(TRUMP_TITLES) == 22 and len(COURT_TITLES) == 16
+
+
+def test_known_titles():
+    assert full_title("4 of Swords - Truce") == "Lord of Rest from Strife"
+    assert short_title("4 of Swords - Truce") == "Rest from Strife"
+    assert short_title("2 of Cups - Love") is None                 # only repeats the card's name
+    assert short_title("XVII - The Star") == "The Daughter of the Firmament"
+    assert short_title("VIII - Adjustment") == "The Daughter of the Lords of Truth"   # Justice's
+    assert short_title("XI - Lust") == "The Daughter of the Flaming Sword"            # Strength's
+    assert short_title("Knight of Wands") == "Lord of the Flame and the Lightning"
+
+
+# ---------- angels and dates ----------
+
+def test_angels_start_at_leo_and_cover_all_72():
+    assert len(ANGELS) == len(set(ANGELS)) == 72
+    assert decan_angels("5 of Wands - Strife") == ("Vehuiah", "Yeliel")      # 0° Leo
+    assert decan_angels("2 of Wands - Dominion") == ("Vehuel", "Daniel")     # 0° Aries
+    assert decan_angels("4 of Cups - Luxury") == ("Haiaiel", "Mumiah")       # last before Leo
+    pips = [t for t in ROWS if pip_decan(t) is not None]
+    assert len(pips) == 36
+    assert sorted(n for t in pips for n in decan_angels(t)) == sorted(ANGELS)
+    assert decan_angels("Knight of Wands") is None and decan_angels("XIX - The Sun") is None
+
+
+def test_decan_dates():
+    assert _equinox(2026).date().isoformat() == "2026-03-20"
+    assert decan_dates("2 of Wands - Dominion", 2026) == "20 Mar - 30 Mar"
+    assert decan_dates("5 of Wands - Strife", 2026).startswith("22 Jul")
+    assert decan_dates("2 of Disks - Change", 2026).startswith("21 Dec")
+    assert decan_dates("10 of Cups - Satiety", 2026).endswith("20 Mar")   # March 2027
+    assert solar_year(datetime(2026, 3, 1, tzinfo=timezone.utc)) == 2025
+    assert solar_year(datetime(2026, 11, 4, tzinfo=timezone.utc)) == 2026
+
+
+def test_day_ruler():
+    assert day_ruler(datetime(2026, 11, 4, 12, tzinfo=timezone.utc)) == ("Wednesday", "Mercury")
+    assert day_ruler(datetime(2026, 11, 8, 12, tzinfo=timezone.utc)) == ("Sunday", "Sun")
+
+
+# ---------- the prompt ----------
+
+def _items(*titles):
+    return [{"position_number": i, "position_name": f"P{i}", "card_data": copy.deepcopy(ROWS[t])}
+            for i, t in enumerate(titles, 1)]
+
+DRAWN = datetime(2026, 11, 4, 5, 0, tzinfo=timezone.utc)
+
+def _prompt(*titles, **kw):
+    return analyze_reading("Triad", "3", "q", "None", "1", _items(*titles), drawn_at=DRAWN, **kw)
+
+
+def test_new_parts_in_the_prompt_and_their_switches():
+    r = _prompt("4 of Swords - Truce", "XVII - The Star", "4 of Swords - Truce")
+    text = r["analytical_prompt"]
+    assert "**Book T Titles**" in text and "4 of Swords - Truce: Rest from Strife" in text
+    assert text.count("Rest from Strife") == 1                      # once per card
+    assert "**Angels of the Decans**" in text and "4 of Swords: Leviah and Caliel" in text
+    assert "**Decan Dates**" in text and "**Day Ruler:** Wednesday, ruled by Mercury" in text
+    assert r["left_out_to_fit"] == []
+    for key, mark in (("titles", "**Book T Titles**"), ("angels", "**Angels of the Decans**"),
+                      ("timing", "**Decan Dates**"), ("timing", "**Day Ruler:**")):
+        assert mark not in _prompt("4 of Swords - Truce", "XVII - The Star", without=frozenset({key}))["analytical_prompt"]
+
+
+def test_no_time_means_no_dates_or_day_ruler():
+    text = analyze_reading("Single", "1", "q", "None", "1", _items("4 of Swords - Truce"))["analytical_prompt"]
+    assert "**Decan Dates**" not in text and "**Day Ruler:**" not in text
+
+
+def test_long_prompts_leave_the_new_parts_out_in_order(monkeypatch):
+    pips = [t for t in ROWS if pip_decan(t) is not None][:12]
+    full = len(_prompt(*pips)["analytical_prompt"])
+    monkeypatch.setattr(report, "PROMPT_BUDGET", full - 1)
+    r = _prompt(*pips)
+    assert r["left_out_to_fit"] == ["angels"]
+    assert len(r["analytical_prompt"]) <= full - 1
+    assert "**Left Out to Fit:** Angels of the decans." in r["analytical_prompt"]
+    assert "**Components Left Out:**" not in r["analytical_prompt"]
+    monkeypatch.setattr(report, "PROMPT_BUDGET", 10)
+    r = _prompt("4 of Swords - Truce", "XVII - The Star")
+    assert r["left_out_to_fit"] == list(FIT_ORDER)
+    # a part switched off by hand is named as switched off, not as left out to fit
+    r = _prompt("4 of Swords - Truce", without=frozenset({"titles"}))
+    assert r["left_out_to_fit"] == ["angels", "timing"]
+    assert "**Components Left Out:** Book T titles." in r["analytical_prompt"]
+    assert PROMPT_BUDGET < 78600

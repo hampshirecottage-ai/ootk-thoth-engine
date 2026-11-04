@@ -141,6 +141,10 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 | Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 | Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8 |
 
+**Book T Titles** (the Golden Dawn's own names for the cards, first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariots of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Queen of Cups: Queen of the Thrones of the Waters; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works.
+
+**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, counted from 0° Leo as Book T does): 4 of Swords: Leviah and Caliel; 7 of Cups: Melahel and Haheuiah; 2 of Wands: Vehuel and Daniel; 2 of Swords: Yezalel and Mebahel; 7 of Swords: Hahahel and Mikael; 10 of Wands: Reiyel and Omael; 3 of Disks: Yehuiah and Lehahiah.
+
 
 ---
 

@@ -53,6 +53,10 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 | Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
 | Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
+**Book T Titles** (the Golden Dawn's own names for the cards, first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariots of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success.
+
+**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, counted from 0° Leo as Book T does): 4 of Swords: Leviah and Caliel; 7 of Cups: Melahel and Haheuiah.
+
 
 ---
 

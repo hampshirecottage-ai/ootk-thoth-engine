@@ -190,6 +190,10 @@ def test_a_card_on_one_row_has_no_split_note():
 
 
 def test_ootk_prompt_leaves_room_under_the_gemini_limit():
-    """Gemini stops reading near 78,600 characters and a question may be 2,000; the 777 table
-    must not push the full Opening of the Key past that."""
-    assert len(build_prompt("12")) + 2000 < 78600
+    """Gemini stops reading near 78,600 characters. Without the parts that are left out to fit,
+    the full Opening of the Key must leave room for a 2,000-character question; with them, the
+    prompt stays within PROMPT_BUDGET by leaving them out."""
+    from ootk.report import FIT_ORDER, PROMPT_BUDGET
+    assert PROMPT_BUDGET < 78600
+    assert len(build_prompt("12", without=frozenset(FIT_ORDER))) + 2000 < 78600
+    assert len(build_prompt("12")) <= PROMPT_BUDGET
