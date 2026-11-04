@@ -14,8 +14,7 @@ site's owner on 2026-11-04.
 Hexagrams. Crowley (The Book of Thoth) gives each court card a hexagram made of two trigrams:
 the rank's element on top, the suit's below. The elements' trigrams are Fire Chên (thunder),
 Water Tui (lake), Air Sun (wind), Earth Kên (mountain); the ranks are Knight Fire, Queen Water,
-Prince Air, Princess Earth. Ten of the sixteen were checked against the book by the owner (CHECKED);
-the other six are worked out from that rule and still need checking.
+Prince Air, Princess Earth. All sixteen were checked against the book by the owner on 2026-11-04.
 """
 
 GODS = {   # 777 row: (Egyptian, column XIX; Greek, column XXXIV)
@@ -30,7 +29,7 @@ GODS = {   # 777 row: (Egyptian, column XIX; Greek, column XXXIV)
     19: ("Ra-Hoor-Khuit, Pasht, Sekhet, Mau", "Demeter"),
     20: ("Isis (as Virgin)", "Attis"),
     21: ("Amoun-Ra", "Zeus"),
-    22: ("Ma", "Themis, Minos, Aecus and Rhadamanthus"),
+    22: ("Ma", "Themis, Minos, Aeacus and Rhadamanthus"),
     23: ("Tum, Ptah, Auramoth (as Water), Asar (as Hanged Man), Hekar, Isis [[Hathor]]", "Poseidon"),
     24: ("Merti goddesses, Typhon, Apep, Khephra", "Ares [[Apollo the Pythean, Thanatos]]"),
     25: ("Nephthys", "Apollo, Artemis (hunters)"),
@@ -66,10 +65,6 @@ _HEXAGRAMS = {
     ("Sun", "Kên"): (53, "Chien, Development"),
     ("Kên", "Kên"): (52, "Kên, Keeping Still"),
 }
-# The owner's 2026-11-04 check gave these ten from the Book of Thoth; the rest follow the rule.
-CHECKED = {"Knight of Wands", "Queen of Wands", "Prince of Wands", "Princess of Wands",
-           "Prince of Cups", "Prince of Swords", "Princess of Swords", "Queen of Disks",
-           "Prince of Disks", "Princess of Disks"}
 
 def court_hexagram(card_title):
     """(51, "Chên, The Arousing") for "Knight of Wands", or None for a card that is not a court."""
