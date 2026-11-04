@@ -2956,3 +2956,10 @@ def test_reading_without_birth_cards_has_no_line(seeded_client):
 @pytest.mark.parametrize("bad", ["1983-07-14", "0-1-2026", "23-1-2026", "x" * 200])
 def test_bad_birth_cards_are_refused(client, bad):
     assert post(client, birth_cards=bad).status_code == 400
+
+
+def test_method_says_what_the_ai_tests_show(client):
+    page = client.get("/method").text
+    assert 'id="tested"' in page and "What the tests show" in page
+    assert "Astrology does most of the work" in page and "scrambled" in page
+    assert 'href="/method#tested"' in client.get("/").text or 'href="/method#tested"' in client.get("/pick").text
