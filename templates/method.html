@@ -87,6 +87,24 @@
             <p>The numbers are the Thoth deck&rsquo;s own (VIII Adjustment, XI Lust), as Arrien uses them. The prompt names the cards, says whether any of them were drawn, and is told they are context only: they change no card and no score. Your birth date stays in your browser. Only the two card numbers and the year are sent and saved with the reading, and they are left out of share links. The &ldquo;Numerology&rdquo; switch under Parts of the AI prompt leaves them out too.</p>
         </section>
 
+        <section class="panel" id="tested" aria-labelledby="testedTitle">
+            <h2 id="testedTitle">What the tests show</h2>
+            <p>Each reading hands your AI many layers of correspondence: elements, astrology, Hebrew letters, the Tree of Life and more. Two kinds of test check them. The first checks the tables against each other; the second checks which layers an AI actually uses.</p>
+            <h3>The tables agree</h3>
+            <p>Most layers restate three facts about a card: its element, its place on the Tree of Life (with its Hebrew letter), and its sign or planet. A code check compares every layer with those three for every card, and all 264 checks pass. So the layers never contradict each other; they say the same thing in different languages.</p>
+            <h3>What an AI leans on</h3>
+            <p>In November 2026 the same 8 readings were sent to Claude Sonnet 384 times: once with everything on, once with each part switched off in turn, and once with the correspondences deliberately scrambled between cards. Each version was asked three times, so the normal wobble between two answers to the same prompt could be measured first.</p>
+            <ul>
+                <li><strong>Astrology does most of the work.</strong> An answer mentions signs, planets or decans about 28 times. Aspects between cards come next (about 10), then Hebrew letters (6), the Tree of Life (3) and decan dates (2).</li>
+                <li><strong>Some parts are barely used.</strong> Angels, gods, geomancy and the Golden Dawn titles are hardly ever mentioned.</li>
+                <li><strong>Some parts don&rsquo;t change the conclusion.</strong> With the angels or the decan dates switched off, the answer leaned the same way (go ahead or wait) as often as two answers with everything on: about 83% of the time.</li>
+                <li><strong>Some parts do.</strong> With the dignities, the Tree of Life or the geometry switched off, the lean matched only about 60% of the time. Geomancy showed the same drop, though it is barely mentioned, so part of that drop is simply the prompt changing.</li>
+                <li><strong>Wrong data gets noticed, but the cards still lead.</strong> With scrambled correspondences, answers flagged a mismatch eight times as often (1.6 per answer, against 0.2), yet still leaned the same way 72% of the time. The AI&rsquo;s conclusion rests mostly on which cards fell where.</li>
+                <li><strong>A smaller AI is too unsteady to tell.</strong> Claude Haiku gave two answers to the same prompt that agreed on the lean only 46% of the time, so no part stood out from that noise.</li>
+            </ul>
+            <p class="note">What this means: every part stays on by default. If a prompt is too long for your AI, the angels and decan dates are the safest to leave out, then the gods and titles; you can switch them off under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
+        </section>
+
         <section class="panel" aria-labelledby="limitsTitle">
             <h2 id="limitsTitle">Worth knowing</h2>
             <ul>
