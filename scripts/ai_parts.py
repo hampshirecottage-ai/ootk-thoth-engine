@@ -25,6 +25,11 @@ Usage (needs `pip install anthropic` and ANTHROPIC_API_KEY, like scripts/ai_scor
     python scripts/ai_parts.py round [--out output/ai_parts] [--model claude-haiku-5-5]
     python scripts/ai_parts.py build --out output/ai_parts/build     # prompts only, free
     python scripts/ai_parts.py report --out output/ai_parts          # report again, free
+    python scripts/ai_parts.py lean --out output/ai_parts            # read each answer's lean (cents)
+
+Each model needs its own --out folder (answers are saved by prompt and run, not by model).
+The go-ahead / wait lean of each answer's closing summary is read by Haiku in a second small
+batch (it sees only that part of the answer); without it, a keyword guess is used.
 
 round builds the prompts, prints the estimated cost and asks before sending. It sends one
 Message Batch (half price, usually done within an hour), saves its id, and waits; if it is
@@ -63,6 +68,21 @@ DRAWN_AT = datetime(2026, 11, 4, 12, 0, tzinfo=timezone.utc)   # fixed, so the d
 SCRAMBLE_SEED = 777
 ANSWER_TOKENS = {"9": 9_000, "12": 14_000}   # rough answer + thinking, for the estimate
 KEEP = {"title", "card_id", "arcana_type", "suit", "number_or_rank"}
+EFFORT = {"claude-sonnet-5-5": "medium", "claude-opus-5-5": "medium"}   # Haiku: its own default
+LEAN_MODEL = "claude-haiku-5-5"
+LEANS = {"go_ahead": 1, "wait": -1, "mixed": 0, "none": 0}
+LEAN_SCHEMA = {"type": "object", "properties": {"lean": {"type": "string", "enum": list(LEANS)}},
+               "required": ["lean"], "additionalProperties": False}
+LEAN_ASK = """Below is the closing part of a tarot reading written for the question "{question}".
+Which way does it lean? Answer with one of:
+- go_ahead: it leans toward changing jobs this year
+- wait: it leans toward not changing now (waiting, staying, holding off)
+- mixed: it gives both sides without leaning either way
+- none: it does not say which way
+
+<reading_end>
+{text}
+</reading_end>"""
 
 PLANETS = ("Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn")
 LETTERS = ("Aleph", "Beth", "Gimel", "Daleth", "Heh", "Hé", "Vau", "Vav", "Zain", "Cheth", "Teth", "Yod",
@@ -196,9 +216,10 @@ def requests_for(build_dir, cases, model, answers, runs=RUNS):
                 with open(os.path.join(build_dir, "prompts", f"{c['id']}.md"), encoding="utf-8") as f:
                     prompt = f.read()
             # A fresh conversation, no system prompt: what a visitor does when they paste it.
-            reqs.append({"custom_id": custom_id(c["id"], n),
-                         "params": {"model": model, "max_tokens": 32000,
-                                    "messages": [{"role": "user", "content": prompt}]}})
+            params = {"model": model, "max_tokens": 32000, "messages": [{"role": "user", "content": prompt}]}
+            if EFFORT.get(model):
+                params["output_config"] = {"effort": EFFORT[model]}
+            reqs.append({"custom_id": custom_id(c["id"], n), "params": params})
     return reqs
 
 
@@ -232,6 +253,76 @@ def make_client():
     return anthropic.Anthropic()
 
 
+def wait_for(client, batch_id, wait):
+    while True:
+        batch = client.messages.batches.retrieve(batch_id)
+        if batch.processing_status == "ended":
+            return
+        counts = batch.request_counts
+        print(f"{time.strftime('%H:%M')} still working: {counts.processing} to go, {counts.succeeded} done")
+        time.sleep(wait)
+
+
+def answer_paths(answers):
+    return sorted(p for p in os.listdir(answers) if re.fullmatch(r"s\d+_sp\d+_.+__\d+\.md", p))
+
+
+def lean_requests(answers):
+    """One short classification per answer that has no <answer>.lean.json yet: which way its
+    closing summary leans. A small AI reads only that part, never the prompt."""
+    reqs = []
+    for path in answer_paths(answers):
+        if os.path.exists(os.path.join(answers, path[:-3] + ".lean.json")):
+            continue
+        with open(os.path.join(answers, path), encoding="utf-8") as f:
+            tail = summary(f.read())[-8000:]
+        reqs.append({"custom_id": path[:-3], "params": {
+            "model": LEAN_MODEL, "max_tokens": 4000,
+            "output_config": {"effort": "low", "format": {"type": "json_schema", "schema": LEAN_SCHEMA}},
+            "messages": [{"role": "user", "content": LEAN_ASK.format(question=QUESTION, text=tail)}]}})
+    return reqs
+
+
+def leans(out, ask=input, client=None, wait=60):
+    """Reads the lean of every answer that has none yet, as one Haiku batch (a few cents)."""
+    answers = os.path.join(out, "answers")
+    batch_file = os.path.join(out, "lean_batch.json")
+    client = client or make_client()
+    if os.path.exists(batch_file):
+        with open(batch_file, encoding="utf-8") as f:
+            batch_id = json.load(f)["id"]
+        print(f"Picking up lean batch {batch_id}.")
+    else:
+        reqs = lean_requests(answers)
+        if not reqs:
+            return 0
+        if ask is not None and ask(f"Read the lean of {len(reqs)} answers with {LEAN_MODEL}: about "
+                                   f"${len(reqs) * 0.0004:.2f}. Go ahead? [y/N] ").strip().lower() != "y":
+            print("Nothing sent.")
+            return 0
+        batch_id = client.messages.batches.create(requests=reqs).id
+        with open(batch_file, "w", encoding="utf-8") as f:
+            json.dump({"id": batch_id}, f)
+        print(f"Sent lean batch {batch_id}.")
+    wait_for(client, batch_id, wait)
+    saved = 0
+    for result in client.messages.batches.results(batch_id):
+        if result.result.type != "succeeded":
+            continue
+        text = next((b.text for b in result.result.message.content if b.type == "text"), "")
+        try:
+            value = json.loads(text)["lean"]
+        except (ValueError, KeyError, TypeError):
+            continue
+        if value in LEANS:
+            with open(os.path.join(answers, f"{result.custom_id}.lean.json"), "w", encoding="utf-8") as f:
+                json.dump({"lean": value}, f)
+            saved += 1
+    os.remove(batch_file)
+    print(f"Read the lean of {saved} answers.")
+    return saved
+
+
 def round_(out, model=MODEL, ask=input, client=None, wait=60):
     build_dir, answers = os.path.join(out, "build"), os.path.join(out, "answers")
     os.makedirs(answers, exist_ok=True)
@@ -249,6 +340,7 @@ def round_(out, model=MODEL, ask=input, client=None, wait=60):
         reqs = requests_for(build_dir, cases, model, answers)
         if not reqs:
             print("Every answer is already saved.")
+            leans(out, ask=ask, client=client, wait=wait)
             return report(out)
         dollars = estimate([c for c in cases if any(r["custom_id"].startswith(c["id"] + "__") for r in reqs)], model)
         if ask(f"{len(reqs)} answers from {model}, sent as one batch at half price: roughly "
@@ -261,18 +353,13 @@ def round_(out, model=MODEL, ask=input, client=None, wait=60):
             json.dump({"id": batch_id, "model": model, "requests": len(reqs)}, f)
         print(f"Sent batch {batch_id}. It usually finishes within an hour; this waits for it "
               "(you can stop and run the same command again later).")
-    while True:
-        batch = client.messages.batches.retrieve(batch_id)
-        if batch.processing_status == "ended":
-            break
-        counts = batch.request_counts
-        print(f"{time.strftime('%H:%M')} still working: {counts.processing} to go, {counts.succeeded} done")
-        time.sleep(wait)
+    wait_for(client, batch_id, wait)
     saved, failed, spent = collect(client, batch_id, answers, model)
     os.remove(batch_file)
     print(f"Saved {saved} answers, about ${spent:.2f}." + (f" {len(failed)} failed:" if failed else ""))
     for line in failed:
         print("  " + line)
+    leans(out, ask=None, client=client, wait=wait)      # a few cents, covered by the go-ahead above
     return report(out)
 
 
@@ -343,8 +430,15 @@ def report(out):
             with open(os.path.join(answers, path), encoding="utf-8") as f:
                 text = f.read()
             tail = summary(text)
+            lean_path = os.path.join(answers, path[:-3] + ".lean.json")
+            if os.path.exists(lean_path):
+                with open(lean_path, encoding="utf-8") as f:
+                    value, read_by_ai = LEANS[json.load(f)["lean"]], True
+            else:
+                value, read_by_ai = lean(tail), False
             texts.setdefault((m[1], m[2]), []).append(
-                {"text": text, "words": word_set(tail), "cards": cards_named(tail, patterns), "lean": lean(tail)})
+                {"text": text, "words": word_set(tail), "cards": cards_named(tail, patterns), "lean": value,
+                 "lean_by_ai": read_by_ai})
     readings = sorted({r for r, _ in texts})
     full = {r: texts.get((r, "full"), []) for r in readings}
 
@@ -364,8 +458,11 @@ def report(out):
     noise = measures("full")
     full_uses = {part: mean(mentions(a["text"])[part] for r in readings for a in full[r]) for part in COMPONENTS}
     leans = [a["lean"] for r in readings for a in full[r]]
+    all_answers = [a for v in texts.values() for a in v]
+    by_ai = sum(a["lean_by_ai"] for a in all_answers)
     lines = ["# Which parts of the prompt the AI uses", "",
-             f"{sum(len(v) for v in texts.values())} answers, compared on their closing summary and recap."]
+             f"{len(all_answers)} answers, compared on their closing summary and recap. Lean read by "
+             + (f"{LEAN_MODEL} for {by_ai} of them, by keywords for the rest." if by_ai else "keywords only.")]
     if noise is None:
         text = "\n".join(lines + ["", "No full answers yet."]) + "\n"
         print(text)
@@ -420,11 +517,16 @@ def main(argv=None):
     p.add_argument("--model", default=MODEL, choices=sorted(PRICES))
     p = sub.add_parser("build", help="write the prompts only (free)")
     p.add_argument("--out", default=os.path.join("output", "ai_parts", "build"))
+    p = sub.add_parser("lean", help="read each saved answer's lean with Haiku (a few cents), then report")
+    p.add_argument("--out", default=os.path.join("output", "ai_parts"))
     p = sub.add_parser("report", help="write results.md from the saved answers (free)")
     p.add_argument("--out", default=os.path.join("output", "ai_parts"))
     args = parser.parse_args(argv)
     if args.command == "round":
         round_(args.out, args.model)
+    elif args.command == "lean":
+        leans(args.out)
+        report(args.out)
     elif args.command == "build":
         cases, skipped = build(args.out)
         print(f"{len(cases)} prompts ({len(skipped)} switches changed nothing for a reading), "
