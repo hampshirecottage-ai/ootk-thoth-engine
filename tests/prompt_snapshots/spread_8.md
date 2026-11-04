@@ -20,6 +20,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
+
 ### Position 1: 1. Significator / Core Nature of Question
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
@@ -50,6 +52,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 5: 5. Further Outcome (Right Pair B)
@@ -79,6 +82,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 8: 8. Psychological / Subconscious Basis (Base Left A)
@@ -116,6 +120,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 13: 13. Final Synthesis / Karma (Top Apex B)
@@ -133,6 +138,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 15: 15. Ultimate Climax / Resolution

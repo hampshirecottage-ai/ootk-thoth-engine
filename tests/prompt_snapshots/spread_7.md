@@ -18,6 +18,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
+
 ### Position 1: 1. Kether (Crown / Primary Impulse)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
@@ -39,6 +41,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 4: 4. Chesed (Mercy / Expansion)
@@ -68,6 +71,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 7: 7. Netzach (Victory / Emotions & Instinct)

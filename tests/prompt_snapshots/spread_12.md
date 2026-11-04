@@ -27,6 +27,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
+
 A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do). A decan's name ends with its own pip in brackets, for example "Saturn in Leo (5 of Wands)"; that pip is part of the place's name too.
 
 Each operation is dealt from its own fresh shuffle of the whole deck, so a card can appear in more than one operation, but never twice in the same one.
@@ -61,6 +63,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 5: [Op 1] 5. Further Outcome (Right Pair B)
@@ -90,6 +93,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 8: [Op 1] 8. Psychological / Subconscious Basis (Base Left A)
@@ -127,6 +131,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 13: [Op 1] 13. Final Synthesis / Karma (Top Apex B)
@@ -144,6 +149,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 15: [Op 1] 15. Ultimate Climax / Resolution
@@ -161,6 +167,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 17: [Op 2] 2. Second House (Finances & Values)
@@ -201,6 +208,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
+- **Planet Strength**: in fall (weakest)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 22: [Op 2] 7. Seventh House (Partnerships)
@@ -315,6 +323,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 35: [Op 3] 8. Scorpio
@@ -355,6 +364,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Moon in Taurus
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 40: [Op 4] Decan 1: Saturn in Leo (5 of Wands)
@@ -409,6 +419,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 46: [Op 4] Decan 7: Moon in Libra (2 of Swords)
@@ -466,6 +477,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 53: [Op 4] Decan 14: Moon in Sagittarius (9 of Wands)
@@ -520,6 +532,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 59: [Op 4] Decan 20: Mercury in Aquarius (6 of Swords)
@@ -538,6 +551,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 61: [Op 4] Decan 22: Saturn in Pisces (8 of Cups)
@@ -626,6 +640,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Jupiter in Pisces
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 71: [Op 4] Decan 32: Mars in Gemini (9 of Swords)
@@ -633,6 +648,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
+- **Planet Strength**: in fall (weakest)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 72: [Op 4] Decan 33: Sun in Gemini (10 of Swords)

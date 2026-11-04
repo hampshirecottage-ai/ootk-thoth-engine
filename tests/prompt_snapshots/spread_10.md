@@ -20,6 +20,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
+
 A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do).
 
 ### Position 1: 1. Aries
@@ -43,6 +45,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 4: 4. Cancer
@@ -72,6 +75,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 7: 7. Libra
@@ -118,6 +122,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 **Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.

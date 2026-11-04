@@ -87,6 +87,58 @@ GEOMANTIC_FIGURES = {
     "Aquarius": "Tristitia", "Pisces": "Laetitia",
 }
 
+# ---------- Planetary dignity (essential dignity of a planet in a sign) ----------
+# The classical scheme with the seven planets of the decans, as Crowley uses it in the Book of
+# Thoth (e.g. 3 of Wands: Sun exalted in Aries). Signs with no classical exaltation or fall
+# have none here. Mercury is both ruler and exalted in Virgo, and both in detriment and fall
+# in Pisces.
+PLANET_RULERS = {
+    "Aries": "Mars", "Taurus": "Venus", "Gemini": "Mercury", "Cancer": "Moon", "Leo": "Sun",
+    "Virgo": "Mercury", "Libra": "Venus", "Scorpio": "Mars", "Sagittarius": "Jupiter",
+    "Capricorn": "Saturn", "Aquarius": "Saturn", "Pisces": "Jupiter",
+}
+PLANET_EXALTATIONS = {
+    "Aries": "Sun", "Taurus": "Moon", "Cancer": "Jupiter", "Virgo": "Mercury",
+    "Libra": "Saturn", "Capricorn": "Mars", "Pisces": "Venus",
+}
+_OPPOSITE_SIGN = {
+    "Aries": "Libra", "Taurus": "Scorpio", "Gemini": "Sagittarius", "Cancer": "Capricorn",
+    "Leo": "Aquarius", "Virgo": "Pisces", "Libra": "Aries", "Scorpio": "Taurus",
+    "Sagittarius": "Gemini", "Capricorn": "Cancer", "Aquarius": "Leo", "Pisces": "Virgo",
+}
+def planet_dignities(planet, sign):
+    """List of "ruler", "exalted", "detriment", "fall" for planet in sign (often empty)."""
+    if sign not in PLANET_RULERS:
+        return []
+    opposite = _OPPOSITE_SIGN[sign]
+    found = []
+    if PLANET_RULERS[sign] == planet:
+        found.append("ruler")
+    if PLANET_EXALTATIONS.get(sign) == planet:
+        found.append("exalted")
+    if PLANET_RULERS[opposite] == planet:
+        found.append("detriment")
+    if PLANET_EXALTATIONS.get(opposite) == planet:
+        found.append("fall")
+    return found
+
+_DIGNITY_LABELS = {
+    ("ruler",): "rules this sign (strong)",
+    ("exalted",): "exalted (strong)",
+    ("ruler", "exalted"): "rules this sign and is exalted (strong)",
+    ("detriment",): "in detriment (weakened)",
+    ("fall",): "in fall (weakest)",
+    ("detriment", "fall"): "in detriment and fall (weakest)",
+}
+
+def planet_dignity_note(attribution):
+    """ "exalted (strong)" for "Sun in Aries" (the Attribution line already names the planet and
+    sign), or None when the attribution is not "Planet in Sign" or the planet has no dignity or
+    debility there."""
+    planet, sep, sign = (attribution or "").partition(" in ")
+    found = planet_dignities(planet.strip(), sign.strip()) if sep else []
+    return _DIGNITY_LABELS.get(tuple(found))
+
 # ---------- Book T counts ----------
 # Book T reads three or four cards of one rank in a reading, and a lead of Trumps, court
 # cards, Aces or one suit. These are the rank names the counts use (Thoth court titles).

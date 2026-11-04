@@ -18,6 +18,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
+
 Each operation is dealt from its own fresh shuffle of the whole deck, so a card can appear in more than one operation, but never twice in the same one.
 
 ### Position 1: [Op 1] The Heh final pack (money, goods, purely material matters): the Significator
@@ -64,6 +66,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 7: [Op 1] The Heh final pack (money, goods, purely material matters): 6 to the right of the Significator
@@ -81,6 +84,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 9: [Op 1] The Heh final pack (money, goods, purely material matters): 8 to the right of the Significator
@@ -156,6 +160,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 17: [Op 1] The Heh final pack (money, goods, purely material matters): 16 to the right of the Significator
@@ -185,6 +190,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 20: [Op 2] The 3rd house: the Significator
@@ -201,6 +207,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Moon in Cancer
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 22: [Op 2] The 3rd house: 2 to the right of the Significator
@@ -231,6 +238,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Mercury in Virgo
+- **Planet Strength**: rules this sign and is exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 26: [Op 2] The 3rd house: 6 to the right of the Significator
@@ -257,6 +265,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 29: [Op 3] Leo: 2 to the right of the Significator
@@ -292,6 +301,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 33: [Op 3] Leo: 6 to the right of the Significator
@@ -336,6 +346,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 38: [Op 4] The ring of 36: 4 to the right of the Significator
@@ -390,6 +401,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 44: [Op 4] The ring of 36: 10 to the right of the Significator
@@ -408,6 +420,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 46: [Op 4] The ring of 36: 12 to the right of the Significator
@@ -496,6 +509,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Jupiter in Pisces
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 56: [Op 4] The ring of 36: 22 to the right of the Significator
@@ -503,6 +517,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
+- **Planet Strength**: in fall (weakest)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 57: [Op 4] The ring of 36: 23 to the right of the Significator
@@ -555,6 +570,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Moon in Taurus
+- **Planet Strength**: exalted (strong)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 63: [Op 4] The ring of 36: 29 to the right of the Significator
@@ -601,6 +617,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 ### Position 69: [Op 4] The ring of 36: 35 to the right of the Significator
@@ -608,6 +625,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Mars in Scorpio
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 70: [Op 4] The ring of 36: 36 to the right of the Significator
@@ -615,6 +633,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Moon in Cancer
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Icosahedron`
 
 ### Position 71: [Op 5] 6. Tiphareth: the Significator
@@ -661,6 +680,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
+- **Planet Strength**: in fall (weakest)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
 ### Position 76: [Op 5] 6. Tiphareth: 5 to the right of the Significator
@@ -682,6 +702,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
+- **Planet Strength**: rules this sign (strong)
 - **Platonic Solid**: `Tetrahedron`
 
 **Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
