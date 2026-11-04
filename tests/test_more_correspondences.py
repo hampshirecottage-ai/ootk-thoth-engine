@@ -162,3 +162,12 @@ def test_gods_and_hexagrams_in_the_prompt_and_their_switches():
     assert "**Court Hexagrams**" in text and "Queen of Cups: 58 Tui, The Joyous" in text
     for key, mark in (("gods", "**Gods (Liber 777)**"), ("hexagrams", "**Court Hexagrams**")):
         assert mark not in _prompt(*cards, without=frozenset({key}))["analytical_prompt"]
+
+
+def test_owner_corrections_to_gods_and_hexagram_names():
+    assert GODS[22][1] == "Themis, Minos, Aeacus and Rhadamanthus"
+    assert GODS[29][1] == "Poseidon [[Hermes Psychopompos]]"
+    assert GODS[28][1] == "[Athena] Ganymede" and GODS[30][0] == "Ra and many others"
+    assert court_hexagram("Knight of Wands") == (51, "Chên, The Arousing (Crowley: Kan)")
+    assert court_hexagram("Princess of Disks") == (52, "Kên, Keeping Still (Crowley: Kan)")
+    assert court_hexagram("Queen of Cups") == (58, "Tui, The Joyous")
