@@ -1,11 +1,17 @@
-"""Book T titles: the Golden Dawn's own long names for the cards.
+"""Golden Dawn titles: the Order's own long names for the cards.
 
-From the Golden Dawn's Book T (printed in Regardie's The Golden Dawn and, for the small cards
-and courts, in Crowley's Book of Thoth). Each small card is "Lord of ..." (the 4 of Swords is
-the Lord of Rest from Strife); each Trump and court card has one or two titles. The Aces'
+Small cards and court cards follow Book T (Regardie's The Golden Dawn; Crowley's Book of Thoth
+gives the same). Each small card is "Lord of ..." (the 4 of Swords is the Lord of Rest from
+Strife). The Trumps follow Liber 777's wording, which Crowley used; Regardie's Book T differs in
+places (the Hierophant "Magus of the Eternal Gods", the Lovers "Children of the Voice Divine",
+the Hermit "The Magus of the Voice of Light, The Prophet of the Gods", Death "Gates" for
+"Gate"), and some witnesses have "Son of the Morning" for the Emperor where 777 and the
+Equinox have "Sun". Text variants within Book T itself (Knight of Disks "Wide" or "Wild",
+Prince of Swords "Chariot" or "Chariots") take the form of its introductory list. The Aces'
 title, "the Root of the Powers of Fire" and so on, is already their Attribution line, so they
-have none here. Golden Dawn Kings are the Thoth Knights, and the Thoth Adjustment (VIII) and
-Lust (XI) take the Golden Dawn titles of Justice and Strength.
+have none here. Court ranks are the Thoth names: the mounted father is the Knight (Book T's
+King), the chariot-borne son the Prince. The keys are Thoth Atu numbers: Adjustment (VIII)
+and Lust (XI) take the titles of Justice and Strength, whose Golden Dawn places differ.
 
 The prompt gives each card's first title only, and drops "Lord of" from the small cards, to
 keep the longest Opening of the Key under the length some AIs stop reading at.
@@ -37,7 +43,7 @@ TRUMP_TITLES = {
     "VIII": "The Daughter of the Lords of Truth; the Ruler of the Balance",
     "IX": "The Prophet of the Eternal; the Magus of the Voice of Power",
     "X": "The Lord of the Forces of Life",
-    "XI": "The Daughter of the Flaming Sword; the Leader of the Lion",
+    "XI": "The Daughter of the Flaming Sword",   # Book T adds "Leader of the Lion"
     "XII": "The Spirit of the Mighty Waters",
     "XIII": "The Child of the Great Transformers; the Lord of the Gate of Death",
     "XIV": "The Daughter of the Reconcilers; the Bringer-forth of Life",
@@ -61,7 +67,7 @@ COURT_TITLES = {
     "Princess of Cups": "Princess of the Waters; Lotus of the Palace of the Floods",
     "Knight of Swords": "Lord of the Winds and the Breezes; King of the Spirits of Air",
     "Queen of Swords": "Queen of the Thrones of Air",
-    "Prince of Swords": "Prince of the Chariots of the Winds",
+    "Prince of Swords": "Prince of the Chariot of the Winds",
     "Princess of Swords": "Princess of the Rushing Winds; Lotus of the Palace of Air",
     "Knight of Disks": "Lord of the Wide and Fertile Land; King of the Spirits of Earth",
     "Queen of Disks": "Queen of the Thrones of Earth",
@@ -97,7 +103,7 @@ def short_title(card_title):
     return first
 
 def titles_markdown(spread_results):
-    """The Book T Titles paragraph for the end of section 1: each card drawn once, in the
+    """The Golden Dawn Titles paragraph for the end of section 1: each card drawn once, in the
     order first drawn, or "" when no card drawn has one to add."""
     seen, parts = set(), []
     for item in spread_results:
@@ -110,6 +116,6 @@ def titles_markdown(spread_results):
             parts.append(f"{title}: {short}")
     if not parts:
         return ""
-    return ("**Book T Titles** (the Golden Dawn's own names for the cards, first title only; a "
-            "small card's is \"Lord of ...\", and ones that only repeat the card's name are left "
-            "out): " + "; ".join(parts) + ".\n\n")
+    return ("**Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first "
+            "title only; a small card's is \"Lord of ...\", and ones that only repeat the card's name "
+            "are left out): " + "; ".join(parts) + ".\n\n")

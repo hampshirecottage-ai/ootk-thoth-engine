@@ -83,15 +83,16 @@ def _sun_reaches(degree, year):
     return hi
 
 def decan_dates(card_title, year):
-    """"23 Jul - 1 Aug": the first and last day (UTC) the Sun is in the card's decan, in the
+    """"22 Jul - 1 Aug 2026" or "31 Dec 2026 - 9 Jan 2027": the first and last day (UTC) the Sun is in the card's decan, in the
     solar year from the March equinox of `year`; None for a card that is not a decan pip."""
     i = pip_decan(card_title)
     if i is None:
         return None
     start = _sun_reaches(i * 10, year)
     end = _sun_reaches((i + 1) * 10, year) - timedelta(minutes=1)
-    fmt = lambda d: f"{d.day} {_MONTHS[d.month - 1]}"
-    return f"{fmt(start)} - {fmt(end)}"
+    day = lambda d: f"{d.day} {_MONTHS[d.month - 1]}"
+    first = day(start) if start.year == end.year else f"{day(start)} {start.year}"
+    return f"{first} - {day(end)} {end.year}"
 
 def solar_year(when):
     """The year whose March equinox last came before `when` (an aware datetime)."""
@@ -111,12 +112,12 @@ def _once(spread_results):
 
 def angels_markdown(spread_results):
     """The Angels of the Decans paragraph for section 1, or "" when no decan pip is drawn."""
-    parts = [f"{t.partition(' - ')[0]}: {' and '.join(decan_angels(t))}"
+    parts = [f"{t.partition(' - ')[0]}: {' and '.join(f'{n} ({ANGELS.index(n) + 1})' for n in decan_angels(t))}"
              for t in _once(spread_results) if decan_angels(t)]
     if not parts:
         return ""
     return ("**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small "
-            "card's decan, counted from 0° Leo as Book T does): " + "; ".join(parts) + ".\n\n")
+            "card's decan, numbered 1-72 from 0° Leo as Book T counts them): " + "; ".join(parts) + ".\n\n")
 
 def dates_markdown(spread_results, year):
     """The Decan Dates paragraph for section 1, or "" when no decan pip is drawn."""
@@ -125,4 +126,4 @@ def dates_markdown(spread_results, year):
     if not parts:
         return ""
     return (f"**Decan Dates** (Book T's timing: the days the Sun is in each small card's decan, "
-            f"for the year from the spring equinox of {year}, UTC): " + "; ".join(parts) + ".\n\n")
+            f"for the year from the March equinox of {year}, in UTC, from the Sun's computed position): " + "; ".join(parts) + ".\n\n")

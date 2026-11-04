@@ -62,7 +62,7 @@ COMPONENTS = {
     "geomancy": "Geomantic figures",
     "geometry": "Geometry (Cube of Space, solids, aspects)",
     "gematria": "Gematria (letter values)",
-    "titles": "Book T titles",
+    "titles": "Golden Dawn titles",
     "angels": "Angels of the decans",
     "timing": "Decan dates and day ruler",
 }

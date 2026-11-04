@@ -1,4 +1,4 @@
-"""Book T titles, decan angels, decan dates and day ruler, and leaving them out to fit."""
+"""Golden Dawn titles, decan angels, decan dates and day ruler, and leaving them out to fit."""
 import copy
 import json
 import os
@@ -46,12 +46,19 @@ def test_angels_start_at_leo_and_cover_all_72():
     assert decan_angels("Knight of Wands") is None and decan_angels("XIX - The Sun") is None
 
 
+def test_titles_follow_one_stated_source():
+    assert full_title("XI - Lust") == "The Daughter of the Flaming Sword"          # 777, one clause
+    assert full_title("V - The Hierophant") == "The Magus of the Eternal"          # 777, not "... Gods"
+    assert full_title("Prince of Swords") == "Prince of the Chariot of the Winds"  # Book T list form
+
+
 def test_decan_dates():
     assert _equinox(2026).date().isoformat() == "2026-03-20"
-    assert decan_dates("2 of Wands - Dominion", 2026) == "20 Mar - 30 Mar"
+    assert decan_dates("2 of Wands - Dominion", 2026) == "20 Mar - 30 Mar 2026"
     assert decan_dates("5 of Wands - Strife", 2026).startswith("22 Jul")
     assert decan_dates("2 of Disks - Change", 2026).startswith("21 Dec")
-    assert decan_dates("10 of Cups - Satiety", 2026).endswith("20 Mar")   # March 2027
+    assert decan_dates("10 of Cups - Satiety", 2026).endswith("20 Mar 2027")
+    assert decan_dates("3 of Disks - Works", 2026) == "31 Dec 2026 - 10 Jan 2027"   # spans the new year
     assert solar_year(datetime(2026, 3, 1, tzinfo=timezone.utc)) == 2025
     assert solar_year(datetime(2026, 11, 4, tzinfo=timezone.utc)) == 2026
 
@@ -76,12 +83,12 @@ def _prompt(*titles, **kw):
 def test_new_parts_in_the_prompt_and_their_switches():
     r = _prompt("4 of Swords - Truce", "XVII - The Star", "4 of Swords - Truce")
     text = r["analytical_prompt"]
-    assert "**Book T Titles**" in text and "4 of Swords - Truce: Rest from Strife" in text
+    assert "**Golden Dawn Titles**" in text and "4 of Swords - Truce: Rest from Strife" in text
     assert text.count("Rest from Strife") == 1                      # once per card
-    assert "**Angels of the Decans**" in text and "4 of Swords: Leviah and Caliel" in text
+    assert "**Angels of the Decans**" in text and "4 of Swords: Leviah (17) and Caliel (18)" in text
     assert "**Decan Dates**" in text and "**Day Ruler:** Wednesday, ruled by Mercury" in text
     assert r["left_out_to_fit"] == []
-    for key, mark in (("titles", "**Book T Titles**"), ("angels", "**Angels of the Decans**"),
+    for key, mark in (("titles", "**Golden Dawn Titles**"), ("angels", "**Angels of the Decans**"),
                       ("timing", "**Decan Dates**"), ("timing", "**Day Ruler:**")):
         assert mark not in _prompt("4 of Swords - Truce", "XVII - The Star", without=frozenset({key}))["analytical_prompt"]
 
@@ -106,5 +113,5 @@ def test_long_prompts_leave_the_new_parts_out_in_order(monkeypatch):
     # a part switched off by hand is named as switched off, not as left out to fit
     r = _prompt("4 of Swords - Truce", without=frozenset({"titles"}))
     assert r["left_out_to_fit"] == ["angels", "timing"]
-    assert "**Components Left Out:** Book T titles." in r["analytical_prompt"]
+    assert "**Components Left Out:** Golden Dawn titles." in r["analytical_prompt"]
     assert PROMPT_BUDGET < 78600
