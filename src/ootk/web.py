@@ -36,6 +36,7 @@ from ootk.db import (
 )
 from ootk.lockout import FailedLogins
 from ootk import journal
+from ootk.birth_cards import parse_birth_cards
 from ootk.report import (
     COMPONENTS, MAPPING_LABELS, analyze_reading, components_param, drawn_now, end_of_prompt_marker, time_stamp,
     without_components,
@@ -589,7 +590,7 @@ PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
     ("hebrew", "Each card's Hebrew letter and the letter totals"),
     ("tree", "Each card's path or Sephira on the Tree of Life, its four Liber 777 colour scales and its Yetziratic title"),
     ("courts", "A court card's element of an element, such as Fire of Water"),
-    ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks"),
+    ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks, and your birth cards if you gave a birth date"),
     ("geomancy", "The geomantic figure on each sign Trump"),
     ("geometry", "The Cube of Space, the Platonic solids and the aspects between positions"),
     ("gematria", "Each Trump's and court card's letter value (Aleph 1 to Tav 400) and their totals"),
@@ -1317,6 +1318,7 @@ def generate_report(
     bt_sephira: str = Form("8"),
     include: list[str] = Form([]),
     parts_shown: str = Form(""),
+    birth_cards: str = Form(""),
 ):
     """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
 
@@ -1325,6 +1327,8 @@ def generate_report(
     where spread 13 (Book T) expects the significator, counted from 1 (book_t.EXPECT_HELP).
     `include` holds the COMPONENTS switched on in the form's "Parts of the AI prompt" fold; it
     counts only when `parts_shown` says the fold was sent, so a form without it leaves nothing out.
+    `birth_cards` is "19-7-2026" (birth_cards.py), worked out in the browser from a birth date
+    that is never sent.
     """
     topic = topic.strip()
     significator = significator.strip()
@@ -1355,6 +1359,12 @@ def generate_report(
         raise HTTPException(status_code=400, detail=f"The question can be at most {TOPIC_MAX} characters; "
                                                     f"this one has {len(topic)}.")
     without = left_out(include, parts_shown)
+    birth_cards = birth_cards.strip()
+    check_lengths(birth_cards=birth_cards)
+    try:
+        parse_birth_cards(birth_cards)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
     expect = ""
     if spread_key == BOOK_T_KEY:
@@ -1393,7 +1403,7 @@ def generate_report(
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-        "seed": seed, "expect": expect, "without": without,
+        "seed": seed, "expect": expect, "without": without, "birth_cards": birth_cards,
         "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
         # When the cards were drawn, and the visitor's own zone (from the browser) to show it in.
         "drawn_at": time_stamp(drawn_now()), "tz": tz.strip() if time_zone(tz.strip()) else "",
@@ -2186,6 +2196,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         book_t_ops=ops,
         # A saved reading from before the switches has no "without": nothing left out.
         without=without_components(settings.get("without", "")),
+        birth_cards=settings.get("birth_cards", ""),
     )
     return {
         "book_t": book_t_view(ops, spread_results) if ops else None,

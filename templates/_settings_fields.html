@@ -230,6 +230,15 @@
                 </select>
                 <p class="hint">The angle your AI is asked to read from. It does not change the cards or the scores. <a href="/method#lens">More</a></p>
                 </div>
+                <details class="parts" id="birthCardsFold">
+                    <summary>Birth cards <span class="parts-sum" id="birthCardsSummary">· optional</span></summary>
+                    <p class="hint">Your birth card and year card, from tarot numerology as Mary Greer and Angeles Arrien (writing for the Thoth deck) teach it: the numbers of your birth date added up to a Major card. The prompt names them and says if any were drawn. <a href="/method#birth-cards">More</a></p>
+                    <label for="birthCardsDate">Birth date</label>
+                    {# No name: the date never leaves the browser, only the card numbers it gives are sent. #}
+                    <input type="date" id="birthCardsDate" autocomplete="off">
+                    <input type="hidden" name="birth_cards" id="birthCardsInput" value="">
+                    <p class="hint" id="birthCardsResult">Stays in your browser; only the card numbers are sent, and they are left out of share links.</p>
+                </details>
                 {# Every part is on unless switched off here. parts_shown tells the server the
                    switches were sent, so a form without them (or an older one) leaves nothing out. #}
                 <details class="parts" id="promptParts">

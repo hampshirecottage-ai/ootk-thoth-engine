@@ -11,6 +11,7 @@ from ootk.analysis import (
     book_t_counts, derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
     major_element_note, spirit_bearing_cards,
 )
+from ootk.birth_cards import birth_cards_markdown
 from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
@@ -112,7 +113,8 @@ def _solid_legend(spread_results):
 
 def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
                     framework="auto", mapping_system="thoth", withheld=None, significator_places=None,
-                    drawn_at=None, local_zone=None, book_t_ops=None, without=frozenset()):
+                    drawn_at=None, local_zone=None, book_t_ops=None, without=frozenset(),
+                    birth_cards=""):
     """Every analysis of a drawn spread, then its prompt. The command line and the web site both
     call this, so the same draw always gives the same prompt from either. `without` is a set of
     COMPONENTS keys the prompt leaves out; the analyses themselves always run."""
@@ -130,7 +132,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
         book_t=book_t_counts(spread_results, spread_key),
         book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
-        without=without,
+        without=without, birth_cards=birth_cards,
     )
     return {
         "element_counts": element_counts, "dignity_matrix": dignity_matrix,
@@ -147,7 +149,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=frozenset()):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, dual_pairings, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=frozenset(), birth_cards=""):
     off = frozenset(without or ())
     unknown = off - set(COMPONENTS)
     if unknown:
@@ -158,6 +160,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         own_place = None
     if "tree" in off:
         framework_basis = None
+    birth_line = birth_cards_markdown(birth_cards, spread_results) if "numerology" not in off else ""
     mapping_label = MAPPING_LABELS.get(mapping_system, mapping_system)
     mapping_note = MAPPING_NOTES.get(mapping_system) if not off & {"hebrew", "tree"} else None
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
@@ -170,7 +173,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 {reading_time_markdown(drawn_at, local_zone, sky="astrology" not in off)}**Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
-{significator_places_markdown(significator_places)}**PRNG Seed:** {seed_val or 'Manual Entry'}
+{significator_places_markdown(significator_places)}{birth_line}**PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}
 {framework_basis_line}{own_place_markdown(own_place)}**Active Mapping System:** {mapping_label}
 {mapping_note_line}{components_off_markdown(off)}"""

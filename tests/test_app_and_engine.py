@@ -2930,3 +2930,29 @@ def test_journal_score_and_chance():
     assert (r["rating_real"], r["rating_decoy"], r["open"]) == (3.0, 2.0, 1)
     assert journal_module.statements("intro\n**Checkable Statements**\n- x") == "**Checkable Statements**\n- x"
     assert journal_module.statements("no section") == "no section"
+
+
+# ---------- birth cards ----------
+
+def test_birth_cards_reach_the_prompt_and_settings_but_not_the_share_link(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+             significator="Knight of Swords", birth_cards="19-7-2026")
+    assert r.status_code == 200
+    assert "**Birth Cards**" in r.text and "XIX - The Sun" in r.text
+    assert seeded_client.saved["report_settings"]["birth_cards"] == "19-7-2026"
+    share = re.search(r'data-path="([^"]+)"', r.text).group(1)
+    assert "birth" not in share and "19-7" not in share
+    shared = seeded_client.get(html.unescape(share))
+    assert shared.status_code == 200 and "**Birth Cards**" not in shared.text
+
+
+def test_reading_without_birth_cards_has_no_line(seeded_client):
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
+             significator="Knight of Swords")
+    assert "**Birth Cards**" not in r.text
+    assert seeded_client.saved["report_settings"]["birth_cards"] == ""
+
+
+@pytest.mark.parametrize("bad", ["1983-07-14", "0-1-2026", "23-1-2026", "x" * 200])
+def test_bad_birth_cards_are_refused(client, bad):
+    assert post(client, birth_cards=bad).status_code == 400
