@@ -592,6 +592,7 @@ PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
     ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks"),
     ("geomancy", "The geomantic figure on each sign Trump"),
     ("geometry", "The Cube of Space, the Platonic solids and the aspects between positions"),
+    ("gematria", "Each Trump's and court card's letter value (Aleph 1 to Tav 400) and their totals"),
 ))
 assert [k for k, _, _ in PROMPT_PARTS] == list(COMPONENTS)
 
