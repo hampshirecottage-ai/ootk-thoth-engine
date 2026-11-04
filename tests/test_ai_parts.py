@@ -102,3 +102,16 @@ def test_terms_cover_every_part():
     found = ai_parts.mentions("Fire of Water in Leo; Aleph; Kether; Puer; trine; gematria; Lord of War; "
                               "angel Vehuiah; day ruler; gods; hexagram; dignity; Book T count")
     assert all(found[p] >= 1 for p in COMPONENTS), found
+
+
+def test_summary_lean_and_cards(ref):
+    answer = ("## Position 1\nThe Lovers in Gemini.\n\n## Closing Summary\nThe Lovers and the Ace of Cups "
+              "say go ahead: the time is favourable.\n\n## Plain-Language Recap\nMake the change.")
+    tail = ai_parts.summary(answer)
+    assert tail.startswith("## Closing Summary") and "Position 1" not in tail
+    assert ai_parts.lean(tail) == 1
+    assert ai_parts.lean("Not yet: wait and hold off.") == -1
+    assert ai_parts.lean("Nothing either way.") == 0
+    named = ai_parts.cards_named(tail, ai_parts.card_patterns(ref))
+    assert {t for t in named if "Lovers" in t} and {t for t in named if t.startswith("Ace of Cups")}
+    assert ai_parts.set_distance({1, 2}, {2, 3}) == pytest.approx(2 / 3)
