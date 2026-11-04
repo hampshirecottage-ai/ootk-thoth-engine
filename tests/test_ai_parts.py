@@ -53,7 +53,10 @@ def fake_batch_client(answer_for):
 
     def results(batch_id):
         for r in sent["requests"]:
-            text = answer_for(r["custom_id"])
+            if "format" in r["params"].get("output_config", {}):      # the lean reading
+                text = json.dumps({"lean": "wait" if "_full__" in r["custom_id"] else "go_ahead"})
+            else:
+                text = answer_for(r["custom_id"])
             msg = SimpleNamespace(content=[SimpleNamespace(type="text", text=text)], stop_reason="end_turn",
                                   usage=SimpleNamespace(input_tokens=1000, output_tokens=500))
             yield SimpleNamespace(custom_id=r["custom_id"], result=SimpleNamespace(type="succeeded", message=msg))
@@ -88,6 +91,8 @@ def test_round_asks_sends_one_batch_and_reports(tmp_path, monkeypatch):
     assert all(r["params"]["model"] == "claude-haiku-5-5" for r in sent["requests"])
     assert not os.path.exists(os.path.join(out, "batch.json"))
     assert "Repeat noise" in text and "Scrambled correspondences" in text
+    assert f"Lean read by claude-haiku-5-5 for {n_cases * ai_parts.RUNS} of them" in text
+    assert "same lean **100%**" in text
     astro = next(line for line in text.splitlines() if line.startswith("| Astrology"))
     assert astro.split("|")[2].strip() == "1.0" and astro.split("|")[3].strip() == "0.0"
 
