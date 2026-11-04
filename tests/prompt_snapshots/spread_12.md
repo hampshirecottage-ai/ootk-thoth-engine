@@ -18,7 +18,7 @@
   * Op 4 (decans): none of 36 cards on their own decan - expected 0.46 at random, z=-0.68
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
-**Left Out to Fit:** Angels of the decans. This reading is long, so these were dropped to keep the prompt short enough for every AI to read to the end. Do not bring them in from your own knowledge.
+**Left Out to Fit:** Angels of the decans, Gods (Liber 777), Court card hexagrams. This reading is long, so these were dropped to keep the prompt short enough for every AI to read to the end. Do not bring them in from your own knowledge.
 
 ---
 

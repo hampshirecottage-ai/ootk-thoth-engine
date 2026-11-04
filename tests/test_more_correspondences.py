@@ -110,10 +110,54 @@ def test_long_prompts_leave_the_new_parts_out_in_order(monkeypatch):
     assert "**Left Out to Fit:** Angels of the decans." in r["analytical_prompt"]
     assert "**Components Left Out:**" not in r["analytical_prompt"]
     monkeypatch.setattr(report, "PROMPT_BUDGET", 10)
-    r = _prompt("4 of Swords - Truce", "XVII - The Star")
+    r = _prompt("4 of Swords - Truce", "XVII - The Star", "Queen of Cups")
     assert r["left_out_to_fit"] == list(FIT_ORDER)
+    # a part with nothing to say for these cards (no Trump, no court) is not named
+    assert _prompt("4 of Swords - Truce")["left_out_to_fit"] == ["angels", "timing", "titles"]
     # a part switched off by hand is named as switched off, not as left out to fit
     r = _prompt("4 of Swords - Truce", without=frozenset({"titles"}))
     assert r["left_out_to_fit"] == ["angels", "timing"]
     assert "**Components Left Out:** Golden Dawn titles." in r["analytical_prompt"]
     assert PROMPT_BUDGET < 78600
+
+
+# ---------- gods and court hexagrams ----------
+
+from ootk.gods import CHECKED, GODS, RANKS, SUITS, TRIGRAMS, court_hexagram, trump_gods
+
+
+def test_gods_cover_every_trump_path_and_follow_the_colour_row():
+    assert sorted(GODS) == list(range(11, 33))
+    majors = [d for d in ROWS.values() if d["arcana_type"] == "Major"]
+    assert len(majors) == 22 and all(trump_gods(d) for d in majors)
+    assert trump_gods(ROWS["XVII - The Star"]) == GODS[28]          # Aquarius row, as its colours
+    assert trump_gods(ROWS["IV - The Emperor"]) == GODS[15]         # Aries row
+    assert all("," not in g.replace(", ", "") for pair in GODS.values() for g in pair)  # spaced
+    assert all(g.count("[[") == g.count("]]") for pair in GODS.values() for g in pair)
+
+
+def test_court_hexagrams_follow_rank_over_suit():
+    numbers = {}
+    for rank in RANKS:
+        for suit in SUITS:
+            numbers[f"{rank} of {suit}"] = court_hexagram(f"{rank} of {suit}")[0]
+    assert len(set(numbers.values())) == 16
+    # the owner's ten values from the Book of Thoth
+    assert {t: numbers[t] for t in CHECKED} == {
+        "Knight of Wands": 51, "Queen of Wands": 17, "Prince of Wands": 42, "Princess of Wands": 27,
+        "Prince of Cups": 61, "Prince of Swords": 57, "Princess of Swords": 18,
+        "Queen of Disks": 31, "Prince of Disks": 53, "Princess of Disks": 52}
+    assert numbers["Queen of Cups"] == 58 and numbers["Knight of Disks"] == 62
+    assert TRIGRAMS == {"Fire": "Chên", "Water": "Tui", "Air": "Sun", "Earth": "Kên"}
+    assert court_hexagram("4 of Swords - Truce") is None and court_hexagram("XVII - The Star") is None
+
+
+def test_gods_and_hexagrams_in_the_prompt_and_their_switches():
+    cards = ("XVII - The Star", "Queen of Cups", "4 of Swords - Truce", "XVII - The Star")
+    text = _prompt(*cards)["analytical_prompt"]
+    assert "**Gods (Liber 777)**" in text and "XVII - The Star (row 28): Ahepi, Aroueris" in text
+    assert text.count("Ahepi, Aroueris") == 1
+    assert "Queen of Cups (row" not in text                         # courts take no gods
+    assert "**Court Hexagrams**" in text and "Queen of Cups: 58 Tui, The Joyous" in text
+    for key, mark in (("gods", "**Gods (Liber 777)**"), ("hexagrams", "**Court Hexagrams**")):
+        assert mark not in _prompt(*cards, without=frozenset({key}))["analytical_prompt"]

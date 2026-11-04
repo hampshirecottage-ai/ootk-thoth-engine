@@ -57,6 +57,8 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 
 **Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Laviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24).
 
+**Court Hexagrams** (Crowley, Book of Thoth: the rank's trigram over the suit's; Fire thunder, Water lake, Air wind, Earth mountain): Prince of Swords: 57 Sun, The Gentle.
+
 
 ---
 

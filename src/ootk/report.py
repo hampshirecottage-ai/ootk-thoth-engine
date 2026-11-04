@@ -14,6 +14,7 @@ from ootk.analysis import (
 from ootk.birth_cards import birth_cards_markdown
 from ootk.decans import angels_markdown, dates_markdown, day_ruler, solar_year
 from ootk.titles import titles_markdown
+from ootk.gods import gods_markdown, hexagrams_markdown
 from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
@@ -65,11 +66,17 @@ COMPONENTS = {
     "titles": "Golden Dawn titles",
     "angels": "Angels of the decans",
     "timing": "Decan dates and day ruler",
+    "gods": "Gods (Liber 777)",
+    "hexagrams": "Court card hexagrams",
 }
-# Added after the first nine. A prompt that would be longer than PROMPT_BUDGET characters
-# leaves these out, in this order, until it fits, and its header says so: some AIs stop
-# reading at about 78,600 characters (Gemini), so the end-of-prompt marker would be lost.
-FIT_ORDER = ("angels", "timing", "titles")
+# Added last. A prompt that would be longer than PROMPT_BUDGET characters leaves these out,
+# in this order, until it fits, and its header says so: some AIs stop reading at about 78,600 characters (Gemini), so the end-of-prompt marker would be lost.
+FIT_ORDER = ("gods", "angels", "timing", "hexagrams", "titles")
+# How to tell each one is in a prompt: one with nothing to say for the cards drawn (no Trump,
+# so no gods) is not named as left out.
+_FIT_MARKS = {"gods": ("**Gods (Liber 777)**",), "angels": ("**Angels of the Decans**",),
+              "timing": ("**Decan Dates**", "**Day Ruler:**"), "hexagrams": ("**Court Hexagrams**",),
+              "titles": ("**Golden Dawn Titles**",)}
 PROMPT_BUDGET = 77_500
 def without_components(text):
     """frozenset of COMPONENTS keys from "astrology,geometry" (spaces and case ignored).
@@ -164,7 +171,8 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
             book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
             without=off, birth_cards=birth_cards, fitted=tuple(fitted),
         )
-        left = [k for k in FIT_ORDER if k not in off]
+        left = [k for k in FIT_ORDER if k not in off
+                and any(m in analytical_prompt for m in _FIT_MARKS[k])]
         if len(analytical_prompt) <= PROMPT_BUDGET or not left:
             break
         fitted.append(left[0])
@@ -383,6 +391,10 @@ def _cards_md(spread_results, legend, off=frozenset(), drawn_at=None):
         md += angels_markdown(spread_results)
     if "timing" not in off and drawn_at is not None:
         md += dates_markdown(spread_results, solar_year(drawn_at))
+    if "gods" not in off:
+        md += gods_markdown(spread_results)
+    if "hexagrams" not in off:
+        md += hexagrams_markdown(spread_results)
     return md
 
 def _row_label(key_scale, name):

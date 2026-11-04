@@ -597,6 +597,8 @@ PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
     ("titles", "The Golden Dawn's long name for each card, such as Lord of Rest from Strife"),
     ("angels", "The two Shem ha-Mephorash angels of each small card's decan"),
     ("timing", "The days the Sun is in each small card's decan, and the planet ruling the day"),
+    ("gods", "The Egyptian and Greek gods of each Trump's path, from Liber 777"),
+    ("hexagrams", "Crowley's I Ching hexagram for each court card"),
 ))
 assert [k for k, _, _ in PROMPT_PARTS] == list(COMPONENTS)
 

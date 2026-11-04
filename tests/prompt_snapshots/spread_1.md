@@ -34,6 +34,8 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariot of the Winds.
 
+**Court Hexagrams** (Crowley, Book of Thoth: the rank's trigram over the suit's; Fire thunder, Water lake, Air wind, Earth mountain): Prince of Swords: 57 Sun, The Gentle.
+
 
 ---
 
