@@ -55,7 +55,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success.
 
-**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Leviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24).
+**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Laviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24).
 
 
 ---

@@ -49,6 +49,8 @@ def test_angels_start_at_leo_and_cover_all_72():
 def test_titles_follow_one_stated_source():
     assert full_title("XI - Lust") == "The Daughter of the Flaming Sword"          # 777, one clause
     assert full_title("V - The Hierophant") == "The Magus of the Eternal"          # 777, not "... Gods"
+    assert full_title("XIII - Death").endswith("the Lord of the Gates of Death")
+    assert short_title("IV - The Emperor") == "The Son of the Morning"
     assert full_title("Prince of Swords") == "Prince of the Chariot of the Winds"  # Book T list form
 
 
@@ -85,7 +87,7 @@ def test_new_parts_in_the_prompt_and_their_switches():
     text = r["analytical_prompt"]
     assert "**Golden Dawn Titles**" in text and "4 of Swords - Truce: Rest from Strife" in text
     assert text.count("Rest from Strife") == 1                      # once per card
-    assert "**Angels of the Decans**" in text and "4 of Swords: Leviah (17) and Caliel (18)" in text
+    assert "**Angels of the Decans**" in text and "4 of Swords: Laviah (17) and Caliel (18)" in text
     assert "**Decan Dates**" in text and "**Day Ruler:** Wednesday, ruled by Mercury" in text
     assert r["left_out_to_fit"] == []
     for key, mark in (("titles", "**Golden Dawn Titles**"), ("angels", "**Angels of the Decans**"),

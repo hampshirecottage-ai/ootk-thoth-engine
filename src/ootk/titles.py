@@ -4,9 +4,8 @@ Small cards and court cards follow Book T (Regardie's The Golden Dawn; Crowley's
 gives the same). Each small card is "Lord of ..." (the 4 of Swords is the Lord of Rest from
 Strife). The Trumps follow Liber 777's wording, which Crowley used; Regardie's Book T differs in
 places (the Hierophant "Magus of the Eternal Gods", the Lovers "Children of the Voice Divine",
-the Hermit "The Magus of the Voice of Light, The Prophet of the Gods", Death "Gates" for
-"Gate"), and some witnesses have "Son of the Morning" for the Emperor where 777 and the
-Equinox have "Sun". Text variants within Book T itself (Knight of Disks "Wide" or "Wild",
+the Hermit "The Magus of the Voice of Light, The Prophet of the Gods"), and one Book T
+witness has "Sun of the Morning" for the Emperor where 777 has "Son". Text variants within Book T itself (Knight of Disks "Wide" or "Wild",
 Prince of Swords "Chariot" or "Chariots") take the form of its introductory list. The Aces'
 title, "the Root of the Powers of Fire" and so on, is already their Attribution line, so they
 have none here. Court ranks are the Thoth names: the mounted father is the Knight (Book T's
@@ -36,7 +35,7 @@ TRUMP_TITLES = {
     "I": "The Magus of Power",
     "II": "The Priestess of the Silver Star",
     "III": "The Daughter of the Mighty Ones",
-    "IV": "Sun of the Morning; Chief among the Mighty",
+    "IV": "The Son of the Morning; Chief among the Mighty",   # one Book T witness: "Sun"
     "V": "The Magus of the Eternal",
     "VI": "The Children of the Voice; the Oracle of the Mighty Gods",
     "VII": "The Child of the Powers of the Waters; the Lord of the Triumph of Light",
@@ -45,7 +44,7 @@ TRUMP_TITLES = {
     "X": "The Lord of the Forces of Life",
     "XI": "The Daughter of the Flaming Sword",   # Book T adds "Leader of the Lion"
     "XII": "The Spirit of the Mighty Waters",
-    "XIII": "The Child of the Great Transformers; the Lord of the Gate of Death",
+    "XIII": "The Child of the Great Transformers; the Lord of the Gates of Death",
     "XIV": "The Daughter of the Reconcilers; the Bringer-forth of Life",
     "XV": "The Lord of the Gates of Matter; the Child of the Forces of Time",
     "XVI": "The Lord of the Hosts of the Mighty",

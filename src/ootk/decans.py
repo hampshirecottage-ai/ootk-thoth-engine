@@ -4,7 +4,8 @@ Shem ha-Mephorash and the dates the Sun spends in each decan. Also the ruler of 
 Angels. The 72 angels of the Name (Shem ha-Mephorash), from Exodus 14:19-21, each rule five
 degrees (a quinance), so each decan and its small card has two. Book T counts them, like the
 decans of the Fourth Operation, from 0° Leo: Vehuiah and Yeliel are the 5 of Wands (Saturn in
-Leo). Spellings follow the usual English forms (as in Robert Wang's The Qabalistic Tarot).
+Leo). Spellings follow the usual modern English forms, not Regardie's (his Vahaviah and Yelayel);
+no. 17 is written Laviah to keep it apart from no. 11, Lauviah.
 
 Dates. Book T times a matter by the decan of the small card: about ten days while the Sun is
 in it. The dates are worked out for the reading's year from the Sun's position (sky.py), so
@@ -23,7 +24,7 @@ from ootk.sky import sun_longitude
 ANGELS = (   # from 0° Leo, two per decan
     "Vehuiah", "Yeliel", "Sitael", "Elemiah", "Mahasiah", "Lelahel",
     "Achaiah", "Cahetel", "Haziel", "Aladiah", "Lauviah", "Hahaiah",
-    "Yezalel", "Mebahel", "Hariel", "Hakamiah", "Leviah", "Caliel",
+    "Yezalel", "Mebahel", "Hariel", "Hakamiah", "Laviah", "Caliel",
     "Leuviah", "Pahaliah", "Nelchael", "Yeiayel", "Melahel", "Haheuiah",
     "Nithhaiah", "Haaiah", "Yerathel", "Seheiah", "Reiyel", "Omael",
     "Lecabel", "Vasariah", "Yehuiah", "Lehahiah", "Chavakiah", "Menadel",
