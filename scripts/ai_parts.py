@@ -13,9 +13,12 @@ For each part it reports:
   letters, Sephiroth, geomantic figures, angels...), per answer;
 - left on: mentions that remain with the part switched off, i.e. supplied from the AI's own
   knowledge (or terms the part shares with another part);
-- change: how different the answers are from the full answers, against how different two
-  full answers to the same prompt are (the repeat noise). A part whose removal changes the
-  answer no more than a repeat does is one the AI does not lean on.
+- change, read from each answer's closing summary and recap (where the prompt asks for the
+  outcome), against how much two full answers to the same prompt differ (the repeat noise):
+  - summary: how different its words are;
+  - cards named: how different the set of drawn cards it names is;
+  - lean: how often it leans the same way (go ahead / wait) as the full answers.
+  A part whose removal changes these no more than a repeat does is one the AI does not lean on.
 Scrambled answers also count how often the AI says something does not match.
 
 Usage (needs `pip install anthropic` and ANTHROPIC_API_KEY, like scripts/ai_score.py):
@@ -43,7 +46,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from ai_check import MAPPING, QUESTION, SEEDS, SIGNIFICATOR, load_reference  # noqa: E402
+from ai_check import MAPPING, QUESTION, SEEDS, SIGNIFICATOR, card_names, load_reference  # noqa: E402
 from ootk.analysis import withheld_summary  # noqa: E402
 from ootk.decans import ANGELS  # noqa: E402
 from ootk.report import COMPONENTS, analyze_reading  # noqa: E402
@@ -279,14 +282,48 @@ def mentions(text):
     return {part: len(rx.findall(text)) for part, rx in TERMS.items()}
 
 
+STOP = set("""that this with from have will your into they them their there what when where which
+while about would could should these those than then been being more most some such only also
+very just over even much many each other your yours here like make made does doing""".split())
+SUMMARY_HEAD = re.compile(r"^[ \t]*(#+|\*\*).*\b(summary|recap|synthesis)\b", re.I | re.M)
+POSITIVE = re.compile(r"\b(yes|go ahead|favou?rable|move forward|make the (change|move|leap)|take the (leap|step|job)|"
+                      r"green light|worth (it|making|taking)|time to (change|move|go)|supports? (a |the )?change)\b", re.I)
+CAUTION = re.compile(r"\b(not yet|wait|hold off|hold back|delay|stay put|stay where|caution|cautious|"
+                     r"unfavou?rable|not the right time|too soon|reconsider|hesitat\w*|premature)\b", re.I)
+
+
 def word_set(text):
-    return set(re.findall(r"[a-z][a-z'-]{3,}", text.lower()))
+    return {w for w in re.findall(r"[a-z][a-z'-]{3,}", text.lower()) if w not in STOP}
 
 
-def distance(a, b):
-    """1 - Jaccard overlap of the two answers' words: 0 same words, 1 nothing shared."""
-    wa, wb = word_set(a), word_set(b)
-    return 1 - len(wa & wb) / len(wa | wb) if wa | wb else 0.0
+def summary(answer):
+    """The closing summary and recap: from the first summary/recap heading to the end, or the
+    last quarter of the answer when it has no such heading."""
+    m = SUMMARY_HEAD.search(answer)
+    return answer[m.start():] if m else answer[len(answer) * 3 // 4:]
+
+
+def lean(text):
+    """+1 leans toward going ahead, -1 toward waiting, 0 neither or both equally."""
+    pos, neg = len(POSITIVE.findall(text)), len(CAUTION.findall(text))
+    return (pos > neg) - (neg > pos)
+
+
+def card_patterns(ref):
+    """{title: regex} matching a card's Thoth or Waite names (not its bare title word)."""
+    out = {}
+    for card in ref["deck"]:
+        names = [n for n, kind in card_names(card["title"]) if kind != "short"]
+        out[card["title"]] = re.compile("|".join(r"\b" + re.escape(n) + r"\b" for n in names), re.I)
+    return out
+
+
+def cards_named(text, patterns):
+    return {title for title, rx in patterns.items() if rx.search(text)}
+
+
+def set_distance(a, b):
+    return 1 - len(a & b) / len(a | b) if a | b else 0.0
 
 
 def mean(values):
@@ -298,50 +335,76 @@ def report(out):
     build_dir, answers = os.path.join(out, "build"), os.path.join(out, "answers")
     with open(os.path.join(build_dir, "cases.json"), encoding="utf-8") as f:
         info = json.load(f)
+    patterns = card_patterns(load_reference())
     texts = {}
     for path in sorted(os.listdir(answers)):
         m = re.fullmatch(r"(s\d+_sp\d+)_(.+)__(\d+)\.md", path)
         if m:
             with open(os.path.join(answers, path), encoding="utf-8") as f:
-                texts.setdefault((m[1], m[2]), []).append(f.read())
+                text = f.read()
+            tail = summary(text)
+            texts.setdefault((m[1], m[2]), []).append(
+                {"text": text, "words": word_set(tail), "cards": cards_named(tail, patterns), "lean": lean(tail)})
     readings = sorted({r for r, _ in texts})
     full = {r: texts.get((r, "full"), []) for r in readings}
-    noise = mean(distance(a, b) for r in readings for a, b in combinations(full[r], 2))
-    full_uses = {part: mean(mentions(t)[part] for r in readings for t in full[r]) for part in COMPONENTS}
 
-    def change(variant):
-        return mean(distance(v, f) for r in readings for v in texts.get((r, variant), []) for f in full[r])
+    def pairs(variant):
+        if variant == "full":
+            return [(a, b) for r in readings for a, b in combinations(full[r], 2)]
+        return [(v, f) for r in readings for v in texts.get((r, variant), []) for f in full[r]]
 
-    lines = [f"# Which parts of the prompt the AI uses", "",
-             f"{sum(len(v) for v in texts.values())} answers. Repeat noise (two full answers to the same prompt): "
-             f"**{noise:.2f}**" if noise is not None else "No full answers yet.", "",
-             "| Part | Uses (full) | Left on (part off) | Change (part off) | Change minus noise | Readings |",
-             "|---|---|---|---|---|---|"]
+    def measures(variant):
+        ps = pairs(variant)
+        if not ps:
+            return None
+        return (mean(set_distance(a["words"], b["words"]) for a, b in ps),
+                mean(set_distance(a["cards"], b["cards"]) for a, b in ps),
+                mean(a["lean"] == b["lean"] for a, b in ps))
+
+    noise = measures("full")
+    full_uses = {part: mean(mentions(a["text"])[part] for r in readings for a in full[r]) for part in COMPONENTS}
+    leans = [a["lean"] for r in readings for a in full[r]]
+    lines = ["# Which parts of the prompt the AI uses", "",
+             f"{sum(len(v) for v in texts.values())} answers, compared on their closing summary and recap."]
+    if noise is None:
+        text = "\n".join(lines + ["", "No full answers yet."]) + "\n"
+        print(text)
+        return text
+    lines += [f"Repeat noise (two full answers to the same prompt): summary words **{noise[0]:.2f}**, "
+              f"cards named **{noise[1]:.2f}**, same lean **{noise[2]:.0%}**. Full answers lean go-ahead "
+              f"{leans.count(1)}, wait {leans.count(-1)}, neither {leans.count(0)}.", "",
+              "| Part | Uses (full) | Left on (part off) | Summary words | Cards named | Same lean as full | Readings |",
+              "|---|---|---|---|---|---|---|"]
     rows = []
     for part, name in COMPONENTS.items():
         variant = f"no-{part}"
-        offs = [t for r in readings for t in texts.get((r, variant), [])]
+        offs = [a for r in readings for a in texts.get((r, variant), [])]
         n_readings = sum(1 for r in readings if texts.get((r, variant)))
-        if not offs:
-            rows.append((None, f"| {name} | {full_uses[part]:.1f} | - | - | - | 0 (no change to the prompt) |"))
+        m = measures(variant)
+        if not offs or m is None:
+            rows.append((None, f"| {name} | {full_uses[part]:.1f} | - | - | - | - | 0 (no change to the prompt) |"))
             continue
-        left = mean(mentions(t)[part] for t in offs)
-        ch = change(variant)
-        rows.append((ch - noise if noise is not None else ch,
-                     f"| {name} | {full_uses[part]:.1f} | {left:.1f} | {ch:.2f} | {ch - noise:+.2f} | {n_readings} |"))
+        left = mean(mentions(a["text"])[part] for a in offs)
+        score = (m[0] - noise[0]) + (m[1] - noise[1]) + (noise[2] - m[2])
+        rows.append((score, f"| {name} | {full_uses[part]:.1f} | {left:.1f} | {m[0] - noise[0]:+.2f} | "
+                            f"{m[1] - noise[1]:+.2f} | {m[2]:.0%} | {n_readings} |"))
     lines += [row for _, row in sorted(rows, key=lambda r: (r[0] is None, -(r[0] or 0)))]
-    scr = [t for r in readings for t in texts.get((r, "scrambled"), [])]
-    if scr:
-        flags = mean(len(MISMATCH.findall(t)) for t in scr)
-        base = mean(len(MISMATCH.findall(t)) for r in readings for t in full[r])
-        lines += ["", f"**Scrambled correspondences:** change {change('scrambled'):.2f} "
-                      f"({change('scrambled') - noise:+.2f} over noise); 'does not match' words per answer "
+    scr = [a for r in readings for a in texts.get((r, "scrambled"), [])]
+    m = measures("scrambled")
+    if scr and m:
+        flags = mean(len(MISMATCH.findall(a["text"])) for a in scr)
+        base = mean(len(MISMATCH.findall(a["text"])) for r in readings for a in full[r])
+        lines += ["", f"**Scrambled correspondences:** summary words {m[0] - noise[0]:+.2f}, cards named "
+                      f"{m[1] - noise[1]:+.2f}, same lean {m[2]:.0%}; 'does not match' words per answer "
                       f"{flags:.1f} (full answers: {base:.1f})."]
     if info.get("no_change"):
         lines += ["", "Parts that changed nothing for a reading, so were not sent: "
                   + ", ".join(info["no_change"]) + "."]
-    lines += ["", "Change is word overlap, 0 = same words, 1 = none shared. A part whose change is no more "
-              "than the noise is one this AI does not lean on. Uses and left on are term counts per answer."]
+    lines += ["", "Summary words and cards named are distances over the repeat noise: 0 means switching the "
+              "part off changed the summary no more than asking again did; higher means it changed more. "
+              "Same lean is how often an answer leans the same way as a full answer (compare with the noise "
+              "line). Uses and left on are term counts per whole answer. Rows are ordered by how much they "
+              "change, most first."]
     text = "\n".join(lines) + "\n"
     with open(os.path.join(out, "results.md"), "w", encoding="utf-8") as f:
         f.write(text)
