@@ -18,6 +18,8 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 
 Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
 
+Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
+
 ### Position 1: Past / Root Cause
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
@@ -39,6 +41,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
+- **Planet Strength**: in detriment (weakened)
 - **Platonic Solid**: `Icosahedron`
 
 **Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.

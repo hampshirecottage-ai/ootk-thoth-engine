@@ -11,7 +11,7 @@ from ootk.analysis import (
     book_t_counts, derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
     major_element_note, spirit_bearing_cards,
 )
-from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
+from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
 from ootk.sky import sky_line
@@ -263,6 +263,11 @@ def _cards_md(spread_results, legend, off=frozenset()):
         md += ("Court cards take their Hebrew letter through their sign (a Princess through her "
                "element), a Golden Dawn and Thoth practice. The French/Egyptian system gives "
                "courts no path letter, so `none` there is by design, not missing data.\n\n")
+    if "astrology" not in off and any(item["card_data"]["arcana_type"] == "Minor"
+                                      and planet_dignity_note(item["card_data"].get("attribution"))
+                                      for item in spread_results):
+        md += ("Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley "
+               "reads the small cards; pips without the line have none.\n\n")
     names = [_OP_PREFIX.sub("", item["position_name"]) for item in spread_results]
     if any(name in _WHEEL_POSITIONS for name in names):
         md += ("A house, sign or decan position's name is the place on the wheel, not the card: "
@@ -296,6 +301,9 @@ def _cards_md(spread_results, legend, off=frozenset()):
         attribution = _attribution(data, off)
         if attribution:
             md += f"- **Attribution**: {attribution}\n"
+        strength = planet_dignity_note(attribution) if minor and "astrology" not in off else None
+        if strength:
+            md += f"- **Planet Strength**: {strength}\n"
         figure = GEOMANTIC_FIGURES.get(data['attribution']) if data['arcana_type'] == 'Major' else None
         if figure and "geomancy" not in off:
             by = f" (Golden Dawn, by {data['attribution']})" if "astrology" not in off else " (Golden Dawn)"
