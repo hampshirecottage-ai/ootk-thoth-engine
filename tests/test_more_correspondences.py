@@ -123,7 +123,7 @@ def test_long_prompts_leave_the_new_parts_out_in_order(monkeypatch):
 
 # ---------- gods and court hexagrams ----------
 
-from ootk.gods import CHECKED, GODS, RANKS, SUITS, TRIGRAMS, court_hexagram, trump_gods
+from ootk.gods import GODS, RANKS, SUITS, TRIGRAMS, court_hexagram, trump_gods
 
 
 def test_gods_cover_every_trump_path_and_follow_the_colour_row():
@@ -142,12 +142,13 @@ def test_court_hexagrams_follow_rank_over_suit():
         for suit in SUITS:
             numbers[f"{rank} of {suit}"] = court_hexagram(f"{rank} of {suit}")[0]
     assert len(set(numbers.values())) == 16
-    # the owner's ten values from the Book of Thoth
-    assert {t: numbers[t] for t in CHECKED} == {
-        "Knight of Wands": 51, "Queen of Wands": 17, "Prince of Wands": 42, "Princess of Wands": 27,
-        "Prince of Cups": 61, "Prince of Swords": 57, "Princess of Swords": 18,
-        "Queen of Disks": 31, "Prince of Disks": 53, "Princess of Disks": 52}
-    assert numbers["Queen of Cups"] == 58 and numbers["Knight of Disks"] == 62
+    # the owner's values from the Book of Thoth, checked 2026-11-04
+    assert numbers == {
+        "Knight of Wands": 51, "Knight of Cups": 54, "Knight of Swords": 32, "Knight of Disks": 62,
+        "Queen of Wands": 17, "Queen of Cups": 58, "Queen of Swords": 28, "Queen of Disks": 31,
+        "Prince of Wands": 42, "Prince of Cups": 61, "Prince of Swords": 57, "Prince of Disks": 53,
+        "Princess of Wands": 27, "Princess of Cups": 41, "Princess of Swords": 18,
+        "Princess of Disks": 52}
     assert TRIGRAMS == {"Fire": "Chên", "Water": "Tui", "Air": "Sun", "Earth": "Kên"}
     assert court_hexagram("4 of Swords - Truce") is None and court_hexagram("XVII - The Star") is None
 
@@ -161,3 +162,12 @@ def test_gods_and_hexagrams_in_the_prompt_and_their_switches():
     assert "**Court Hexagrams**" in text and "Queen of Cups: 58 Tui, The Joyous" in text
     for key, mark in (("gods", "**Gods (Liber 777)**"), ("hexagrams", "**Court Hexagrams**")):
         assert mark not in _prompt(*cards, without=frozenset({key}))["analytical_prompt"]
+
+
+def test_owner_corrections_to_gods_and_hexagram_names():
+    assert GODS[22][1] == "Themis, Minos, Aeacus and Rhadamanthus"
+    assert GODS[29][1] == "Poseidon [[Hermes Psychopompos]]"
+    assert GODS[28][1] == "[Athena] Ganymede" and GODS[30][0] == "Ra and many others"
+    assert court_hexagram("Knight of Wands") == (51, "Chên, The Arousing (Crowley: Kan)")
+    assert court_hexagram("Princess of Disks") == (52, "Kên, Keeping Still (Crowley: Kan)")
+    assert court_hexagram("Queen of Cups") == (58, "Tui, The Joyous")
