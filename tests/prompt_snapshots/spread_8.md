@@ -185,6 +185,9 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 
 Section 1 gives each card's letter and spatial type.
 
+**Letter Values (standard gematria, Aleph 1 to Tav 400):** the letters from section 1 added up (pips have none). Plain sums to weigh, not a verdict.
+* **Total**: ח 8 + ה 5 + ו 6 + ט 9 + ק 100 + פ 80 + ב 2 = **210**
+
 ---
 
 ## 4. PLATONIC SOLID TOPOLOGY MATRIX

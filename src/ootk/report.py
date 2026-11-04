@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timezone
 
 from ootk import PROJECT_ROOT as BASE_DIR
+from ootk import gematria
 from ootk.analysis import (
     SUIT_ELEMENTS, analyze_elemental_balance, analyze_hebrew_spatial_distribution,
     analyze_platonic_topology, analyze_spatial_vectors, calculate_elemental_dignities, card_home,
@@ -57,6 +58,7 @@ COMPONENTS = {
     "numerology": "Numerology (Book T counts)",
     "geomancy": "Geomantic figures",
     "geometry": "Geometry (Cube of Space, solids, aspects)",
+    "gematria": "Gematria (letter values)",
 }
 def without_components(text):
     """frozenset of COMPONENTS keys from "astrology,geometry" (spaces and case ignored).
@@ -176,7 +178,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     sections = (                     # in the order of the numbers above
         _cards_md(spread_results, legend, off),
         _elements_md(spread_results, element_counts, withheld, book_t, off),
-        _hebrew_md(spatial_dist, off),
+        _hebrew_md(spatial_dist, off, spread_results),
         _solids_md(solid_counts, legend, dual_pairings, off,
                    "in a Celtic Cross" if spread_name == SPREADS[CELTIC_CROSS_KEY]["name"] else "in a heap"),
         _dignity_md(dignity_matrix, book_t_notes, off),
@@ -471,17 +473,37 @@ def book_t_markdown(book_t):
         md += f"* {name + ': ' if name else ''}{line}\n"
     return md
 
-def _hebrew_md(spatial_dist, off=frozenset()):
+def _hebrew_md(spatial_dist, off=frozenset(), spread_results=()):
     # Totals only: each card's letter and spatial type are in its section 1 entry.
+    md = "HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
     gone = [k for k in ("hebrew", "geometry") if k in off]
     if gone:
-        return "HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n" + _left_out(*gone)
-    return ("HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)\n"
-            f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
-            f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
-            f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
-            f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n"
-            f"\nSection {CARDS} gives each card's letter and spatial type.\n")
+        md += _left_out(*gone)
+    else:
+        md += (f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
+               f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
+               f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
+               f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n"
+               f"\nSection {CARDS} gives each card's letter and spatial type.\n")
+    if "hebrew" not in off:
+        md += _gematria_md(spread_results, off)
+    return md
+
+def _gematria_md(spread_results, off):
+    """The letter values added up, per operation: plain sums, no meaning given to them."""
+    if "gematria" in off:
+        return "\n**Letter Values (gematria):**\n" + _left_out("gematria")
+    totals = gematria.operation_totals(spread_results)
+    if not totals:
+        return ""
+    md = ("\n**Letter Values (standard gematria, Aleph 1 to Tav 400):** the letters from section "
+          f"{CARDS} added up (pips have none). Plain sums to weigh, not a verdict.\n")
+    several = len({operation_number(i["position_name"]) for i in spread_results}) > 1
+    for op, rows, total in totals:
+        parts = " + ".join(f"{letter.split()[0]} {value}" for _, letter, value in rows)
+        label = f"Operation {op}" if several else "Total"
+        md += f"* **{label}**: {parts} = **{total}**\n"
+    return md
 
 def _solids_md(solid_counts, legend, dual_pairings, off=frozenset(), named="in a heap"):
     md = "PLATONIC SOLID TOPOLOGY MATRIX\n"

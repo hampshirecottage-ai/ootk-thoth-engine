@@ -733,6 +733,12 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 Section 1 gives each card's letter and spatial type.
 
+**Letter Values (standard gematria, Aleph 1 to Tav 400):** the letters from section 1 added up (pips have none). Plain sums to weigh, not a verdict.
+* **Operation 1**: ח 8 + ה 5 + ו 6 + ט 9 + ק 100 + פ 80 + ב 2 = **210**
+* **Operation 2**: ק 100 + כ 20 + ז 7 + ח 8 + ע 70 = **205**
+* **Operation 3**: ה 5 + ה 5 + ס 60 + פ 80 + י 10 + ב 2 = **162**
+* **Operation 4**: ט 9 + ז 7 + ל 30 + נ 50 + מ 40 + ח 8 + ח 8 + ר 200 + פ 80 + ש 300 + מ 40 + צ 90 + ה 5 + ו 6 + ש 300 + כ 20 + א 1 + ק 100 + ל 30 + ס 60 + ט 9 + צ 90 = **1483**
+
 ---
 
 ## 4. PLATONIC SOLID TOPOLOGY MATRIX

@@ -126,3 +126,26 @@ def test_cli_rejects_unknown_component(monkeypatch):
     monkeypatch.setattr(sys, "argv", ["ootk", "--spread", "3", "--without", "runes"])
     with pytest.raises(cli.CliError, match="runes"):
         cli.run_spread_session()
+
+
+@pytest.mark.parametrize("spread_key", SPREADS)
+def test_gematria_totals_and_switch(spread_key):
+    assert "Letter Values (standard gematria" in prompt(spread_key)
+    for off in ("gematria", "hebrew"):
+        assert "Letter Values (standard gematria" not in prompt(spread_key, off)
+
+
+def test_gematria_values():
+    from ootk import gematria
+    assert gematria.letter_value("ס (Samekh)") == 60
+    assert gematria.letter_value("Tav (ת)") == 400
+    assert gematria.letter_value("Aleph") is None
+    assert sum(gematria.STANDARD_VALUES.values()) == 1495
+    assert gematria.card_value({"arcana_type": "Minor", "hebrew_letter": "כֶּתֶר (Kether)"}) is None
+    assert gematria.card_value({"arcana_type": "Court", "hebrew_letter": "ה (Hé)"}) == 5
+    cards = [{"position_number": n, "position_name": name, "card_data": data} for n, name, data in (
+        (1, "[Op 1] One", {"arcana_type": "Major", "hebrew_letter": "א (Aleph)"}),
+        (2, "[Op 1] Two", {"arcana_type": "Minor", "hebrew_letter": "כֶּתֶר (Kether)"}),
+        (3, "[Op 2] One", {"arcana_type": "Major", "hebrew_letter": "ת (Tau)"}),
+        (4, "[Op 2] Two", {"arcana_type": "Court", "hebrew_letter": "ש (Shin)"}))]
+    assert [(op, total) for op, _, total in gematria.operation_totals(cards)] == [(1, 1), (2, 700)]
