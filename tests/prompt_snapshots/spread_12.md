@@ -18,6 +18,7 @@
   * Op 4 (decans): none of 36 cards on their own decan - expected 0.46 at random, z=-0.68
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Left Out to Fit:** Angels of the decans. This reading is long, so these were dropped to keep the prompt short enough for every AI to read to the end. Do not bring them in from your own knowledge.
 
 ---
 
@@ -722,6 +723,8 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 | Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8, 18, 67 |
 | Path 30 Head | Collecting Intelligence | Orange | Gold Yellow | Rich amber | Amber rayed red | 53 |
 | Path 31 Tooth | Perpetual Intelligence | Glowing orange scarlet | Vermillion | Scarlet, flecked gold | Vermillion flecked crimson & emerald | 56, 64 |
+
+**Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power; 8 of Swords - Interference: Shortened Force; X - Fortune: The Lord of the Forces of Life; 2 of Disks - Change: Harmonious Change; VI - The Lovers: The Children of the Voice; VII - The Chariot: The Child of the Powers of the Waters; 7 of Disks - Failure: Success Unfulfilled; 9 of Swords - Cruelty: Despair and Cruelty; Queen of Disks: Queen of the Thrones of Earth; 5 of Disks - Worry: Material Trouble; XVII - The Star: The Daughter of the Firmament; XIV - Art: The Daughter of the Reconcilers; 4 of Wands - Completion: Perfected Work; Knight of Disks: Lord of the Wide and Fertile Land; 6 of Disks - Success: Material Success; Prince of Wands: Prince of the Chariot of Fire; VIII - Adjustment: The Daughter of the Lords of Truth; Prince of Cups: Prince of the Chariot of the Waters; Princess of Cups: Princess of the Waters; XIX - The Sun: The Lord of the Fire of the World; XX - The Aeon: The Spirit of the Primal Fire; XII - The Hanged Man: The Spirit of the Mighty Waters; IV - The Emperor: The Son of the Morning; Prince of Disks: Prince of the Chariot of Earth; Princess of Wands: Princess of the Shining Flame; 0 - The Fool: The Spirit of Aethyr; XVIII - The Moon: The Ruler of Flux and Reflux; Queen of Swords: Queen of the Thrones of Air; 9 of Cups - Happiness: Material Happiness; Queen of Wands: Queen of the Thrones of Flame.
 
 
 ---
