@@ -2962,4 +2962,6 @@ def test_method_says_what_the_ai_tests_show(client):
     page = client.get("/method").text
     assert 'id="tested"' in page and "What the tests show" in page
     assert "Astrology does most of the work" in page and "scrambled" in page
+    assert 'id="ranking"' in page and "Ranked by what they add" in page
+    assert page.index("Astrology (signs") < page.index("Elemental dignities</td>") < page.index("Angels of the decans, decan dates")
     assert 'href="/method#tested"' in client.get("/").text or 'href="/method#tested"' in client.get("/pick").text

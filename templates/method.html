@@ -9,6 +9,8 @@
         .art-pair figure { margin: 0; width: 170px; font-size: 0.9em; line-height: 1.35; }
         .art-pair img { width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); display: block; margin-bottom: 6px; }
         .art-table { border-collapse: collapse; margin: 6px 0 12px; font-size: 0.95em; }
+        .table-scroll { overflow-x: auto; }
+        .rank-table td:first-child { text-align: center; padding-right: 10px; }
         .art-table th, .art-table td { text-align: left; padding: 4px 14px 4px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
         .guide ol, .guide ul { padding-left: 22px; }
         .guide li { margin: 6px 0; }
@@ -102,6 +104,25 @@
                 <li><strong>Wrong data gets noticed, but the cards still lead.</strong> With scrambled correspondences, answers flagged a mismatch eight times as often (1.6 per answer, against 0.2), yet still leaned the same way 72% of the time. The AI&rsquo;s conclusion rests mostly on which cards fell where.</li>
                 <li><strong>A smaller AI is too unsteady to tell.</strong> Claude Haiku gave two answers to the same prompt that agreed on the lean only 46% of the time, so no part stood out from that noise.</li>
             </ul>
+            <h3 id="ranking">Ranked by what they add</h3>
+            <p>Putting those results together with the table check gives this order, from the part that does most for a reading to the part that does least. Each line says how sure the rank is: <em>measured</em> means the AI tests show it, <em>traditional</em> means it rests on the weight the Golden Dawn gave it, and <em>thin</em> means there is too little evidence to be sure.</p>
+            <div class="table-scroll">
+            <table class="art-table rank-table">
+                <thead><tr><th>Rank</th><th>Part</th><th>Why, and how sure</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td>Astrology (signs, planets, decans)</td><td>By far the most used: about 28 mentions an answer, and a fact of its own about each card. <em>Measured.</em> Its effect on the conclusion is hard to see, because the spread positions are themselves houses, signs and decans, so it never fully goes away.</td></tr>
+                    <tr><td>2</td><td>Elemental dignities</td><td>Switching them off changed the conclusion more than any other part (same lean only 60% of the time, against 83% for a plain repeat). The element is a fact of its own, and dignities are the heart of Book T reading. <em>Measured and traditional.</em> The AI names them as Fire, Water and so on more than as &ldquo;dignities&rdquo;, so how often it uses them is undercounted.</td></tr>
+                    <tr><td>3</td><td>Geometry (aspects, Cube of Space, solids)</td><td>Second most used (about 10 mentions) and it moves the conclusion (62%). But the aspects are the same in every reading of a spread, the cube and solids restate the letter and element, it is the largest part of the longest prompt, and it is where AI fact errors cluster. <em>Measured, mixed.</em></td></tr>
+                    <tr><td>4</td><td>Tree of Life (with the King Scale colours)</td><td>A fact of its own, and it moves the conclusion (62%), though it is mentioned only about 3 times an answer. <em>Measured, thin on use.</em></td></tr>
+                    <tr><td>5</td><td>Hebrew letters</td><td>Mentioned about 6 times, but switching them off barely changes the conclusion (76%), likely because the Tree of Life still carries the same fact. <em>Measured, small effect.</em></td></tr>
+                    <tr><td>6</td><td>Numerology (Book T counts, birth and year cards)</td><td>Little used, some shift (65%), and worked out from the cards drawn. <em>Thin.</em></td></tr>
+                    <tr><td>7</td><td>Court card detail</td><td>Restates a court&rsquo;s rank and element; no measurable effect (78%). The Golden Dawn gave courts great weight as significators. <em>Thin, traditional.</em></td></tr>
+                    <tr><td>8</td><td>Golden Dawn titles, gods, gematria, hexagrams, geomantic figures</td><td>Hardly ever mentioned. Their shifts are within the noise, or, for geomancy, best explained by the prompt simply being different. <em>Thin.</em></td></tr>
+                    <tr><td>9</td><td>Angels of the decans, decan dates and day ruler</td><td>No measurable effect: with them off the conclusion is as steady as asking again (82&ndash;83%). <em>Measured.</em></td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p>Above all of these sits which cards fell where. With every correspondence scrambled, the AI still reached the same conclusion 72% of the time. Only Claude models were tested, mentions are counted by keyword, and none of this says whether a reading comes true.</p>
             <p class="note">What this means: every part stays on by default. If a prompt is too long for your AI, the angels and decan dates are the safest to leave out, then the gods and titles; you can switch them off under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
         </section>
 
