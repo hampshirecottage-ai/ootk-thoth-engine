@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "How it works" %}
-{% set page_description = "How OOTK draws the cards and works out their correspondences, what it can't do, what it stores and what it is for." %}
-{% set tagline = "How a reading is made, what it can't do, and what it is for." %}
+{% set page_description = "How OOTK draws the cards, how it uses each correspondence and your birth date, what the AI tests show, what it can't do and what it stores." %}
+{% set tagline = "How a reading is made, how each correspondence is used, and what the tests show." %}
 {% set active = "/method" %}
 {% block head %}
     <style>
@@ -32,7 +32,7 @@
             <ol>
                 <li><strong>Shuffle.</strong> Your seed is turned into a number (SHA-256) that shuffles the 78 cards with Python&rsquo;s standard shuffler. The same seed always gives the same order, which is what lets you repeat or share a reading. A blank seed gets a random six-digit number. The shuffle is ordinary software: nothing outside the seed chooses the cards.</li>
                 <li><strong>Draw.</strong> Cards are dealt from the top into the spread&rsquo;s positions. For the 15-card heap and the full Opening of the Key, your significator is placed first. The full Opening of the Key reshuffles the whole deck for each operation, as the Golden Dawn method does, so a card can fall again in a house, sign or decan. For a seeded draw the report also says where your significator falls in each operation when the whole deck is laid out as Book&nbsp;T lays it out: which of the four I&nbsp;H&nbsp;V&nbsp;H packs, then which house, sign and decan pack.</li>
-                <li><strong>Look up.</strong> Each card&rsquo;s attribution, Hebrew letter or Sephira, path, its four colour scales (King, Queen, Prince and Princess) and its Yetziratic title come from Liber 777 tables, under the mapping system you chose (Thoth by default).</li>
+                <li><strong>Look up.</strong> Each card&rsquo;s element, sign, planet or decan, Hebrew letter, place on the Tree of Life, colour scales and the rest come from the Book&nbsp;T and Liber 777 tables, under the mapping system you chose (Thoth by default). Only a few of these are calculated with; the rest are handed to your AI as they are. <a href="#correspondences">How each one is used</a>.</li>
                 <li><strong>Score.</strong> Neighbouring cards get a Book T elemental dignity. Neighbours are the next card along; in the 15-card heap and the Celtic Cross they are the named pairs (in the Celtic Cross: 1 with 2, 3 with 4, 5 with 6, the staff from 7 up to 10, and 1 with 10), and on the Tree of Life the Sephiroth a path joins:
                     <table class="scores">
                         <tr><th>Elements</th><th>Score</th></tr>
@@ -53,6 +53,72 @@
                 <li><strong>Write the prompt.</strong> Section 1 lists the cards, and sections 2 to 6 hold every calculation. Section 7 asks your AI to relate them to your question, using only the data given, to name the outcome they lean toward as a likely possibility, not a certainty, leaving the decision to you, and to end with a recap in plain words. It also explains what the scores mean.</li>
             </ol>
             <p class="note">The code, tables and tests are all <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a>, so every step above can be checked.</p>
+        </section>
+
+        <section class="panel" id="correspondences" aria-labelledby="corrTitle">
+            <h2 id="corrTitle">How the engine uses the correspondences</h2>
+            <p>Every card carries many correspondences, but the engine treats them in three different ways. A few are calculated with, so they change the scores and checks in the report. Most are looked up and passed to your AI as they are. And two things come from your birth date, if you give one. The &ldquo;Parts of the AI prompt&rdquo; switches decide what your AI is shown; they never change the cards drawn or the calculations.</p>
+            <h3>Calculated with</h3>
+            <div class="table-scroll">
+            <table class="art-table">
+                <thead><tr><th>Correspondence</th><th>What the engine does with it</th></tr></thead>
+                <tbody>
+                    <tr><td>Element</td><td>Scores each pair of neighbouring cards (the Book&nbsp;T dignities above) and counts the elements across the spread. A planetary Major takes the element of the sign named on its card.</td></tr>
+                    <tr><td>Sign, planet and decan</td><td>Compared with the house, sign or decan each card falls in during the Opening of the Key: the Own-Place Check says when a card has landed in its own sign, decan or natural house, and the chance of that by luck. It also marks a small card&rsquo;s planet as strong or weak in its sign, and gives where the Sun and Moon stood when you drew.</td></tr>
+                    <tr><td>Position in the layout</td><td>Gives the aspects between positions (trine, square and so on). These belong to the spread, so they are the same in every reading of it; only the cards at either end change.</td></tr>
+                    <tr><td>Place on the Tree of Life</td><td>Used by the Auto lens to see whether the cards run down the Tree or up it, which picks the story your AI is asked to tell.</td></tr>
+                    <tr><td>Card numbers and ranks</td><td>Book&nbsp;T&rsquo;s counts (how many Trumps, courts, Aces and so on), and the counting steps in the Book&nbsp;T Opening of the Key.</td></tr>
+                    <tr><td>Hebrew letter values</td><td>Added up across the Trumps and court cards drawn (gematria).</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <h3>Looked up and handed to your AI</h3>
+            <p>These are named in the prompt for each card, with no score attached: the Hebrew letter, the path or Sephira and its four Liber&nbsp;777 colour scales and Yetziratic title, the court card&rsquo;s element of an element (such as Fire of Water), the place on the Cube of Space and the Platonic solid, the geomantic figure of a sign Trump, the Golden Dawn titles, the gods of each Trump&rsquo;s path, the two angels and the dates of each small card&rsquo;s decan, and Crowley&rsquo;s I&nbsp;Ching hexagram for each court card. A code check shows most of them restate three facts about the card: its element, its place on the Tree (with its letter), and its sign or planet. They are the same facts in different languages, offered to your AI as Thoth readers use them.</p>
+            <h3>From your birth date</h3>
+            <ul>
+                <li><strong>A significator.</strong> On spreads that have one, you can let your birth date choose the card that stands for you: the Knight, Queen or Prince whose part of the zodiac holds your birthday, as Book&nbsp;T gives them. That card is placed first and followed through every operation, so it changes the reading itself.</li>
+                <li><strong>Birth and year cards.</strong> An optional extra: your birth date added up to a Major card, and the same for this year. The prompt names them and says whether either was drawn, and tells your AI they are context only. They change no card and no score. See <a href="#birth-cards">Birth cards and year cards</a>.</li>
+            </ul>
+            <p class="note">Either way, the date is worked out in your browser and never sent: only the card it gives is.</p>
+        </section>
+
+        <section class="panel" id="tested" aria-labelledby="testedTitle">
+            <h2 id="testedTitle">What the tests show</h2>
+            <p>Each reading hands your AI many layers of correspondence: elements, astrology, Hebrew letters, the Tree of Life and more. Two kinds of test check them. The first checks the tables against each other; the second checks which layers an AI actually uses.</p>
+            <h3>The tables agree</h3>
+            <p>Most layers restate three facts about a card: its element, its place on the Tree of Life (with its Hebrew letter), and its sign or planet. A code check compares every layer with those three for every card, and all 264 checks pass. So the layers never contradict each other; they say the same thing in different languages.</p>
+            <h3>What an AI leans on</h3>
+            <p>In November 2026 the same 8 readings were sent to Claude Sonnet 384 times: once with everything on, once with each part switched off in turn, and once with the correspondences deliberately scrambled between cards. Each version was asked three times, so the normal wobble between two answers to the same prompt could be measured first.</p>
+            <ul>
+                <li><strong>Astrology does most of the work.</strong> An answer mentions signs, planets or decans about 28 times. Aspects between cards come next (about 10), then Hebrew letters (6), the Tree of Life (3) and decan dates (2).</li>
+                <li><strong>Some parts are barely used.</strong> Angels, gods, geomancy and the Golden Dawn titles are hardly ever mentioned.</li>
+                <li><strong>Some parts don&rsquo;t change the conclusion.</strong> With the angels or the decan dates switched off, the answer leaned the same way (go ahead or wait) as often as two answers with everything on: about 83% of the time.</li>
+                <li><strong>Some parts do.</strong> With the dignities, the Tree of Life or the geometry switched off, the lean matched only about 60% of the time. Geomancy showed the same drop, though it is barely mentioned, so part of that drop is simply the prompt changing.</li>
+                <li><strong>Wrong data gets noticed, but the cards still lead.</strong> With scrambled correspondences, answers flagged a mismatch eight times as often (1.6 per answer, against 0.2), yet still leaned the same way 72% of the time. The AI&rsquo;s conclusion rests mostly on which cards fell where.</li>
+                <li><strong>Birth cards nudge it a little.</strong> In a separate run of 24 answers, adding a birth date (and so a birth card and year card) to the same readings, the AI mentioned them about 1.6 times an answer and leaned the same way 68% of the time, against 83% for a plain repeat. That gap is under the 20 points this sample needs to be firm.</li>
+                <li><strong>A smaller AI is too unsteady to tell.</strong> Claude Haiku gave two answers to the same prompt that agreed on the lean only 46% of the time, so no part stood out from that noise.</li>
+            </ul>
+            <h3 id="ranking">Ranked by what they add</h3>
+            <p>Putting those results together with the table check gives this order, from the part that does most for a reading to the part that does least. Each line says how sure the rank is: <em>measured</em> means the AI tests show it, <em>traditional</em> means it rests on the weight the Golden Dawn gave it, and <em>thin</em> means there is too little evidence to be sure.</p>
+            <div class="table-scroll">
+            <table class="art-table rank-table">
+                <thead><tr><th>Rank</th><th>Part</th><th>Why, and how sure</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td>Astrology (signs, planets, decans)</td><td>By far the most used: about 28 mentions an answer, and a fact of its own about each card. <em>Measured.</em> Its effect on the conclusion is hard to see, because the spread positions are themselves houses, signs and decans, so it never fully goes away.</td></tr>
+                    <tr><td>2</td><td>Elemental dignities</td><td>Switching them off changed the conclusion more than any other part (same lean only 60% of the time, against 83% for a plain repeat). The element is a fact of its own, and dignities are the heart of Book T reading. <em>Measured and traditional.</em> The AI names them as Fire, Water and so on more than as &ldquo;dignities&rdquo;, so how often it uses them is undercounted.</td></tr>
+                    <tr><td>3</td><td>Geometry (aspects, Cube of Space, solids)</td><td>Second most used (about 10 mentions) and it moves the conclusion (62%). But the aspects are the same in every reading of a spread, the cube and solids restate the letter and element, it is the largest part of the longest prompt, and it is where AI fact errors cluster. <em>Measured, mixed.</em></td></tr>
+                    <tr><td>4</td><td>Tree of Life (with the King Scale colours)</td><td>A fact of its own, and it moves the conclusion (62%), though it is mentioned only about 3 times an answer. <em>Measured, thin on use.</em></td></tr>
+                    <tr><td>5</td><td>Hebrew letters</td><td>Mentioned about 6 times, but switching them off barely changes the conclusion (76%), likely because the Tree of Life still carries the same fact. <em>Measured, small effect.</em></td></tr>
+                    <tr><td>6</td><td>Book T counts (Trumps, courts, Aces, suits)</td><td>Little used, some shift (65%), and worked out from the cards drawn. <em>Thin.</em></td></tr>
+                    <tr><td>7</td><td>Birth and year cards (only with a birth date)</td><td>Mentioned about 1.6 times an answer, and the conclusion matched 68% of the time with them added. Tested on 24 answers, so not firm. They are modern numerology, not Golden Dawn, and the prompt calls them context only. <em>Measured, small effect.</em></td></tr>
+                    <tr><td>8</td><td>Court card detail</td><td>Restates a court&rsquo;s rank and element; no measurable effect (78%). The Golden Dawn gave courts great weight as significators. <em>Thin, traditional.</em></td></tr>
+                    <tr><td>9</td><td>Golden Dawn titles, gods, gematria, hexagrams, geomantic figures</td><td>Hardly ever mentioned. Their shifts are within the noise, or, for geomancy, best explained by the prompt simply being different. <em>Thin.</em></td></tr>
+                    <tr><td>10</td><td>Angels of the decans, decan dates and day ruler</td><td>No measurable effect: with them off the conclusion is as steady as asking again (82&ndash;83%). <em>Measured.</em></td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p>Above all of these sits which cards fell where. With every correspondence scrambled, the AI still reached the same conclusion 72% of the time. Choosing the significator by birth date was not tested on its own: it changes which card stands for you, so it changes the reading itself rather than adding a part. Only Claude models were tested, mentions are counted by keyword, and none of this says whether a reading comes true.</p>
+            <p class="note">What this means: every part stays on by default. If a prompt is too long for your AI, the angels and decan dates are the safest to leave out, then the gods and titles; you can switch them off under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
         </section>
 
         <section class="panel" id="space" aria-labelledby="spaceTitle">
@@ -87,44 +153,9 @@
                 <li><strong>Year card.</strong> The same sum with the year of your latest birthday in place of your birth year. It runs from one birthday to the next.</li>
             </ul>
             <p>The numbers are the Thoth deck&rsquo;s own (VIII Adjustment, XI Lust), as Arrien uses them. The prompt names the cards, says whether any of them were drawn, and is told they are context only: they change no card and no score. Your birth date stays in your browser. Only the two card numbers and the year are sent and saved with the reading, and they are left out of share links. The &ldquo;Numerology&rdquo; switch under Parts of the AI prompt leaves them out too.</p>
+            <p>In the AI tests they had a small effect: the AI mentioned them about 1.6 times an answer, and its conclusion shifted a little more than asking again would shift it, though not by enough to be sure on 24 answers. See <a href="#ranking">the ranking</a>.</p>
         </section>
 
-        <section class="panel" id="tested" aria-labelledby="testedTitle">
-            <h2 id="testedTitle">What the tests show</h2>
-            <p>Each reading hands your AI many layers of correspondence: elements, astrology, Hebrew letters, the Tree of Life and more. Two kinds of test check them. The first checks the tables against each other; the second checks which layers an AI actually uses.</p>
-            <h3>The tables agree</h3>
-            <p>Most layers restate three facts about a card: its element, its place on the Tree of Life (with its Hebrew letter), and its sign or planet. A code check compares every layer with those three for every card, and all 264 checks pass. So the layers never contradict each other; they say the same thing in different languages.</p>
-            <h3>What an AI leans on</h3>
-            <p>In November 2026 the same 8 readings were sent to Claude Sonnet 384 times: once with everything on, once with each part switched off in turn, and once with the correspondences deliberately scrambled between cards. Each version was asked three times, so the normal wobble between two answers to the same prompt could be measured first.</p>
-            <ul>
-                <li><strong>Astrology does most of the work.</strong> An answer mentions signs, planets or decans about 28 times. Aspects between cards come next (about 10), then Hebrew letters (6), the Tree of Life (3) and decan dates (2).</li>
-                <li><strong>Some parts are barely used.</strong> Angels, gods, geomancy and the Golden Dawn titles are hardly ever mentioned.</li>
-                <li><strong>Some parts don&rsquo;t change the conclusion.</strong> With the angels or the decan dates switched off, the answer leaned the same way (go ahead or wait) as often as two answers with everything on: about 83% of the time.</li>
-                <li><strong>Some parts do.</strong> With the dignities, the Tree of Life or the geometry switched off, the lean matched only about 60% of the time. Geomancy showed the same drop, though it is barely mentioned, so part of that drop is simply the prompt changing.</li>
-                <li><strong>Wrong data gets noticed, but the cards still lead.</strong> With scrambled correspondences, answers flagged a mismatch eight times as often (1.6 per answer, against 0.2), yet still leaned the same way 72% of the time. The AI&rsquo;s conclusion rests mostly on which cards fell where.</li>
-                <li><strong>A smaller AI is too unsteady to tell.</strong> Claude Haiku gave two answers to the same prompt that agreed on the lean only 46% of the time, so no part stood out from that noise.</li>
-            </ul>
-            <h3 id="ranking">Ranked by what they add</h3>
-            <p>Putting those results together with the table check gives this order, from the part that does most for a reading to the part that does least. Each line says how sure the rank is: <em>measured</em> means the AI tests show it, <em>traditional</em> means it rests on the weight the Golden Dawn gave it, and <em>thin</em> means there is too little evidence to be sure.</p>
-            <div class="table-scroll">
-            <table class="art-table rank-table">
-                <thead><tr><th>Rank</th><th>Part</th><th>Why, and how sure</th></tr></thead>
-                <tbody>
-                    <tr><td>1</td><td>Astrology (signs, planets, decans)</td><td>By far the most used: about 28 mentions an answer, and a fact of its own about each card. <em>Measured.</em> Its effect on the conclusion is hard to see, because the spread positions are themselves houses, signs and decans, so it never fully goes away.</td></tr>
-                    <tr><td>2</td><td>Elemental dignities</td><td>Switching them off changed the conclusion more than any other part (same lean only 60% of the time, against 83% for a plain repeat). The element is a fact of its own, and dignities are the heart of Book T reading. <em>Measured and traditional.</em> The AI names them as Fire, Water and so on more than as &ldquo;dignities&rdquo;, so how often it uses them is undercounted.</td></tr>
-                    <tr><td>3</td><td>Geometry (aspects, Cube of Space, solids)</td><td>Second most used (about 10 mentions) and it moves the conclusion (62%). But the aspects are the same in every reading of a spread, the cube and solids restate the letter and element, it is the largest part of the longest prompt, and it is where AI fact errors cluster. <em>Measured, mixed.</em></td></tr>
-                    <tr><td>4</td><td>Tree of Life (with the King Scale colours)</td><td>A fact of its own, and it moves the conclusion (62%), though it is mentioned only about 3 times an answer. <em>Measured, thin on use.</em></td></tr>
-                    <tr><td>5</td><td>Hebrew letters</td><td>Mentioned about 6 times, but switching them off barely changes the conclusion (76%), likely because the Tree of Life still carries the same fact. <em>Measured, small effect.</em></td></tr>
-                    <tr><td>6</td><td>Numerology (Book T counts, birth and year cards)</td><td>Little used, some shift (65%), and worked out from the cards drawn. <em>Thin.</em></td></tr>
-                    <tr><td>7</td><td>Court card detail</td><td>Restates a court&rsquo;s rank and element; no measurable effect (78%). The Golden Dawn gave courts great weight as significators. <em>Thin, traditional.</em></td></tr>
-                    <tr><td>8</td><td>Golden Dawn titles, gods, gematria, hexagrams, geomantic figures</td><td>Hardly ever mentioned. Their shifts are within the noise, or, for geomancy, best explained by the prompt simply being different. <em>Thin.</em></td></tr>
-                    <tr><td>9</td><td>Angels of the decans, decan dates and day ruler</td><td>No measurable effect: with them off the conclusion is as steady as asking again (82&ndash;83%). <em>Measured.</em></td></tr>
-                </tbody>
-            </table>
-            </div>
-            <p>Above all of these sits which cards fell where. With every correspondence scrambled, the AI still reached the same conclusion 72% of the time. Only Claude models were tested, mentions are counted by keyword, and none of this says whether a reading comes true.</p>
-            <p class="note">What this means: every part stays on by default. If a prompt is too long for your AI, the angels and decan dates are the safest to leave out, then the gods and titles; you can switch them off under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
-        </section>
 
         <section class="panel" aria-labelledby="limitsTitle">
             <h2 id="limitsTitle">Worth knowing</h2>
@@ -192,6 +223,7 @@
                 <li>A reading drawn with <strong>Draw my cards</strong> (on the start page or the Pick page) is saved on the server, with its question, so its report has its own private link (a random address that search engines are told not to list).</li>
                 <li>Shared links (<code>/reading?seed=&hellip;</code>), the examples and the card of the day are worked out fresh each time and not saved.</li>
                 <li>Your last settings and your theme are remembered in your own browser only.</li>
+                <li>A birth date is never sent or stored. Only the card it gives (a significator, or the birth and year card numbers) is.</li>
                 <li>There are no accounts. The question is optional, so leave out anything you would not want stored.</li>
             </ul>
             <p class="note">Found a mistake in a table or a calculation? <a href="{{ bug_report_url }}" target="_blank" rel="noopener">Report a bug</a>.</p>
