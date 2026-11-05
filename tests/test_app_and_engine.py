@@ -2964,4 +2964,9 @@ def test_method_says_what_the_ai_tests_show(client):
     assert "Astrology does most of the work" in page and "scrambled" in page
     assert 'id="ranking"' in page and "Ranked by what they add" in page
     assert page.index("Astrology (signs") < page.index("Elemental dignities</td>") < page.index("Angels of the decans, decan dates")
+    assert "Birth and year cards (only with a birth date)" in page and "68%" in page
+    corr = page.index('id="correspondences"')
+    assert page.index('id="howTitle"') < corr < page.index('id="tested"') < page.index('id="space"')
+    assert "Calculated with" in page and "Looked up and handed to your AI" in page and "From your birth date" in page
+    assert "A birth date is never sent or stored" in page
     assert 'href="/method#tested"' in client.get("/").text or 'href="/method#tested"' in client.get("/pick").text
