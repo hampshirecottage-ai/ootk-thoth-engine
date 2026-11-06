@@ -26,7 +26,57 @@
     }
     const order = [...pickEl.options].map(o => o.value).filter(v => v !== "");
 
+    // ---------- Decan tour: the "Play" button under the zodiac walks a hand round all 36
+    // decans from 0° Aries, counter-clockwise, lighting each decan, its sign and its small card.
+    // It starts only when pressed; with reduced motion the hand jumps instead of sweeping.
+    const STEP_MS = 1600, SVG_NS = "http://www.w3.org/2000/svg";
+    const playBtn = $("ringPlay"), stepEl = $("ringStep");
+    let tour = null, resumeAt = 0;   // tour is { i, timer, turn } while playing
+    function tourFrame() {
+        const svg = $("mapRing").querySelector("svg"), i = tour.i;
+        const decs = svg.querySelectorAll(".a-dec"), bands = svg.querySelectorAll(".a-band");
+        decs.forEach((g, k) => g.classList.toggle("on", k === i));
+        bands.forEach((b, k) => b.classList.toggle("on", k === Math.floor(i / 3)));
+        let hand = svg.querySelector(".a-hand");
+        if (!hand) {
+            const r = 118;   // to the inner edge of the decan ring (atlas.js ring, full size)
+            hand = document.createElementNS(SVG_NS, "g");
+            hand.setAttribute("class", "a-hand");
+            hand.innerHTML = `<line x1="0" y1="0" x2="-${r}" y2="0"/><circle r="5"/>`;
+            svg.appendChild(hand);
+            hand.getBoundingClientRect();   // lay out once, so the first turn sweeps from 0°
+        }
+        // counter-clockwise from 9 o'clock, as the wheel is drawn; the angle only grows, so the
+        // hand carries on past Pisces into Aries instead of swinging back
+        tour.turn = tour.turn === null ? i * 10 + 5 : tour.turn + 10;
+        hand.style.transform = `rotate(${-tour.turn}deg)`;
+        const d = data.decans[i], card = Number.isInteger(d.index) ? data.cards[d.index] : null;
+        stepEl.textContent = `${d.sign} ${i % 3 * 10}°–${i % 3 * 10 + 10}°, ruled by ${d.ruler}: ${card ? card.title : d.card} (${i + 1} of 36 from 0° Aries)`;
+    }
+    function stopTour() {
+        if (!tour) return;
+        clearInterval(tour.timer);
+        resumeAt = (tour.i + 1) % 36;
+        tour = null;
+        playBtn.setAttribute("aria-pressed", "false");
+        playBtn.innerHTML = "&#9654; Play the 36 decans";
+        stepEl.textContent = "";
+    }
+    function startTour() {
+        $("mapRing").innerHTML = A.ring(null, data);   // whole wheel, nothing marked, while it plays
+        $("capRing").innerHTML = esc(WHOLE.ring);
+        tour = { i: resumeAt, turn: null };
+        playBtn.setAttribute("aria-pressed", "true");
+        playBtn.innerHTML = "&#10074;&#10074; Pause";
+        tourFrame();
+        tour.timer = setInterval(() => { tour.i = (tour.i + 1) % 36; tourFrame(); }, STEP_MS);
+    }
+    playBtn.addEventListener("click", () => {
+        if (tour) show(pickEl.value, false); else startTour();   // show() pauses the tour
+    });
+
     function show(i, push) {
+        stopTour();
         const n = Number.parseInt(i, 10);   // an index from the menu or a map; anything else shows the whole deck
         const c = Number.isInteger(n) && n >= 0 && n < data.cards.length ? data.cards[n] : null;
         pickEl.value = c ? String(n) : "";
