@@ -97,6 +97,10 @@
         .balance-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr); gap: 12px 20px; align-items: start; }
         .balance-row h3 { margin-top: 0; }
         .balance-tiles { display: grid; gap: 12px; }
+        .balance-side { display: grid; gap: 12px; }
+        /* The key cards sit under the dignity tiles, two to a row. */
+        .keycards.keycards-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 0; }
+        .keycards-side .keycard { min-width: 0; width: auto; }
         .vbars { display: flex; gap: 10px; align-items: stretch; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; }
         .vbar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.85em; }
         .vbar-track { width: 100%; max-width: 56px; height: 140px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--line); }
@@ -344,6 +348,8 @@
                 <p class="muted" style="font-size:0.85em; margin:6px 0 0">Spirit as a secondary quality on {{ S.spirit_secondary | length }}: {% for p, t in S.spirit_secondary %}Pos {{ p }} ({{ t }}){{ ', ' if not loop.last }}{% endfor %}</p>
                 {% endif %}
             </div>
+            {% if S.dignity.pairs or S.key_cards %}
+            <div class="balance-side">
             {% if S.dignity.pairs %}
             <div class="balance-tiles">
                 <div class="tile">
@@ -356,6 +362,18 @@
                     <div class="big">{{ S.ill_dignified_count }} <span style="font-size:0.5em" class="muted">of {{ S.card_count }}</span></div>
                     <div class="muted" style="font-size:0.85em">Cards whose neighbouring dignities sum below zero</div>
                 </div>
+            </div>
+            {% endif %}
+            {% if S.key_cards %}
+            <div class="keycards keycards-side">
+                {% for c in S.key_cards %}
+                <div class="keycard" data-card="{{ c.gindex }}" tabindex="0" role="button">
+                    {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                    <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             </div>
             {% endif %}
         </div>
@@ -386,16 +404,6 @@
         </div>
         {% endif %}
 
-        {% if S.key_cards %}
-        <div class="keycards">
-            {% for c in S.key_cards %}
-            <div class="keycard" data-card="{{ c.gindex }}" tabindex="0" role="button">
-                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
-                <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
 
         {% if S.significator_places %}
         <h3 style="margin-top:18px">Where the significator falls</h3>
