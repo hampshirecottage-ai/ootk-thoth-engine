@@ -87,7 +87,10 @@ def build_reading(ref, seed, spread_key, question=QUESTION):
     significator = sig_card["title"] if pinned else "None (spread has no significator position)"
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, question, significator, seed,
                               spread_results, mapping_system=MAPPING, withheld=withheld,
-                              significator_places=significator_places(deck, seed, positions, sig_card))
+                              significator_places=significator_places(deck, seed, positions, sig_card),
+                              # Every layer on, as in the rounds this checker was built for: its
+                              # facts and section numbers (1-7) assume the full prompt.
+                              without=frozenset())
     return reading, positions, titles, (sig_card["title"] if pinned else None), withheld
 
 

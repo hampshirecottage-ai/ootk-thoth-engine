@@ -41,7 +41,7 @@
                         <tr><td>Contrary (Fire and Water, Air and Earth)</td><td class="n">&minus;2</td></tr>
                         <tr><td>Spirit on either side (neutral)</td><td class="n">0</td></tr>
                     </table>
-                    Cards are also related by where they sit in the layout; on the wheels of houses, signs and decans that means astrological aspects, counted within set orbs. These aspects belong to the layout, so they are the same in every reading of a spread; only the cards at their two ends change. The report adds the elemental balance, where the cards fall on the Cube of Space, and their Platonic solids.</li>
+                    Cards are also related by where they sit in the layout; on the wheels of houses, signs and decans that means astrological aspects, counted within set orbs. These aspects belong to the layout, so they are the same in every reading of a spread; only the cards at their two ends change. The prompt lists only the oppositions unless you add every aspect. The report adds the elemental balance and where the cards fall on the Cube of Space; Platonic solids are an extra layer you can add.</li>
                 <li id="lens"><strong>Choose a lens.</strong> The framework is the overall story your AI is asked to read the cards as. It sets one line of the prompt and changes nothing else: the cards, scores and calculations stay the same. There are four:
                     <ul>
                         <li><strong>Something coming into being (Divine Light Flow):</strong> energy coming down from Kether, the divine, into Malkuth, the material world.</li>
@@ -50,7 +50,7 @@
                         <li><strong>Letting go and returning (Post-Mortem Return):</strong> the climb back up the Tree, as in the Book of the Dead.</li>
                     </ul>
                     On Auto, each card that has a place of its own on the Tree of Life is given a height: a pip its Sephira (Ace in Kether, 10 in Malkuth), a Trump the midpoint of the two Sephiroth its path joins. Court cards have no place of their own and are left out. With at least six such cards, Auto checks whether they run steadily down towards Malkuth in position order (Divine Light Flow) or up towards Kether (Post-Mortem Return); the bar is set so a random shuffle passes it only about one time in ten. Otherwise, and in every spread of fewer than six cards, it uses Life Path. Auto never picks Soul Formation, which has no pattern in the cards to test, so choose it yourself if you want it. The report says which lens was used, and why.</li>
-                <li><strong>Write the prompt.</strong> Section 1 lists the cards, and sections 2 to 6 hold every calculation. Section 7 asks your AI to relate them to your question, using only the data given, to name the outcome they lean toward as a likely possibility, not a certainty, leaving the decision to you, and to end with a recap in plain words. It also explains what the scores mean.</li>
+                <li><strong>Write the prompt.</strong> Section 1 lists the cards, and the sections after it hold the calculations. The last section asks your AI to relate them to your question, using only the data given, to name the outcome they lean toward as a likely possibility, not a certainty, leaving the decision to you, and to end with a recap in plain words. It also explains what the scores mean.</li>
             </ol>
             <p class="note">The code, tables and tests are all <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a>, so every step above can be checked.</p>
         </section>
@@ -118,7 +118,7 @@
             </table>
             </div>
             <p>Above all of these sits which cards fell where. With every correspondence scrambled, the AI still reached the same conclusion 72% of the time. Choosing the significator by birth date was not tested on its own: it changes which card stands for you, so it changes the reading itself rather than adding a part. Only Claude models were tested, mentions are counted by keyword, and none of this says whether a reading comes true.</p>
-            <p class="note">What this means: every part stays on by default. If a prompt is too long for your AI, the angels and decan dates are the safest to leave out, then the gods and titles; you can switch them off under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
+            <p class="note">What this means: the main parts stay on by default. The angels, decan dates, gods, hexagrams and gematria, along with layers that only repeat another part (Platonic solids, Cube of Space counts, every wheel aspect, the letters in other systems, the statistics), are extra layers, off unless you add them under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
         </section>
 
         <section class="panel" id="space" aria-labelledby="spaceTitle">

@@ -106,7 +106,8 @@ def test_round_asks_sends_one_batch_and_reports(tmp_path, monkeypatch):
 def test_terms_cover_every_part():
     assert set(ai_parts.TERMS) == set(COMPONENTS)
     found = ai_parts.mentions("Fire of Water in Leo; Aleph; Kether; Puer; trine; gematria; Lord of War; "
-                              "angel Vehuiah; day ruler; gods; hexagram; dignity; Book T count")
+                              "angel Vehuiah; day ruler; gods; hexagram; dignity; Book T count; "
+                              "Octahedron; simple edges; French letter; z=1.2")
     assert all(found[p] >= 1 for p in COMPONENTS), found
 
 

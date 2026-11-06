@@ -593,6 +593,7 @@
     </details>
     {% endfor %}
 
+    {% if show_solids %}
     <details class="section">
         <summary><h2>Hebrew letters and Platonic solids</h2></summary>
         <div class="body">
@@ -610,6 +611,7 @@
             </table></div>
         </div>
     </details>
+    {% endif %}
 
     <!-- ===== SETTINGS, SEED AND SHARE LINK ===== -->
     <section class="panel" id="readingDetails">
@@ -620,6 +622,7 @@
             <div><span>Mapping</span>{{ mapping_label }}</div>
             <div><span>Framework</span>{{ S.framework }}<div class="muted" style="font-size:0.85em">{{ S.framework_basis }}</div></div>
             {% if left_out %}<div><span>Left out of the AI prompt</span>{{ left_out | join(", ") }}<div class="muted" style="font-size:0.85em">Switched off for this reading; the cards are the same.</div></div>{% endif %}
+            {% if layers_added %}<div><span>Extra layers in the AI prompt</span>{{ layers_added | join(", ") }}<div class="muted" style="font-size:0.85em">Switched on for this reading; they are off by default.</div></div>{% endif %}
             <div>
                 <span>Seed</span>
                 {% if seed %}

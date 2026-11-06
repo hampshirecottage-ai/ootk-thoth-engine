@@ -564,7 +564,7 @@ def test_report_shows_framework_name_not_tuple(client):
     assert r.status_code == 200
     assert "Incarnational Life Path" in client.saved["notes"]
     assert "('" not in client.saved["notes"]                 # not a stringified tuple
-    assert "Framework Basis" in r.text
+    assert "<span>Framework</span>" in r.text and "Incarnational Life Path" in r.text
 
 
 def test_gui_dignities_stay_inside_each_operation(client):
@@ -822,7 +822,7 @@ def build_report(tmp_path, monkeypatch, topic="Love & War <3", pos_prefix="[Op 1
     framework, basis = analysis.evaluate_macro_framework(results)
     prompt = report.build_analytical_prompt("Triad <test>", topic, "Knight of Swords", "1568", results, counts,
                                         dignity, spatial, sdist, solids, duals, framework,
-                                        framework_basis=basis)
+                                        framework_basis=basis, without=frozenset())
     report.generate_html_output(7, "Triad <test>", topic, prompt)
     return prompt, tmp_path / "output" / "ootk_output_7.html"
 
@@ -898,7 +898,7 @@ def test_prompt_states_repeated_facts_once():
     heap = [{"pair": "Pos 1 <-> Pos 2", "distance": 0.5, "delta_angle": None, "aspect": "Heap Pair",
              "description": "Neighbours in the deal", "score_modifier": 0}] * 2
     prompt = report.build_analytical_prompt("Test", "גְּבוּרָה?", "", "1", results, counts, [], heap,
-                                            sdist, solids, duals)
+                                            sdist, solids, duals, without=frozenset())
     assert "**Query/Intent Topic:** גְּבוּרָה?" in prompt          # the querent's text is untouched
     body = prompt.split("**Active Mapping System:**", 1)[1]
     assert "גבורה (Geburah)" in body and "גְּבוּרָה" not in body  # points dropped, name kept
@@ -1973,7 +1973,10 @@ def test_ootk_prompt_and_report_show_the_own_place_check(seeded_client):
              significator="Knight of Swords")
     for op in ("Op 2 (houses)", "Op 3 (signs)", "Op 4 (decans)"):
         assert op in r.text
-    assert "**Own-Place Check:**" in r.text
+    # The prompt names only the checks that found a card; their odds are an extra layer.
+    prompt = r.text.split("HERMETIC ANALYTICAL REPORT", 1)[1]
+    assert ("**Own-Place Check:**" in prompt) == ("of 12 cards" in prompt or "of 36 cards" in prompt)
+    assert "z=" not in prompt
 
 
 def test_headline_names_ties_and_absent_elements():
@@ -2409,11 +2412,12 @@ def test_prompt_says_layout_aspects_are_fixed():
     assert "same in every reading of this spread" in prompt
 
 
-def _prompt_for(key, n, topic=""):
+def _prompt_for(key, n, topic="", without=frozenset()):
+    """Every layer on unless `without` says otherwise."""
     cards = [fake_card(f"C{i}", ("Wands", "Cups", "Swords", "Disks")[i % 4]) for i in range(n)]
     results = [{"position_number": i + 1, "position_name": p, "card_data": c}
                for i, (p, c) in enumerate(zip(spreads.spread_positions(key), cards))]
-    return report.analyze_reading("Test", key, topic, "", "1", results)["analytical_prompt"]
+    return report.analyze_reading("Test", key, topic, "", "1", results, without=without)["analytical_prompt"]
 
 
 def test_prompt_lists_the_cards_first_and_ends_with_the_instructions():
@@ -2421,6 +2425,9 @@ def test_prompt_lists_the_cards_first_and_ends_with_the_instructions():
     headings = re.findall(r"^## (\d)\. (\S+)", prompt, re.M)
     assert [int(n) for n, _ in headings] == list(range(1, 8))
     assert headings[0][1] == "CARD-BY-CARD" and headings[-1][1] == "SYNTHESIS"
+    usual = re.findall(r"^## (\d)\. (\S+)", _prompt_for("3", 3, without=report.DEFAULT_OFF), re.M)
+    assert [h for _, h in usual] == ["CARD-BY-CARD", "ELEMENTAL", "PAIRWISE", "SPATIAL", "SYNTHESIS"]
+    assert [int(n) for n, _ in usual] == list(range(1, 6))
     assert "Card Spatial Vectors" not in prompt            # each card's letter is in section 1 only
 
 
@@ -2451,6 +2458,7 @@ def test_numbers_key_names_only_the_aspects_in_the_reading():
     key = hexagram.split("**How to read the numbers:**", 1)[1]
     assert "Sextile +1" in key and "Quincunx" not in key
     assert "`Modifier`" not in _prompt_for("8", 15)          # a heap has no aspects
+    assert "Modifier" not in _prompt_for("6", 7, without=report.DEFAULT_OFF)   # an extra layer
 
 
 def test_spreads_4_and_5_share_one_cross():
@@ -2733,11 +2741,14 @@ def test_book_t_is_offered_from_a_seed_only(client):
 
 # ---------- Parts of the AI prompt (report.COMPONENTS) ----------
 
-def test_start_page_offers_every_prompt_part_switched_on(client):
+def test_start_page_offers_main_parts_on_and_extra_layers_off(client):
     page = client.get("/").text
     assert 'id="promptParts"' in page and 'name="parts_shown" value="1"' in page
     for key in app_module.COMPONENTS:
-        assert f'name="include" value="{key}" checked' in page
+        if key in app_module.DEFAULT_OFF:
+            assert f'name="include" value="{key}" data-default="off">' in page
+        else:
+            assert f'name="include" value="{key}" checked data-default="on"' in page
     assert 'name="include" value="astrology" checked' in client.get("/pick").text
 
 
@@ -2753,13 +2764,37 @@ def test_switched_off_parts_leave_the_prompt_and_stay_with_the_reading(seeded_cl
              parts_shown="1", include=on)
     assert r.status_code == 200
     assert "**Components Left Out:** Astrology, Geometry" in r.text
-    assert "Left out of the AI prompt</span>Astrology, Geometry (Cube of Space, solids, aspects)" in r.text
+    assert "Left out of the AI prompt</span>Astrology, Geometry (Cube of Space, aspects)" in r.text
+    assert "Extra layers in the AI prompt</span>Platonic solids" in r.text     # every box ticked
     stored = seeded_client.saved["report_settings"]
     assert stored["without"] == "astrology,geometry"
+    assert stored["with"] == ",".join(k for k in app_module.COMPONENTS if k in app_module.DEFAULT_OFF)
     assert "without=astrology%2Cgeometry" in r.text                      # the share link keeps them
+    assert "with=solids%2Ccube_counts" in r.text
     assert "--without astrology,geometry" in r.text                     # and so does the command
+    assert "--with solids,cube_counts" in r.text
     again = seeded_client.get(f"/report/{stored['link']}")
     assert "**Components Left Out:** Astrology, Geometry" in again.text
+
+
+def test_default_form_keeps_extra_layers_out_and_one_can_be_added(seeded_client):
+    main = [k for k in app_module.COMPONENTS if k not in app_module.DEFAULT_OFF]
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="7", selected_cards="",
+             significator="Knight of Swords", parts_shown="1", include=main)
+    assert seeded_client.saved["report_settings"]["without"] == ""          # the defaults
+    assert seeded_client.saved["report_settings"]["with"] == ""
+    assert "Platonic Solid" not in r.text and "Components Left Out" not in r.text
+    assert "Hebrew letters and Platonic solids" not in r.text
+    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="7", selected_cards="",
+             significator="Knight of Swords", parts_shown="1", include=main + ["solids"])
+    assert "- **Platonic Solid**:" in r.text and "Hebrew letters and Platonic solids" in r.text
+    assert "Extra layers in the AI prompt</span>Platonic solids<" in r.text
+    assert "--with solids " in r.text and "Components Left Out" not in r.text
+    assert "with=solids&" in r.text or "with=solids\"" in r.text
+    shared = seeded_client.get("/reading?seed=7&spread=12&significator=Knight+of+Swords&with=solids")
+    assert "- **Platonic Solid**:" in shared.text
+    assert "Platonic Solid" not in seeded_client.get(
+        "/reading?seed=7&spread=12&significator=Knight+of+Swords").text
 
 
 def test_share_link_leaves_out_its_parts_and_redraws_the_same_cards(seeded_client):

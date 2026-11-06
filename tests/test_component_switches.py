@@ -8,7 +8,8 @@ from datetime import datetime, timezone
 import pytest
 
 from ootk import cli
-from ootk.report import COMPONENTS, components_off_markdown, reading_time_markdown, without_components
+from ootk.report import (COMPONENTS, DEFAULT_OFF, choose_components, cli_switches, component_keys,
+                         components_off_markdown, reading_time_markdown)
 from ootk.spreads import BOOK_T_KEY, ZODIAC_SIGNS
 
 sys.path.insert(0, __file__.rsplit("/", 1)[0])
@@ -21,6 +22,7 @@ PLANETS = ("Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn")
 
 
 def prompt(spread_key, *off):
+    """The prompt with every layer on (extra layers included) except `off`."""
     without = frozenset(off)
     return build_book_t_prompt(without) if spread_key == BOOK_T_KEY else build_prompt(spread_key, without=without)
 
@@ -33,18 +35,35 @@ def cards_drawn(text):
     return lines(text, "Card Drawn")
 
 
+def headings(text):
+    return [h.split(". ", 1)[1] for h in text.splitlines() if h.startswith("## ")]
+
+
 def test_parse_component_list():
-    assert without_components(None) == frozenset()
-    assert without_components(" Astrology, geometry ") == {"astrology", "geometry"}
-    assert without_components("hebrew tree") == {"hebrew", "tree"}
+    assert component_keys(None) == frozenset()
+    assert component_keys("all") == set(COMPONENTS)
+    assert component_keys(" Astrology, geometry ") == {"astrology", "geometry"}
+    assert component_keys("hebrew tree") == {"hebrew", "tree"}
     with pytest.raises(ValueError, match="Use any of"):
-        without_components("astrology,tarot")
+        component_keys("astrology,tarot")
+
+
+def test_defaults_round_trip_through_links_and_the_command_line():
+    assert cli_switches(DEFAULT_OFF) == ("", "")
+    assert choose_components() == DEFAULT_OFF                  # no choice made: the defaults
+    assert choose_components("solids", "astrology") == (DEFAULT_OFF - {"solids"}) | {"astrology"}
+    assert choose_components("all") == frozenset()
+    off = (DEFAULT_OFF - {"gematria"}) | {"tree"}
+    assert cli_switches(off) == ("gematria", "tree")
+    assert choose_components(*cli_switches(off)) == off
 
 
 @pytest.mark.parametrize("spread_key", SPREADS)
 def test_all_on_is_the_usual_prompt(spread_key):
-    assert prompt(spread_key) == (build_book_t_prompt() if spread_key == BOOK_T_KEY else build_prompt(spread_key))
     assert "Components Left Out" not in prompt(spread_key)
+    usual = build_book_t_prompt() if spread_key == BOOK_T_KEY else build_prompt(spread_key)
+    assert "Components Left Out" not in usual                 # the extra layers are not named
+    assert len(usual) < len(prompt(spread_key))
 
 
 @pytest.mark.parametrize("spread_key", SPREADS)
@@ -53,10 +72,12 @@ def test_switch_keeps_cards_sections_and_end_marker(spread_key, key):
     off = tuple(COMPONENTS) if key == "all" else (key,)
     full, cut = prompt(spread_key), prompt(spread_key, *off)
     assert cards_drawn(cut) == cards_drawn(full)
-    assert [h for h in cut.splitlines() if h.startswith("## ")] == [h for h in full.splitlines() if h.startswith("## ")]
+    assert set(headings(cut)) <= set(headings(full))     # sections 3 and 4 go when left empty
+    assert headings(cut)[-1] == headings(full)[-1]
     assert cut.rstrip().endswith(full.rstrip().splitlines()[-1])
     assert components_off_markdown(frozenset(off)) in cut
-    assert cut != full
+    # An extra layer is not named in the header, so a reading without it is unchanged.
+    assert cut != full or key in DEFAULT_OFF
 
 
 @pytest.mark.parametrize("spread_key", SPREADS)
