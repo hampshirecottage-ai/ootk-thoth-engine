@@ -403,7 +403,7 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
-    for path in ("/start", "/examples", "/library", "/maps", "/method"):
+    for path in ("/start", "/library", "/maps", "/method"):
         assert f"<loc>https://ootk.example.com{path}</loc>" in sitemap.text
     assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
@@ -473,9 +473,7 @@ def test_google_site_verification_file(client):
 
 
 def test_guide_pages_render_and_link_each_other(client, monkeypatch):
-    monkeypatch.setattr(app_module, "_examples_cache", {})
     for path, heading in [("/start", "Your first reading, step by step"),
-                          ("/examples", "Open the report"),
                           ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Worth knowing")]:
         page = client.get(path)
         assert page.status_code == 200 and heading in page.text
@@ -537,15 +535,13 @@ def test_report_opens_on_the_next_step_not_the_settings(client):
     assert page.index('class="site-bar"') < page.index('id="nowStep"')   # same OOTK bar as the start page
 
 
-def test_examples_link_shared_readings_and_draw_cards_with_a_full_deck(client, monkeypatch):
-    monkeypatch.setattr(app_module, "_examples_cache", {})
-    page = client.get("/examples").text                                  # empty deck: links only
-    for ex in app_module.EXAMPLES:
-        assert f"/reading?seed={ex['seed']}&amp;spread={ex['spread_key']}" in page
-    deck = [fake_card(f"Card {i}") | {"card_id": i} for i in range(78)]
-    examples = app_module.example_readings(deck)
-    assert [len(ex["cards"]) for ex in examples] == [ex["count"] for ex in examples]
-    assert examples[0]["cards"][0]["title"] == shuffle.shuffle_deck(deck, "2026-01-01")[0]["title"]
+def test_examples_page_is_retired_and_forwards_to_the_sample(client):
+    r = client.get("/examples", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/start#sample"
+    assert 'href="/examples"' not in client.get("/start").text           # nav, footer and button
+    assert "/examples" not in client.get("/sitemap.xml").text
+    slug = next(iter(app_module.LANDING_PAGES))
+    assert 'href="/start#sample"' in client.get(f"/tarot/{slug}").text
 
 
 def test_library_terms_are_sorted_and_have_text():
@@ -2183,8 +2179,6 @@ def test_database_down_gives_a_retry_page_and_keeps_static_pages(client, monkeyp
     assert api.status_code == 503 and "card database" in api.json()["detail"]
     for path in ("/start", "/library", "/method"):
         assert client.get(path).status_code == 200, path
-    examples = client.get("/examples")                               # listed, without card names
-    assert examples.status_code == 200 and "/reading?seed=777" in examples.text
 
 
 class FakeConn:

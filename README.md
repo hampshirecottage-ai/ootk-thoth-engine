@@ -220,7 +220,6 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/` | Start page: the banner, the form and the testimonial of the day |
 | `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
 | `/start` | Start here, in folded sections: what OOTK does best, your first reading step by step, a sample Opening of the Key, learning stages, and where the cards come from |
-| `/examples` | Example readings with fixed seeds |
 | `/library` | Glossary (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
 | `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
