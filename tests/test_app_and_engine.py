@@ -125,6 +125,8 @@ def test_front_page_shows_the_tree_and_zodiac_animation(client):
     assert ">Jupiter in Leo · 10–20°<" in svg and ">6 of Wands<" in svg
     assert ">Mars in Pisces · 20–30°<" in svg and ">10 of Cups<" in svg
     assert 'fill="#FF2400"' in svg and 'fill="#4B0082"' in svg   # King Scale: Aries/Mars scarlet, Saturn indigo
+    # the third scene: the aspects on the wheel, its classes prefixed so they cannot clash
+    assert '<g class="sc3">' in svg and svg.count('class="wd ') == 42 and ">Every wheel aspect<" in svg
 
 
 def test_method_page_shows_the_book_t_operations_animation(client):
@@ -147,6 +149,17 @@ def test_method_page_shows_the_counting_and_pairing_animation(client):
                  "The Chariot counts 12", "back to a counted card: stop", "8 of Cups is left over:"):
         assert line in svg
     assert svg.count('class="pair ') == 5 and svg.count('class="hop ') == 5
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
+def test_method_page_shows_the_wheel_aspects_animation(client):
+    page = client.get("/method").text
+    assert "site/wheel-aspects.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "wheel-aspects.svg").read_text(encoding="utf-8")
+    # one drawn chord per aspected pair the engine finds on a twelve-position wheel
+    assert svg.count('class="d ') == 42
+    for kind, n, score in (("Opposition", 6, "−1"), ("Square", 12, "−2"), ("Trine", 12, "+2"), ("Sextile", 12, "+1")):
+        assert f">{kind} · " in svg and f">scores {score}<" in svg and f">{n} pairs on a wheel of twelve<" in svg
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 

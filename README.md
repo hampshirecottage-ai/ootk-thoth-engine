@@ -64,9 +64,10 @@ ootk-thoth-engine/
 │   ├── download_images.py  # Fetch card images into static/images/
 │   ├── optimize_images.py  # Build the WebP copies the web GUI serves
 │   ├── make_site_images.py # Rebuild the favicon and link-preview image in static/site/
-│   ├── make_front_animation.py  # Rebuild the front page's Tree of Life and zodiac animation (static/site/front-animation.svg)
+│   ├── make_front_animation.py  # Rebuild the front page's Tree of Life, zodiac and aspects animation (static/site/front-animation.svg)
 │   ├── make_book_t_animation.py  # Rebuild How it works' animation of Book T's five operations (static/site/book-t-operations.svg)
 │   ├── make_counting_animation.py  # Rebuild How it works' animation of Book T's counting and pairing (static/site/book-t-counting.svg)
+│   ├── make_aspects_animation.py  # Rebuild How it works' animation of the aspects on a wheel (static/site/wheel-aspects.svg)
 │   ├── ai_check.py         # AI answer check, step 1: build the test prompts and truth files
 │   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
 │   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
