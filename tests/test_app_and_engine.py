@@ -127,6 +127,17 @@ def test_front_page_shows_the_tree_and_zodiac_animation(client):
     assert 'fill="#FF2400"' in svg and 'fill="#4B0082"' in svg   # King Scale: Aries/Mars scarlet, Saturn indigo
 
 
+def test_method_page_shows_the_book_t_operations_animation(client):
+    page = client.get("/method").text
+    assert 'class="ops-anim"' in page and "site/book-t-operations.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "book-t-operations.svg").read_text(encoding="utf-8")
+    assert svg.count('<g class="sc"') == 5                  # one scene per operation
+    for title in ("1 · The four packs", "2 · The twelve houses", "3 · The twelve signs",
+                  "4 · The ring of 36", "5 · The ten Sephiroth"):
+        assert title in svg
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     start = client.get("/").text

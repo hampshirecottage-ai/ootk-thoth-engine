@@ -29,6 +29,10 @@
         details.corr .corr-sum { color: var(--muted); font-size: 0.92em; flex-basis: 100%; padding-left: 18px; }
         details.corr[open] > summary { margin-bottom: 6px; }
         details.corr > :last-child { margin-bottom: 0; }
+        /* Book T's five operations, animated (static/site/book-t-operations.svg) */
+        .ops-anim { float: right; margin: 0 0 12px 20px; }
+        .ops-anim img { display: block; height: 340px; width: auto; }
+        @media (max-width: 640px) { .ops-anim { float: none; margin: 12px auto; } .ops-anim img { margin: 0 auto; } }
     </style>
 {% endblock %}
 {% block content %}
@@ -247,6 +251,9 @@
         <section class="panel" id="book-t" aria-labelledby="bookTTitle">
             <details class="sec">
             <summary><h2 id="bookTTitle">The Book T Opening of the Key</h2></summary>
+            <figure class="ops-anim">
+                <img src="{{ static_url('site/book-t-operations.svg') }}" width="160" height="294" loading="lazy" alt="The five operations in turn: the deck cut into the four packs Yod, Heh, Vau and Heh final; dealt into twelve stacks for the houses; dealt again into twelve stacks for the signs; the significator ringed by the 36 cards after him; and dealt into ten packs on the Tree of Life. Each ends by marking the pile the significator falls in, which is the one read.">
+            </figure>
             <p>The other Opening of the Key spreads lay out a fixed number of cards. The Book T spread follows the method as the Golden Dawn&rsquo;s Book T gives it (printed in Crowley&rsquo;s <em>Equinox</em> I(8)): five operations, each from a fresh shuffle of the whole deck, and in each only the pile the significator falls in is read.</p>
             <ol>
                 <li><strong>The four packs.</strong> The deck is cut into four packs, Yod, Heh, Vau and Heh final: work, love, trouble and money.</li>
