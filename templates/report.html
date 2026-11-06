@@ -94,12 +94,18 @@
         .headline { font-size: 1.05em; margin: 4px 0 14px; padding-left: 0; list-style: none; }
         .headline li { margin-bottom: 4px; }
         .headline li::before { content: "◆ "; color: var(--accent); }
-        .balance-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr); gap: 12px 20px; align-items: start; }
-        .balance-row h3 { margin-top: 0; }
+        /* Chart on the left, stretched to the height of the tiles and key cards on the right. */
+        .balance-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 3fr); gap: 12px 20px; align-items: stretch; }
+        .balance-chart { display: flex; flex-direction: column; min-width: 0; }
+        .balance-chart:only-child { grid-column: 1 / -1; }
         .balance-tiles { display: grid; gap: 12px; }
-        .vbars { display: flex; gap: 10px; align-items: stretch; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; }
+        .balance-side { display: grid; gap: 12px; }
+        /* The key cards sit under the dignity tiles, two to a row. */
+        .keycards.keycards-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 0; }
+        .keycards-side .keycard { min-width: 0; width: auto; }
+        .vbars { flex: 1 1 auto; display: flex; gap: 10px; align-items: stretch; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; }
         .vbar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.85em; }
-        .vbar-track { width: 100%; max-width: 56px; height: 140px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--line); }
+        .vbar-track { flex: 1 1 auto; width: 100%; max-width: 56px; min-height: 140px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--line); }
         .vbar-fill { width: 100%; min-height: 2px; border-radius: 5px 5px 0 0; }
         .vbar-n { font-weight: 700; }
         .vbar-l { font-weight: 600; }
@@ -243,7 +249,7 @@
             /* Chart full width, the two dignity tiles side by side under it. */
             .balance-row { grid-template-columns: minmax(0, 1fr); }
             .balance-tiles { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-            .vbar-track { height: 110px; }
+            .vbar-track { min-height: 110px; }
             /* Tables scroll sideways rather than squeezing every column to a word per line. */
             .table-wrap table { min-width: 540px; }
             .ops-table td:first-child { min-width: 11em; }
@@ -327,9 +333,9 @@
         </ul>
 
         {% set emax = S.elements | map(attribute='count') | max %}
+        <h3>Elemental balance</h3>
         <div class="balance-row">
             <div class="balance-chart">
-                <h3>Elemental balance</h3>
                 <div class="vbars" role="img" aria-label="Elemental balance: {% for e in S.elements %}{{ e.element }} {{ e.count }} ({{ e.pct }}%){{ ', ' if not loop.last }}{% endfor %}">
                     {% for e in S.elements %}
                     <div class="vbar" title="{{ e.element }}: {{ e.count }} ({{ e.pct }}%)">
@@ -344,6 +350,8 @@
                 <p class="muted" style="font-size:0.85em; margin:6px 0 0">Spirit as a secondary quality on {{ S.spirit_secondary | length }}: {% for p, t in S.spirit_secondary %}Pos {{ p }} ({{ t }}){{ ', ' if not loop.last }}{% endfor %}</p>
                 {% endif %}
             </div>
+            {% if S.dignity.pairs or S.key_cards %}
+            <div class="balance-side">
             {% if S.dignity.pairs %}
             <div class="balance-tiles">
                 <div class="tile">
@@ -356,6 +364,18 @@
                     <div class="big">{{ S.ill_dignified_count }} <span style="font-size:0.5em" class="muted">of {{ S.card_count }}</span></div>
                     <div class="muted" style="font-size:0.85em">Cards whose neighbouring dignities sum below zero</div>
                 </div>
+            </div>
+            {% endif %}
+            {% if S.key_cards %}
+            <div class="keycards keycards-side">
+                {% for c in S.key_cards %}
+                <div class="keycard" data-card="{{ c.gindex }}" tabindex="0" role="button">
+                    {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                    <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             </div>
             {% endif %}
         </div>
@@ -386,16 +406,6 @@
         </div>
         {% endif %}
 
-        {% if S.key_cards %}
-        <div class="keycards">
-            {% for c in S.key_cards %}
-            <div class="keycard" data-card="{{ c.gindex }}" tabindex="0" role="button">
-                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
-                <div><div class="muted" style="font-size:0.78em">{{ c.position_name }}</div><strong>{{ c.title }}</strong>{% if c.art %}<div class="muted" style="font-size:0.78em">{{ c.art }}</div>{% endif %}<div style="font-size:0.85em"><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}{{ '' if c.dignified else ' · ill-dignified' }}</div></div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
 
         {% if S.significator_places %}
         <h3 style="margin-top:18px">Where the significator falls</h3>
