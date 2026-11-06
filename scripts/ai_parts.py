@@ -6,7 +6,7 @@ switched off (report.COMPONENTS, the site's "Parts of the AI prompt"), and once 
 correspondences scrambled (each card keeps its name, suit and number but carries another
 card's correspondences, so the tables are consistent with each other and wrong for the cards).
 Plain code then compares the answers. No AI judges them, and nothing here says whether
-readings predict anything (that is the prediction journal's job).
+readings predict anything.
 
 For each part it reports:
 - uses: how often the full answers mention that part's terms (dignities, sign names, Hebrew

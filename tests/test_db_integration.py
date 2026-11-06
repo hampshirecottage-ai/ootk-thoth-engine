@@ -512,26 +512,3 @@ def test_every_card_has_all_four_scales_and_a_title(conn, system):
         for key in ("king_scale_color", "queen_scale_color", "prince_scale_color",
                     "princess_scale_color", "yetziratic_title"):
             assert card[key] and card[key] != "...", (title, key)
-
-
-def test_journal_entries_save_update_and_delete(conn):
-    from datetime import date
-    with conn.transaction(force_rollback=True):
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM journal_entries;")
-        fields = dict(question="Will it rain?", settle_by=date(2027, 1, 1), spread_key="3",
-                      mapping_system="thoth", framework="auto", without="", drawn_at="20261103T0500Z",
-                      real_seed="111111", decoy_seed="222222", real_is_a=True)
-        entry_id = db.create_journal_entry(conn, **fields)
-        entry = db.get_journal_entry(conn, entry_id)
-        assert entry["question"] == "Will it rain?" and entry["answer_a"] is None
-        db.update_journal_entry(conn, entry_id, answer_a="A", answer_b="B")
-        db.update_journal_entry(conn, entry_id, outcome="It rained.", real_shown_first=False,
-                                outcome_at=datetime.now(timezone.utc))
-        db.update_journal_entry(conn, entry_id, picked="real", rating_real=5, rating_decoy=1,
-                                judged_at=datetime.now(timezone.utc))
-        assert [e["picked"] for e in db.list_journal_entries(conn)] == ["real"]
-        with pytest.raises(ValueError):
-            db.update_journal_entry(conn, entry_id, question="changed")
-        db.delete_journal_entry(conn, entry_id)
-        assert db.get_journal_entry(conn, entry_id) is None
