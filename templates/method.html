@@ -17,18 +17,33 @@
         table.scores { border-collapse: collapse; margin: 8px 0; font-size: 0.92em; }
         table.scores th, table.scores td { border: 1px solid var(--line); padding: 4px 10px; text-align: left; }
         table.scores td.n { text-align: right; font-variant-numeric: tabular-nums; }
+        /* Every section and every correspondence opens with an arrow. */
+        details.sec > summary, details.corr > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 8px; }
+        details.sec > summary::-webkit-details-marker, details.corr > summary::-webkit-details-marker { display: none; }
+        details.sec > summary::before, details.corr > summary::before { content: "\25B8"; color: var(--accent); flex: none; transition: transform 0.15s; }
+        details.sec[open] > summary::before, details.corr[open] > summary::before { transform: rotate(90deg); }
+        details.sec > summary h2 { margin: 0; }
+        details.sec[open] > summary { margin-bottom: 8px; }
+        details.corr { border: 1px solid var(--line); border-radius: 6px; background: var(--panel-3); margin: 0 0 8px; padding: 8px 10px; }
+        details.corr > summary { flex-wrap: wrap; }
+        details.corr .corr-sum { color: var(--muted); font-size: 0.92em; flex-basis: 100%; padding-left: 18px; }
+        details.corr[open] > summary { margin-bottom: 6px; }
+        details.corr > :last-child { margin-bottom: 0; }
     </style>
 {% endblock %}
 {% block content %}
         <section class="panel" aria-labelledby="useTitle">
-            <h2 id="useTitle">What it is for</h2>
+            <details class="sec">
+            <summary><h2 id="useTitle">What it is for</h2></summary>
             <p>I made this to do the slow part of a Thoth reading for me: shuffling, looking up every correspondence and scoring how the cards interact. It writes all of that up as a prompt, and your AI does the interpreting.</p>
             <p>It is for studying the Thoth deck and its correspondences, for reflection, and for giving an AI the same careful groundwork every time instead of a bare list of card names.</p>
             <p>Please don&rsquo;t use it for decisions about health, money, law or safety. A reading, and whatever an AI makes of it, is something to think with, not advice or a forecast.</p>
+            </details>
         </section>
 
         <section class="panel" aria-labelledby="howTitle">
-            <h2 id="howTitle">How a reading is made</h2>
+            <details class="sec">
+            <summary><h2 id="howTitle">How a reading is made</h2></summary>
             <ol>
                 <li><strong>Shuffle.</strong> Your seed is turned into a number (SHA-256) that shuffles the 78 cards with Python&rsquo;s standard shuffler. The same seed always gives the same order, which is what lets you repeat or share a reading. A blank seed gets a random six-digit number. The shuffle is ordinary software: nothing outside the seed chooses the cards.</li>
                 <li><strong>Draw.</strong> Cards are dealt from the top into the spread&rsquo;s positions. For the 15-card heap and the full Opening of the Key, your significator is placed first. The full Opening of the Key reshuffles the whole deck for each operation, as the Golden Dawn method does, so a card can fall again in a house, sign or decan. For a seeded draw the report also says where your significator falls in each operation when the whole deck is laid out as Book&nbsp;T lays it out: which of the four I&nbsp;H&nbsp;V&nbsp;H packs, then which house, sign and decan pack.</li>
@@ -53,37 +68,132 @@
                 <li><strong>Write the prompt.</strong> Section 1 lists the cards, and the sections after it hold the calculations. The last section asks your AI to relate them to your question, using only the data given, to name the outcome they lean toward as a likely possibility, not a certainty, leaving the decision to you, and to end with a recap in plain words. It also explains what the scores mean.</li>
             </ol>
             <p class="note">The code, tables and tests are all <a href="{{ repo_url }}" target="_blank" rel="noopener">open source</a>, so every step above can be checked.</p>
+            </details>
         </section>
 
         <section class="panel" id="correspondences" aria-labelledby="corrTitle">
-            <h2 id="corrTitle">How the engine uses the correspondences</h2>
+            <details class="sec">
+            <summary><h2 id="corrTitle">How the engine uses the correspondences</h2></summary>
             <p>Every card carries many correspondences, but the engine treats them in three different ways. A few are calculated with, so they change the scores and checks in the report. Most are looked up and passed to your AI as they are. And two things come from your birth date, if you give one. The &ldquo;Parts of the AI prompt&rdquo; switches decide what your AI is shown; they never change the cards drawn or the calculations.</p>
+            <p class="note">Open any correspondence below to see, step by step, what the code does with it for each card drawn.</p>
             <h3>Calculated with</h3>
-            <div class="table-scroll">
-            <table class="art-table">
-                <thead><tr><th>Correspondence</th><th>What the engine does with it</th></tr></thead>
-                <tbody>
-                    <tr><td>Element</td><td>Scores each pair of neighbouring cards (the Book&nbsp;T dignities above) and counts the elements across the spread. A planetary Major takes the element of the sign named on its card.</td></tr>
-                    <tr><td>Sign, planet and decan</td><td>Compared with the house, sign or decan each card falls in during the Opening of the Key: the Own-Place Check says when a card has landed in its own sign, decan or natural house, and the chance of that by luck. It also marks a small card&rsquo;s planet as strong or weak in its sign, and gives where the Sun and Moon stood when you drew.</td></tr>
-                    <tr><td>Position in the layout</td><td>Gives the aspects between positions (trine, square and so on). These belong to the spread, so they are the same in every reading of it; only the cards at either end change.</td></tr>
-                    <tr><td>Place on the Tree of Life</td><td>Used by the Auto lens to see whether the cards run down the Tree or up it, which picks the story your AI is asked to tell.</td></tr>
-                    <tr><td>Card numbers and ranks</td><td>Book&nbsp;T&rsquo;s counts (how many Trumps, courts, Aces and so on), and the counting steps in the Book&nbsp;T Opening of the Key.</td></tr>
-                    <tr><td>Hebrew letter values</td><td>Added up across the Trumps and court cards drawn (gematria).</td></tr>
-                </tbody>
-            </table>
-            </div>
+            <details class="corr">
+                <summary><strong>Element</strong> <span class="corr-sum">Scores each pair of neighbouring cards and counts the elements across the spread.</span></summary>
+                <ol>
+                    <li><strong>Each card gets one element.</strong> A small or court card takes its suit&rsquo;s: Wands Fire, Cups Water, Swords Air, Disks Earth. A Trump takes a fixed Thoth element: a sign Trump the element of its sign (the Emperor Fire, by Aries); a planetary Trump the element of one of its planet&rsquo;s signs, the one named on its card (the Empress is Earth by Taurus; Libra would have made her Air); and the Fool, the Hanged Man and the Aeon are Air, Water and Fire themselves. The prompt prints this choice beside each Trump.</li>
+                    <li><strong>The elements are counted.</strong> Fire, Water, Air and Earth are added up across the draw. Trumps on the letter Shin, or attributed to Spirit, are named as carrying Spirit too, but they still score with their main element.</li>
+                    <li><strong>Neighbours are paired.</strong> Usually that is each card with the next one. On a full house, sign or decan wheel the last card also neighbours the first. A Tree of Life spread pairs the Sephiroth that a path joins. A heap or the Celtic Cross pairs its named pairs. In Book&nbsp;T&rsquo;s own Opening of the Key, the cards either side of the Significator are paired, then the two outside them, and so on. A pair never crosses from one operation into the next.</li>
+                    <li><strong>Each pair is scored.</strong> Same element <strong>+2</strong> (strong); friendly elements <strong>+1</strong>; contrary elements <strong>&minus;2</strong> (ill-dignified). Fire and Water are contrary, and so are Air and Earth; every other mix is friendly, as Book&nbsp;T has it. A card with no element (Spirit) scores <strong>0</strong> with anything.</li>
+                    <li><strong>Each card is judged.</strong> The scores of every pair a card is in are added up. Zero or more and the card is drawn as well dignified on the card map; below zero, ill-dignified. A card with no neighbour counts as well dignified.</li>
+                </ol>
+            </details>
+            <details class="corr">
+                <summary><strong>Sign, planet and decan</strong> <span class="corr-sum">Checks whether a card landed in its own place, rates a small card&rsquo;s planet, and gives the Sun and Moon.</span></summary>
+                <ol>
+                    <li><strong>Each card&rsquo;s own place is read from its attribution.</strong> A small card from 2 to 10 owns its decan and that decan&rsquo;s sign (&ldquo;Mars in Aries&rdquo; is the 2 of Wands: Aries, first decan; 3 and 4 are the second and third). A Knight, Queen or Prince owns the sign it holds two of its three decans in (20&deg; Scorpio to 20&deg; Sagittarius gives Sagittarius). A sign Trump owns its sign. Aces, Princesses and the planet and element Trumps have no own place.</li>
+                    <li><strong>The Own-Place Check.</strong> Only on a full wheel: the 12 houses, the 12 signs or the 36 decans. The 1st house goes with Aries and so on round to the 12th with Pisces. Each card that fell in its own house, sign or decan is listed.</li>
+                    <li><strong>The odds.</strong> The engine works out exactly how often that many cards or more land at home when a wheel is dealt at random from all 78 cards, with the number you would expect by chance. A count with a chance of 5% or less is marked unusual. The odds are the same in every reading; only the count changes.</li>
+                    <li><strong>Planet strength.</strong> For a small card whose attribution is a planet in a sign, the classical dignity is added: rules the sign or exalted (strong), in detriment (weakened), or in fall (weakest). The 3 of Wands, the Sun in Aries, is exalted. Most cards have none, and then nothing is added.</li>
+                    <li><strong>The Sun and Moon.</strong> From the moment you draw, the engine works out where the Sun and Moon stand in the tropical zodiac (to about 0.02&deg; and 0.1&deg;), names the decan and its small card for each, and gives the Moon&rsquo;s phase. This is context only and changes no score.</li>
+                </ol>
+            </details>
+            <details class="corr">
+                <summary><strong>Position in the layout</strong> <span class="corr-sum">Gives the aspects between positions; they belong to the spread, not the cards.</span></summary>
+                <ol>
+                    <li><strong>Every position has a place on the spread&rsquo;s drawing.</strong> The engine takes the middle of the drawing and measures the angle of each position around it.</li>
+                    <li><strong>On a wheel</strong> (houses, signs, decans) every two positions are checked for an exact aspect, within 1&deg;: opposition (180&deg;, &minus;1), square (90&deg;, &minus;2), trine (120&deg;, +2) or sextile (60&deg;, +1). Each such pair also shows the elemental score of the two cards that fell there, which is the only part that changes between readings. By default only the oppositions are shown; &ldquo;Every wheel aspect&rdquo; adds the rest.</li>
+                    <li><strong>On other drawn spreads</strong> each position is compared with the next, with wider allowances because the drawings are only roughly on the angles: conjunction (0&deg;, within 15&deg;, +2), sextile (within 10&deg;, +1), square (within 10&deg;, &minus;2), trine (within 10&deg;, +2), quincunx (150&deg;, within 5&deg;, &minus;1) and opposition (within 15&deg;, &minus;1). Anything else is unaspected (0). A card at the very middle has no angle and is left out.</li>
+                    <li><strong>Heaps and the Celtic Cross</strong> make no angles, so they get no aspects: their pairs are scored only by element.</li>
+                </ol>
+            </details>
+            <details class="corr">
+                <summary><strong>Place on the Tree of Life</strong> <span class="corr-sum">Used by the Auto lens to see whether the cards run down the Tree or up it.</span></summary>
+                <ol>
+                    <li><strong>Each card gets a height on the Tree.</strong> A small card sits on its Sephira, numbered from Kether 1 to Malkuth 10 (a 3 is Binah, 3). A Trump sits on its path, halfway between the two Sephiroth it joins (the Fool&rsquo;s path, Kether to Chokmah, gives 1.5). Court cards have no place of their own on the Tree and are left out.</li>
+                    <li><strong>The trend is measured.</strong> With the cards in position order, the engine measures how steadily the height rises or falls (a correlation, r), and weighs it by how many cards there are (z = r &times; &radic;n).</li>
+                    <li><strong>The lens is chosen.</strong> Fewer than 6 cards with a height: Life Path, the default. z of 1.64 or more (heading down to Malkuth): Divine Light Flow. z of &minus;1.64 or less (climbing to Kether): Post-Mortem Return. Anything between: Life Path. A random shuffle passes the test about 10% of the time, 5% each way. Soul Formation is never picked automatically; you can choose it.</li>
+                    <li><strong>The prompt says why.</strong> It gives the numbers, so the lens never comes without its reason. A lens you pick yourself skips all of this.</li>
+                </ol>
+            </details>
+            <details class="corr">
+                <summary><strong>Card numbers and ranks</strong> <span class="corr-sum">Book&nbsp;T&rsquo;s counts, and the counting steps in the Opening of the Key.</span></summary>
+                <ol>
+                    <li><strong>The counts.</strong> In each operation of three cards or more, the engine counts the Trumps, court cards and Aces, and the cards of each suit (small and court cards). Any rank that turns up three or four times is named, with its suits: &ldquo;Three Queens (Wands, Cups, Disks)&rdquo;.</li>
+                    <li><strong>The counting number.</strong> In Book&nbsp;T&rsquo;s Opening of the Key each card counts on by a set number, itself included: Aces 11; small cards their own number; Knights, Queens and Princes 4; Princesses 7; Trumps 3 for the elements, 9 for the planets, 12 for the signs.</li>
+                    <li><strong>The count.</strong> Starting on the Significator, the engine counts round its pile in the direction the Significator faces on the Thoth card, then counts on again from each card it lands on. It stops on reaching a card already counted. The cards it landed on, in order, are the story.</li>
+                    <li><strong>The pairs.</strong> Then the cards either side of the Significator are paired, then those outside them, and so on round the pile; a card left over is read on its own.</li>
+                </ol>
+            </details>
+            <details class="corr">
+                <summary><strong>Hebrew letter values</strong> <span class="corr-sum">Added up across the Trumps and court cards drawn (gematria).</span></summary>
+                <ol>
+                    <li><strong>Each letter has its standard number,</strong> from Aleph 1 to Tav 400.</li>
+                    <li><strong>Which cards have one.</strong> A Trump takes the value of its path&rsquo;s letter. A court card takes the letter it gets through its sign (a Princess through her element). Small cards have no letter of their own, so no value.</li>
+                    <li><strong>The sum.</strong> The values are added up for each operation and shown as a plain sum, with no meaning given to it. Off unless you add &ldquo;Gematria&rdquo;.</li>
+                </ol>
+            </details>
             <h3>Looked up and handed to your AI</h3>
-            <p>These are named in the prompt for each card, with no score attached: the Hebrew letter, the path or Sephira and its four Liber&nbsp;777 colour scales and Yetziratic title, the court card&rsquo;s element of an element (such as Fire of Water), the place on the Cube of Space and the Platonic solid, the geomantic figure of a sign Trump, the Golden Dawn titles, the gods of each Trump&rsquo;s path, the two angels and the dates of each small card&rsquo;s decan, and Crowley&rsquo;s I&nbsp;Ching hexagram for each court card. A code check shows most of them restate three facts about the card: its element, its place on the Tree (with its letter), and its sign or planet. They are the same facts in different languages, offered to your AI as Thoth readers use them.</p>
+            <p>These are named in the prompt for each card, with no score attached. A code check shows most of them restate three facts about the card: its element, its place on the Tree (with its letter), and its sign or planet. They are the same facts in different languages, offered to your AI as Thoth readers use them.</p>
+            <details class="corr">
+                <summary><strong>Hebrew letter</strong></summary>
+                <p>A Trump shows the letter of its path in the mapping system you chose (Thoth by default). A court card shows the letter it takes through its sign, or a Princess through her element. A small card has no letter: it shows the name of its Sephira instead. &ldquo;Hebrew letters in other systems&rdquo; adds the Golden Dawn and French letters beside it.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Path or Sephira, colours and Yetziratic title</strong></summary>
+                <p>Each card is shown on its path or Sephira. Its four Liber&nbsp;777 colour scales (King, Queen, Prince, Princess) and its Yetziratic title are listed once per row of 777, with the positions that use it, so a long spread does not repeat them. Under Crowley&rsquo;s swap the Emperor and the Star take their colours from their sign&rsquo;s row and their title from the path they are shown on, and the table says which.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Court card element</strong></summary>
+                <p>Each court card is shown as an element of an element: the rank&rsquo;s element of the suit&rsquo;s (Knight Fire, Queen Water, Prince Air, Princess Earth), so the Queen of Wands is Water of Fire. Its span of the zodiac is given beside it.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Cube of Space and Platonic solid</strong></summary>
+                <p>A Trump is placed on the Cube of Space by its letter: a mother letter is an axis, a double letter a face or the centre, a simple letter an edge. Small cards sit on a Sephira, not on the cube. Every card takes the solid of its element (Fire the tetrahedron, Water the icosahedron, Air the octahedron, Earth the cube), and the seven planetary Trumps the dodecahedron. Neighbouring cards whose solids are duals are noted. The solids and the cube counts are off unless you add them. See <a href="#space">Letters and solids in space</a>.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Geomantic figure</strong></summary>
+                <p>A Trump that carries a zodiac sign is given the Golden Dawn&rsquo;s figure for that sign, from Liber&nbsp;777 (Aries Puer, Taurus Amissio and so on). Planet and element Trumps, and all other cards, have none.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Golden Dawn titles</strong></summary>
+                <p>Each card&rsquo;s first Golden Dawn title is given: the small cards&rsquo; from Book&nbsp;T, without &ldquo;Lord of&rdquo; (the 4 of Swords is Rest from Strife); the courts&rsquo; from Book&nbsp;T; the Trumps&rsquo; from Liber&nbsp;777. Aces have none, as their attribution already is their title.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Gods of the path</strong></summary>
+                <p>Each Trump is given two columns of Liber&nbsp;777 for its path: the Egyptian gods and the Greek gods. Under the swap the Emperor and the Star take the gods of their sign&rsquo;s row. Off unless you add &ldquo;Gods&rdquo;.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>Angels and dates of the decan</strong></summary>
+                <p>Each small card from 2 to 10 rules a decan of ten degrees. It is given the two angels of the Shem ha-Mephorash that rule its two halves, counted from 0&deg; Leo as Book&nbsp;T does (the 5 of Wands has Vehuiah and Yeliel), and the dates the Sun is in that decan in the year of your reading, worked out from the Sun&rsquo;s position. The planet that rules the day of the reading is given too. Off unless you add them.</p>
+            </details>
+            <details class="corr">
+                <summary><strong>I&nbsp;Ching hexagram</strong></summary>
+                <p>Each court card is given Crowley&rsquo;s hexagram: the trigram of the rank&rsquo;s element above the trigram of the suit&rsquo;s (Fire Ch&ecirc;n, Water Tui, Air Sun, Earth K&ecirc;n). Off unless you add &ldquo;Court card hexagrams&rdquo;.</p>
+            </details>
             <h3>From your birth date</h3>
-            <ul>
-                <li><strong>A significator.</strong> On spreads that have one, you can let your birth date choose the card that stands for you: the Knight, Queen or Prince whose part of the zodiac holds your birthday, as Book&nbsp;T gives them. That card is placed first and followed through every operation, so it changes the reading itself.</li>
-                <li><strong>Birth and year cards.</strong> An optional extra: your birth date added up to a Major card, and the same for this year. The prompt names them and says whether either was drawn, and tells your AI they are context only. They change no card and no score. See <a href="#birth-cards">Birth cards and year cards</a>.</li>
-            </ul>
+            <details class="corr">
+                <summary><strong>A significator</strong> <span class="corr-sum">Changes the reading itself.</span></summary>
+                <ol>
+                    <li><strong>The card.</strong> Each Knight, Queen and Prince rules about a month of the zodiac, from 21&deg; of one sign to 20&deg; of the next, as Book&nbsp;T gives them. Your browser finds the one that holds your birthday. Princesses rule quarters of the sky, not dates, so this never gives a Princess.</li>
+                    <li><strong>Where it goes.</strong> On spreads with a significator position, that card is put first and taken out of the first operation&rsquo;s deck, so it cannot be drawn twice there.</li>
+                    <li><strong>What it changes.</strong> Each later operation reshuffles the whole deck, so the Significator can fall anywhere. The engine says where it fell in each: which of the four packs, or which house, sign or decan. In Book&nbsp;T&rsquo;s Opening of the Key the counting and pairing start from it.</li>
+                </ol>
+            </details>
+            <details class="corr">
+                <summary><strong>Birth and year cards</strong> <span class="corr-sum">Context only: they change no card and no score.</span></summary>
+                <ol>
+                    <li><strong>Birth card.</strong> Month + day + year of birth are added (14 July 1983: 7 + 14 + 1983 = 2004), then the digits of the total, until the number is 22 or less (2 + 0 + 0 + 4 = 6, The Lovers). 22 stands for The Fool. While it is 10 or more its digits give the next card too (19 The Sun, then 10 Fortune, then 1 The Magus).</li>
+                    <li><strong>Year card.</strong> The same sum with the year of your latest birthday in place of your birth year.</li>
+                    <li><strong>In the prompt.</strong> Both cards are named, the prompt says whether either was drawn, and tells your AI they are context only. See <a href="#birth-cards">Birth cards and year cards</a>.</li>
+                </ol>
+            </details>
             <p class="note">Either way, the date is worked out in your browser and never sent: only the card it gives is.</p>
+            </details>
         </section>
 
         <section class="panel" id="tested" aria-labelledby="testedTitle">
-            <h2 id="testedTitle">What the tests show</h2>
+            <details class="sec">
+            <summary><h2 id="testedTitle">What the tests show</h2></summary>
             <p>Each reading hands your AI many layers of correspondence: elements, astrology, Hebrew letters, the Tree of Life and more. Two kinds of test check them. The first checks the tables against each other; the second checks which layers an AI actually uses.</p>
             <h3>The tables agree</h3>
             <p>Most layers restate three facts about a card: its element, its place on the Tree of Life (with its Hebrew letter), and its sign or planet. A code check compares every layer with those three for every card, and all 264 checks pass. So the layers never contradict each other; they say the same thing in different languages.</p>
@@ -119,20 +229,24 @@
             </div>
             <p>Above all of these sits which cards fell where. With every correspondence scrambled, the AI still reached the same conclusion 72% of the time. Choosing the significator by birth date was not tested on its own: it changes which card stands for you, so it changes the reading itself rather than adding a part. Only Claude models were tested, mentions are counted by keyword, and none of this says whether a reading comes true.</p>
             <p class="note">What this means: the main parts stay on by default. The angels, decan dates, gods, hexagrams and gematria, along with layers that only repeat another part (Platonic solids, Cube of Space counts, every wheel aspect, the letters in other systems, the statistics), are extra layers, off unless you add them under &ldquo;Parts of the AI prompt&rdquo;. The sample is small (24 answers per part), so differences under about 20 points are not firm. And these tests show what an AI uses, not whether a reading comes true. That is a separate question this site doesn&rsquo;t answer.</p>
+            </details>
         </section>
 
         <section class="panel" id="space" aria-labelledby="spaceTitle">
-            <h2 id="spaceTitle">Letters and solids in space</h2>
+            <details class="sec">
+            <summary><h2 id="spaceTitle">Letters and solids in space</h2></summary>
             <p>Rather than treating the Hebrew alphabet as an abstract list or the Platonic solids as isolated geometry, the report places both in three-dimensional space with two models: the Cube of Space from the Sefer Yetzirah, and polyhedral dual inversions.</p>
             <ul>
                 <li><strong>The Cube of Space.</strong> The three mother letters are its axes, the seven double letters its six faces and its centre, and the twelve simple letters its twelve edges, in Paul Case&rsquo;s layout. Each Major sits where its letter sits; court cards and pips are linked through their sign. Crowley&rsquo;s swap of Tzaddi and Heh moves letters, not signs, so the Emperor stays on the Aries edge and the Star on the Aquarius edge, where the Sefer Yetzirah puts them.</li>
                 <li><strong>Dual inversions.</strong> Each card takes the Platonic solid of its element: Fire the tetrahedron, Water the icosahedron, Air the octahedron, Earth the cube. The seven planetary Majors keep the dodecahedron. Put a corner at the centre of every face of one solid and the corners make its dual: the cube and the octahedron, the dodecahedron and the icosahedron, and the tetrahedron, which is its own dual. The cube&rsquo;s dual is where the two models meet: its six corners are the centres of the Cube of Space&rsquo;s six faces, the six directions held by the double letters, with Tav at the centre both solids share. The report notes each pair of neighbouring cards whose solids are duals.</li>
             </ul>
             <p class="note"><a href="/maps">Card maps</a> draws both models and marks where any card sits on them.</p>
+            </details>
         </section>
 
         <section class="panel" id="book-t" aria-labelledby="bookTTitle">
-            <h2 id="bookTTitle">The Book T Opening of the Key</h2>
+            <details class="sec">
+            <summary><h2 id="bookTTitle">The Book T Opening of the Key</h2></summary>
             <p>The other Opening of the Key spreads lay out a fixed number of cards. The Book T spread follows the method as the Golden Dawn&rsquo;s Book T gives it (printed in Crowley&rsquo;s <em>Equinox</em> I(8)): five operations, each from a fresh shuffle of the whole deck, and in each only the pile the significator falls in is read.</p>
             <ol>
                 <li><strong>The four packs.</strong> The deck is cut into four packs, Yod, Heh, Vau and Heh final: work, love, trouble and money.</li>
@@ -143,10 +257,12 @@
             <p>Before the cards are dealt you choose where the significator should fall for the answer to be about your question: the pack, a house and a related one, a sign and a related one, and a Sephira. The form suggests these from your question; the pack&rsquo;s subjects are Book T&rsquo;s, and the rest are this site&rsquo;s suggestion. Book T says to abandon the reading when the significator is not in the pack, or in either house or sign. That happens in most readings, so this site reads on, says so in the prompt, and asks your AI to weigh that operation lightly. A miss in the Sephiroth, Book T says, need not mean the reading has gone astray.</p>
             <p>Each pile is read in two passes. <strong>Counting</strong> starts at the significator, which counts as one, and moves by each card&rsquo;s number: 4 for Knights, Queens and Princes, 7 for Princesses, 11 for Aces, a small card its own number, and 3, 9 or 12 for a Trump of an element, a planet or a sign. The cards counted make the story. <strong>Pairing</strong> then takes the cards either side of the significator, then the next two out, and so on, to fill in the detail. The report draws each pile as a ring, with the significator at the top, the count steps numbered and the pairs as lines across it.</p>
             <p class="note">Book T doesn&rsquo;t say where to cut, how to deal, when a count stops, what to do with a card left over from the pairs, or which way each court card faces (the count goes the way the significator looks). This site cuts into equal packs, deals one card to each stack in turn, stops a count at a card already counted, and reads a left-over card on its own. Each court card counts the way its figure looks on the Thoth card, as seen by you: the Knights of Wands, Swords and Disks, the Prince of Wands, the Queens, Prince and Princess of Swords, the Queen of Disks and the Princess of Cups to the right; the Knight, Queen and Prince of Cups and the Prince of Disks to the left. The Queen and Princess of Wands and the Princess of Disks face straight out, and they, like any significator that is not a court card, count from right to left. The prompt says the same.</p>
+            </details>
         </section>
 
         <section class="panel" id="birth-cards" aria-labelledby="birthCardsTitle">
-            <h2 id="birthCardsTitle">Birth cards and year cards</h2>
+            <details class="sec">
+            <summary><h2 id="birthCardsTitle">Birth cards and year cards</h2></summary>
             <p>An optional extra under More options. It is modern tarot numerology, not Golden Dawn: Mary K. Greer (<em>Tarot for Your Self</em>, 1984) and Angeles Arrien (<em>The Tarot Handbook</em>, 1987, written for the Thoth deck) both teach it.</p>
             <ul>
                 <li><strong>Birth card.</strong> Add the month, day and year of your birth as numbers: 14 July 1983 is 7 + 14 + 1983 = 2004. Add the digits, 2 + 0 + 0 + 4 = 6, and keep adding digits while the total is over 22. That Major is your birth card (here VI, The Lovers). A card of 10 or more reduces again to a single digit: 19 is The Sun, then X Fortune, then I The Magus. 22 stands for The Fool.</li>
@@ -154,11 +270,13 @@
             </ul>
             <p>The numbers are the Thoth deck&rsquo;s own (VIII Adjustment, XI Lust), as Arrien uses them. The prompt names the cards, says whether any of them were drawn, and is told they are context only: they change no card and no score. Your birth date stays in your browser. Only the two card numbers and the year are sent and saved with the reading, and they are left out of share links. The &ldquo;Numerology&rdquo; switch under Parts of the AI prompt leaves them out too.</p>
             <p>In the AI tests they had a small effect: the AI mentioned them about 1.6 times an answer, and its conclusion shifted a little more than asking again would shift it, though not by enough to be sure on 24 answers. See <a href="#ranking">the ranking</a>.</p>
+            </details>
         </section>
 
 
         <section class="panel" aria-labelledby="limitsTitle">
-            <h2 id="limitsTitle">Worth knowing</h2>
+            <details class="sec">
+            <summary><h2 id="limitsTitle">Worth knowing</h2></summary>
             <ul>
                 <li><strong>The interpretation is your AI&rsquo;s, not this site&rsquo;s.</strong> AIs can be wrong, invent details, or answer the same prompt differently each time. Nothing here checks what they say.</li>
                 <li><strong>One tradition among several.</strong> Card attributions differ between systems, which is why there are three to choose from. The dignity scores (+2, +1, &minus;2, 0) and the aspect orbs are this project&rsquo;s reading of Book T and astrological practice, not the only one. A planetary Major takes the element of one sign its planet rules: the Empress is Earth through Venus&rsquo;s Taurus, though Venus&rsquo;s Libra would make her Air, and the Magus, Fortune, the Tower and the Universe make the same kind of choice. The prompt names the sign used on each of these cards.</li>
@@ -167,10 +285,12 @@
                 <li><strong>The pictures don&rsquo;t match the Thoth deck.</strong> The Thoth paintings are still under copyright, so the cards shown are Pamela Colman Smith&rsquo;s 1909 public-domain art under the Thoth names. See <a href="#art">About the card art</a>.</li>
                 <li><strong>A seed is a repeatable shuffle, not chance.</strong> If you want a fresh draw, leave the seed blank or use a new one.</li>
             </ul>
+            </details>
         </section>
 
         <section class="panel" id="art" aria-labelledby="artTitle">
-            <h2 id="artTitle">About the card art</h2>
+            <details class="sec">
+            <summary><h2 id="artTitle">About the card art</h2></summary>
             <p>The readings use the Thoth deck of Aleister Crowley and Lady Frieda Harris (painted 1938&ndash;43). Harris&rsquo;s paintings are still under copyright, so each card is shown with its counterpart from the Rider-Waite-Smith deck, drawn by Pamela Colman Smith for A.&nbsp;E. Waite in 1909 and now in the public domain. Both decks come from the Golden Dawn&rsquo;s system, so every Thoth card has a Waite counterpart, though many go by a different name.</p>
             <p>Each picture keeps the name Waite printed on it, as a check on the Thoth title above it. Waite printed no names on the numbered cards (2 to 10), so this site adds a banner with the Thoth title there. Where the names differ, the card also says which Waite card is pictured, for example <em>&ldquo;Pictured: Rider-Waite-Smith King of Wands&rdquo;</em>.</p>
             <h3>Court cards</h3>
@@ -215,10 +335,12 @@
                 </tbody>
             </table>
             <p class="note">Waite followed the Golden Dawn in swapping Strength and Justice to VIII and XI; Crowley kept the older order, so Lust is XI and Adjustment VIII, and the printed numerals on those two pictures differ from their titles. The Magus, the Priestess and Fortune are Waite&rsquo;s Magician, High Priestess and Wheel of Fortune under shorter names.</p>
+            </details>
         </section>
 
         <section class="panel" aria-labelledby="dataTitle">
-            <h2 id="dataTitle">What is stored</h2>
+            <details class="sec">
+            <summary><h2 id="dataTitle">What is stored</h2></summary>
             <ul>
                 <li>A reading drawn with <strong>Draw my cards</strong> (on the start page or the Pick page) is saved on the server, with its question, so its report has its own private link (a random address that search engines are told not to list).</li>
                 <li>Shared links (<code>/reading?seed=&hellip;</code>), the sample reading and the card of the day are worked out fresh each time and not saved.</li>
@@ -227,5 +349,25 @@
                 <li>There are no accounts. The question is optional, so leave out anything you would not want stored.</li>
             </ul>
             <p class="note">Found a mistake in a table or a calculation? <a href="{{ bug_report_url }}" target="_blank" rel="noopener">Report a bug</a>.</p>
+            </details>
         </section>
+        <script>
+            // A link to a part of the page (#tested, #ranking, #birth-cards...) opens the sections it is in.
+            (function () {
+                function openTo(hash) {
+                    let el = hash && document.getElementById(decodeURIComponent(hash.slice(1)));
+                    if (!el) return;
+                    for (let d = el.closest("details"); d; d = d.parentElement.closest("details")) d.open = true;
+                    const inner = el.querySelector(":scope > details.sec");
+                    if (inner) inner.open = true;
+                    el.scrollIntoView();
+                }
+                openTo(location.hash);
+                window.addEventListener("hashchange", () => openTo(location.hash));
+                document.addEventListener("click", (e) => {
+                    const a = e.target.closest('a[href^="#"]');
+                    if (a && a.getAttribute("href") === location.hash) openTo(location.hash);
+                });
+            })();
+        </script>
 {% endblock %}
