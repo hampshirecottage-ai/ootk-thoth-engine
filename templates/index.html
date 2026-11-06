@@ -33,6 +33,21 @@
         .band #readingForm { grid-column: 2; grid-row: 1 / span 4; align-self: start; max-width: none; }
         .band-more { grid-column: 1; grid-row: 3; align-self: start; }
         .band { row-gap: 0; grid-template-rows: 1fr auto auto 1fr; }
+        /* The Tree of Life animation sits between the text and the form, as tall as the form. */
+        .tree-anim { margin: 0; }
+        .tree-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
+        @media (min-width: 1000px) {
+            .band { grid-template-columns: minmax(0, 1fr) 230px minmax(400px, 0.9fr); }
+            .band #readingForm { grid-column: 3; }
+            .tree-anim { grid-column: 2; grid-row: 1 / span 4; align-self: stretch; position: relative; min-height: 0; }
+            .tree-anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+        }
+        @media (min-width: 861px) and (max-width: 999px) {
+            .band { grid-template-rows: 1fr auto auto auto 1fr; }
+            .band #readingForm { grid-row: 1 / span 5; }
+            .tree-anim { grid-column: 1; grid-row: 4; margin-top: 16px; }
+            .tree-anim img { margin: 0; }
+        }
         .band .settings { margin: 0; }
         .band .settings p, .band .settings p a { color: var(--text); }
         #readingForm { width: 100%; max-width: 560px; justify-self: center; }
@@ -132,6 +147,9 @@
                 <a href="/start#sample" class="today-link">See a sample reading &rarr;</a>
             </p>
         </div>
+        <figure class="tree-anim">
+            <img src="{{ static_url('site/tree-paths.svg') }}" width="160" height="294" alt="The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe).">
+        </figure>
     </section>
 
     <script type="application/json" id="positionsData">{{ positions | tojson }}</script>
