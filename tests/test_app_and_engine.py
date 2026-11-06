@@ -138,6 +138,18 @@ def test_method_page_shows_the_book_t_operations_animation(client):
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 
+def test_method_page_shows_the_counting_and_pairing_animation(client):
+    page = client.get("/method").text
+    assert "site/book-t-counting.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "book-t-counting.svg").read_text(encoding="utf-8")
+    # the engine's own count for the example pile: Knight 4, Fortune 9, 4 of Disks 4, Lust 12, Chariot 12
+    for line in ("Knight of Wands counts 4", "Fortune counts 9", "4 of Disks counts 4", "Lust counts 12",
+                 "The Chariot counts 12", "back to a counted card: stop", "8 of Cups is left over:"):
+        assert line in svg
+    assert svg.count('class="pair ') == 5 and svg.count('class="hop ') == 5
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     start = client.get("/").text
