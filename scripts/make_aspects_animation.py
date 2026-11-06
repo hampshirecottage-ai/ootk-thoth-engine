@@ -30,8 +30,8 @@ from ootk.visual import ASPECT_COLORS  # noqa: E402
 OUT = PROJECT_ROOT / "static" / "site" / "wheel-aspects.svg"
 
 W, H = 160, 294
-CX, CY = 80, 114
-R_OUT, R_IN = 74, 54                  # the sign ring
+CX, CY = 80, 106                      # the same wheel as the front page's zodiac, so the scenes fade into each other
+R_OUT, R_IN = 76, 57                  # the sign ring (front page: SIGN_R)
 R_CHORD = R_IN - 2                    # chords run between points just inside it
 CREAM, INK, LINE = "#FFE0A0", "#0f2a1b", "#A7E2C0"
 KINDS = ("Opposition", "Square", "Trine", "Sextile")
@@ -57,15 +57,20 @@ def signed(n):
     return f"+{n}" if n > 0 else f"−{-n}"
 
 
-def build():
+def scene(t0=0.4, p=""):
+    """The wheel and its aspects, timed from t0 seconds. Every class is prefixed with `p`, so
+    the scene can sit inside another animation (the front page's) without clashing.
+
+    Returns (markup, timed, end): `timed` is [(class, on, off)] for keyframes(), and `end`
+    when the last caption has gone."""
     pairs = _ring_pairs("10", 12)
     assert len(pairs) == 42, "twelve positions make 6 oppositions and 12 each of the rest"
-    rules, out, caps = [], [], []
-    t = 0.4
+    timed_, out, caps = [], [], []
+    t = t0
 
-    def timed(cls, on, off):
-        rules.append((cls, on, off))
-        return cls
+    def timed(cls, on, off, draw):
+        timed_.append((p + cls, on, off, draw))
+        return p + cls
 
     def chord(cls, a, b, kind, width):
         (x1, y1), (x2, y2) = at(R_CHORD, a * 30 + 15), at(R_CHORD, b * 30 + 15)
@@ -73,33 +78,55 @@ def build():
                 f'd="M{x1:.1f} {y1:.1f}L{x2:.1f} {y2:.1f}"/>')
 
     def cap(cls, on, off, title, line, line2):
-        timed(cls, on, off)
-        caps.append(f'<g class="cap {cls}"><text class="h" x="{W / 2}" y="222">{title}</text>'
-                    f'<text class="n" x="{W / 2}" y="238">{line}</text>'
-                    f'<text class="n" x="{W / 2}" y="250">{line2}</text></g>')
+        cls = timed(cls, on, off, False)
+        caps.append(f'<g class="{p}cap {cls}"><text class="{p}h" x="{W / 2}" y="222">{title}</text>'
+                    f'<text class="{p}n" x="{W / 2}" y="238">{line}</text>'
+                    f'<text class="{p}n" x="{W / 2}" y="250">{line2}</text></g>')
 
     for kind in KINDS:
-        mine = [p for p in pairs if p[4] == kind]
+        mine = [q for q in pairs if q[4] == kind]
         aspect = ASPECTS_BY_NAME[kind]
         end = t + EACH * len(mine) + HOLD
-        for i, p in enumerate(mine):
-            out.append(chord(f"d {timed(f'{kind[:3].lower()}{i}', t + EACH * i, end)}", p[0], p[1], kind, 1.8))
+        for i, q in enumerate(mine):
+            out.append(chord(f"{p}d {timed(f'{kind[:3].lower()}{i}', t + EACH * i, end, True)}", q[0], q[1], kind, 1.8))
         cap(f"c{kind[:3].lower()}", t, end, f"{kind} · {aspect.angle:g}°",
             f"scores {signed(aspect.score)}", f"{len(mine)} pairs on a wheel of twelve")
         t = end + FADE
-    out.append(f'<g class="{timed("all", t, t + ALL_HOLD)}">'   # every aspect at once, thinner
-               + "".join(chord("e", p[0], p[1], p[4], 1.1) for p in pairs) + "</g>")
+    out.append(f'<g class="{p}all {timed("every", t, t + ALL_HOLD, False)}">'   # every aspect at once, thinner
+               + "".join(chord(f"{p}e", q[0], q[1], q[4], 1.1) for q in pairs) + "</g>")
     cap("call", t, t + ALL_HOLD, "Every wheel aspect", f"{len(pairs)} pairs, the same in every reading:",
         "only the cards at their ends change")
-    cycle = t + ALL_HOLD + FADE
 
+    ring = [f'<circle class="{p}hub" cx="{CX}" cy="{CY}" r="{R_IN}"/>']
+    for i in range(12):
+        ring.append(f'<path class="{p}sg" fill="{SIGN_KING[i]}" d="{sector(R_IN, R_OUT, i * 30, i * 30 + 30)}"/>')
+        x, y = at((R_IN + R_OUT) / 2, i * 30 + 15)
+        ring.append(f'<text class="{p}gl" x="{x:.1f}" y="{y:.1f}" dy="0.35em" style="fill:{ink(SIGN_KING[i])}">{SIGN_GLYPHS[i]}</text>')
+        x, y = at(R_CHORD, i * 30 + 15)
+        ring.append(f'<circle class="{p}pt" cx="{x:.1f}" cy="{y:.1f}" r="1.8"/>')
+    ring.append(f'<text class="{p}t" x="{W / 2}" y="278">They belong to the wheel, not the cards</text>')
+    return "".join(ring) + "".join(out) + "".join(caps), timed_, t + ALL_HOLD
+
+
+def styles(p=""):
+    """The scene's fixed styles, for classes prefixed with `p`."""
+    return (f".{p}sg{{stroke:{INK};stroke-opacity:.6;stroke-width:.6}}.{p}gl{{font:12px serif;text-anchor:middle}}"
+            f".{p}pt{{fill:{CREAM}}}.{p}hub{{fill:{INK};fill-opacity:.18;stroke:{LINE};stroke-opacity:.35}}"
+            f".{p}d,.{p}e{{fill:none;stroke-linecap:round}}.{p}d{{stroke-dasharray:1 1;opacity:0}}"
+            f".{p}cap,.{p}all{{opacity:0}}"
+            f".{p}t{{font:600 8px Inter,system-ui,sans-serif;fill:{LINE};text-anchor:middle}}"
+            f".{p}h{{font:700 11px Inter,system-ui,sans-serif;fill:{CREAM};text-anchor:middle}}"
+            f".{p}n{{font:600 8px Inter,system-ui,sans-serif;fill:{CREAM};text-anchor:middle}}")
+
+
+def keyframes(timed, cycle):
+    """One animation per timed class on a shared cycle of `cycle` seconds."""
     def pct(s):
         return f"{max(0.0, min(s, cycle)) / cycle * 100:.2f}%"
 
     anim = []
-    for cls, on, off in rules:
-        dash = cls not in ("all",) and not cls.startswith("c")
-        if dash:   # a chord drawn along its length, held, then gone
+    for cls, on, off, draw in timed:
+        if draw:   # a chord drawn along its length, held, then gone
             frames = (f"0%{{opacity:0;stroke-dashoffset:1}}{pct(on - .01)}{{opacity:0;stroke-dashoffset:1}}"
                       f"{pct(on)}{{opacity:1;stroke-dashoffset:1}}{pct(on + .5)}{{opacity:1;stroke-dashoffset:0}}"
                       f"{pct(off)}{{opacity:1;stroke-dashoffset:0}}{pct(off + FADE)}{{opacity:0;stroke-dashoffset:0}}"
@@ -108,32 +135,19 @@ def build():
             frames = (f"0%{{opacity:0}}{pct(on - .01)}{{opacity:0}}{pct(on + .3)}{{opacity:1}}"
                       f"{pct(off)}{{opacity:1}}{pct(off + FADE)}{{opacity:0}}100%{{opacity:0}}")
         anim.append(f".{cls}{{animation:{cls} {cycle:.1f}s linear infinite}}@keyframes {cls}{{{frames}}}")
+    return "".join(anim)
 
-    ring = []
-    for i in range(12):
-        ring.append(f'<path class="sg" fill="{SIGN_KING[i]}" d="{sector(R_IN, R_OUT, i * 30, i * 30 + 30)}"/>')
-        x, y = at((R_IN + R_OUT) / 2, i * 30 + 15)
-        ring.append(f'<text class="gl" x="{x:.1f}" y="{y:.1f}" dy="0.35em" style="fill:{ink(SIGN_KING[i])}">{SIGN_GLYPHS[i]}</text>')
-        x, y = at(R_CHORD, i * 30 + 15)
-        ring.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="1.8"/>')
 
-    css = (
-        f".bg{{fill:#2E8A56}}text{{text-anchor:middle;fill:{CREAM}}}"
-        f".sg{{stroke:{INK};stroke-opacity:.6;stroke-width:.6}}.gl{{font:12px serif}}"
-        f"circle{{fill:{CREAM}}}.hub{{fill:{INK};fill-opacity:.18;stroke:{LINE};stroke-opacity:.35}}"
-        f".d,.e{{fill:none;stroke-linecap:round}}.d{{stroke-dasharray:1 1;opacity:0}}"
-        f".cap,.all{{opacity:0}}"
-        f".t{{font:600 8px Inter,system-ui,sans-serif;fill:{LINE}}}"
-        f".h{{font:700 11px Inter,system-ui,sans-serif}}.n{{font:600 8px Inter,system-ui,sans-serif}}"
-        + "".join(anim)
-        + "@media (prefers-reduced-motion:reduce){*{animation:none!important}.all,.call{opacity:1!important}}"
-    )
+def build():
+    markup, timed, end = scene()
+    cycle = end + FADE
+    css = (f".bg{{fill:#2E8A56}}.title{{font:600 8px Inter,system-ui,sans-serif;fill:{LINE};text-anchor:middle}}"
+           + styles() + keyframes(timed, cycle)
+           + "@media (prefers-reduced-motion:reduce){*{animation:none!important}.all,.call{opacity:1!important}}")
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">'
             f'<style>{css}</style><rect class="bg" width="{W}" height="{H}" rx="10"/>'
-            f'<text class="t" x="{W / 2}" y="18">Aspects on a wheel</text>'
-            f'<circle class="hub" cx="{CX}" cy="{CY}" r="{R_IN}"/>'
-            + "".join(ring) + "".join(out) + "".join(caps)
-            + f'<text class="t" x="{W / 2}" y="278">They belong to the wheel, not the cards</text></svg>\n')
+            f'<text class="title" x="{W / 2}" y="18">Aspects on a wheel</text>'
+            + markup + "</svg>\n")
 
 
 if __name__ == "__main__":

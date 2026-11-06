@@ -1,6 +1,6 @@
 """Builds static/site/front-animation.svg, the small animation on the front page. It cycles
-between two scenes, cross-fading from one to the other: the Tree of Life, then the zodiac and
-its 36 decans, then the Tree again.
+through three scenes, cross-fading from one to the next: the Tree of Life, the zodiac and its 36
+decans, the aspects on a wheel, then the Tree again.
 
 Tree of Life: the 22 paths light up one at a time, from Path 11 (Aleph, The Fool) to Path 32 (Tav, The
 Universe), with the Hebrew letter and the Thoth trump shown below. Trumps follow this site's own
@@ -15,8 +15,12 @@ the Card maps wheel), each with its ruling planet, sign and small card below. Ru
 come from ootk.atlas (Book T: Chaldean order from Mars, the 2 of Wands on Aries 0-10°), so the
 animation always agrees with the engine.
 
-Pure SVG + CSS: no script, no images. Every element runs on one shared cycle, so the two scenes
-never drift apart. Visitors who ask for reduced motion see the still Tree. Layouts match the
+Aspects: the wheel of twelve with each kind of aspect drawn in turn, then all 42 together. The
+scene is the one on How it works, built by scripts/make_aspects_animation.py (scene(), with its
+classes prefixed "w" so they cannot clash with these).
+
+Pure SVG + CSS: no script, no images. Every element runs on one shared cycle, so the scenes never
+drift apart. Visitors who ask for reduced motion see the still Tree. Layouts match the
 maps in static/js/atlas.js. Run `python scripts/make_front_animation.py` after changing anything
 here.
 """
@@ -50,7 +54,9 @@ TREE = STEP * len(PATHS)             # the Tree's run
 FADE = 0.8                           # cross-fade between the scenes
 Z_STEP = 1.0                         # seconds each decan stays lit
 Z0 = TREE + FADE                     # the first decan lights once the wheel has faded in
-CYCLE = Z0 + Z_STEP * 36 + FADE      # Tree, fade, 36 decans, fade, and round again
+Z_END = Z0 + Z_STEP * 36             # the last decan goes out
+A0 = Z_END + FADE + 0.2              # the aspects start once their wheel has faded in
+CYCLE = None                         # set by build(): the aspects scene's length decides it
 
 # Zodiac wheel: centre, and the sign and decan rings' inner and outer radii.
 CX, CY = 80, 106
@@ -102,6 +108,10 @@ def sephira(i):
 
 
 def build():
+    global CYCLE
+    from make_aspects_animation import keyframes, scene, styles   # it imports this module's colours
+    aspects, timed, a_end = scene(A0, "w")
+    CYCLE = a_end + FADE              # Tree, zodiac, aspects, fade, and round again
     css = (
         f".bg{{fill:#2E8A56}}"
         f".p{{stroke:#A7E2C0;stroke-width:1.4;opacity:.35}}"
@@ -114,12 +124,16 @@ def build():
         f"@keyframes draw{{0%{{stroke-dashoffset:1;opacity:1}}{pct(.55)}{{stroke-dashoffset:0;opacity:1}}"
         f"{pct(STEP)}{{stroke-dashoffset:0;opacity:1}}{pct(STEP + .5)}{{stroke-dashoffset:0;opacity:0}}100%{{opacity:0}}}}"
         f"@keyframes label{{0%{{opacity:0}}{pct(.15)}{{opacity:1}}{pct(STEP - .15)}{{opacity:1}}{pct(STEP)}{{opacity:0}}100%{{opacity:0}}}}"
-        # the two scenes: the Tree shows for its run, then the wheel, cross-fading each way
+        # the three scenes: the Tree for its run, then the zodiac, then the aspects, cross-fading
         f".sc1{{animation:sc1 {CYCLE:.1f}s linear infinite}}.sc2{{opacity:0;animation:sc2 {CYCLE:.1f}s linear infinite}}"
+        f".sc3{{opacity:0;animation:sc3 {CYCLE:.1f}s linear infinite}}"
         f"@keyframes sc1{{0%{{opacity:1}}{pct(TREE)}{{opacity:1}}{pct(TREE + FADE)}{{opacity:0}}"
         f"{pct(CYCLE - FADE)}{{opacity:0}}100%{{opacity:1}}}}"
         f"@keyframes sc2{{0%{{opacity:0}}{pct(TREE)}{{opacity:0}}{pct(TREE + FADE)}{{opacity:1}}"
+        f"{pct(Z_END)}{{opacity:1}}{pct(Z_END + FADE)}{{opacity:0}}100%{{opacity:0}}}}"
+        f"@keyframes sc3{{0%{{opacity:0}}{pct(Z_END)}{{opacity:0}}{pct(Z_END + FADE)}{{opacity:1}}"
         f"{pct(CYCLE - FADE)}{{opacity:1}}100%{{opacity:0}}}}"
+        + styles("w") + keyframes(timed, CYCLE) +
         # the wheel: rings in the Tree's path colour, a lit decan in the Tree's lit-path cream
         f".zs path,.zd path{{stroke:#0f2a1b;stroke-opacity:.6;stroke-width:.6}}"
         f".zs text{{font:12px serif;text-anchor:middle}}"
@@ -135,7 +149,7 @@ def build():
         f"@keyframes sign{{0%{{opacity:0}}{pct(.2)}{{opacity:1}}{pct(3 * Z_STEP - .1)}{{opacity:1}}{pct(3 * Z_STEP + .2)}{{opacity:0}}100%{{opacity:0}}}}"
         f"@keyframes zlabel{{0%{{opacity:0}}{pct(.1)}{{opacity:1}}{pct(Z_STEP - .1)}{{opacity:1}}{pct(Z_STEP)}{{opacity:0}}100%{{opacity:0}}}}"
         f"@media (prefers-reduced-motion:reduce){{.l,.t{{animation:none;opacity:0}}.sc1{{animation:none;opacity:1}}"
-        f".sc2{{animation:none;display:none}}}}"
+        f".sc2,.sc3{{animation:none;display:none}}}}"
     )
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">'
            f'<style>{css}</style><rect class="bg" width="{W}" height="{H}" rx="10"/><g class="sc1">']
@@ -154,6 +168,7 @@ def build():
                    f'<text class="n" x="{W / 2:g}" y="{y + 15:.0f}">{p} · {LETTERS[i]} · {TRUMPS[p]}</text></g>')
     out.append("</g>")
     out += zodiac()
+    out.append(f'<g class="sc3">{aspects}</g>')
     return "".join(out) + "</svg>\n"
 
 

@@ -125,6 +125,8 @@ def test_front_page_shows_the_tree_and_zodiac_animation(client):
     assert ">Jupiter in Leo · 10–20°<" in svg and ">6 of Wands<" in svg
     assert ">Mars in Pisces · 20–30°<" in svg and ">10 of Cups<" in svg
     assert 'fill="#FF2400"' in svg and 'fill="#4B0082"' in svg   # King Scale: Aries/Mars scarlet, Saturn indigo
+    # the third scene: the aspects on the wheel, its classes prefixed so they cannot clash
+    assert '<g class="sc3">' in svg and svg.count('class="wd ') == 42 and ">Every wheel aspect<" in svg
 
 
 def test_method_page_shows_the_book_t_operations_animation(client):
