@@ -68,6 +68,7 @@ ootk-thoth-engine/
 │   ├── make_book_t_animation.py  # Rebuild How it works' animation of Book T's five operations (static/site/book-t-operations.svg)
 │   ├── make_counting_animation.py  # Rebuild How it works' animation of Book T's counting and pairing (static/site/book-t-counting.svg)
 │   ├── make_aspects_animation.py  # Rebuild How it works' animation of the aspects on a wheel (static/site/wheel-aspects.svg)
+│   ├── make_pairing_animation.py  # Rebuild How it works' animation of which cards are paired (static/site/neighbour-pairing.svg)
 │   ├── ai_check.py         # AI answer check, step 1: build the test prompts and truth files
 │   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
 │   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
