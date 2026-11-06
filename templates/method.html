@@ -30,7 +30,7 @@
         details.corr[open] > summary { margin-bottom: 6px; }
         details.corr > :last-child { margin-bottom: 0; }
         /* Book T's five operations, animated (static/site/book-t-operations.svg) */
-        .ops-anim { float: right; margin: 0 0 12px 20px; }
+        .ops-anim { float: right; clear: right; margin: 0 0 12px 20px; }
         .ops-anim img { display: block; height: 340px; width: auto; }
         @media (max-width: 640px) { .ops-anim { float: none; margin: 12px auto; } .ops-anim img { margin: 0 auto; } }
     </style>
@@ -262,6 +262,9 @@
                 <li><strong>The ten Sephiroth.</strong> The deck is dealt into ten packs laid out as the Tree of Life.</li>
             </ol>
             <p>Before the cards are dealt you choose where the significator should fall for the answer to be about your question: the pack, a house and a related one, a sign and a related one, and a Sephira. The form suggests these from your question; the pack&rsquo;s subjects are Book T&rsquo;s, and the rest are this site&rsquo;s suggestion. Book T says to abandon the reading when the significator is not in the pack, or in either house or sign. That happens in most readings, so this site reads on, says so in the prompt, and asks your AI to weigh that operation lightly. A miss in the Sephiroth, Book T says, need not mean the reading has gone astray.</p>
+            <figure class="ops-anim">
+                <img src="{{ static_url('site/book-t-counting.svg') }}" width="160" height="294" loading="lazy" alt="Counting and pairing on an example pile of twelve laid in a ring, the Knight of Wands as significator at the top. The count goes clockwise, the way he faces: the Knight counts 4 to Fortune, Fortune 9 to the 4 of Disks, the 4 of Disks 4 to Lust, Lust 12 to the Chariot, and the Chariot 12 back to the Knight, where it stops. Then the cards either side of him are paired, working outwards, and the 8 of Cups is left over and read on its own.">
+            </figure>
             <p>Each pile is read in two passes. <strong>Counting</strong> starts at the significator, which counts as one, and moves by each card&rsquo;s number: 4 for Knights, Queens and Princes, 7 for Princesses, 11 for Aces, a small card its own number, and 3, 9 or 12 for a Trump of an element, a planet or a sign. The cards counted make the story. <strong>Pairing</strong> then takes the cards either side of the significator, then the next two out, and so on, to fill in the detail. The report draws each pile as a ring, with the significator at the top, the count steps numbered and the pairs as lines across it.</p>
             <p class="note">Book T doesn&rsquo;t say where to cut, how to deal, when a count stops, what to do with a card left over from the pairs, or which way each court card faces (the count goes the way the significator looks). This site cuts into equal packs, deals one card to each stack in turn, stops a count at a card already counted, and reads a left-over card on its own. Each court card counts the way its figure looks on the Thoth card, as seen by you: the Knights of Wands, Swords and Disks, the Prince of Wands, the Queens, Prince and Princess of Swords, the Queen of Disks and the Princess of Cups to the right; the Knight, Queen and Prince of Cups and the Prince of Disks to the left. The Queen and Princess of Wands and the Princess of Disks face straight out, and they, like any significator that is not a court card, count from right to left. The prompt says the same.</p>
             </details>
