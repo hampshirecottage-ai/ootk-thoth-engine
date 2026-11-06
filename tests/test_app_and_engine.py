@@ -163,6 +163,17 @@ def test_method_page_shows_the_wheel_aspects_animation(client):
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 
+def test_method_page_shows_the_neighbour_pairing_animation(client):
+    page = client.get("/method").text
+    assert "site/neighbour-pairing.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "neighbour-pairing.svg").read_text(encoding="utf-8")
+    # the engine's pairs: Triad 2, twelve houses 12 (closing the ring), the Tree's 22 paths, the Cross's 7
+    assert svg.count('class="lk') == 2 + 12 + 22 + 7 and svg.count('class="lk cl ') == 1
+    for title in ("1 · A row", "2 · A full wheel", "3 · The Tree of Life", "4 · The Celtic Cross"):
+        assert title in svg
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     start = client.get("/").text
