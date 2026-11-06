@@ -14,7 +14,7 @@ import pytest
 
 from ootk import book_t
 from ootk.analysis import withheld_summary
-from ootk.report import analyze_reading, liber_777_markdown
+from ootk.report import DEFAULT_OFF, analyze_reading, liber_777_markdown
 from ootk.shuffle import draw_spread, has_significator_position, resolve_significator, significator_places
 from ootk.spreads import BOOK_T_KEY, BOOK_T_OP_NAMES, BOOK_T_SPREAD, SPREADS, spread_positions
 
@@ -31,7 +31,7 @@ with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-
     REFERENCE = json.load(f)
 
 
-def build_prompt(spread_key, mapping_system="thoth", without=frozenset()):
+def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
     """The same steps as cli.run_spread_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     positions = spread_positions(spread_key)
@@ -56,7 +56,7 @@ def build_prompt(spread_key, mapping_system="thoth", without=frozenset()):
 BOOK_T_EXPECT = "1,10/6,10,6"
 
 
-def build_book_t_prompt(without=frozenset()):
+def build_book_t_prompt(without=DEFAULT_OFF):
     """The same steps as cli.run_book_t_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     sig_card = resolve_significator(deck, SIGNIFICATOR)
@@ -197,3 +197,17 @@ def test_ootk_prompt_leaves_room_under_the_gemini_limit():
     assert PROMPT_BUDGET < 78600
     assert len(build_prompt("12", without=frozenset(FIT_ORDER))) + 2000 < 78600
     assert len(build_prompt("12")) <= PROMPT_BUDGET
+
+
+def test_ootk_prompt_with_every_layer_matches_saved_copy():
+    """The extra layers (DEFAULT_OFF) switched on: the full Opening of the Key with every part,
+    still within PROMPT_BUDGET by leaving out the ones in FIT_ORDER."""
+    from ootk.report import PROMPT_BUDGET
+    prompt = build_prompt("12", without=frozenset())
+    assert len(prompt) <= PROMPT_BUDGET
+    path = os.path.join(HERE, "prompt_snapshots", "spread_12_all_layers.md")
+    if os.getenv("OOTK_UPDATE_SNAPSHOTS") == "1":
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(prompt)
+    with open(path, encoding="utf-8") as f:
+        assert prompt == f.read()

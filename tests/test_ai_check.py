@@ -42,8 +42,9 @@ def test_case_counts(built):
 def test_full_prompt_matches_snapshot(built, spread_key):
     out, cases = built
     prompt = read(out, cases[f"s{SEED}_sp{spread_key}_full"], "prompt")
-    with open(os.path.join(HERE, "prompt_snapshots", f"spread_{spread_key}.md"), encoding="utf-8") as f:
-        assert prompt == f.read()
+    # The checker builds prompts with every layer on, as in the rounds it was made for.
+    from test_prompt_snapshots import build_prompt
+    assert prompt == build_prompt(spread_key, without=frozenset())
 
 
 def test_truth_matches_prompt(built):

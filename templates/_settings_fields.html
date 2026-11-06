@@ -239,15 +239,24 @@
                     <input type="hidden" name="birth_cards" id="birthCardsInput" value="">
                     <p class="hint" id="birthCardsResult">Stays in your browser; only the card numbers are sent, and they are left out of share links.</p>
                 </details>
-                {# Every part is on unless switched off here. parts_shown tells the server the
-                   switches were sent, so a form without them (or an older one) leaves nothing out. #}
+                {# The main parts are on and the extra layers (DEFAULT_OFF) off unless changed here.
+                   parts_shown tells the server the switches were sent, so a form without them (or an
+                   older one) takes the defaults. #}
                 <details class="parts" id="promptParts">
-                    <summary>Parts of the AI prompt <span class="parts-sum" id="partsSummary">· all on</span></summary>
+                    <summary>Parts of the AI prompt <span class="parts-sum" id="partsSummary">· standard</span></summary>
                     <input type="hidden" name="parts_shown" value="1">
-                    <p class="hint">All on gives the full reading. Switch a part off to see what your AI makes of the reading without it. The cards drawn stay the same, and the prompt tells your AI what was left out. <a href="/method#tested">Which parts AIs use</a>.</p>
+                    <p class="hint">The standard set gives the full reading. Switch a main part off to see what your AI makes of the reading without it, or add an extra layer. The cards drawn stay the same, and the prompt tells your AI what was left out. <a href="/method#tested">Which parts AIs use</a>.</p>
                     <fieldset class="sig-q">
-                    {% for key, name, hint in prompt_parts %}
-                    <label><input type="checkbox" name="include" value="{{ key }}" checked><span>{{ name }} <small>{{ hint }}</small></span></label>
+                    <legend>Main parts</legend>
+                    {% for key, name, hint in prompt_parts if key not in default_off %}
+                    <label><input type="checkbox" name="include" value="{{ key }}" checked data-default="on"><span>{{ name }} <small>{{ hint }}</small></span></label>
+                    {% endfor %}
+                    </fieldset>
+                    <fieldset class="sig-q">
+                    <legend>Extra layers (off unless you add them)</legend>
+                    <p class="hint">Each repeats another part, is the same in every reading, or made no difference when tested.</p>
+                    {% for key, name, hint in prompt_parts if key in default_off %}
+                    <label><input type="checkbox" name="include" value="{{ key }}" data-default="off"><span>{{ name }} <small>{{ hint }}</small></span></label>
                     {% endfor %}
                     </fieldset>
                 </details>

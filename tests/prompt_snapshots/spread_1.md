@@ -6,7 +6,6 @@
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
-**Framework Basis:** auto: only 0 card(s) carry Sephirothic data (minimum 6), so the default Life Path lens is used
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
@@ -23,7 +22,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
-- **Platonic Solid**: `Octahedron`
 
 **Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
 
@@ -33,8 +31,6 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 | Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariot of the Winds.
-
-**Court Hexagrams** (Crowley, Book of Thoth: the rank's trigram over the suit's; Fire thunder, Water lake, Air wind, Earth mountain): Prince of Swords: 57 Sun, The Gentle.
 
 
 ---
@@ -47,46 +43,24 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 
 ---
 
-## 3. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)
-* **3 Mother Axes (Core Planes)**: `0`
-* **7 Double Directions (Cardinal Faces)**: `0`
-* **12 Simple Edges (Polyhedral Boundaries)**: `1`
-* **Nodal Sephiroth Spheres**: `0`
-
-Section 1 gives each card's letter and spatial type.
-
-**Letter Values (standard gematria, Aleph 1 to Tav 400):** the letters from section 1 added up (pips have none). Plain sums to weigh, not a verdict.
-* **Total**: ה 5 = **5**
-
----
-
-## 4. PLATONIC SOLID TOPOLOGY MATRIX
-* **Octahedron          **: `1`
-* None drawn: Dodecahedron, Tetrahedron, Icosahedron, Hexahedron (Cube)
-
-**Solid properties** (fixed for each solid; section 1 names only the card's solid):
-* **Octahedron**: Faces 8, Vertices 6 | Dual: `Hexahedron (Cube)` | Role: Dynamic Axis (Mediating Air)
-
----
-
-## 5. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
+## 3. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
 * Only one card was drawn, so there are no pairs to score.
 
 ---
 
-## 6. SPATIAL & GEOMETRIC VECTOR ANALYSIS
+## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS
 * No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.
 
 ---
 
-## 7. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 
 1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header. Before reading any card, restate it in one or two sentences as an open question framed in this spread's terms: its positions (section 1) and the Incarnational Life Path & Psychological Evolution lens. If it asks yes or no, or whether something will happen, turn it toward what the querent can understand or do. Keep the querent's subject and intent and change only the wording; show the reframed question first so the querent can correct it, then read each position as answering part of it.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
-4. **Suggested order:** Start with the card in section 1 and its correspondences, then its element, letter and solid (sections 2-4).
+4. **Suggested order:** Start with the card in section 1 and its correspondences, then its element (section 2).
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Answer the reframed question directly. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 

@@ -733,16 +733,20 @@ def own_place_check(spread_results, spread_key):
         })
     return checks
 
-def own_place_sentence(check):
+def own_place_sentence(check, stats=True):
     """'3 of 36 cards on their own decan: Pos 41 (2 of Wands - Dominion), ... - expected 0.46 at
-    random, z=+...; 3 or more happens in 1.1% of random draws (about 1 in 88)'."""
+    random, z=+...; 3 or more happens in 1.1% of random draws (about 1 in 88)'. Without `stats`
+    only the cards, and whether that many is unusual."""
     c = check
+    flag = " - unusual (5% or less)" if c["unusual"] else ""
+    if not stats:
+        cards = ", ".join(f"Pos {h['position']} ({h['title']})" for h in c["hits"])
+        return f"{c['count']} of {c['positions']} cards {c['noun']}" + (f": {cards}" if cards else "") + flag
     stats = f"expected {c['expected']:.2f} at random, z={c['z']:+.2f}"
     if not c["count"]:
         return f"none of {c['positions']} cards {c['noun']} - {stats}"
     cards = ", ".join(f"Pos {h['position']} ({h['title']})" for h in c["hits"])
     odds = f"about 1 in {round(1 / c['chance']):,}" if c["chance"] > 0 else "never"
-    flag = " - unusual (5% or less)" if c["unusual"] else ""
     return (f"{c['count']} of {c['positions']} cards {c['noun']}: {cards} - {stats}; "
             f"{c['count']} or more happens in {c['chance']:.1%} of random draws ({odds}){flag}")
 

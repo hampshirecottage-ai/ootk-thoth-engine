@@ -11,7 +11,8 @@ from ootk.db import (
     CardNotFound, DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
 from ootk.birth_cards import birth_cards_param
-from ootk.report import COMPONENTS, analyze_reading, drawn_now, generate_html_output, this_computer_zone, without_components
+from ootk.report import (COMPONENTS, DEFAULT_OFF, analyze_reading, choose_components, drawn_now,
+                         generate_html_output, this_computer_zone)
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
     significator_places,
@@ -39,8 +40,12 @@ def parse_args():
     parser.add_argument("--mapping", type=str, choices=MAPPING_SYSTEMS, default=DEFAULT_MAPPING, help="Tarot-Kabbalah mapping scheme: thoth keeps Crowley's swap (Emperor on Tzaddi, Star on Heh), golden_dawn undoes it")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
     parser.add_argument("--without", type=str, default=None, metavar="PARTS",
-                        help="Leave Thoth components out of the AI prompt, to test what each adds: a "
-                             f"comma-separated list of {', '.join(COMPONENTS)}. The cards drawn do not change.")
+                        help="Leave parts out of the AI prompt, to test what each adds: a "
+                             f"comma-separated list of {', '.join(k for k in COMPONENTS if k not in DEFAULT_OFF)}. "
+                             "The cards drawn do not change.")
+    parser.add_argument("--with", dest="with_parts", type=str, default=None, metavar="PARTS",
+                        help="Add extra layers, off by default, to the AI prompt: a comma-separated "
+                             f"list of {', '.join(k for k in COMPONENTS if k in DEFAULT_OFF)}, or all.")
     parser.add_argument("--birth-date", type=str, default=None, metavar="YYYY-MM-DD",
                         help="Add the querent's birth card and year card (Greer and Arrien tarot "
                              "numerology) to the prompt header. Only the card numbers are used; "
@@ -83,7 +88,7 @@ def run_spread_session():
                        f"or {BOOK_T_KEY} for the full Book T Opening of the Key.")
     args.spread = args.spread.strip() if args.spread else None
     try:
-        args.without = without_components(args.without)
+        args.without = choose_components(args.with_parts, args.without)
     except ValueError as e:
         raise CliError(str(e)) from e
     args.birth_cards = ""

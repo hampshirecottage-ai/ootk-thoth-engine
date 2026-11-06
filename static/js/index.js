@@ -56,21 +56,25 @@ function updateMoreSummary() {
     const short = el => el.options[el.selectedIndex].text.split(" (")[0].replace(/^\d+\.\s*/, "");
     const parts = [short($("mappingSelect")), $("frameworkSelect").value === "auto" ? "" : short($("frameworkSelect"))];
     if (!manual && $("seedInput").value.trim()) parts.unshift(`seed ${$("seedInput").value.trim()}`);
-    const off = promptPartsOff();
+    const off = promptPartsOff(), added = promptLayersAdded();
     if (off.length) parts.push(`${off.length} prompt part${off.length === 1 ? "" : "s"} off`);
+    if (added.length) parts.push(`${added.length} extra layer${added.length === 1 ? "" : "s"}`);
     if ($("birthCardsInput") && $("birthCardsInput").value) parts.push("birth cards");
     $("moreSummary").textContent = "· " + parts.filter(Boolean).join(" · ");
-    $("partsSummary").textContent = off.length ? `· ${off.length} off` : "· all on";
+    $("partsSummary").textContent = "· " + ([off.length && `${off.length} off`, added.length && `${added.length} added`]
+        .filter(Boolean).join(", ") || "standard");
 }
 $("moreOptions").addEventListener("input", updateMoreSummary);
 $("moreOptions").addEventListener("change", updateMoreSummary);
 
-// ---------- Parts of the AI prompt: the names of the ones switched off ----------
-function promptPartsOff() {
-    return Array.from(form.querySelectorAll('#promptParts input[name="include"]'))
-        .filter(box => !box.checked)
+// ---------- Parts of the AI prompt: main parts switched off, extra layers switched on ----------
+function promptParts(isDefault, checked) {
+    return Array.from(form.querySelectorAll(`#promptParts input[name="include"][data-default="${isDefault}"]`))
+        .filter(box => box.checked === checked)
         .map(box => box.nextElementSibling.firstChild.textContent.trim());
 }
+function promptPartsOff() { return promptParts("on", false); }
+function promptLayersAdded() { return promptParts("off", true); }
 
 // ---------- Birth cards (birth_cards.py has the method) ----------
 // Worked out here so the birth date is never sent: only "personality-year card-year" is.

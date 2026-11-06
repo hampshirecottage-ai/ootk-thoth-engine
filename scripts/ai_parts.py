@@ -126,6 +126,11 @@ TERMS = {
                          r"Nov|Dec)[a-z]*\b", re.I),
     "gods": re.compile(r"\bgods?\b|\bgoddess", re.I),
     "hexagrams": re.compile(r"\bhexagrams?\b|\bI Ching\b", re.I),
+    "solids": re.compile(r"\bplatonic\b|\b(tetrahedron|octahedron|icosahedron|dodecahedron)\b|\bdual\b", re.I),
+    "cube_counts": re.compile(r"\bmother ax[ei]s\b|\bdouble directions?\b|\bsimple edges\b", re.I),
+    "all_aspects": re.compile(r"\b(trine|sextile|square)s?\b", re.I),
+    "hebrew_compare": re.compile(r"\bFrench\b|\bEgyptian\b|\bGolden Dawn letter", re.I),
+    "statistics": re.compile(r"\bz ?=|\btrend test\b|\bat random\b|\bodds\b", re.I),
 }
 assert set(TERMS) == set(COMPONENTS)
 BIRTH_TERMS = re.compile(r"\bbirth card|\byear card|\bpersonality card", re.I)
