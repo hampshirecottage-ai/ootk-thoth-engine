@@ -192,6 +192,8 @@ def test_method_page_shows_the_birthday_significator_animation(client):
     assert svg.count('class="sp s') == 12
     assert ">Born 14 July<" in svg and ">Prince of Wands<" in svg and ">21° Cancer to 20° Leo<" in svg
     assert ">Born 5 February<" in svg and ">Prince of Swords<" in svg and ">Never a Princess<" in svg
+    from ootk.significator import card_for_birthday
+    assert card_for_birthday(7, 14) == "Prince of Wands" and card_for_birthday(2, 5) == "Prince of Swords"
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 

@@ -8,8 +8,8 @@ as Book T gives them. The court spans are laid round the wheel, then the Sun goe
 example birthdays, and the court card whose span it stands in is picked out. It ends on why a
 Princess is never given.
 
-The spans and dates come from the engine itself (ootk.significator.BIRTH_SPANS, SPAN_SIGNS and
-card_for_birthday), so the animation always gives the card the start page gives. The Sun's
+The spans and dates come from the engine itself (ootk.significator.BIRTH_SPANS, SPAN_SIGNS and the
+dates its spans start on), so the animation gives the card the start page gives. The Sun's
 place on a date is read off the span: its first day is 20 degrees of the sign, the next span's
 first day 30 degrees on.
 
@@ -28,7 +28,6 @@ from make_front_animation import SIGN_GLYPHS, SIGN_KING, ink  # noqa: E402
 from ootk import PROJECT_ROOT  # noqa: E402
 from ootk.significator import BIRTH_SPANS as SPANS  # noqa: E402
 from ootk.significator import MONTHS, SPAN_SIGNS  # noqa: E402
-from ootk.significator import card_for_birthday as court_on  # noqa: E402
 
 OUT = PROJECT_ROOT / "static" / "site" / "birthday-significator.svg"
 
@@ -51,6 +50,13 @@ def short(title):
     return f"{RANK[rank]} {suit[0]}"
 
 
+def span_of(month, day):
+    """Index of the span that holds this date: the last that starts on or before it (early
+    January is still the Queen of Disks'). tests/test_app_and_engine checks it against the
+    start page's own choice, ootk.significator's card for the date."""
+    return max((n for n, (first, _) in enumerate(SPANS) if (month, day) >= first), default=len(SPANS) - 1)
+
+
 def span_start(i):
     """Degrees from 0 Aries where span i begins: 20 degrees into its sign."""
     return (SIGNS.index(SPAN_SIGNS[i]) * 30 + 20) % 360
@@ -59,8 +65,7 @@ def span_start(i):
 def sun_degree(month, day):
     """The Sun's place (degrees from 0 Aries) on a date, read off the span it falls in."""
     d = date(2001, month, day)
-    title = court_on(month, day)
-    i = next(n for n, (_, t) in enumerate(SPANS) if t == title)
+    i = span_of(month, day)
     first = date(2001, *SPANS[i][0])
     nxt = date(2001, *SPANS[(i + 1) % 12][0])
     if d < first:
@@ -71,7 +76,7 @@ def sun_degree(month, day):
 
 
 def build():
-    assert court_on(7, 14) == "Prince of Wands" and court_on(2, 5) == "Prince of Swords"
+    assert [SPANS[span_of(m, d)][1] for m, d in EXAMPLE_DATES] == ["Prince of Wands", "Prince of Swords"]
     timed, spans, marks, caps = [], [], [], []
     t = 0.4
 
@@ -96,7 +101,7 @@ def build():
     sun_frames, last = [], 0.0
     for b, (m, d) in enumerate(EXAMPLE_DATES):
         deg, i = sun_degree(m, d)
-        title = court_on(m, d)
+        title = SPANS[i][1]
         sign, within = SIGNS[int(deg // 30)], deg % 30
         cap(f"b{b}", t, t + MOVE, f"Born {d} {MONTHS[m - 1]}", f"the Sun is near {within:.0f}° {sign}")
         sun_frames.append((t, last, t + MOVE, deg if deg > last else deg + 360))
