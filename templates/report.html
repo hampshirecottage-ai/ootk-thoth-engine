@@ -298,32 +298,21 @@
         </div>
         <div class="panel report-actions no-print">
             <h2>Send the prompt to your AI</h2>
-            <p class="form-lede">Save the prompt as a file, then attach it in your AI with <strong>+</strong>. This suits long readings best.</p>
+            <p class="form-lede">Save the prompt as a file, then attach it in your AI with <strong>+</strong>.</p>
             <button type="button" class="btn send-main" data-download-md title="Download the prompt as a .md file to attach in your AI">Save prompt as Markdown (.md)</button>
-            <p class="or-copy">Or copy it and paste it in yourself:</p>
-            <div class="copy-row">
-                <button type="button" class="btn secondary" id="copyPromptTop" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')" title="Copy the prompt, then paste it into your AI">Copy prompt</button>
-                {% with prompt_source = "promptText", llm_note_elsewhere = true, llm_btn_class = "btn secondary" %}{% include "_send_to_llm.html" %}{% endwith %}
-            </div>
             <div class="action-row">
-                <details class="menu">
-                    <summary class="btn secondary">More &#9662;</summary>
-                    <div class="menu-list">
-                        <button type="button" onclick="window.print()">Save as PDF (print)</button>
-                        <button type="button" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>Save as JSON</button>
-                    </div>
-                </details>
+                <button type="button" class="btn secondary" onclick="window.print()">Save as PDF (print)</button>
+                <button type="button" class="btn secondary" data-download-json{% if json_url %} data-json-url="{{ json_url }}"{% endif %}>Save as JSON</button>
                 <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn secondary" title="Back to settings">&larr; New reading</a>
             </div>
         </div>
         <div class="band-more">
             <ol class="steps-done no-print" aria-label="Your progress">
                 <li class="done">Cards drawn</li>
-                <li class="here">Save or copy the prompt</li>
-                <li>Attach or paste it in your AI</li>
+                <li class="here">Save the prompt</li>
+                <li>Attach it in your AI</li>
             </ol>
             <p class="tagline no-print"><a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
-            <p class="tagline left-out no-print">{% include "_llm_left_out.html" %}</p>
         </div>
     </section>
     {% if unsaved %}
@@ -683,7 +672,6 @@
     <details class="section" id="promptSection">
         <summary><h2>The prompt for your AI</h2></summary>
         <div class="body">
-            <button class="btn secondary" type="button" onclick="copyText(document.getElementById('promptText').textContent, this, 'promptText')">Copy prompt</button>
             <pre id="promptText">{{ prompt }}</pre>
         </div>
     </details>
@@ -691,7 +679,7 @@
     <!-- ===== FINAL STEP ===== -->
     <section class="panel next-step no-print" id="nextStep">
         <h2>Next</h2>
-        <p class="muted">Paste the prompt into your AI to get the interpretation.{% if session_id %} This reading is saved.{% endif %}</p>
+        <p class="muted">Attach the saved prompt in your AI to get the interpretation.{% if session_id %} This reading is saved.{% endif %}</p>
         <div class="actions">
             <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn">New reading</a>
             <form action="/generate_report" method="POST" style="display:inline">
@@ -713,7 +701,6 @@
 <script src="{{ static_url('js/atlas.js') }}" defer></script>
 <script src="{{ static_url('js/copy.js') }}" defer></script>
 <script src="{{ static_url('js/report.js') }}" defer></script>
-<script src="{{ static_url('js/send-to-llm.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>
