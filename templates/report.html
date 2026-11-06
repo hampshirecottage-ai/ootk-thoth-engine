@@ -63,7 +63,7 @@
         .next-step h3 { margin: 16px 0 0; font-size: 1em; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
         /* Banner, as on the start page: what the reading is on the left, the prompt actions on the right. */
-        .report-head { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 0 26px; align-items: start; }
+        .report-head { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 0 26px; align-items: start; }
         .report-head .band-text { grid-column: 1; grid-row: 1; }
         .report-head .band-more { grid-column: 1; grid-row: 2; }
         .report-head .report-actions { grid-column: 2; grid-row: 1 / span 2; }
@@ -94,8 +94,16 @@
         .headline { font-size: 1.05em; margin: 4px 0 14px; padding-left: 0; list-style: none; }
         .headline li { margin-bottom: 4px; }
         .headline li::before { content: "◆ "; color: var(--accent); }
-        .ebar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; border: 1px solid var(--line); }
-        .ebar div { height: 100%; }
+        .balance-row { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr); gap: 12px 20px; align-items: start; }
+        .balance-row h3 { margin-top: 0; }
+        .balance-tiles { display: grid; gap: 12px; }
+        .vbars { display: flex; gap: 10px; align-items: stretch; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; }
+        .vbar { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.85em; }
+        .vbar-track { width: 100%; max-width: 56px; height: 140px; display: flex; align-items: flex-end; border-bottom: 1px solid var(--line); }
+        .vbar-fill { width: 100%; min-height: 2px; border-radius: 5px 5px 0 0; }
+        .vbar-n { font-weight: 700; }
+        .vbar-l { font-weight: 600; }
+        .vbar-p { font-size: 0.85em; margin-top: -4px; }
         .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font-size: 0.88em; }
         .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
         .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-top: 16px; }
@@ -232,6 +240,10 @@
             .search { min-width: 0; width: 100%; font-size: 16px; }
             .keycard { width: 100%; }
             .tile .big { font-size: 1.5em; }
+            /* Chart full width, the two dignity tiles side by side under it. */
+            .balance-row { grid-template-columns: minmax(0, 1fr); }
+            .balance-tiles { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+            .vbar-track { height: 110px; }
             /* Tables scroll sideways rather than squeezing every column to a word per line. */
             .table-wrap table { min-width: 540px; }
             .ops-table td:first-child { min-width: 11em; }
@@ -314,16 +326,39 @@
             {% for line in S.headline %}<li>{{ line }}</li>{% endfor %}
         </ul>
 
-        <h3>Elemental balance</h3>
-        <div class="ebar" role="img" aria-label="Elemental balance">
-            {% for e in S.elements if e.count %}<div style="width:{{ e.pct }}%; background:{{ e.color }}" title="{{ e.element }}: {{ e.count }} ({{ e.pct }}%)"></div>{% endfor %}
+        {% set emax = S.elements | map(attribute='count') | max %}
+        <div class="balance-row">
+            <div class="balance-chart">
+                <h3>Elemental balance</h3>
+                <div class="vbars" role="img" aria-label="Elemental balance: {% for e in S.elements %}{{ e.element }} {{ e.count }} ({{ e.pct }}%){{ ', ' if not loop.last }}{% endfor %}">
+                    {% for e in S.elements %}
+                    <div class="vbar" title="{{ e.element }}: {{ e.count }} ({{ e.pct }}%)">
+                        <span class="vbar-n">{{ e.count }}</span>
+                        <div class="vbar-track"><div class="vbar-fill" style="height:{{ (100 * e.count / emax) | round(1) if emax else 0 }}%; background:{{ e.color }}"></div></div>
+                        <span class="vbar-l">{{ e.element }}</span>
+                        <span class="vbar-p muted">{{ e.pct }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if S.spirit_secondary %}
+                <p class="muted" style="font-size:0.85em; margin:6px 0 0">Spirit as a secondary quality on {{ S.spirit_secondary | length }}: {% for p, t in S.spirit_secondary %}Pos {{ p }} ({{ t }}){{ ', ' if not loop.last }}{% endfor %}</p>
+                {% endif %}
+            </div>
+            {% if S.dignity.pairs %}
+            <div class="balance-tiles">
+                <div class="tile">
+                    <div class="label">Elemental dignities</div>
+                    <div class="big">{{ signed(S.dignity.net) }}</div>
+                    <div class="muted" style="font-size:0.85em">{{ S.dignity.strong }} same element · {{ S.dignity.friendly }} friendly · {{ S.dignity.neutral }} neutral · {{ S.dignity.contrary }} contrary, over {{ S.dignity.pairs }} pairs</div>
+                </div>
+                <div class="tile">
+                    <div class="label">Ill-dignified cards</div>
+                    <div class="big">{{ S.ill_dignified_count }} <span style="font-size:0.5em" class="muted">of {{ S.card_count }}</span></div>
+                    <div class="muted" style="font-size:0.85em">Cards whose neighbouring dignities sum below zero</div>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        <div class="legend">
-            {% for e in S.elements %}<span><i class="dot" style="background:{{ e.color }}"></i>{{ e.element }} {{ e.count }} <span class="muted">({{ e.pct }}%)</span></span>{% endfor %}
-        </div>
-        {% if S.spirit_secondary %}
-        <p class="muted" style="font-size:0.85em; margin:6px 0 0">Spirit as a secondary quality on {{ S.spirit_secondary | length }}: {% for p, t in S.spirit_secondary %}Pos {{ p }} ({{ t }}){{ ', ' if not loop.last }}{% endfor %}</p>
-        {% endif %}
 
         {% if withheld %}
         <h3>Withheld <span class="muted" style="font-weight:normal; font-size:0.8em">({{ withheld.cards | length }} not drawn)</span></h3>
@@ -338,16 +373,8 @@
         <p class="muted" style="font-size:0.85em; margin:6px 0 0">{{ withheld.note }}</p>
         {% endif %}
 
-        {% if S.dignity.pairs or S.aspects.total %}
+        {% if S.aspects.total %}
         <div class="tiles">
-            {% if S.dignity.pairs %}
-            <div class="tile">
-                <div class="label">Elemental dignities</div>
-                <div class="big">{{ signed(S.dignity.net) }}</div>
-                <div class="muted" style="font-size:0.85em">{{ S.dignity.strong }} same element · {{ S.dignity.friendly }} friendly · {{ S.dignity.neutral }} neutral · {{ S.dignity.contrary }} contrary, over {{ S.dignity.pairs }} pairs</div>
-            </div>
-            {% endif %}
-            {% if S.aspects.total %}
             <div class="tile">
                 <div class="label">Aspects</div>
                 <div class="big">{{ S.aspects.total }} <span style="font-size:0.5em">net {{ signed(S.aspects.net) }}</span></div>
@@ -356,14 +383,6 @@
                 </div>
                 <div class="muted" style="font-size:0.85em">Set by the layout: the same in every reading of this spread</div>
             </div>
-            {% endif %}
-            {% if S.dignity.pairs %}
-            <div class="tile">
-                <div class="label">Ill-dignified cards</div>
-                <div class="big">{{ S.ill_dignified_count }} <span style="font-size:0.5em" class="muted">of {{ S.card_count }}</span></div>
-                <div class="muted" style="font-size:0.85em">Cards whose neighbouring dignities sum below zero</div>
-            </div>
-            {% endif %}
         </div>
         {% endif %}
 
