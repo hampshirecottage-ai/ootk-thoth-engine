@@ -55,7 +55,7 @@ ootk-thoth-engine/
 │   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
 │   ├── lockout.py          # Locks out repeated wrong passwords (APP_PASSWORD, ADMIN_PASSWORD)
 │   ├── busy.py             # Busy-server alert: ntfy push when CPU stays high (BUSY_ALERT_*)
-│   └── library.json        # Glossary (/library) and further reading (/history)
+│   └── library.json        # Glossary and further reading (/library)
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
 │   ├── db_inspect.py       # DB audit / schema / join inspection (audit, schema, joins)
@@ -72,7 +72,6 @@ ootk-thoth-engine/
 ├── static/cards/           # WebP card images served by the web GUI
 ├── static/js/              # Page scripts, loaded with defer
 ├── static/fonts/           # Self-hosted Cinzel, Inter and JetBrains Mono (SIL Open Font License)
-├── static/history/         # Archival photos for the /history page (credits in CREDITS.md)
 ├── static/site/            # Favicon, app icon and link-preview image
 ├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker, Render and Hugging Face Spaces)
 ├── deploy/huggingface/     # Space README and start script, also used by the Docker image
@@ -225,7 +224,6 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/library` | Glossary (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
 | `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
-| `/history` | History of the decks, with archival photos, their credits and further reading |
 | `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
 | `/testimonial` | Send a testimonial (one per visitor session); the start page shows one approved testimonial a day |
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |

@@ -475,7 +475,7 @@ LANDING_PAGES = {
         "spread": "14"},
 }
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
-PUBLIC_PAGES = (["/", "/pick", "/start", "/history", "/examples", "/library", "/maps", "/method"]
+PUBLIC_PAGES = (["/", "/pick", "/start", "/examples", "/library", "/maps", "/method"]
                 + [f"/tarot/{slug}" for slug in LANDING_PAGES])
 
 
@@ -1187,7 +1187,7 @@ LIBRARY_FILE = BASE_DIR / "src" / "ootk" / "library.json"
 
 
 def load_library():
-    """The resource library: a glossary (on /library) and further reading (on /history), kept
+    """The resource library: a glossary and further reading (both on /library), kept
     in library.json so a new entry is one edit. Read on each request, so an edit shows without a restart."""
     with open(LIBRARY_FILE, encoding="utf-8") as f:
         library = json.load(f)
@@ -1213,11 +1213,11 @@ def start_here(request: Request):
                       sizes={key: spread_size_text(key) for key in list(SPREADS) + [BOOK_T_KEY]})
 
 
-@app.get("/history", response_class=HTMLResponse)
-def history_page(request: Request):
-    """Where the decks come from, with archival photographs (static/history) and further
-    reading from library.json."""
-    return guide_page(request, "history.html", library=load_library())
+@app.get("/history")
+def history_page():
+    """The History page was retired in November 2026; its Further reading moved to /library.
+    Old links and search results land there."""
+    return RedirectResponse("/library#readingTitle", status_code=301)
 
 
 @app.get("/examples", response_class=HTMLResponse)
