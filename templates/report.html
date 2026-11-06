@@ -76,14 +76,8 @@
         .report-actions { margin: 0; }
         .report-actions h2 { font-size: 1.15em; }
         .form-lede { margin: 0 0 12px; color: var(--muted); font-size: 0.9em; }
-        /* One main action (save the prompt as a file); copying sits below it as a second way. */
+        /* One main action: save the prompt as a file. */
         .report-actions .send-main { display: block; width: 100%; padding: 11px 16px; font-size: 1em; }
-        .report-actions .or-copy { margin: 14px 0 6px; font-size: 0.85em; color: var(--muted); }
-        .copy-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
-        .copy-row .send-llm { flex: 1 1 auto; }
-        .copy-row .send-llm-controls { display: flex; height: 100%; }
-        .copy-row .send-llm select { border-color: var(--control); }
-        .copy-row .send-llm .btn { flex: 1; }
         .action-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .btn-small { background: var(--panel-2); color: var(--text); border: 1px solid var(--control); padding: 6px 10px; border-radius: 4px; cursor: pointer; white-space: nowrap; font: inherit; }
         .btn-small:hover { border-color: var(--accent); }
@@ -265,13 +259,6 @@
             details.section, .panel { break-inside: avoid-page; border-color: #ccc; }
             details.section > summary::before { display: none; }
         }
-        .send-llm { display: inline-block; vertical-align: top; }
-        .send-llm-controls { display: inline-flex; align-items: stretch; }
-        .send-llm select { border: 1px solid var(--accent); border-right: none; border-radius: 6px 0 0 6px; background: var(--panel); color: var(--text); padding: 0 6px; font: inherit; font-size: 0.9em; }
-        .send-llm select { width: auto; }
-        .send-llm .btn { border-radius: 0 6px 6px 0; white-space: nowrap; }
-        .send-llm-note { display: block; font-size: 0.85em; margin-top: 6px; max-width: 32em; }
-        .send-llm-note:empty { display: none; }
     </style>
 {% include "_brand_styles.html" %}
 {% include "_atlas_styles.html" %}
@@ -318,7 +305,7 @@
     {% if unsaved %}
     <p class="panel save-failed" id="saveFailed" role="alert"><strong>This reading couldn't be saved.</strong>
         It has no link of its own and won't come back if you leave or reload this page.
-        {% if share_path %}The share link further down redraws the same cards.{% else %}Copy the prompt now if you want to keep it.{% endif %}</p>
+        {% if share_path %}The share link further down redraws the same cards.{% else %}Save the prompt as Markdown now if you want to keep it.{% endif %}</p>
     {% endif %}
 
     <!-- ===== SUMMARY FIRST ===== -->
