@@ -2005,7 +2005,7 @@ def test_failed_save_says_so_on_the_report(client, monkeypatch):
     monkeypatch.setattr(app_module, "save_spread_session", lambda *a, **k: None)
     r = post(client, follow=False)
     assert r.status_code == 200 and 'id="saveFailed"' in r.text
-    assert "Copy the prompt now" in r.text and "saved as session" not in r.text
+    assert "Save the prompt as Markdown now" in r.text and "saved as session" not in r.text
 
 
 def test_unreachable_database_at_save_still_shows_the_reading(client, monkeypatch):

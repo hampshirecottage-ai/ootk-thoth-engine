@@ -429,10 +429,10 @@ LANDING_PAGES = {
         "title": "AI Tarot Reading",
         "tagline": "Your AI interprets the cards. OOTK gives it the facts to work from.",
         "description": "An AI tarot reading with the correspondences done properly: draw your "
-                       "cards, copy the prompt into ChatGPT, Claude or Gemini.",
+                       "cards, then attach the prompt in ChatGPT, Claude or Gemini.",
         "intro": "Chatbots are good with meaning but shaky on correspondences. OOTK looks every card up in the Golden "
                  "Dawn and Liber 777 tables, scores the dignities between them, and writes it all "
-                 "into one prompt you paste into ChatGPT, Claude, Gemini or any other AI.",
+                 "into one prompt you attach in ChatGPT, Claude, Gemini or any other AI.",
         "spread": "3"},
     "opening-of-the-key": {
         "title": "Opening of the Key Tarot Spread",
