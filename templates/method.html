@@ -103,6 +103,9 @@
             </details>
             <details class="corr">
                 <summary><strong>Position in the layout</strong> <span class="corr-sum">Gives the aspects between positions; they belong to the spread, not the cards.</span></summary>
+                <figure class="ops-anim">
+                    <img src="{{ static_url('site/wheel-aspects.svg') }}" width="160" height="294" loading="lazy" alt="A wheel of the twelve signs. Each aspect is drawn in turn between the positions it joins: 6 oppositions (180°, scores −1), 12 squares (90°, −2), 12 trines (120°, +2) and 12 sextiles (60°, +1), then all 42 together. They are the same in every reading; only the cards at their ends change.">
+                </figure>
                 <ol>
                     <li><strong>Every position has a place on the spread&rsquo;s drawing.</strong> The engine takes the middle of the drawing and measures the angle of each position around it.</li>
                     <li><strong>On a wheel</strong> (houses, signs, decans) every two positions are checked for an exact aspect, within 1&deg;: opposition (180&deg;, &minus;1), square (90&deg;, &minus;2), trine (120&deg;, +2) or sextile (60&deg;, +1). Each such pair also shows the elemental score of the two cards that fell there, which is the only part that changes between readings. By default only the oppositions are shown; &ldquo;Every wheel aspect&rdquo; adds the rest.</li>

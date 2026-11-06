@@ -150,6 +150,17 @@ def test_method_page_shows_the_counting_and_pairing_animation(client):
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 
+def test_method_page_shows_the_wheel_aspects_animation(client):
+    page = client.get("/method").text
+    assert "site/wheel-aspects.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "wheel-aspects.svg").read_text(encoding="utf-8")
+    # one drawn chord per aspected pair the engine finds on a twelve-position wheel
+    assert svg.count('class="d ') == 42
+    for kind, n, score in (("Opposition", 6, "−1"), ("Square", 12, "−2"), ("Trine", 12, "+2"), ("Sextile", 12, "+1")):
+        assert f">{kind} · " in svg and f">scores {score}<" in svg and f">{n} pairs on a wheel of twelve<" in svg
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     start = client.get("/").text
