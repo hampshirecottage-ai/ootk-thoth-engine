@@ -6,7 +6,7 @@
 
 **Try it online: [tarotthoth.com](https://tarotthoth.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![The start page: the headline "Welcome to the Opening of the Key", the three steps (ask your question and draw, save the prompt, attach it in your AI) and the "Ask your question" wizard on its first step, "How would you like to ask?"](docs/images/front.png)
+![The start page: the headline "Welcome to the Opening of the Key", the three steps (ask your question and draw, save the prompt, attach it in your AI), the Tree of Life animation lighting Path 15 (Heh, The Star) and the "Ask your question" wizard on its first step, "How would you like to ask?"](docs/images/front.png)
 
 It places the Hebrew letters and the Platonic solids in three-dimensional space with two models: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and **polyhedral dual inversions** (each card's solid and its dual; the cube's dual octahedron has its six corners on the Cube of Space's six directions). The [Method page](https://tarotthoth.com/method#space) explains both and [/maps](https://tarotthoth.com/maps) draws them.
 
@@ -43,10 +43,12 @@ ootk-thoth-engine/
 │   ├── gematria.py         # Standard Hebrew letter values (Aleph 1 to Tav 400) and per-operation totals
 │   ├── report.py           # analyze_reading (the one pipeline the CLI and web share), the prompt and HTML export
 │   ├── db.py               # DB settings, card lookups, saving sessions
+│   ├── book_t.py           # Book T's Opening of the Key: piles, counting and pairing
 │   ├── shuffle.py          # Seeded shuffler (single source of truth)
 │   ├── rules.py            # Book T dignities, aspects and orbs (the one source of scoring rules)
 │   ├── birth_cards.py      # Birth and year cards (Greer and Arrien tarot numerology)
 │   ├── decans.py           # Shem ha-Mephorash angels and Sun dates of the 36 decans, day ruler
+│   ├── gods.py             # Liber 777 gods for the Trumps and I Ching hexagrams for the court cards
 │   ├── titles.py           # Book T titles of the cards (Lord of ..., Trump and court titles)
 │   ├── significator.py     # Book T significator: court card from description or birth date
 │   ├── sky.py              # Sun and Moon decans and their cards, local maths (/today and the prompt header)
@@ -62,6 +64,10 @@ ootk-thoth-engine/
 │   ├── download_images.py  # Fetch card images into static/images/
 │   ├── optimize_images.py  # Build the WebP copies the web GUI serves
 │   ├── make_site_images.py # Rebuild the favicon and link-preview image in static/site/
+│   ├── make_tree_paths.py  # Rebuild the front page's Tree of Life animation (static/site/tree-paths.svg)
+│   ├── ai_check.py         # AI answer check, step 1: build the test prompts and truth files
+│   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
+│   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
 │   ├── export_hf_space.sh  # Copy the files a Hugging Face Space needs into a folder
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
@@ -72,7 +78,7 @@ ootk-thoth-engine/
 ├── static/cards/           # WebP card images served by the web GUI
 ├── static/js/              # Page scripts, loaded with defer
 ├── static/fonts/           # Self-hosted Cinzel, Inter and JetBrains Mono (SIL Open Font License)
-├── static/site/            # Favicon, app icon and link-preview image
+├── static/site/            # Favicon, app icon, link-preview image and the Tree of Life animation
 ├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker, Render and Hugging Face Spaces)
 ├── deploy/huggingface/     # Space README and start script, also used by the Docker image
 ├── output/                 # Generated HTML reports (not in git)
@@ -239,7 +245,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Time of reading.** The prompt header gives the date and time the cards were drawn, on your own clock (your browser's time zone) and in UTC, and where the Sun and Moon stood then (tropical zodiac, context only, not used in any score). A saved report keeps its original time; a share link carries the time (`drawn=20261029T2200Z`) but not your time zone. Older share links and the samples have no time line.
 - **Parts of the AI prompt.** Under More options, a folded list has two groups. The main parts (elemental dignities, astrology, Hebrew letters, Tree of Life, court card detail, Book T counts, geomantic figures, geometry with the Cube of Space and the wheel oppositions, Golden Dawn titles) are on; switch one off to see what your AI makes of the reading without it. The extra layers are off unless you add them, because each repeats another part, is the same in every reading, or made no difference when tested: Platonic solids, Cube of Space counts, every wheel aspect (squares, trines and sextiles with their weights, not only oppositions), each card's letter in the other systems, the statistics behind the lens and the Own-Place Check, gematria, angels of the decans, decan dates and day ruler, Liber 777 gods and court card hexagrams. With the defaults the full Opening of the Key prompt is about 48k characters (78k with every layer). The cards drawn stay the same, the prompt header names any main part left out, and the report, its share link (`with=solids&without=astrology`) and its terminal command (`--with`, `--without`) keep the choice. Golden Dawn titles, angels, decan dates and day ruler, gods and hexagrams are also left out automatically, gods first, then angels, dates, hexagrams and titles, when a reading's prompt would pass 77,500 characters, so the longest Opening of the Key stays readable by AIs that stop near 78,600 (Gemini); the prompt header then says "Left Out to Fit". `/method#correspondences` explains which parts the engine calculates with and which it only hands to the AI, and `/method#ranking` ranks them by what they add to a reading (astrology first, angels and decan dates last; birth cards a small effect), with how sure each rank is.
 - **Birth cards.** Under More options, an optional birth date gives your birth card and year card (tarot numerology as Mary Greer and Angeles Arrien teach it). The date stays in the browser: only the card numbers and the year are sent and saved, and share links leave them out. See `/method#birth-cards`.
-- **What now.** The report opens with three steps (cards drawn, save the prompt, attach it in your AI). **Save prompt as Markdown (.md)** downloads `attach_this_to_your_ai_seed<seed>.md` (or today's date in place of the seed for cards picked by hand), which you attach in the AI chat with its **+** button. A file gets round the limits AI chats put on pasted text. **Save as PDF (print)** and **Save as JSON** sit beside it. The report has no copy buttons; the card of the day (`/today`) keeps **Copy prompt** and **Copy and open**. The prompt asks the AI to restate your question as an open one framed by the spread's positions and the framework, show that first so you can correct it, and answer it in the closing summary. The question never changes the draw. It names its own last line (`END OF OOTK PROMPT (N positions)`) at the top and asks the AI to say so, rather than interpret, if that line never arrives.
+- **What now.** The report opens with three steps (cards drawn, save the prompt, attach it in your AI). **Save prompt as Markdown (.md)** downloads `attach_this_to_your_ai_seed<seed>.md` (or today's date in place of the seed for cards picked by hand), which you attach in the AI chat with its **+** button. A file gets round the limits AI chats put on pasted text. **Save as PDF (print)** and **Save as JSON** sit beside it. The card of the day (`/today`) saves its prompt the same way. The prompt asks the AI to restate your question as an open one framed by the spread's positions and the framework, show that first so you can correct it, and answer it in the closing summary. The question never changes the draw. It names its own last line (`END OF OOTK PROMPT (N positions)`) at the top and asks the AI to say so, rather than interpret, if that line never arrives.
 - **Summary first.** Then come a short summary, the elemental balance, dignity and aspect totals and the key cards. Each operation is a collapsed section that opens on click, with its drawing and its card, aspect and dignity tables.
 - **Drawings.** Operation 1 is drawn as the 15-card heap inside a triangle (its cards are compared by element only: side-by-side cards in a heap take no astrological aspect), houses and signs as 12-segment wheels (the houses with each house's meaning), and decans as a 36-segment ring, with card images. Switch between **Aspect lines** and **Element pairs**. Layout positions come from `SPREAD_DEFAULT_COORDINATES` in `spreads.py`, the same coordinates the aspects are measured on.
 - **How the cards are linked.** Each operation explains in plain words which cards are compared. Tap a card in a drawing to see its element pairs and aspects, each with its score and reason, in an inspector beside the drawing (below it on phones); tap a partner to jump to it.
