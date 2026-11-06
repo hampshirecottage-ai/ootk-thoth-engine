@@ -338,39 +338,6 @@ def test_report_link_lookup_returns_when_the_reading_was_saved(conn):
         assert db.load_report_by_link(conn, "M" * 22) is None
 
 
-def test_testimonials_one_per_session_and_only_approved_shown(conn):
-    with conn.transaction(force_rollback=True):
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM testimonials;")
-        assert db.save_testimonial(conn, "s" * 22, "Ann", "Clear.", "UA/1", None) is True
-        assert db.save_testimonial(conn, "s" * 22, "Ann", "Again.", "UA/1", None) is False
-        assert db.session_has_testimonial(conn, "s" * 22)
-        assert not db.session_has_testimonial(conn, "t" * 22)
-        assert db.approved_testimonials(conn) == []
-        with conn.cursor() as cur:
-            cur.execute("UPDATE testimonials SET approved = true;")
-        assert db.approved_testimonials(conn) == [{"name": "Ann", "body": "Clear."}]
-
-
-def test_admin_testimonial_queries(conn):
-    with conn.transaction(force_rollback=True):
-        with conn.cursor() as cur:
-            cur.execute("DELETE FROM testimonials;")
-        db.save_testimonial(conn, "a" * 22, "", "One.", None, None)
-        db.save_testimonial(conn, "b" * 22, "Bo", "Two.", None, None)
-        rows = db.list_testimonials(conn)
-        assert [r["body"] for r in rows] == ["Two.", "One."] and "session_id" not in rows[0]
-        db.set_testimonial_approved(conn, rows[1]["testimonial_id"], True)
-        assert db.approved_testimonials(conn) == [{"name": None, "body": "One."}]
-        assert [r["body"] for r in db.list_testimonials(conn)] == ["Two.", "One."]   # waiting first
-        assert db.waiting_testimonials(conn, 7) == 1
-        with conn.cursor() as cur:
-            cur.execute("UPDATE testimonials SET created_at = now() - interval '8 days' WHERE NOT approved;")
-        assert db.waiting_testimonials(conn, 7) == 0                    # older waiting ones don't count
-        db.delete_testimonial(conn, rows[0]["testimonial_id"])
-        assert [r["body"] for r in db.list_testimonials(conn)] == ["One."]
-
-
 @pytest.mark.parametrize("spread, significator, mapping, framework", [
     ("3", None, "thoth", "auto"),
     ("7", None, "golden_dawn", "life_path"),

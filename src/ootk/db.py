@@ -285,55 +285,6 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
         print(f"\n[ERROR] Failed to record session to database: {e}")
         return None
 
-def save_testimonial(conn, session_id, name, body, user_agent=None, ip_hash=None):
-    """Saves a visitor's testimonial, unapproved. Returns False when this session has already
-    sent one (testimonials.session_id is unique)."""
-    with conn.transaction(), conn.cursor() as cur:
-        cur.execute("INSERT INTO testimonials (session_id, name, body, user_agent, ip_hash) "
-                    "VALUES (%s, %s, %s, %s, %s) ON CONFLICT (session_id) DO NOTHING "
-                    "RETURNING testimonial_id;",
-                    (session_id, name or None, body, user_agent or None, ip_hash))
-        return cur.fetchone() is not None
-
-def session_has_testimonial(conn, session_id):
-    """Whether this session has already sent a testimonial."""
-    with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM testimonials WHERE session_id = %s;", (session_id,))
-        return cur.fetchone() is not None
-
-def waiting_testimonials(conn, days):
-    """How many testimonials sent in the last `days` days are waiting for approval."""
-    with conn.cursor() as cur:
-        cur.execute("SELECT count(*) AS n FROM testimonials WHERE NOT approved "
-                    "AND created_at > now() - make_interval(days => %s);", (days,))
-        return cur.fetchone()["n"]
-
-def approved_testimonials(conn):
-    """[{name, body}] of approved testimonials, oldest first.
-    Session details are never read here, so they can't reach a page."""
-    with conn.cursor() as cur:
-        cur.execute("SELECT name, body FROM testimonials WHERE approved "
-                    "ORDER BY testimonial_id;")
-        return [dict(row) for row in cur.fetchall()]
-
-def list_testimonials(conn):
-    """Every testimonial for the admin page, waiting ones first, newest first. Session details
-    are left out: the admin page doesn't need them."""
-    with conn.cursor() as cur:
-        cur.execute("SELECT testimonial_id, created_at AT TIME ZONE 'UTC' AS created_at, name, body, approved "
-                    "FROM testimonials "
-                    "ORDER BY approved, testimonial_id DESC;")
-        return [dict(row) for row in cur.fetchall()]
-
-def set_testimonial_approved(conn, testimonial_id, approved):
-    with conn.transaction(), conn.cursor() as cur:
-        cur.execute("UPDATE testimonials SET approved = %s WHERE testimonial_id = %s;",
-                    (approved, testimonial_id))
-
-def delete_testimonial(conn, testimonial_id):
-    with conn.transaction(), conn.cursor() as cur:
-        cur.execute("DELETE FROM testimonials WHERE testimonial_id = %s;", (testimonial_id,))
-
 def list_sessions(conn, limit, offset=0):
     """(rows, total) for the admin Sessions list, newest first: created_at (UTC), question,
     spread and report link. Web readings keep the question in report_settings; command-line
