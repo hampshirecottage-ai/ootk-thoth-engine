@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Admin" %}
 {% set page_description = "Site admin." %}
-{% set titles = {"sessions": "Sessions", "journal": "Journal", "journal_entry": "Journal"} %}
+{% set titles = {"sessions": "Sessions"} %}
 {% set tagline = titles.get(view, "Testimonials") %}
 {% set active = "" %}
 {% block head %}
@@ -67,13 +67,8 @@
             <nav class="tabs" aria-label="Admin">
                 <a href="/admin"{% if view == "testimonials" %} aria-current="page"{% endif %}>Testimonials</a>
                 <a href="/admin/sessions"{% if view == "sessions" %} aria-current="page"{% endif %}>Sessions</a>
-                <a href="/admin/journal"{% if view in ("journal", "journal_entry") %} aria-current="page"{% endif %}>Journal</a>
             </nav>
-            {% if view == "journal" %}
-            {% include "_admin_journal.html" %}
-            {% elif view == "journal_entry" %}
-            {% include "_admin_journal_entry.html" %}
-            {% elif view == "sessions" %}
+            {% if view == "sessions" %}
             <p class="note">{{ total }} saved reading{{ "" if total == 1 else "s" }}, newest first. Dates are UTC. Questions are private: don't share this page.</p>
             {% if sessions %}
             <div class="table-wrap">

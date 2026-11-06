@@ -229,7 +229,6 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/report/<link>` | A saved reading |
 | `/admin` | Approve, hide or delete testimonials; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
 | `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
-| `/admin/journal` | Private prediction journal: for a real question, your reading and a hidden decoy drawn the same way go to your AI as Reading A and B; after the question settles you write what happened, then pick the better fit blind. Shows how often your reading wins and the chance of that by luck. Same sign-in; needs `database/migrations/add_journal.sql` |
 
 `/?spread=N` opens the start page with that spread chosen.
 
@@ -350,7 +349,7 @@ The repository holds only the engine and reference data. Your own readings stay 
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |
 | `testimonials` | Testimonials sent from `/testimonial`, unapproved until approved at `/admin` |
-| `journal_entries` | The private prediction journal at `/admin/journal`: question, settle-by date, the two seeds, both AI answers, the outcome and the blind pick |
+| `journal_entries` | Left from the retired prediction journal (removed November 2026). Nothing reads it now; it is kept so any saved entries are not lost. Export it before dropping it. |
 
 Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`. Platonic solids, duals and layout coordinates are not stored: the engine works them out from each card's element and from `spreads.py`.
 
