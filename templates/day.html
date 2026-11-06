@@ -80,8 +80,7 @@
                     {% if card.king_scale_color %}<dt>King Scale</dt><dd>{{ card.king_scale_color }}</dd>{% endif %}
                 </dl>
                 <div class="actions">
-                    {% with prompt_source = "promptText" %}{% include "_send_to_llm.html" %}{% endwith %}
-                    <button class="btn secondary" type="button" id="copyPrompt">Copy prompt</button>
+                    <button class="btn" type="button" id="savePrompt" title="Download the prompt as a .md file to attach in your AI">Save prompt as Markdown (.md)</button>
                     <a class="btn secondary" href="{{ reading_url }}">Full report</a>
                 </div>
             </div>
@@ -120,13 +119,13 @@
             root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
             try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
         });
-        document.getElementById("copyPrompt").addEventListener("click", (e) => {
-            const source = document.getElementById("promptText");
-            ootkCopyButton(e.currentTarget, source.textContent, source);
+        document.getElementById("savePrompt").addEventListener("click", () => {
+            const blob = new Blob([document.getElementById("promptText").textContent], {type: "text/markdown"});
+            const a = Object.assign(document.createElement("a"), {href: URL.createObjectURL(blob), download: "attach_this_to_your_ai_{{ day.isoformat() }}.md"});
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         });
     </script>
-    <script src="{{ static_url('js/copy.js') }}" defer></script>
-    <script src="{{ static_url('js/send-to-llm.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>
