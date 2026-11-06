@@ -174,6 +174,16 @@ def test_method_page_shows_the_neighbour_pairing_animation(client):
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 
+def test_method_page_shows_the_own_place_animation(client):
+    page = client.get("/method").text
+    assert "site/own-place.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "own-place.svg").read_text(encoding="utf-8")
+    # twelve cards; the engine finds the 9 of Disks on Virgo and Adjustment on Libra at home
+    assert svg.count('class="k k') == 12 and svg.count('class="hit ') == 2
+    assert ">2 of 12 at home<" in svg and ">chance alone gives 0.77;<" in svg and ">2 or more in 18% of deals<" in svg
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     start = client.get("/").text
