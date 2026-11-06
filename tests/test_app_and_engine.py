@@ -124,6 +124,7 @@ def test_front_page_shows_the_tree_and_zodiac_animation(client):
     assert ">Mars in Aries · 0–10°<" in svg and ">2 of Wands<" in svg
     assert ">Jupiter in Leo · 10–20°<" in svg and ">6 of Wands<" in svg
     assert ">Mars in Pisces · 20–30°<" in svg and ">10 of Cups<" in svg
+    assert 'fill="#FF2400"' in svg and 'fill="#4B0082"' in svg   # King Scale: Aries/Mars scarlet, Saturn indigo
 
 
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):

@@ -8,7 +8,9 @@ table (thoth_cards.key_scale), so The Star is on Path 15 (Heh) and The Emperor o
 The Sephiroth are filled in their Queen Scale colours (Liber 777, the colours the Tree is usually
 painted in), with Malkuth quartered citrine, olive, russet and black.
 
-Zodiac: the 36 decans light up one at a time, counter-clockwise from 0° Aries on the left (as on
+Zodiac: the signs and decans are painted in their King Scale colours (Liber 777, the colours the
+zodiac is traditionally painted in): each sign in its letter's colour, each decan in its ruling
+planet's. The 36 decans light up one at a time, counter-clockwise from 0° Aries on the left (as on
 the Card maps wheel), each with its ruling planet, sign and small card below. Rulers and cards
 come from ootk.atlas (Book T: Chaldean order from Mars, the 2 of Wands on Aries 0-10°), so the
 animation always agrees with the engine.
@@ -54,6 +56,22 @@ CYCLE = Z0 + Z_STEP * 36 + FADE      # Tree, fade, 36 decans, fade, and round ag
 CX, CY = 80, 106
 SIGN_R, DEC_R = (57, 76), (37, 57)
 SIGN_GLYPHS = [g + "\ufe0e" for g in "♈♉♊♋♌♍♎♏♐♑♒♓"]   # text, not emoji
+# King Scale hex as stored in the correspondences table (attributions.king_scale_hex) for each
+# sign's and planet's path: Aries is Heh (Path 15, scarlet) ... Pisces is Qoph (Path 29, crimson);
+# Saturn is Tav (Path 32, indigo), Jupiter Kaph (21, violet), Mars Peh (27, scarlet), the Sun
+# Resh (30, orange), Venus Daleth (14, emerald), Mercury Beth (12, yellow), the Moon Gimel (13, blue).
+SIGN_KING = ["#FF2400", "#FF4500", "#FFA500", "#FFBF00", "#ADFF2F", "#ADFF2F",
+             "#00C957", "#006400", "#0000FF", "#4B0082", "#EE82EE", "#8A2BE2"]
+PLANET_KING = {"Saturn": "#4B0082", "Jupiter": "#EE82EE", "Mars": "#FF2400", "Sun": "#FFA500",
+               "Venus": "#00C957", "Mercury": "#FFFF00", "Moon": "#0000FF"}
+
+
+def ink(hex_colour):
+    """Dark or light text, whichever reads on this colour."""
+    r, g, b = (int(hex_colour[k:k + 2], 16) for k in (1, 3, 5))
+    return "#0f2a1b" if 0.299 * r + 0.587 * g + 0.114 * b > 140 else "#fff"
+
+
 PLANET_GLYPHS = {"Saturn": "♄", "Jupiter": "♃", "Mars": "♂", "Sun": "☉", "Venus": "♀", "Mercury": "☿",
                  "Moon": "☽"}
 
@@ -103,13 +121,13 @@ def build():
         f"@keyframes sc2{{0%{{opacity:0}}{pct(TREE)}{{opacity:0}}{pct(TREE + FADE)}{{opacity:1}}"
         f"{pct(CYCLE - FADE)}{{opacity:1}}100%{{opacity:0}}}}"
         # the wheel: rings in the Tree's path colour, a lit decan in the Tree's lit-path cream
-        f".zs path,.zd path{{fill:#0f2a1b;fill-opacity:.18;stroke:#A7E2C0;stroke-opacity:.45;stroke-width:.8}}"
-        f".zs text{{font:12px serif;fill:#FFE0A0;text-anchor:middle}}"
-        f".zd text{{font:7px serif;fill:#A7E2C0;text-anchor:middle}}"
+        f".zs path,.zd path{{stroke:#0f2a1b;stroke-opacity:.6;stroke-width:.6}}"
+        f".zs text{{font:12px serif;text-anchor:middle}}"
+        f".zd text{{font:7px serif;text-anchor:middle}}"
         f".zl,.zsl,.zc,.zt{{opacity:0}}"
-        f".zl{{animation:dec {CYCLE:.1f}s linear infinite}}.zl path{{fill:#FFE0A0}}"
+        f".zl{{animation:dec {CYCLE:.1f}s linear infinite}}.zl path{{fill:#FFE0A0;stroke:#0f2a1b;stroke-width:.8}}"
         f".zl text{{font:700 7px serif;fill:#0f2a1b;text-anchor:middle}}"
-        f".zsl{{animation:sign {CYCLE:.1f}s linear infinite}}.zsl path{{fill:#FFE0A0;fill-opacity:.3}}"
+        f".zsl{{animation:sign {CYCLE:.1f}s linear infinite}}.zsl path{{fill:none;stroke:#FFE0A0;stroke-width:2.2;stroke-linejoin:round}}"
         f".zc{{animation:sign {CYCLE:.1f}s linear infinite;font:30px serif;fill:#FFE0A0;text-anchor:middle}}"
         f".zt{{animation:zlabel {CYCLE:.1f}s linear infinite;text-anchor:middle;fill:#FFE0A0}}"
         f".zt .g{{font:700 14px serif}}.zt .n{{font:600 9px Inter,system-ui,sans-serif}}"
@@ -161,16 +179,17 @@ def zodiac():
     out = ['<g class="sc2"><g class="zs">']
     mid_s, mid_d = sum(SIGN_R) / 2, sum(DEC_R) / 2
     for i, sign in enumerate(SIGNS):
-        out.append(f'<path d="{sector(*SIGN_R, i * 30, i * 30 + 30)}"><title>{sign}</title></path>')
-        out.append(glyph(mid_s, i * 30 + 15, SIGN_GLYPHS[i]))
+        out.append(f'<path fill="{SIGN_KING[i]}" d="{sector(*SIGN_R, i * 30, i * 30 + 30)}"><title>{sign}</title></path>')
+        out.append(glyph(mid_s, i * 30 + 15, SIGN_GLYPHS[i], f' fill="{ink(SIGN_KING[i])}"'))
     out.append('</g><g class="zd">')
     for i in range(36):
-        out.append(f'<path d="{sector(*DEC_R, i * 10, i * 10 + 10)}"/>')
-        out.append(glyph(mid_d, i * 10 + 5, PLANET_GLYPHS[DECAN_RULERS[i]]))
+        colour = PLANET_KING[DECAN_RULERS[i]]
+        out.append(f'<path fill="{colour}" d="{sector(*DEC_R, i * 10, i * 10 + 10)}"/>')
+        out.append(glyph(mid_d, i * 10 + 5, PLANET_GLYPHS[DECAN_RULERS[i]], f' fill="{ink(colour)}"'))
     out.append("</g>")
     for i in range(12):   # the sign lit for its three decans, with its glyph in the centre
         delay = f' style="animation-delay:{Z0 + i * 3 * Z_STEP:.1f}s"'
-        out.append(f'<g class="zsl"{delay}><path d="{sector(*SIGN_R, i * 30, i * 30 + 30)}"/></g>')
+        out.append(f'<g class="zsl"{delay}><path d="{sector(SIGN_R[0] - 1, SIGN_R[1] - 1, i * 30, i * 30 + 30)}"/></g>')
         out.append(f'<text class="zc"{delay} x="{CX}" y="{CY}" dy="0.35em">{SIGN_GLYPHS[i]}</text>')
     y = CY + SIGN_R[1] + 26
     for i in range(36):
