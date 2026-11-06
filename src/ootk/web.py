@@ -475,7 +475,7 @@ LANDING_PAGES = {
         "spread": "14"},
 }
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
-PUBLIC_PAGES = (["/", "/pick", "/start", "/examples", "/library", "/maps", "/method"]
+PUBLIC_PAGES = (["/", "/pick", "/start", "/library", "/maps", "/method"]
                 + [f"/tarot/{slug}" for slug in LANDING_PAGES])
 
 
@@ -1139,49 +1139,7 @@ def pick_gui(request: Request):
     return settings_page(request, "pick.html", "manual")
 
 
-# ---------- guide pages: start here, examples, library, method ----------
-
-# The examples page: throwaway seeds, smallest spread first. "shows" says what to look at in
-# the report, never what the cards mean; interpreting them is the LLM's job.
-EXAMPLES = [
-    {"spread_key": "1", "seed": "2026-01-01", "title": "One card",
-     "shows": "The smallest reading: one card with its attribution, Hebrew letter and King "
-              "Scale colour. The seed is a date, which is how the card of the day works."},
-    {"spread_key": "2", "seed": "777", "title": "Two cards",
-     "shows": "Two forces side by side, and the one elemental dignity between them."},
-    {"spread_key": "3", "seed": "12345", "title": "Three cards",
-     "shows": "Each neighbouring pair is scored by Book T's friendly and contrary elements."},
-    {"spread_key": "5", "seed": "1909", "title": "Four cards",
-     "shows": "One card for each letter of IHVH and its world, from Atziluth (Fire) down to "
-              "Assiah (Earth)."},
-    {"spread_key": "7", "seed": "10", "title": "Ten cards",
-     "shows": "One card on each Sephira. The report draws the cards on the Tree of Life."},
-    {"spread_key": "9", "seed": "918851", "title": "Twelve cards",
-     "shows": "The Second Operation of the Opening of the Key: the twelve houses drawn as a "
-              "wheel."},
-]
-_examples_cache = {}
-
-
-def example_readings(deck):
-    """EXAMPLES with their links and, when the full deck is loaded, the cards each seed draws.
-    Drawn once per process, like the /start sample."""
-    if "examples" in _examples_cache:
-        return _examples_cache["examples"]
-    full_deck = len(deck) == 78
-    examples = []
-    for ex in EXAMPLES:
-        settings = {"spread_key": ex["spread_key"], "seed": ex["seed"], "framework": "auto",
-                    "significator": "", "mapping_system": DEFAULT_MAPPING}
-        positions = spread_positions(ex["spread_key"])
-        titles = draw_spread(deck, ex["seed"], positions)[0] if full_deck else []
-        examples.append(dict(ex, spread_name=spread_label(ex["spread_key"]),
-                             count=len(positions), url=share_path(settings),
-                             cards=[{"title": t, "name": short_card_name(t)} for t in titles]))
-    if full_deck:
-        _examples_cache["examples"] = examples
-    return examples
-
+# ---------- guide pages: start here, library, method ----------
 
 LIBRARY_FILE = BASE_DIR / "src" / "ootk" / "library.json"
 
@@ -1220,16 +1178,11 @@ def history_page():
     return RedirectResponse("/library#readingTitle", status_code=301)
 
 
-@app.get("/examples", response_class=HTMLResponse)
-def examples_page(request: Request):
-    """Sample readings at fixed seeds, each opening its full report. Without the database the
-    page still lists them, just without naming the cards each seed draws."""
-    try:
-        deck = reference_deck()
-    except psycopg.OperationalError as e:
-        log.warning("examples page without card names: %s", e)
-        deck = []
-    return guide_page(request, "examples.html", examples=example_readings(deck))
+@app.get("/examples")
+def examples_page():
+    """The Examples page was retired in November 2026; the sample reading on Start here
+    stands in for it. Old links and search results land there."""
+    return RedirectResponse("/start#sample", status_code=301)
 
 
 @app.get("/library", response_class=HTMLResponse)
