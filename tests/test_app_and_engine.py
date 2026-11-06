@@ -403,7 +403,7 @@ def test_robots_sitemap_and_favicon(client, monkeypatch):
     assert sitemap.headers["content-type"].startswith("application/xml")
     assert "<loc>https://ootk.example.com/</loc>" in sitemap.text
     assert "<loc>https://ootk.example.com/pick</loc>" in sitemap.text and "/report" not in sitemap.text
-    for path in ("/start", "/history", "/examples", "/library", "/maps", "/method"):
+    for path in ("/start", "/examples", "/library", "/maps", "/method"):
         assert f"<loc>https://ootk.example.com{path}</loc>" in sitemap.text
     assert f"<loc>https://ootk.example.com/day/{app_module.utc_today().isoformat()}</loc>" in sitemap.text
     icon = client.get("/favicon.ico")
@@ -474,7 +474,7 @@ def test_google_site_verification_file(client):
 
 def test_guide_pages_render_and_link_each_other(client, monkeypatch):
     monkeypatch.setattr(app_module, "_examples_cache", {})
-    for path, heading in [("/start", "Your first reading, step by step"), ("/history", "The Golden Dawn"),
+    for path, heading in [("/start", "Your first reading, step by step"),
                           ("/examples", "Open the report"),
                           ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Worth knowing")]:
         page = client.get(path)
@@ -498,32 +498,20 @@ def test_landing_pages_match_their_keywords_and_are_listed(client, monkeypatch):
     assert client.get("/tarot/free-tarot", headers={"accept": "text/html"}).status_code == 404
 
 
-def test_history_page_credits_every_photo_and_links_from_start_here(client):
-    assert 'href="/history"' in client.get("/start").text
-    page = client.get("/history").text
-    assert 'href="/method#art"' in page                                  # links the art explainer, not a copy
-    photos = sorted(p.name for p in (app_module.BASE_DIR / "static" / "history").glob("*.webp"))
-    assert photos, "no history photos"
-    for name in photos:
-        assert f"/static/history/{name}?v=" in page, name               # every photo shown
-    credits = (app_module.BASE_DIR / "static" / "history" / "CREDITS.md").read_text()
-    for name in photos:
-        assert name in credits, name                                    # and credited
+def test_history_page_is_retired_and_forwards_to_further_reading(client):
+    r = client.get("/history", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/library#readingTitle"
+    assert 'href="/history"' not in client.get("/start").text
+    assert 'href="/history"' not in client.get("/library").text      # footer and nav drop it
+    assert "/history" not in client.get("/sitemap.xml").text
 
 
-def test_history_page_describes_the_drawing_ceremony(client):
-    page = client.get("/history").text
-    assert 'id="ceremony"' in page and "The card drawing ceremony" in page
-    assert "I H V H" in page.replace("&nbsp;", " ")                    # Book T's four packs
-    assert 'href="/pick"' in page                                        # hand-drawn alternative
-
-
-def test_further_reading_lives_on_history_not_library(client):
-    history, library = client.get("/history").text, client.get("/library").text
-    assert "Further reading" in history and 'id="readingTitle"' in history
+def test_further_reading_lives_on_library(client):
+    library = client.get("/library").text
+    assert "Further reading" in library and 'id="readingTitle"' in library
     for r in app_module.load_library()["reading"]:
-        assert r["url"] in history and r["url"] not in library
-    assert 'href="/history#readingTitle"' in library                    # library points to it
+        assert r["url"] in library
+    assert 'href="/library#readingTitle"' in client.get("/start").text  # start here points to it
 
 
 def test_start_here_links_preselect_each_spread(client):
@@ -2193,7 +2181,7 @@ def test_database_down_gives_a_retry_page_and_keeps_static_pages(client, monkeyp
     assert r.status_code == 503
     api = client.get("/maps")
     assert api.status_code == 503 and "card database" in api.json()["detail"]
-    for path in ("/start", "/history", "/library", "/method"):
+    for path in ("/start", "/library", "/method"):
         assert client.get(path).status_code == 200, path
     examples = client.get("/examples")                               # listed, without card names
     assert examples.status_code == 200 and "/reading?seed=777" in examples.text

@@ -13,6 +13,8 @@
         dl.terms dd { margin: 2px 0 0; }
         details.spread { border-top: 1px solid var(--line); padding: 8px 0; }
         details.spread summary { cursor: pointer; }
+        ul.reading { padding-left: 20px; margin: 0; }
+        ul.reading li { margin: 6px 0; }
         details.spread ol { margin: 6px 0 4px; padding-left: 24px; font-size: 0.9em; columns: 2 260px; }
     </style>
 {% endblock %}
@@ -42,5 +44,16 @@
             {% endfor %}
         </section>
 
-        <p class="note">Missing a term? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a> and the library grows. Books and background on the decks are in <a href="/history#readingTitle">Further reading</a> on the History page.</p>
+        <section class="panel" aria-labelledby="readingTitle">
+            <h2 id="readingTitle">Further reading</h2>
+            <p class="muted">Books and background on the decks and where they come from.</p>
+            <ul class="reading">
+                {% for r in library.reading %}
+                <li><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.title }}</a>{% if r.by %} <span class="muted">({{ r.by }})</span>{% endif %}. {{ r.note }}</li>
+                {% endfor %}
+            </ul>
+            <p class="note">Know a good source? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a>.</p>
+        </section>
+
+        <p class="note">Missing a term? <a href="{{ contact_url }}" target="_blank" rel="noopener">Suggest one</a> and the library grows.</p>
 {% endblock %}
