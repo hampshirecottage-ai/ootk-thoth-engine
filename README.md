@@ -64,7 +64,7 @@ ootk-thoth-engine/
 │   ├── download_images.py  # Fetch card images into static/images/
 │   ├── optimize_images.py  # Build the WebP copies the web GUI serves
 │   ├── make_site_images.py # Rebuild the favicon and link-preview image in static/site/
-│   ├── make_tree_paths.py  # Rebuild the front page's Tree of Life animation (static/site/tree-paths.svg)
+│   ├── make_front_animation.py  # Rebuild the front page's Tree of Life and zodiac animation (static/site/front-animation.svg)
 │   ├── ai_check.py         # AI answer check, step 1: build the test prompts and truth files
 │   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
 │   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
