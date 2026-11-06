@@ -111,14 +111,19 @@ def test_index_renders(client):
     assert client.get("/").status_code == 200
 
 
-def test_front_page_shows_the_tree_of_life_animation(client):
+def test_front_page_shows_the_tree_and_zodiac_animation(client):
     page = client.get("/").text
-    assert 'class="tree-anim"' in page and "site/tree-paths.svg" in page
-    svg = (PROJECT_ROOT / "static" / "site" / "tree-paths.svg").read_text(encoding="utf-8")
+    assert 'class="tree-anim"' in page and "site/front-animation.svg" in page
+    svg = (PROJECT_ROOT / "static" / "site" / "front-animation.svg").read_text(encoding="utf-8")
     assert svg.count('class="l"') == 22                     # one lit stroke per path
     assert svg.count('<g class="s"') == 10                  # ten Sephiroth
     assert "prefers-reduced-motion" in svg and "<script" not in svg
     assert "15 · Heh · The Star" in svg and "28 · Tzaddi · The Emperor" in svg
+    # the second scene: the 36 decans in Book T order from 0° Aries
+    assert svg.count('<g class="zl"') == 36 and svg.count('<g class="zt"') == 36
+    assert ">Mars in Aries · 0–10°<" in svg and ">2 of Wands<" in svg
+    assert ">Jupiter in Leo · 10–20°<" in svg and ">6 of Wands<" in svg
+    assert ">Mars in Pisces · 20–30°<" in svg and ">10 of Cups<" in svg
 
 
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):

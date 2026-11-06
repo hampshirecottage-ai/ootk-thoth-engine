@@ -33,7 +33,7 @@
         .band #readingForm { grid-column: 2; grid-row: 1 / span 4; align-self: start; max-width: none; }
         .band-more { grid-column: 1; grid-row: 3; align-self: start; }
         .band { row-gap: 0; grid-template-rows: 1fr auto auto 1fr; }
-        /* The Tree of Life animation sits between the text and the form, as tall as the form. */
+        /* The Tree of Life and zodiac animation sits between the text and the form, as tall as the form. */
         .tree-anim { margin: 0; }
         .tree-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
         @media (min-width: 1000px) {
@@ -148,7 +148,7 @@
             </p>
         </div>
         <figure class="tree-anim">
-            <img src="{{ static_url('site/tree-paths.svg') }}" width="160" height="294" alt="The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe).">
+            <img src="{{ static_url('site/front-animation.svg') }}" width="160" height="294" alt="Two diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups.">
         </figure>
     </section>
 
