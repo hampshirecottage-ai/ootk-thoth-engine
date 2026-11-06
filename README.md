@@ -25,7 +25,7 @@ It places the Hebrew letters and the Platonic solids in three-dimensional space 
 - **Three mapping schemes** for tarot-to-Kabbalah attributions: `thoth` (Crowley's swap: the Emperor on Tzaddi, the Star on Heh), `golden_dawn` (the older letters: the Emperor on Heh, the Star on Tzaddi) and `french_egyptian`. The Queen of Wands and Prince of Swords follow the Emperor and the Star. Crowley swapped letters, not signs, so the Liber 777 colour scales and Cube of Space edges stay with the sign (a card's Yetziratic title stays with the path it sits on): under both `thoth` and `golden_dawn` the Emperor and the Queen of Wands (Aries) are Scarlet on the North-East edge, and the Star and the Prince of Swords (Aquarius) Violet on the Upper-South edge. `french_egyptian` Majors take the colour of their French path.
 - **Macro frameworks**: `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem`.
 - **Deterministic PRNG shuffler** (`src/ootk/shuffle.py`), shared by every entry point.
-- **PostgreSQL persistence** of sessions, spreads, card pulls and testimonials.
+- **PostgreSQL persistence** of sessions, spreads and card pulls.
 - **Three interfaces**: CLI (`ootk`), FastAPI web GUI (`ootk.web`), and a Rich terminal viewer for saved reports (`scripts/view_output.py`).
 
 ---
@@ -128,8 +128,7 @@ Everything else is optional:
 | Variable | What it does | Default |
 |---|---|---|
 | `APP_PASSWORD` | Every web page asks for this password | off |
-| `ADMIN_PASSWORD` | Turns on `/admin` for approving testimonials and listing saved readings | off (no `/admin` page) |
-| `VISITOR_HASH_KEY` | Stores a keyed hash of a testimonial sender's IP address (never the address itself) | off |
+| `ADMIN_PASSWORD` | Turns on `/admin` for listing saved readings | off (no `/admin` page) |
 | `SITE_URL` | Public address used in link previews, `robots.txt` and `sitemap.xml` | Render's address, then the request's |
 | `DB_CONNECT_TIMEOUT` | Seconds to wait for the database before showing the "database down" page | `10` |
 | `DB_QUERY_TIMEOUT` | Seconds one database query may take (including waiting on a migration's lock, or a connection that went silent) before it gives up; a reading that can't be saved in time is still shown, with a notice | `15` |
@@ -218,17 +217,16 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 
 | Address | What it is |
 |---|---|
-| `/` | Start page: the banner, the form and the testimonial of the day |
+| `/` | Start page: the banner and the form |
 | `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
 | `/start` | Start here, in folded sections: what OOTK does best, your first reading step by step, a sample Opening of the Key, learning stages, and where the cards come from |
 | `/library` | Glossary (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
 | `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
 | `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
-| `/testimonial` | Send a testimonial (one per visitor session); the start page shows one approved testimonial a day |
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
 | `/report/<link>` | A saved reading |
-| `/admin` | Approve, hide or delete testimonials; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
+| `/admin` | Admin sign-in, then on to `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
 | `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
 
 `/?spread=N` opens the start page with that spread chosen.
@@ -285,15 +283,11 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `fix_court_paths.sql` | Queen of Wands and Prince of Swords on the same paths as the Emperor and the Star; four court descriptions |
 | `fix_correspondence_audit.sql` | Six Cube of Space edges as Paul Case gives them, axis directions, French Magus and Priestess planets |
 | `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
-| `add_testimonials.sql` | Testimonials (without it the start page shows none and the testimonial pages ask for the update); lists the approve queries |
+| `add_testimonials.sql` | Testimonials table (the feature was retired in November 2026; the table is kept so old entries are not lost) |
 | `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
 | `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
-
-### Testimonials
-
-New testimonials from `/testimonial` are saved unapproved. With `ADMIN_PASSWORD` set, sign in at `/admin` to approve, hide or delete them (wrong passwords lock out like `APP_PASSWORD`). Without it, approve one with `UPDATE testimonials SET approved = true WHERE testimonial_id = <id>;`. Each is stored with a random session id from a cookie, the time and the browser's user agent, plus a keyed IP hash when `VISITOR_HASH_KEY` is set. Approved testimonials take turns by date and reach the start page within five minutes. Spam guards: a hidden field bots fill in, a check that drops forms sent within 3 seconds of opening, one per session, three per address an hour, and a pause on new testimonials while 50 sent in the last week are waiting (hidden ones count as waiting, so delete spam rather than hiding it).
 
 ### Sanity-check a full run
 
@@ -349,7 +343,7 @@ The repository holds only the engine and reference data. Your own readings stay 
 | `tarot_sessions` | One row per reading (operation, significator, notes, and `report_settings` with the report link) |
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |
-| `testimonials` | Testimonials sent from `/testimonial`, unapproved until approved at `/admin` |
+| `testimonials` | Left from the retired testimonials feature (removed November 2026). Nothing reads it now; export it before dropping it. |
 | `journal_entries` | Left from the retired prediction journal (removed November 2026). Nothing reads it now; it is kept so any saved entries are not lost. Export it before dropping it. |
 
 Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`. Platonic solids, duals and layout coordinates are not stored: the engine works them out from each card's element and from `spreads.py`.

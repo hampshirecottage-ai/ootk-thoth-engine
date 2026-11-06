@@ -29,9 +29,8 @@ from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import WITHHELD_MAX, derive_primary_element, king_scale_hex, withheld_summary
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
-    DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, approved_testimonials, env_int, delete_testimonial, fetch_all_cards, fetch_cards_correspondences,
-    connect, list_sessions, list_testimonials, load_report_by_link, save_spread_session, save_testimonial,
-    session_has_testimonial, set_testimonial_approved, waiting_testimonials,
+    DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, env_int, fetch_all_cards, fetch_cards_correspondences,
+    connect, list_sessions, load_report_by_link, save_spread_session,
 )
 from ootk.lockout import FailedLogins
 from ootk.birth_cards import parse_birth_cards
@@ -307,7 +306,7 @@ app.add_middleware(HeadAsGet)
 
 
 def is_private_path(path: str) -> bool:
-    return (path.startswith(("/report/", "/admin")) or path in ("/generate_report", "/testimonial"))
+    return (path.startswith(("/report/", "/admin")) or path == "/generate_report")
 
 
 class RedactReportLinks(logging.Filter):
@@ -712,7 +711,7 @@ def check_lengths(**fields):
 
 def refuse_nul(**fields):
     """400 for a NUL character, which PostgreSQL can't store in text: without this check the
-    reading or testimonial would fail to save. Only a hand-made request can send one."""
+    reading would fail to save. Only a hand-made request can send one."""
     for name, value in fields.items():
         if "\x00" in value:
             raise HTTPException(status_code=400, detail=f"The {name.replace('_', ' ')} field contains "
@@ -1052,15 +1051,12 @@ def share_path(settings) -> str:
 def settings_page(request: Request, name: str, mode: str):
     """Sync endpoint body: FastAPI executes in threadpool to prevent blocking the event loop."""
     cards = reference_deck()
-    testimonial = testimonial_of_the_day() if mode == "seed" else None
     return templates.TemplateResponse(
         request=request,
         name=name,
         context={
             "cards": cards,
             "mode": mode,
-            "testimonial": testimonial,
-            "show_testimonials": mode == "seed",
             "spreads": SPREADS,
             "positions": dict({key: spread_positions(key) for key in SPREADS}, **{BOOK_T_KEY: BOOK_T_PREVIEW}),
             "book_t_subjects": book_t.SUBJECTS,
@@ -1570,144 +1566,13 @@ def card_of_the_day(request: Request, day: str):
     )
 
 
-# ---------- testimonials ----------
-
-TESTIMONIAL_MAX = 600
-TESTIMONIAL_NAME_MAX = 60
-USER_AGENT_MAX = 200
-# A random id per browser, kept for a year, so each visitor session sends at most one
-# testimonial. Only /testimonial sets it; it carries nothing but the id.
-SESSION_COOKIE = "ootk_session"
-SESSION_ID = re.compile(r"[A-Za-z0-9_-]{22}")
-SESSION_MAX_AGE = 365 * 24 * 3600
-# Approvals reach the front page within this many seconds, without a database query per visit.
-TESTIMONIAL_CACHE_SECONDS = 300
-# While the database is unreachable, the front page waits this long before trying it again.
-# Every other part of the page comes from memory, so it stays instant during an outage.
-TESTIMONIAL_RETRY_SECONDS = 60
-_testimonial_cache = {}
-# Clearing cookies starts a new session, so one address may send at most three an hour.
-testimonial_senders = FailedLogins(attempts=3, window=3600)
-# The form carries the time it was opened. Anything sent sooner than this, or without that time,
-# came from a bot: nobody reads the form and writes a testimonial that fast.
-TESTIMONIAL_MIN_SECONDS = 3
-# While this many testimonials sent in the last week are waiting for approval, the form takes
-# no more, so a flood can't bury /admin. Older waiting (or hidden) ones don't count.
-TESTIMONIAL_WAITING_MAX = 50
-TESTIMONIAL_WAITING_DAYS = 7
+@app.get("/testimonial")
+def testimonial_page():
+    """Testimonials were retired in November 2026. Old links land on the start page."""
+    return RedirectResponse("/", status_code=301)
 
 
-def visitor_session(request: Request) -> str | None:
-    sid = request.cookies.get(SESSION_COOKIE, "")
-    return sid if SESSION_ID.fullmatch(sid) else None
-
-
-def with_session_cookie(request: Request, response, sid: str):
-    response.set_cookie(SESSION_COOKIE, sid, max_age=SESSION_MAX_AGE, httponly=True,
-                        samesite="lax", secure=request.url.scheme == "https")
-    return response
-
-
-def visitor_hash(request: Request) -> str | None:
-    """A keyed hash of the visitor's IP address, so repeat senders can be spotted without
-    storing the address. None unless VISITOR_HASH_KEY is set: an unkeyed hash of an IPv4
-    address can be reversed by trying them all."""
-    key = os.getenv("VISITOR_HASH_KEY")
-    if not key:
-        return None
-    return hmac.new(key.encode(), visitor_address(request).encode(), hashlib.sha256).hexdigest()
-
-
-def sent_too_fast(opened: str) -> bool:
-    """Whether a testimonial form came back sooner than a person could fill it in, or without
-    the time it was opened (a bot posting straight to /testimonial)."""
-    try:
-        seconds = time.time() - int(opened)
-    except ValueError:
-        return True
-    return not TESTIMONIAL_MIN_SECONDS <= seconds
-
-
-def testimonial_of_the_day():
-    """One approved testimonial, the same for everyone all day (UTC): they take turns in the
-    order they were sent. None when none is approved or the database can't be read, so the
-    front page never fails because of it."""
-    today = utc_today()
-    cached = _testimonial_cache.get("day")
-    if cached and cached[0] == today and time.monotonic() < cached[1]:
-        return cached[2]
-    try:
-        with get_db_connection() as conn:
-            approved = approved_testimonials(conn)
-    except psycopg.Error as e:
-        log.warning("testimonials unavailable: %s", e)
-        _testimonial_cache["day"] = (today, time.monotonic() + TESTIMONIAL_RETRY_SECONDS, None)
-        return None
-    pick = approved[today.toordinal() % len(approved)] if approved else None
-    _testimonial_cache["day"] = (today, time.monotonic() + TESTIMONIAL_CACHE_SECONDS, pick)
-    return pick
-
-
-def testimonial_page(request: Request, sid: str, status: int = 200, **context):
-    response = guide_page(request, "testimonial.html", max_body=TESTIMONIAL_MAX,
-                          max_name=TESTIMONIAL_NAME_MAX, opened=int(time.time()), **context)
-    response.status_code = status
-    return with_session_cookie(request, response, sid)
-
-
-@app.get("/testimonial", response_class=HTMLResponse)
-def testimonial_form(request: Request):
-    """The form for a testimonial, or a thank-you once this session has sent one."""
-    sid = visitor_session(request)
-    sent = False
-    if sid:
-        with get_db_connection() as conn:
-            sent = session_has_testimonial(conn, sid)
-    return testimonial_page(request, sid or secrets.token_urlsafe(16), sent=sent)
-
-
-@app.post("/testimonial", response_class=HTMLResponse)
-def send_testimonial(request: Request, body: str = Form(""), name: str = Form(""),
-                     website: str = Form(""), opened: str = Form("")):
-    """Saves a testimonial, unapproved, with this session's id. One per session: a second one
-    is refused. `website` is a field people never see; bots that fill it in are ignored, and so
-    are bots that send the form within seconds of opening it (`opened`). Either way the bot is
-    thanked, so it can't tell it was caught."""
-    sid = visitor_session(request) or secrets.token_urlsafe(16)
-    body, name = body.strip(), " ".join(name.split())
-    if website or sent_too_fast(opened):
-        return testimonial_page(request, sid, sent=True)
-    error = None
-    if not body:
-        error = "Please write a few words before sending."
-    elif "\x00" in body + name:
-        error = "The text contains a character that can't be saved. Please retype it."
-    elif len(body) > TESTIMONIAL_MAX:
-        error = f"Please keep it to {TESTIMONIAL_MAX} characters (this one has {len(body)})."
-    elif len(name) > TESTIMONIAL_NAME_MAX:
-        error = f"Please keep the name to {TESTIMONIAL_NAME_MAX} characters."
-    if error:
-        return testimonial_page(request, sid, status=400, error=error, given_body=body, given_name=name)
-    visitor = visitor_address(request)
-    if testimonial_senders.retry_after(visitor):
-        return testimonial_page(request, sid, status=429, given_body=body, given_name=name,
-                                error="Several testimonials have come from here recently. "
-                                      "Please try again in an hour.")
-    user_agent = request.headers.get("user-agent", "")[:USER_AGENT_MAX]
-    with get_db_connection() as conn:
-        if waiting_testimonials(conn, TESTIMONIAL_WAITING_DAYS) >= TESTIMONIAL_WAITING_MAX:
-            log.warning("testimonial refused: %d already waiting for approval", TESTIMONIAL_WAITING_MAX)
-            return testimonial_page(request, sid, status=429, given_body=body, given_name=name,
-                                    error="A lot of testimonials are waiting to be read, so new ones "
-                                          "are paused for now. Please try again in a few days.")
-        saved = save_testimonial(conn, sid, name, body, user_agent, visitor_hash(request))
-    if saved:
-        testimonial_senders.failed(visitor)
-        log.info("testimonial received, waiting for approval")
-    return testimonial_page(request, sid, sent=True, just_sent=saved)
-
-
-# ---------- admin: approving testimonials ----------
+# ---------- admin: saved readings ----------
 
 # /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
 # doesn't exist (404). Signing in sets a cookie derived from the password, so changing the
@@ -1742,13 +1607,10 @@ def admin_page(request: Request, status: int = 200, **context):
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_home(request: Request):
-    """Sign-in form, or every testimonial with approve, hide and delete buttons."""
+    """Sign-in form, or on to the saved readings once signed in."""
     if not is_admin(request):
         return admin_page(request, signed_in=False)
-    with get_db_connection() as conn:
-        rows = list_testimonials(conn)
-    return admin_page(request, signed_in=True, view="testimonials", testimonials=rows,
-                      waiting=sum(not t["approved"] for t in rows))
+    return RedirectResponse("/admin/sessions", status_code=303)
 
 
 SESSIONS_PER_PAGE = 100
@@ -1794,24 +1656,6 @@ def admin_logout(request: Request):
     response = RedirectResponse("/admin", status_code=303)
     response.delete_cookie(ADMIN_COOKIE, path="/admin")
     return response
-
-
-ADMIN_ACTIONS = {"approve", "hide", "delete"}
-
-
-@app.post("/admin/testimonials/{testimonial_id}")
-def admin_testimonial(request: Request, testimonial_id: int, action: str = Form("")):
-    if not is_admin(request):
-        raise HTTPException(status_code=403, detail="Sign in at /admin first.")
-    if action not in ADMIN_ACTIONS:
-        raise HTTPException(status_code=400, detail="Unknown action.")
-    with get_db_connection() as conn:
-        if action == "delete":
-            delete_testimonial(conn, testimonial_id)
-        else:
-            set_testimonial_approved(conn, testimonial_id, action == "approve")
-    _testimonial_cache.clear()          # the front page picks the change up straight away
-    return RedirectResponse("/admin", status_code=303)
 
 
 NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "

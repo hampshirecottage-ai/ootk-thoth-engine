@@ -4,12 +4,10 @@ Needs: pip install -e ".[dev]"
 import html
 import json
 import re
-import time
 from contextlib import nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 
-import psycopg
 import pytest
 
 from ootk import analysis, db, report, shuffle, spreads
@@ -33,10 +31,6 @@ def fake_card(title, suit="Wands", arcana="Minor", attribution="Fire"):
         "dual_solid": "Tetrahedron", "topological_role": "Node",
     }
 
-# A testimonial form opened a minute ago, as a person would send it.
-OPENED = {"opened": str(int(time.time()) - 60)}
-
-
 @pytest.fixture
 def client(monkeypatch):
     """App client with the database fully mocked out."""
@@ -55,38 +49,9 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "fetch_cards_correspondences", fake_fetch)
     monkeypatch.setattr(app_module, "_reference_cache", {})
     monkeypatch.setattr(app_module, "failed_logins", FailedLogins())
-    testimonials = []
-
-    def fake_save_testimonial(conn, session_id, name, body, user_agent=None, ip_hash=None):
-        if any(t["session_id"] == session_id for t in testimonials):
-            return False
-        testimonials.append(dict(session_id=session_id, name=name, body=body, approved=False,
-                                 user_agent=user_agent, ip_hash=ip_hash))
-        return True
-
-    monkeypatch.setattr(app_module, "_testimonial_cache", {})
-    monkeypatch.setattr(app_module, "testimonial_senders", FailedLogins(attempts=3, window=3600))
-    monkeypatch.setattr(app_module, "save_testimonial", fake_save_testimonial)
-    monkeypatch.setattr(app_module, "session_has_testimonial",
-                        lambda conn, sid: any(t["session_id"] == sid for t in testimonials))
-    monkeypatch.setattr(app_module, "waiting_testimonials",
-                        lambda conn, days: sum(not t["approved"] for t in testimonials))
     monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
     monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=60, window=600))
-
-    def fake_list(conn):
-        from datetime import datetime
-        return [dict(t, testimonial_id=i + 1, created_at=datetime(2026, 10, 4, 21, 0))
-                for i, t in enumerate(testimonials)]
-
-    def fake_set_approved(conn, tid, approved):
-        testimonials[tid - 1]["approved"] = approved
-
-    monkeypatch.setattr(app_module, "list_testimonials", fake_list)
-    monkeypatch.setattr(app_module, "set_testimonial_approved", fake_set_approved)
-    monkeypatch.setattr(app_module, "delete_testimonial", lambda conn, tid: testimonials.pop(tid - 1))
-    monkeypatch.setattr(app_module, "approved_testimonials",
-                        lambda conn: [{"name": t["name"], "body": t["body"]} for t in testimonials if t["approved"]])
+    monkeypatch.setattr(app_module, "list_sessions", lambda conn, limit, offset=0: ([], 0))
     # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
     monkeypatch.setattr(app_module, "card_rows", lambda titles, system: fake_fetch(None, titles, system))
 
@@ -109,7 +74,6 @@ def client(monkeypatch):
     c.saved = saved
     c.lookups = lookups
     c.systems = systems
-    c.testimonials = testimonials
     return c
 
 
@@ -1344,7 +1308,7 @@ def test_start_here_sections_fold_with_only_the_first_reading_open(client, monke
 
 def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_report(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
-    assert "Today&rsquo;s card" not in client.get("/").text   # replaced by the testimonial
+    assert "Today&rsquo;s card" not in client.get("/").text
     page = client.get("/start").text
     link = "/reading?seed=12345&spread=12&system=thoth&significator=Queen+of+Cups"
     assert f'href="{link.replace("&", "&amp;")}"' in page
@@ -1352,13 +1316,14 @@ def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_repor
     assert client.get("/today", follow_redirects=False).status_code == 307   # still its own page
 
 
-# ---------- testimonials ----------
+# ---------- testimonials (retired) ----------
 
-def test_testimonial_is_asked_for_on_the_report_not_the_front_page(client):
-    page = client.get("/").text
-    assert 'href="/testimonial"' not in page and "Testimonial of the day" not in page
-    assert 'href="/testimonial"' not in client.get("/pick").text
-    assert 'href="/testimonial"' in post(client).text
+def test_testimonials_are_retired(client):
+    r = client.get("/testimonial", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/"
+    assert client.post("/testimonial", data={"body": "hi"}).status_code == 405
+    for page in (client.get("/").text, post(client).text):
+        assert "/testimonial" not in page and "Testimonial of the day" not in page
 
 
 def test_question_box_comes_first_and_wraps(client):
@@ -1367,147 +1332,30 @@ def test_question_box_comes_first_and_wraps(client):
     assert '<textarea name="topic" id="topicInput"' in page
 
 
-def test_testimonial_is_saved_unapproved_with_its_session(client, monkeypatch):
-    monkeypatch.setenv("VISITOR_HASH_KEY", "k")
-    form = client.get("/testimonial")
-    sid = form.cookies.get("ootk_session")
-    assert form.status_code == 200 and len(sid) == 22 and 'name="body"' in form.text
-    assert form.headers["cache-control"] == "no-store"
-    r = client.post("/testimonial", data={**OPENED, "body": "  Clear and thorough.  ", "name": " Sam  R "},
-                    headers={"user-agent": "TestBrowser/1.0"})
-    assert r.status_code == 200 and "Thank you" in r.text
-    [t] = client.testimonials
-    assert t == {"session_id": sid, "name": "Sam R", "body": "Clear and thorough.", "approved": False,
-                 "user_agent": "TestBrowser/1.0", "ip_hash": t["ip_hash"]}
-    assert len(t["ip_hash"]) == 64 and "testclient" not in t["ip_hash"]   # keyed hash, never the address
-    assert "Clear and thorough" not in client.get("/").text            # not shown until approved
-
-
-def test_one_testimonial_per_session(client):
-    client.post("/testimonial", data={**OPENED, "body": "first"})
-    r = client.post("/testimonial", data={**OPENED, "body": "second"})
-    assert "already shared one" in r.text and len(client.testimonials) == 1
-    assert "already shared one" in client.get("/testimonial").text
-    client.cookies.clear()                                             # a new session may send one
-    client.post("/testimonial", data={**OPENED, "body": "other visitor"})
-    assert len(client.testimonials) == 2
-
-
-def test_one_address_sends_at_most_three_an_hour(client):
-    for n in range(3):
-        client.cookies.clear()
-        assert "Thank you" in client.post("/testimonial", data={**OPENED, "body": f"t{n}"}).text
-    client.cookies.clear()
-    r = client.post("/testimonial", data={**OPENED, "body": "t3"})
-    assert r.status_code == 429 and "try again in an hour" in r.text and len(client.testimonials) == 3
-
-
-def test_no_ip_hash_without_a_key(client, monkeypatch):
-    monkeypatch.delenv("VISITOR_HASH_KEY", raising=False)
-    client.post("/testimonial", data={**OPENED, "body": "hello"})
-    assert client.testimonials[0]["ip_hash"] is None
-
-
-@pytest.mark.parametrize("data, message", [
-    ({"body": "   "}, "write a few words"),
-    ({"body": "x" * 601}, "600 characters"),
-    ({"body": "ok", "name": "n" * 61}, "60 characters"),
-])
-def test_bad_testimonials_are_refused_and_kept_in_the_form(client, data, message):
-    r = client.post("/testimonial", data={**OPENED, **data})
-    assert r.status_code == 400 and message in r.text and client.testimonials == []
-
-
-def test_honeypot_field_drops_bot_testimonials(client):
-    r = client.post("/testimonial", data={**OPENED, "body": "buy now", "website": "http://spam"})
-    assert r.status_code == 200 and client.testimonials == []
-
-
-def test_form_carries_the_time_it_was_opened(client):
-    [opened] = re.findall(r'name="opened" value="(\d+)"', client.get("/testimonial").text)
-    assert abs(int(opened) - time.time()) < 5
-
-
-@pytest.mark.parametrize("opened", ["", "soon", 0, 3600])
-def test_testimonials_sent_too_fast_or_without_a_time_are_dropped(client, opened):
-    if isinstance(opened, int):                                        # seconds from now
-        opened = str(int(time.time()) + opened)
-    r = client.post("/testimonial", data={"body": "buy now", "opened": opened})
-    assert r.status_code == 200 and "Thank you" in r.text and client.testimonials == []
-
-
-def test_form_pauses_while_too_many_wait_for_approval(client, monkeypatch):
-    monkeypatch.setattr(app_module, "TESTIMONIAL_WAITING_MAX", 2)
-    monkeypatch.setattr(app_module, "testimonial_senders", FailedLogins(attempts=10, window=3600))
-    for n in range(2):
-        client.cookies.clear()
-        client.post("/testimonial", data={**OPENED, "body": f"t{n}"})
-    client.cookies.clear()
-    r = client.post("/testimonial", data={**OPENED, "body": "third", "name": "Cy"})
-    assert r.status_code == 429 and "paused for now" in r.text and "third" in r.text
-    assert len(client.testimonials) == 2
-    client.testimonials[0]["approved"] = True                         # approving one frees a place
-    assert "Thank you" in client.post("/testimonial", data={**OPENED, "body": "third"}).text
-    assert len(client.testimonials) == 3
-
-
-def test_testimonial_of_the_day_rotates_by_date_and_is_escaped(client, monkeypatch):
-    from datetime import date
-    client.testimonials.extend([
-        {"session_id": "a", "name": "Ann", "body": "First <b>one</b>", "approved": True},
-        {"session_id": "b", "name": "", "body": "Second one", "approved": True},
-        {"session_id": "c", "name": "Spam", "body": "Unapproved", "approved": False},
-    ])
-    day = date(2026, 10, 4)
-    monkeypatch.setattr(app_module, "utc_today", lambda: day)
-    page = client.get("/").text
-    expected = ["First &lt;b&gt;one&lt;/b&gt;", "Second one"][day.toordinal() % 2]
-    assert "Testimonial of the day" in page and expected in page and "Unapproved" not in page
-    assert "<b>one</b>" not in page
-    day = date(2026, 10, 5)
-    monkeypatch.setattr(app_module, "utc_today", lambda: day)
-    other = ["First &lt;b&gt;one&lt;/b&gt;", "Second one"][day.toordinal() % 2]
-    assert other != expected and other in client.get("/").text
-
-
 def test_admin_page_does_not_exist_without_a_password(client, monkeypatch):
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
     assert client.get("/admin").status_code == 404
     assert client.post("/admin/login", data={"password": ""}).status_code == 404
-    assert client.post("/admin/testimonials/1", data={"action": "approve"}).status_code == 404
 
 
 def test_admin_is_linked_from_nowhere(client, monkeypatch):
     monkeypatch.setenv("ADMIN_PASSWORD", "secret")
-    for path in ["/", "/start", "/testimonial", "/robots.txt", "/sitemap.xml"]:
+    for path in ["/", "/start", "/robots.txt", "/sitemap.xml"]:
         assert "/admin" not in client.get(path).text, path
 
 
-def test_admin_signs_in_and_approves_hides_and_deletes(client, monkeypatch):
+def test_admin_signs_in_and_out(client, monkeypatch):
     monkeypatch.setenv("ADMIN_PASSWORD", "secret")
-    client.post("/testimonial", data={**OPENED, "body": "Waiting one", "name": "Ann"})
     page = client.get("/admin")
-    assert 'name="password"' in page.text and "Waiting one" not in page.text
+    assert 'name="password"' in page.text
     assert page.headers["cache-control"] == "no-store" and "noindex" in page.text
-    # Not signed in: the buttons do nothing.
-    assert client.post("/admin/testimonials/1", data={"action": "approve"}).status_code == 403
-    assert client.testimonials[0]["approved"] is False
     r = client.post("/admin/login", data={"password": "wrong"})
     assert r.status_code == 401 and "isn&#39;t right" in r.text
     r = client.post("/admin/login", data={"password": "secret"}, follow_redirects=False)
     assert r.status_code == 303 and "samesite=strict" in r.headers["set-cookie"].lower()
-    page = client.get("/admin").text
-    assert "Waiting one" in page and "1 waiting for approval" in page
-    assert client.testimonials[0]["session_id"] not in page             # session info stays private
-    client.get("/")                                                       # caches "nothing approved"
-    client.post("/admin/testimonials/1", data={"action": "approve"})
-    assert client.testimonials[0]["approved"] is True
-    assert "Waiting one" in client.get("/").text                          # shown straight away
-    client.post("/admin/testimonials/1", data={"action": "hide"})
-    assert client.testimonials[0]["approved"] is False
-    assert client.post("/admin/testimonials/1", data={"action": "nonsense"}).status_code == 400
-    client.post("/admin/testimonials/1", data={"action": "delete"})
-    assert client.testimonials == []
+    r = client.get("/admin", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/admin/sessions"
+    assert "0 saved readings" in client.get("/admin").text
     client.post("/admin/logout")
     assert 'name="password"' in client.get("/admin").text
 
@@ -1535,7 +1383,7 @@ def test_admin_sessions_lists_readings_only_when_signed_in(client, monkeypatch):
     page = client.get("/admin/sessions")
     assert 'name="password"' in page.text and "Will" not in page.text and seen == []
     assert page.headers["cache-control"] == "no-store" and "noindex" in page.text
-    client.post("/admin/login", data={"password": "secret"})
+    client.post("/admin/login", data={"password": "secret"}, follow_redirects=False)
     page = client.get("/admin/sessions?page=2")
     assert page.status_code == 200 and seen == [(100, 100)]
     text = page.text
@@ -1543,7 +1391,7 @@ def test_admin_sessions_lists_readings_only_when_signed_in(client, monkeypatch):
     assert '/report/abc_DEF-123' in text and "15 Oct 2026, 09:30" in text and "No question" in text
     assert "250 saved readings" in text and "Page 2 of 3" in text
     assert "/admin/sessions?page=1" in text and "/admin/sessions?page=3" in text
-    assert 'href="/admin/sessions"' in client.get("/admin").text                # tab on the testimonials view
+    assert 'href="/admin/sessions"' in client.get("/admin").text                # signed in: /admin opens it
     client.get("/admin/sessions?page=0")
     assert seen[-1] == (100, 0)
 
@@ -1558,25 +1406,6 @@ def test_wrong_admin_passwords_lock_the_visitor_out(client, monkeypatch):
     codes = [client.post("/admin/login", data={"password": "x"}).status_code for _ in range(10)]
     assert codes[-1] == 429
     assert client.post("/admin/login", data={"password": "secret"}).status_code == 429
-
-
-def test_front_page_survives_a_testimonial_database_error(client, monkeypatch):
-    calls = []
-
-    def broken(conn):
-        calls.append(1)
-        raise psycopg.OperationalError("down")
-    monkeypatch.setattr(app_module, "approved_testimonials", broken)
-    assert client.get("/").status_code == 200
-    # The failure is remembered: further visits don't wait on the database again.
-    assert client.get("/").status_code == 200 and len(calls) == 1
-    day, retry_at, pick = app_module._testimonial_cache["day"]
-    assert pick is None and retry_at - time.monotonic() <= app_module.TESTIMONIAL_RETRY_SECONDS
-
-
-def test_testimonial_with_a_nul_character_is_refused(client):
-    r = client.post("/testimonial", data={**OPENED, "body": "hi\x00there"})
-    assert r.status_code == 400 and client.testimonials == []
 
 
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
