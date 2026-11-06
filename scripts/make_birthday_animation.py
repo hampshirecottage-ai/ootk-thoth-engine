@@ -26,13 +26,15 @@ from make_aspects_animation import CX, CY, R_IN, R_OUT, at, keyframes, sector  #
 from make_front_animation import SIGN_GLYPHS, SIGN_KING, ink  # noqa: E402
 
 from ootk import PROJECT_ROOT  # noqa: E402
-from ootk.significator import BIRTH_SPANS, MONTHS, SPAN_SIGNS, card_for_birthday  # noqa: E402
+from ootk.significator import BIRTH_SPANS as SPANS  # noqa: E402
+from ootk.significator import MONTHS, SPAN_SIGNS  # noqa: E402
+from ootk.significator import card_for_birthday as court_on  # noqa: E402
 
 OUT = PROJECT_ROOT / "static" / "site" / "birthday-significator.svg"
 
 SIGNS = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio",
          "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
-BIRTHDAYS = [(7, 14), (2, 5)]       # the examples: 14 July, then 5 February
+EXAMPLE_DATES = [(7, 14), (2, 5)]       # the examples: 14 July, then 5 February
 W, H = 160, 294
 CREAM, INK, LINE = "#FFE0A0", "#0f2a1b", "#A7E2C0"
 R_SPAN = (36, R_IN - 1)             # the court ring, just inside the signs
@@ -57,10 +59,10 @@ def span_start(i):
 def sun_degree(month, day):
     """The Sun's place (degrees from 0 Aries) on a date, read off the span it falls in."""
     d = date(2001, month, day)
-    title = card_for_birthday(month, day)
-    i = next(n for n, (_, t) in enumerate(BIRTH_SPANS) if t == title)
-    first = date(2001, *BIRTH_SPANS[i][0])
-    nxt = date(2001, *BIRTH_SPANS[(i + 1) % 12][0])
+    title = court_on(month, day)
+    i = next(n for n, (_, t) in enumerate(SPANS) if t == title)
+    first = date(2001, *SPANS[i][0])
+    nxt = date(2001, *SPANS[(i + 1) % 12][0])
     if d < first:
         first = first.replace(year=2000)
     if nxt <= first:
@@ -69,7 +71,7 @@ def sun_degree(month, day):
 
 
 def build():
-    assert card_for_birthday(7, 14) == "Prince of Wands" and card_for_birthday(2, 5) == "Prince of Swords"
+    assert court_on(7, 14) == "Prince of Wands" and court_on(2, 5) == "Prince of Swords"
     timed, spans, marks, caps = [], [], [], []
     t = 0.4
 
@@ -80,7 +82,7 @@ def build():
                     f'<text class="n" x="{W / 2}" y="250">{line2}</text></g>')
 
     # the court spans, round the wheel from the Prince of Swords
-    for i, (_, title) in enumerate(BIRTH_SPANS):
+    for i, (_, title) in enumerate(SPANS):
         a = span_start(i)
         timed.append((f"s{i}", t + SPAN_EACH * i, None, False))
         x, y = at(sum(R_SPAN) / 2, a + 15)
@@ -92,9 +94,9 @@ def build():
 
     # the Sun to each birthday, and the card it falls under
     sun_frames, last = [], 0.0
-    for b, (m, d) in enumerate(BIRTHDAYS):
+    for b, (m, d) in enumerate(EXAMPLE_DATES):
         deg, i = sun_degree(m, d)
-        title = card_for_birthday(m, d)
+        title = court_on(m, d)
         sign, within = SIGNS[int(deg // 30)], deg % 30
         cap(f"b{b}", t, t + MOVE, f"Born {d} {MONTHS[m - 1]}", f"the Sun is near {within:.0f}° {sign}")
         sun_frames.append((t, last, t + MOVE, deg if deg > last else deg + 360))
@@ -103,8 +105,8 @@ def build():
         a = span_start(i)
         timed.append((f"h{b}", on, off, False))
         marks.append(f'<path class="hi h{b}" d="{sector(*R_SPAN, a, a + 30)}"/>')
-        first = date(2001, *BIRTH_SPANS[i][0])
-        end_day = date(2001, *BIRTH_SPANS[(i + 1) % 12][0]).toordinal() - 1
+        first = date(2001, *SPANS[i][0])
+        end_day = date(2001, *SPANS[(i + 1) % 12][0]).toordinal() - 1
         end = date.fromordinal(end_day)
         cap(f"r{b}", on, off, title, f"21° {SPAN_SIGNS[i]} to 20° {SPAN_SIGNS[(i + 1) % 12]}",
             f"about {first.day} {MONTHS[first.month - 1]} to {end.day} {MONTHS[end.month - 1]}")
