@@ -140,6 +140,14 @@ def send_ntfy(server, topic, title, message, tags, click=None, sleep=time.sleep)
                 return
         except urllib.error.HTTPError as error:
             if error.code != 429 or attempt == 2:
+                # ntfy explains a refusal in its reply (e.g. "limit reached: too many requests",
+                # or an unknown token), so the log says why, not just the status number.
+                try:
+                    reason = error.read(300).decode("utf-8", "replace").strip()
+                except Exception:
+                    reason = ""
+                if reason:
+                    error.msg = f"{error.msg}: {reason}"
                 raise
         sleep(RETRY_SECONDS)
 
