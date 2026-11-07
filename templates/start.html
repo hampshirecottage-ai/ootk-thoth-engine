@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Start here" %}
-{% set page_description = "New to OOTK? Five short steps from your first card to a full Opening of the Key, and what each spread teaches." %}
-{% set tagline = "New here? Five steps from your first card to the Opening of the Key." %}
+{% set page_description = "New to OOTK? Four short steps from your question to your AI: shape it, draw the cards, save the prompt as Markdown and attach it, plus what each spread teaches." %}
+{% set tagline = "New here? Four steps from your question to your AI." %}
 {% set active = "/start" %}
 {% block head %}
     <style>
@@ -35,37 +35,32 @@
 {% block content %}
         <figure class="panel hero-anim">
             <img src="{{ static_url('site/question-to-ai.svg') }}" width="160" height="294" alt="An example question about a job, from start to finish. In Help me shape my question: Work and career is picked; Should I take the new job? is typed and flagged as a yes/no question; Help me weigh a decision suggests the Dyad; the question is mine, over the next three months; under Anything your AI should know? the situation and what I am unsure about are added. The finished question reads: What is drawing me toward the job offer, and what in me or the situation is resisting it, over the next three months? Two cards are drawn, Save prompt as Markdown (.md) saves the prompt as a file, and in your AI the + button attaches it and your AI replies.">
-            <figcaption>From question to your AI: shape the question, draw the cards, save the prompt as Markdown and attach it in your AI.</figcaption>
+            <figcaption>Your first reading in four steps: shape your question, draw the cards, save the prompt as Markdown, and attach it in your AI.</figcaption>
         </figure>
 
         <details class="panel fold" open>
             <summary class="fold-toggle"><h2 id="pathTitle">Your first reading, step by step</h2></summary>
             <ol class="path">
                 <li>
-                    <h3>See what you get</h3>
-                    <p>Here is what a reading looks like: every card, its correspondences and how the cards speak to each other, written up for your AI. The sample below is a whole Opening of the Key.</p>
-                    <div class="actions">{% if sample %}<a class="btn secondary" href="#sample">See the sample</a>{% endif %}</div>
+                    <h3>Shape your question</h3>
+                    <p>On the reading form, open <strong>Help me shape my question</strong> under the Question box. It asks which part of life the question touches, how you&rsquo;d put it in your own words, what the reading should do (this picks the spread), whose question it is and over what span, and <strong>anything your AI should know</strong>. Then press <strong>Use this question</strong>. A question is optional: you can leave it blank.</p>
+                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Shape a question</a></div>
                 </li>
                 <li>
-                    <h3>Start with one card</h3>
-                    <p>Today&rsquo;s card is the same for everyone, so it is an easy first prompt to try.</p>
-                    <div class="actions"><a class="btn secondary" href="/today">Today&rsquo;s card</a></div>
+                    <h3>Draw the cards</h3>
+                    <p>Your question rides along with the cards but doesn&rsquo;t change which cards come up. For a first try, three cards (past, present and future) or today&rsquo;s card, which is the same for everyone, are easy places to start.</p>
+                    <div class="actions"><a class="btn secondary" href="/?spread=3#readingForm">Draw three cards</a> <a class="btn secondary" href="/today">Today&rsquo;s card</a>{% if sample %} <a class="btn secondary" href="#sample">See the sample</a>{% endif %}</div>
                 </li>
                 <li>
-                    <h3>Draw three cards</h3>
-                    <p>Past, present and future. Add a question if you like, or leave it blank. <strong>Help me shape my question</strong>, under the Question box, turns a rough question into an open one and adds anything your AI should know.</p>
-                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Draw three cards</a></div>
+                    <h3>Save the prompt as Markdown</h3>
+                    <p>On the report, press <strong>Save prompt as Markdown (.md)</strong>. The one file holds the cards, every calculation and your question.</p>
                 </li>
                 <li>
-                    <h3>Give the prompt to your AI</h3>
-                    <p>On the report, press <strong>Save prompt as Markdown (.md)</strong>, then attach the file in Claude, ChatGPT or another AI with its <strong>+</strong> button. Your AI writes the interpretation from the cards and calculations in the prompt.</p>
-                </li>
-                <li>
-                    <h3>Learn what the numbers mean</h3>
-                    <p>The library explains each term in the report, and How it works shows how it is all worked out and what to keep in mind.</p>
-                    <div class="actions"><a class="btn secondary" href="/library">Library</a> <a class="btn secondary" href="/method">How it works</a></div>
+                    <h3>Attach it in your AI</h3>
+                    <p>In Claude, ChatGPT or another AI, press its <strong>+</strong> button and add the file. Your AI writes the interpretation from the cards and calculations in the prompt.</p>
                 </li>
             </ol>
+            <p>To learn what the numbers mean, the <a href="/library">Library</a> explains each term in the report, and <a href="/method">How it works</a> shows how it is all worked out.</p>
         </details>
 
         {% if sample %}
