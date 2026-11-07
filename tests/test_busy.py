@@ -155,8 +155,12 @@ def _ntfy_server(statuses):
         def do_POST(self):
             self.rfile.read(int(self.headers["Content-Length"]))
             seen.append(self.headers.get("Authorization"))
-            self.send_response(statuses[len(seen) - 1])
+            status = statuses[len(seen) - 1]
+            body = b'{"code":42901,"error":"limit reached: too many requests"}' if status == 429 else b""
+            self.send_response(status)
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
+            self.wfile.write(body)
 
         def log_message(self, *args):
             pass
@@ -184,9 +188,11 @@ def test_send_ntfy_gives_up_after_a_second_429_and_never_retries_other_errors(mo
     for statuses, posts in (([429, 429], 2), ([500], 1)):
         server, seen = _ntfy_server(statuses)
         try:
-            with pytest.raises(urllib.error.HTTPError):
+            with pytest.raises(urllib.error.HTTPError) as caught:
                 busy.send_ntfy(f"http://127.0.0.1:{server.server_port}", "t", "T", "m", "x", sleep=lambda s: None)
         finally:
             server.shutdown()
             server.server_close()
         assert seen == [None] * posts                          # no token: no Authorization header
+        if statuses[0] == 429:                                 # ntfy's own reason reaches the log
+            assert "limit reached: too many requests" in str(caught.value)
