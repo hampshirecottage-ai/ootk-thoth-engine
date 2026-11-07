@@ -56,7 +56,7 @@ ootk-thoth-engine/
 │   ├── assets.py           # Static files: versioned URLs, cache headers, compression
 │   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
 │   ├── lockout.py          # Locks out repeated wrong passwords (APP_PASSWORD, ADMIN_PASSWORD)
-│   ├── busy.py             # Busy-server alert: ntfy push when CPU stays high (BUSY_ALERT_*)
+│   ├── busy.py             # Busy-server alert: ntfy push when CPU stays high (BUSY_ALERT_*); also sends contact-message pushes
 │   └── library.json        # Glossary and further reading (/library)
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
@@ -140,7 +140,7 @@ Everything else is optional:
 | Variable | What it does | Default |
 |---|---|---|
 | `APP_PASSWORD` | Every web page asks for this password | off |
-| `ADMIN_PASSWORD` | Turns on `/admin` for listing saved readings | off (no `/admin` page) |
+| `ADMIN_PASSWORD` | Turns on `/admin` for reading contact messages and listing saved readings | off (no `/admin` page) |
 | `SITE_URL` | Public address used in link previews, `robots.txt` and `sitemap.xml` | Render's address, then the request's |
 | `DB_CONNECT_TIMEOUT` | Seconds to wait for the database before showing the "database down" page | `10` |
 | `DB_QUERY_TIMEOUT` | Seconds one database query may take (including waiting on a migration's lock, or a connection that went silent) before it gives up; a reading that can't be saved in time is still shown, with a notice | `15` |
@@ -148,6 +148,7 @@ Everything else is optional:
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
 | `READINGS_PER_VISITOR` | Most reading pages (drawn, shared, saved, or their JSON) one visitor may open in 10 minutes; past it they wait out the 10 minutes | `60` |
 | `BUSY_ALERT_NTFY_TOPIC` | Turns on the busy-server alert: a push to this [ntfy](https://ntfy.sh) topic when CPU stays high, and another when it calms down. Anyone who knows the name can read the topic, so make it long and random | off |
+| `CONTACT_ALERT_NTFY_TOPIC` | ntfy topic that gets a push for each new contact message (the push says only that a message came, never what it says, and opens `/admin/messages`) | `BUSY_ALERT_NTFY_TOPIC`; with neither set, no pushes |
 | `BUSY_ALERT_PERCENT` | CPU use, as a share of what the host allows (a tenth of a CPU on Render's free plan), that counts as busy | `70` |
 | `BUSY_ALERT_MINUTES` | Minutes the average must stay at or above that before an alert | `5` |
 | `BUSY_ALERT_COOLDOWN_MINUTES` | Least time between two busy alerts | `60` |
@@ -238,7 +239,9 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/today`, `/day/<date>` | Card of the day: the top card of the deck shuffled with the date as the seed |
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
 | `/report/<link>` | A saved reading |
-| `/admin` | Admin sign-in, then on to `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
+| `/contact` | Contact form: a private message to the site owner (message, optional name and reply address), saved to `contact_messages`; footer **Contact** links here |
+| `/admin` | Admin sign-in, then on to `/admin/messages` when any are unread, else `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
+| `/admin/messages` | Contact messages, newest first, with Mark read, Mark unread and Delete; behind the same `ADMIN_PASSWORD` sign-in |
 | `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
 
 `/?spread=N` opens the start page with that spread chosen.
@@ -298,6 +301,7 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `add_testimonials.sql` | Testimonials table (the feature was retired in November 2026; the table is kept so old entries are not lost) |
 | `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
 | `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
+| `add_contact_messages.sql` | `contact_messages` is missing (the contact form shows a "needs an update" page) |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 
