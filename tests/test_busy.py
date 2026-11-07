@@ -145,3 +145,48 @@ def test_watch_keeps_going_when_a_send_fails(monkeypatch):
     with pytest.raises(asyncio.CancelledError):
         asyncio.run(busy.watch("topic", "https://ntfy.sh", 70, 5, 60))
     assert sent and sent[0][2] == "Server busy"
+
+
+def _ntfy_server(statuses):
+    """A local ntfy stand-in answering each POST with the next status; returns (server, seen)."""
+    seen = []
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            self.rfile.read(int(self.headers["Content-Length"]))
+            seen.append(self.headers.get("Authorization"))
+            self.send_response(statuses[len(seen) - 1])
+            self.end_headers()
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, seen
+
+
+def test_send_ntfy_sends_the_token_and_retries_a_429_once(monkeypatch):
+    monkeypatch.setenv("NTFY_TOKEN", " tk_abc ")
+    server, seen = _ntfy_server([429, 200])
+    waits = []
+    try:
+        busy.send_ntfy(f"http://127.0.0.1:{server.server_port}", "t", "T", "m", "x", sleep=waits.append)
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert seen == ["Bearer tk_abc", "Bearer tk_abc"] and waits == [busy.RETRY_SECONDS]
+
+
+def test_send_ntfy_gives_up_after_a_second_429_and_never_retries_other_errors(monkeypatch):
+    import urllib.error
+    monkeypatch.delenv("NTFY_TOKEN", raising=False)
+    for statuses, posts in (([429, 429], 2), ([500], 1)):
+        server, seen = _ntfy_server(statuses)
+        try:
+            with pytest.raises(urllib.error.HTTPError):
+                busy.send_ntfy(f"http://127.0.0.1:{server.server_port}", "t", "T", "m", "x", sleep=lambda s: None)
+        finally:
+            server.shutdown()
+            server.server_close()
+        assert seen == [None] * posts                          # no token: no Authorization header

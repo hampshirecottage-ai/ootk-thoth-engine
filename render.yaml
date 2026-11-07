@@ -32,3 +32,6 @@ services:
       # neither set no alerts are sent (messages are still saved for /admin/messages).
       - key: CONTACT_ALERT_NTFY_TOPIC
         sync: false
+      # Access token from a free ntfy.sh account; without it ntfy.sh may refuse pushes from Render's shared addresses (HTTP 429).
+      - key: NTFY_TOKEN
+        sync: false

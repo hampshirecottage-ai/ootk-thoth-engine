@@ -9,12 +9,14 @@ BUSY_ALERT_COOLDOWN_MINUTES apart. The message carries the CPU figure only, neve
 a reading.
 
 It is off unless BUSY_ALERT_NTFY_TOPIC is set. Anyone who knows an ntfy topic's name can read
-it, so the name should be long and random, and kept with the other secrets.
+it, so the name should be long and random, and kept with the other secrets. NTFY_TOKEN, an access
+token from a free ntfy.sh account, keeps pushes from being refused on a shared host (see send_ntfy).
 """
 import asyncio
 import logging
 import os
 import time
+import urllib.error
 import urllib.request
 from collections import deque
 from pathlib import Path
@@ -114,15 +116,32 @@ class BusyWatch:
         return None, average
 
 
-def send_ntfy(server, topic, title, message, tags, click=None):
-    """Posts one ntfy message; `click` is a link the notification opens when tapped."""
+# ntfy.sh limits senders without an account by IP address, and a free host such as Render shares
+# its outgoing addresses with many other apps, which can use the limit up (HTTP 429). With an
+# access token from a free ntfy.sh account (NTFY_TOKEN), the limit is counted against that
+# account instead. A 429 is tried once more after RETRY_SECONDS.
+RETRY_SECONDS = 5
+
+
+def send_ntfy(server, topic, title, message, tags, click=None, sleep=time.sleep):
+    """Posts one ntfy message; `click` is a link the notification opens when tapped. Sends
+    NTFY_TOKEN, when set, as the account's access token."""
     headers = {"Title": title, "Tags": tags}
     if click:
         headers["Click"] = click
-    request = urllib.request.Request(
-        f"{server.rstrip('/')}/{topic}", data=message.encode(), method="POST", headers=headers)
-    with urllib.request.urlopen(request, timeout=SEND_TIMEOUT):
-        pass
+    token = (os.getenv("NTFY_TOKEN") or "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    for attempt in (1, 2):
+        request = urllib.request.Request(
+            f"{server.rstrip('/')}/{topic}", data=message.encode(), method="POST", headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=SEND_TIMEOUT):
+                return
+        except urllib.error.HTTPError as error:
+            if error.code != 429 or attempt == 2:
+                raise
+        sleep(RETRY_SECONDS)
 
 
 def alert_text(event, average, percent, minutes):
