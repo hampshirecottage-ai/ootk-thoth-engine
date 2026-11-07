@@ -285,6 +285,42 @@ def save_spread_session(conn, spread_name, query_prompt, notes, significator, sp
         print(f"\n[ERROR] Failed to record session to database: {e}")
         return None
 
+def save_contact_message(conn, name, reply_to, body):
+    """Saves a message from the contact form, unread. Returns its message_id."""
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("INSERT INTO contact_messages (name, reply_to, body) VALUES (%s, %s, %s) "
+                    "RETURNING message_id;", (name or None, reply_to or None, body))
+        return cur.fetchone()["message_id"]
+
+def unread_contact_messages(conn, days=None):
+    """How many messages are unread; with `days`, only those sent in the last `days` days."""
+    with conn.cursor() as cur:
+        if days is None:
+            cur.execute("SELECT count(*) AS n FROM contact_messages WHERE NOT is_read;")
+        else:
+            cur.execute("SELECT count(*) AS n FROM contact_messages WHERE NOT is_read "
+                        "AND created_at > now() - make_interval(days => %s);", (days,))
+        return cur.fetchone()["n"]
+
+def list_contact_messages(conn, limit, offset=0):
+    """(rows, total) for the admin Messages list, newest first, created_at in UTC."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT count(*) AS total FROM contact_messages;")
+        total = cur.fetchone()["total"]
+        cur.execute("SELECT message_id, created_at AT TIME ZONE 'UTC' AS created_at, name, reply_to, "
+                    "body, is_read FROM contact_messages "
+                    "ORDER BY created_at DESC, message_id DESC LIMIT %s OFFSET %s;", (limit, offset))
+        return [dict(row) for row in cur.fetchall()], total
+
+def set_contact_message_read(conn, message_id, is_read):
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("UPDATE contact_messages SET is_read = %s WHERE message_id = %s;",
+                    (is_read, message_id))
+
+def delete_contact_message(conn, message_id):
+    with conn.transaction(), conn.cursor() as cur:
+        cur.execute("DELETE FROM contact_messages WHERE message_id = %s;", (message_id,))
+
 def list_sessions(conn, limit, offset=0):
     """(rows, total) for the admin Sessions list, newest first: created_at (UTC), question,
     spread and report link. Web readings keep the question in report_settings; command-line

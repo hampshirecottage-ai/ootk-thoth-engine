@@ -525,6 +525,23 @@ CREATE TABLE public.journal_entries (
 
 
 --
+-- Name: contact_messages; Type: TABLE; Schema: public; Owner: -
+-- (database/migrations/add_contact_messages.sql)
+--
+
+CREATE TABLE public.contact_messages (
+    message_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    name character varying(60),
+    reply_to character varying(200),
+    body text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 2000),
+    is_read boolean NOT NULL DEFAULT false
+);
+
+CREATE INDEX idx_contact_messages_unread ON public.contact_messages USING btree (created_at) WHERE (NOT is_read);
+
+
+--
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -
 --
 

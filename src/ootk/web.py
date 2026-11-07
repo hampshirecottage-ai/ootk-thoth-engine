@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from urllib.parse import urlencode, urlsplit
 
-from fastapi import FastAPI, Form, HTTPException, Query, Request
+from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Query, Request
 from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
@@ -30,7 +30,8 @@ from ootk.analysis import WITHHELD_MAX, derive_primary_element, king_scale_hex, 
 from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, env_int, fetch_all_cards, fetch_cards_correspondences,
-    connect, list_sessions, load_report_by_link, save_spread_session,
+    connect, delete_contact_message, list_contact_messages, list_sessions, load_report_by_link,
+    save_contact_message, save_spread_session, set_contact_message_read, unread_contact_messages,
 )
 from ootk.lockout import FailedLogins
 from ootk.birth_cards import parse_birth_cards
@@ -306,7 +307,7 @@ app.add_middleware(HeadAsGet)
 
 
 def is_private_path(path: str) -> bool:
-    return (path.startswith(("/report/", "/admin")) or path == "/generate_report")
+    return (path.startswith(("/report/", "/admin")) or path in ("/generate_report", "/contact"))
 
 
 class RedactReportLinks(logging.Filter):
@@ -328,7 +329,10 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 REPO_URL = "https://github.com/hampshirecottage-ai/ootk-thoth-engine"
 BUG_REPORT_URL = f"{REPO_URL}/issues/new?template=bug_report.yml"
-CONTACT_URL = f"{REPO_URL}/discussions"
+# The footer's Contact link opens the site's own private form; public questions and ideas can
+# still go to GitHub Discussions, which the form page links to.
+CONTACT_URL = "/contact"
+DISCUSSIONS_URL = f"{REPO_URL}/discussions"
 SITE_DESCRIPTION = ("Draw a Thoth tarot spread. OOTK works out its Golden Dawn dignities, decans "
                     "and Liber 777 correspondences and writes them up for your AI to read with you.")
 # The spreads from first steps to the full Opening of the Key: (level, name, spread keys, what
@@ -1572,6 +1576,119 @@ def testimonial_page():
     return RedirectResponse("/", status_code=301)
 
 
+# ---------- contact form ----------
+
+CONTACT_MAX = 2000
+CONTACT_NAME_MAX = 60
+CONTACT_REPLY_MAX = 200
+
+
+def looks_like_email(text: str) -> bool:
+    """Whether a reply address looks like one: name@domain.tld, no spaces. The site never mails
+    it, so this only catches typos. Plain string checks rather than a regular expression, so a
+    long run of odd characters can't make it slow."""
+    local, at, domain = text.partition("@")
+    name, dot, tld = domain.rpartition(".")
+    return (bool(local and at and name and dot and tld) and "@" not in domain
+            and not any(c.isspace() for c in text))
+# One address may send at most three messages an hour.
+contact_senders = FailedLogins(attempts=3, window=3600)
+# The form carries the time it was opened. Anything sent sooner than this, or without that time,
+# came from a bot: nobody reads the form and writes a message that fast.
+CONTACT_MIN_SECONDS = 3
+# While this many messages sent in the last week are unread, the form takes no more, so a flood
+# can't bury /admin/messages or the owner's phone. Reading (or deleting) them frees places.
+CONTACT_UNREAD_MAX = 50
+CONTACT_UNREAD_DAYS = 7
+
+
+def sent_too_fast(opened: str) -> bool:
+    """Whether a form came back sooner than a person could fill it in, or without the time it
+    was opened (a bot posting straight to the form's address)."""
+    try:
+        seconds = time.time() - int(opened)
+    except ValueError:
+        return True
+    return not CONTACT_MIN_SECONDS <= seconds
+
+
+def contact_alert_topic() -> str:
+    """The ntfy topic for new-message alerts: CONTACT_ALERT_NTFY_TOPIC, else the busy-server
+    alert's topic, so a phone already set up for that gets these too. Empty means no alerts."""
+    return ((os.getenv("CONTACT_ALERT_NTFY_TOPIC") or "").strip()
+            or (os.getenv("BUSY_ALERT_NTFY_TOPIC") or "").strip())
+
+
+def send_contact_alert(topic: str, admin_url: str):
+    """Pushes 'a new message came' to the owner's phone. The push never carries the message, the
+    name or the reply address: anyone who knows an ntfy topic's name can read it, so the message
+    stays in the database and is read on /admin/messages, which the notification opens."""
+    server = (os.getenv("BUSY_ALERT_NTFY_SERVER") or "").strip() or "https://ntfy.sh"
+    try:
+        busy.send_ntfy(server, topic, "New contact message",
+                       "Someone sent a message through the site's contact form. Tap to read it.",
+                       "envelope", click=admin_url)
+    except Exception as error:  # a failed alert must not lose or fail the message
+        log.warning("contact alert not sent: %s", error)
+
+
+def contact_page(request: Request, status: int = 200, **context):
+    response = guide_page(request, "contact.html", max_body=CONTACT_MAX, max_name=CONTACT_NAME_MAX,
+                          max_reply=CONTACT_REPLY_MAX, opened=int(time.time()),
+                          discussions_url=DISCUSSIONS_URL, **context)
+    response.status_code = status
+    return response
+
+
+@app.get("/contact", response_class=HTMLResponse)
+def contact_form(request: Request):
+    return contact_page(request)
+
+
+@app.post("/contact", response_class=HTMLResponse)
+def send_contact(request: Request, background: BackgroundTasks, body: str = Form(""),
+                 name: str = Form(""), reply_to: str = Form(""), website: str = Form(""),
+                 opened: str = Form("")):
+    """Saves a message for the site owner and, when an ntfy topic is set, pushes an alert after
+    the page has been sent. `website` is a field people never see; bots that fill it in are
+    ignored, and so are forms sent within seconds of opening (`opened`). Either way the bot is
+    thanked, so it can't tell it was caught."""
+    body, name, reply_to = body.strip(), " ".join(name.split()), reply_to.strip()
+    if website or sent_too_fast(opened):
+        return contact_page(request, sent=True)
+    given = {"given_body": body, "given_name": name, "given_reply": reply_to}
+    error = None
+    if not body:
+        error = "Please write a message before sending."
+    elif "\x00" in body + name + reply_to:
+        error = "The text contains a character that can't be saved. Please retype it."
+    elif len(body) > CONTACT_MAX:
+        error = f"Please keep the message to {CONTACT_MAX} characters (this one has {len(body)})."
+    elif len(name) > CONTACT_NAME_MAX:
+        error = f"Please keep the name to {CONTACT_NAME_MAX} characters."
+    elif len(reply_to) > CONTACT_REPLY_MAX or (reply_to and not looks_like_email(reply_to)):
+        error = "That reply address doesn't look like an email address. Check it, or leave it empty."
+    if error:
+        return contact_page(request, status=400, error=error, **given)
+    visitor = visitor_address(request)
+    if contact_senders.retry_after(visitor):
+        return contact_page(request, status=429, error="Several messages have come from here "
+                            "recently. Please try again in an hour.", **given)
+    with get_db_connection() as conn:
+        if unread_contact_messages(conn, CONTACT_UNREAD_DAYS) >= CONTACT_UNREAD_MAX:
+            log.warning("contact message refused: %d unread from the last week", CONTACT_UNREAD_MAX)
+            return contact_page(request, status=429, error="A lot of messages are waiting to be "
+                                "read, so new ones are paused for now. Please try again in a few days.",
+                                **given)
+        save_contact_message(conn, name, reply_to, body)
+    contact_senders.failed(visitor)
+    log.info("contact message received")
+    topic = contact_alert_topic()
+    if topic:
+        background.add_task(send_contact_alert, topic, f"{site_url(request)}/admin/messages")
+    return contact_page(request, sent=True)
+
+
 # ---------- admin: saved readings ----------
 
 # /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
@@ -1607,10 +1724,13 @@ def admin_page(request: Request, status: int = 200, **context):
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_home(request: Request):
-    """Sign-in form, or on to the saved readings once signed in."""
+    """Sign-in form, or once signed in on to the messages when any are unread, else the saved
+    readings."""
     if not is_admin(request):
         return admin_page(request, signed_in=False)
-    return RedirectResponse("/admin/sessions", status_code=303)
+    with get_db_connection() as conn:
+        unread = unread_contact_messages(conn)
+    return RedirectResponse("/admin/messages" if unread else "/admin/sessions", status_code=303)
 
 
 SESSIONS_PER_PAGE = 100
@@ -1628,6 +1748,39 @@ def admin_sessions(request: Request, page: int = 1):
     pages = max(1, -(-total // SESSIONS_PER_PAGE))
     return admin_page(request, signed_in=True, view="sessions", sessions=rows, total=total,
                       page=page, pages=pages)
+
+
+MESSAGES_PER_PAGE = 50
+MESSAGE_ACTIONS = {"read", "unread", "delete"}
+
+
+@app.get("/admin/messages", response_class=HTMLResponse)
+def admin_messages(request: Request, page: int = 1):
+    """Messages from the contact form, newest first, with read, unread and delete buttons."""
+    if not is_admin(request):
+        return admin_page(request, signed_in=False)
+    page = max(page, 1)
+    with get_db_connection() as conn:
+        rows, total = list_contact_messages(conn, MESSAGES_PER_PAGE, (page - 1) * MESSAGES_PER_PAGE)
+        unread = unread_contact_messages(conn)
+    pages = max(1, -(-total // MESSAGES_PER_PAGE))
+    return admin_page(request, signed_in=True, view="messages", messages=rows, total=total,
+                      unread=unread, page=page, pages=pages)
+
+
+@app.post("/admin/messages/{message_id}")
+def admin_message(request: Request, message_id: int, action: str = Form(""), page: int = Form(1)):
+    if not is_admin(request):
+        raise HTTPException(status_code=403, detail="Sign in at /admin first.")
+    if action not in MESSAGE_ACTIONS:
+        raise HTTPException(status_code=400, detail="Unknown action.")
+    with get_db_connection() as conn:
+        if action == "delete":
+            delete_contact_message(conn, message_id)
+        else:
+            set_contact_message_read(conn, message_id, action == "read")
+    back = "/admin/messages" + (f"?page={page}" if page > 1 else "")
+    return RedirectResponse(back, status_code=303)
 
 
 @app.post("/admin/login")

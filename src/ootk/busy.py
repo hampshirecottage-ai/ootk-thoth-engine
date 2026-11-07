@@ -114,10 +114,13 @@ class BusyWatch:
         return None, average
 
 
-def send_ntfy(server, topic, title, message, tags):
+def send_ntfy(server, topic, title, message, tags, click=None):
+    """Posts one ntfy message; `click` is a link the notification opens when tapped."""
+    headers = {"Title": title, "Tags": tags}
+    if click:
+        headers["Click"] = click
     request = urllib.request.Request(
-        f"{server.rstrip('/')}/{topic}", data=message.encode(), method="POST",
-        headers={"Title": title, "Tags": tags})
+        f"{server.rstrip('/')}/{topic}", data=message.encode(), method="POST", headers=headers)
     with urllib.request.urlopen(request, timeout=SEND_TIMEOUT):
         pass
 

@@ -338,6 +338,25 @@ def test_report_link_lookup_returns_when_the_reading_was_saved(conn):
         assert db.load_report_by_link(conn, "M" * 22) is None
 
 
+def test_contact_messages_save_list_read_and_delete(conn):
+    with conn.transaction(force_rollback=True):
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM contact_messages;")
+        first = db.save_contact_message(conn, "", "", "One.")
+        second = db.save_contact_message(conn, "Bo", "bo@example.com", "Two.")
+        rows, total = db.list_contact_messages(conn, 10)
+        assert total == 2 and [r["body"] for r in rows] == ["Two.", "One."]
+        assert rows[1]["name"] is None and rows[1]["reply_to"] is None and rows[0]["is_read"] is False
+        assert db.unread_contact_messages(conn) == 2 and db.unread_contact_messages(conn, 7) == 2
+        db.set_contact_message_read(conn, first, True)
+        assert db.unread_contact_messages(conn) == 1
+        with conn.cursor() as cur:
+            cur.execute("UPDATE contact_messages SET created_at = now() - interval '8 days';")
+        assert db.unread_contact_messages(conn, 7) == 0 and db.unread_contact_messages(conn) == 1
+        db.delete_contact_message(conn, second)
+        assert [r["body"] for r in db.list_contact_messages(conn, 10)[0]] == ["One."]
+
+
 @pytest.mark.parametrize("spread, significator, mapping, framework", [
     ("3", None, "thoth", "auto"),
     ("7", None, "golden_dawn", "life_path"),

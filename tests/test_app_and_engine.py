@@ -4,6 +4,7 @@ Needs: pip install -e ".[dev]"
 import html
 import json
 import re
+import time
 from contextlib import nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
@@ -52,6 +53,29 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
     monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=60, window=600))
     monkeypatch.setattr(app_module, "list_sessions", lambda conn, limit, offset=0: ([], 0))
+    messages = []
+
+    def fake_save_message(conn, name, reply_to, body):
+        messages.append(dict(message_id=len(messages) + 1, name=name or None, reply_to=reply_to or None,
+                             body=body, is_read=False, created_at=datetime(2026, 11, 7, 9, 30)))
+        return len(messages)
+
+    def fake_set_read(conn, mid, is_read):
+        next(m for m in messages if m["message_id"] == mid)["is_read"] = is_read
+
+    monkeypatch.setattr(app_module, "contact_senders", FailedLogins(attempts=3, window=3600))
+    monkeypatch.setattr(app_module, "save_contact_message", fake_save_message)
+    monkeypatch.setattr(app_module, "unread_contact_messages",
+                        lambda conn, days=None: sum(not m["is_read"] for m in messages))
+    monkeypatch.setattr(app_module, "list_contact_messages",
+                        lambda conn, limit, offset=0: (messages[::-1][offset:offset + limit], len(messages)))
+    monkeypatch.setattr(app_module, "set_contact_message_read", fake_set_read)
+    monkeypatch.setattr(app_module, "delete_contact_message",
+                        lambda conn, mid: messages.remove(next(m for m in messages if m["message_id"] == mid)))
+    alerts = []
+    monkeypatch.setattr(app_module, "send_contact_alert", lambda topic, url: alerts.append((topic, url)))
+    monkeypatch.delenv("CONTACT_ALERT_NTFY_TOPIC", raising=False)
+    monkeypatch.delenv("BUSY_ALERT_NTFY_TOPIC", raising=False)
     # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
     monkeypatch.setattr(app_module, "card_rows", lambda titles, system: fake_fetch(None, titles, system))
 
@@ -74,6 +98,8 @@ def client(monkeypatch):
     c.saved = saved
     c.lookups = lookups
     c.systems = systems
+    c.messages = messages
+    c.alerts = alerts
     return c
 
 
@@ -425,7 +451,7 @@ def test_form_errors_render_a_page_with_a_way_back(client):
 def test_pages_link_to_bug_report_and_contact(client):
     for page in (client.get("/").text, post(client).text):              # settings and report pages
         assert 'class="site-footer"' in page
-        assert "/issues/new?template=bug_report.yml" in page and "/discussions" in page
+        assert "/issues/new?template=bug_report.yml" in page and 'href="/contact"' in page
 
 
 def test_pages_have_description_previews_and_icons(client, monkeypatch):
@@ -2780,3 +2806,127 @@ def test_method_says_what_the_ai_tests_show(client):
     assert "Calculated with" in page and "Looked up and handed to your AI" in page and "From your birth date" in page
     assert "A birth date is never sent or stored" in page
     assert 'href="/method#tested"' in client.get("/").text or 'href="/method#tested"' in client.get("/pick").text
+
+
+# ---------- contact form ----------
+
+# A contact form opened a minute ago, as a person would send it.
+OPENED = {"opened": str(int(time.time()) - 60)}
+
+
+def test_footer_contact_opens_the_sites_own_form(client):
+    page = client.get("/").text
+    assert '<a href="/contact">Contact</a>' in page and "/discussions" not in page.split("site-footer")[-1]
+    form = client.get("/contact")
+    assert form.status_code == 200 and 'name="body"' in form.text and 'name="reply_to"' in form.text
+    assert form.headers["cache-control"] == "no-store"
+    assert "/discussions" in form.text                       # public questions can still go there
+
+
+def test_contact_message_is_saved_and_alerts_without_its_text(client, monkeypatch):
+    monkeypatch.setenv("BUSY_ALERT_NTFY_TOPIC", "busy-topic")
+    monkeypatch.setenv("SITE_URL", "https://tarotthoth.com")
+    r = client.post("/contact", data={**OPENED, "body": "  Love the maps.  ", "name": " Sam  R ",
+                                      "reply_to": " sam@example.com "})
+    assert r.status_code == 200 and "Thank you" in r.text
+    [m] = client.messages
+    assert (m["name"], m["reply_to"], m["body"], m["is_read"]) == ("Sam R", "sam@example.com", "Love the maps.", False)
+    assert client.alerts == [("busy-topic", "https://tarotthoth.com/admin/messages")]
+    monkeypatch.setenv("CONTACT_ALERT_NTFY_TOPIC", "contact-topic")   # its own topic wins
+    client.post("/contact", data={**OPENED, "body": "Second"})
+    assert client.alerts[-1][0] == "contact-topic" and client.messages[-1]["name"] is None
+
+
+def test_no_alert_without_a_topic(client):
+    assert "Thank you" in client.post("/contact", data={**OPENED, "body": "hi"}).text
+    assert len(client.messages) == 1 and client.alerts == []
+
+
+def test_contact_alert_carries_no_message_details(monkeypatch):
+    sent = []
+    monkeypatch.setattr(app_module.busy, "send_ntfy", lambda *a, **k: sent.append((a, k)))
+    app_module.send_contact_alert("t", "https://x/admin/messages")
+    [(args, kwargs)] = sent
+    assert args[1] == "t" and kwargs == {"click": "https://x/admin/messages"}
+    assert "Tap to read it" in args[3]
+
+    def broken(*a, **k):
+        raise OSError("ntfy down")
+    monkeypatch.setattr(app_module.busy, "send_ntfy", broken)
+    app_module.send_contact_alert("t", "u")                   # logged, never raised
+
+
+@pytest.mark.parametrize("data, message", [
+    ({"body": "   "}, "write a message"),
+    ({"body": "x" * 2001}, "2000 characters"),
+    ({"body": "ok", "name": "n" * 61}, "60 characters"),
+    ({"body": "ok", "reply_to": "not an address"}, "doesn&#39;t look like an email"),
+    ({"body": "hi\x00there"}, "can&#39;t be saved"),
+])
+def test_bad_contact_messages_are_refused_and_kept_in_the_form(client, data, message):
+    r = client.post("/contact", data={**OPENED, **data})
+    assert r.status_code == 400 and message in r.text and client.messages == [] and client.alerts == []
+
+
+def test_bots_are_thanked_and_dropped(client):
+    r = client.post("/contact", data={**OPENED, "body": "buy now", "website": "http://spam"})
+    assert r.status_code == 200 and "Thank you" in r.text and client.messages == []
+    for opened in ["", "soon", str(int(time.time())), str(int(time.time()) + 3600)]:
+        r = client.post("/contact", data={"body": "buy now", "opened": opened})
+        assert "Thank you" in r.text and client.messages == []
+
+
+def test_one_address_sends_at_most_three_messages_an_hour(client):
+    for n in range(3):
+        assert "Thank you" in client.post("/contact", data={**OPENED, "body": f"m{n}"}).text
+    r = client.post("/contact", data={**OPENED, "body": "m3"})
+    assert r.status_code == 429 and "try again in an hour" in r.text and "m3" in r.text
+    assert len(client.messages) == 3
+
+
+def test_form_pauses_while_too_many_are_unread(client, monkeypatch):
+    monkeypatch.setattr(app_module, "CONTACT_UNREAD_MAX", 2)
+    monkeypatch.setattr(app_module, "contact_senders", FailedLogins(attempts=10, window=3600))
+    for n in range(2):
+        client.post("/contact", data={**OPENED, "body": f"m{n}"})
+    r = client.post("/contact", data={**OPENED, "body": "third"})
+    assert r.status_code == 429 and "paused for now" in r.text and len(client.messages) == 2
+    client.messages[0]["is_read"] = True                         # reading one frees a place
+    assert "Thank you" in client.post("/contact", data={**OPENED, "body": "third"}).text
+
+
+def test_admin_messages_read_unread_delete(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/contact", data={**OPENED, "body": "Hello <b>there</b>", "reply_to": "a@b.co"})
+    page = client.get("/admin/messages")
+    assert 'name="password"' in page.text and "Hello" not in page.text
+    assert page.headers["cache-control"] == "no-store" and "noindex" in page.text
+    assert client.post("/admin/messages/1", data={"action": "read"}).status_code == 403
+    client.post("/admin/login", data={"password": "secret"}, follow_redirects=False)
+    r = client.get("/admin", follow_redirects=False)
+    assert r.headers["location"] == "/admin/messages"           # unread messages come first
+    text = client.get("/admin/messages").text
+    assert "Hello &lt;b&gt;there&lt;/b&gt;" in text and "<b>there</b>" not in text
+    assert "1 message, 1 unread" in text and 'href="mailto:a@b.co"' in text and "7 Nov 2026, 09:30" in text
+    r = client.post("/admin/messages/1", data={"action": "read"}, follow_redirects=False)
+    assert r.status_code == 303 and client.messages[0]["is_read"] is True
+    assert client.get("/admin", follow_redirects=False).headers["location"] == "/admin/sessions"
+    client.post("/admin/messages/1", data={"action": "unread"})
+    assert client.messages[0]["is_read"] is False
+    assert client.post("/admin/messages/1", data={"action": "nonsense"}).status_code == 400
+    client.post("/admin/messages/1", data={"action": "delete"})
+    assert client.messages == [] and "No messages" in client.get("/admin/messages").text
+
+
+def test_admin_messages_does_not_exist_without_a_password(client, monkeypatch):
+    monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
+    assert client.get("/admin/messages").status_code == 404
+    assert client.post("/admin/messages/1", data={"action": "read"}).status_code == 404
+
+
+@pytest.mark.parametrize("text, ok", [
+    ("a@b.co", True), ("first.last@mail.example.org", True), ("a@b", False), ("@b.co", False),
+    ("a@.co", False), ("a@b.", False), ("a@b@c.co", False), ("a b@c.co", False), ("a@" + "!" * 5000, False),
+])
+def test_reply_address_check(text, ok):
+    assert app_module.looks_like_email(text) is ok

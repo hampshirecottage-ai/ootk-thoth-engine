@@ -1,0 +1,50 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Contact" %}
+{% set page_description = "Send a private message to the person who runs OOTK." %}
+{% set tagline = "A private message to the person who runs this site." %}
+{% set active = "" %}
+{% block head %}
+    <style>
+        .contact-form textarea { width: 100%; min-height: 160px; padding: 8px 10px; margin-bottom: 4px; background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 4px; font: inherit; font-size: 0.95em; resize: vertical; box-sizing: border-box; }
+        .contact-form .count { display: block; text-align: right; font-size: 0.8em; color: var(--muted); margin-bottom: 12px; }
+        .contact-form .hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+        .contact-form .error { color: #b00020; background: #fff3f3; border: 1px solid #f0b8b8; padding: 8px 10px; border-radius: 6px; }
+        .contact-form button.send { background: var(--accent); color: var(--on-accent); border: none; padding: 9px 16px; border-radius: 6px; font: inherit; font-weight: 600; cursor: pointer; }
+        .contact-form button.send:hover { background: var(--accent-2); }
+    </style>
+{% endblock %}
+{% block content %}
+        <section class="panel contact-form" aria-labelledby="contactTitle">
+            {% if sent %}
+            <h2 id="contactTitle">Thank you</h2>
+            <p>Your message has been received. If you left a reply address, I&rsquo;ll answer there.</p>
+            <div class="actions"><a class="btn" href="/">Back to the start page</a></div>
+            {% else %}
+            <h2 id="contactTitle">Send a message</h2>
+            <p>Questions, ideas, a source for the library, or anything that didn&rsquo;t work. Only I read these; nothing you send here is published.</p>
+            {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+            <form method="post" action="/contact">
+                <label for="contactBody">Your message</label>
+                <textarea id="contactBody" name="body" maxlength="{{ max_body }}" required>{{ given_body or "" }}</textarea>
+                <span class="count" id="contactCount" aria-live="polite"></span>
+                <label for="contactName">Your name (optional)</label>
+                <input id="contactName" name="name" maxlength="{{ max_name }}" autocomplete="name" value="{{ given_name or "" }}">
+                <label for="contactReply">Email for a reply (optional)</label>
+                <input id="contactReply" name="reply_to" type="email" maxlength="{{ max_reply }}" autocomplete="email" value="{{ given_reply or "" }}">
+                <div class="hp" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+                <input type="hidden" name="opened" value="{{ opened }}">
+                <p class="note">Only what you type here and the time it was sent are kept. Please leave out anything you&rsquo;d rather not have stored, such as a reading about someone else.</p>
+                <div class="actions"><button type="submit" class="send">Send message</button></div>
+            </form>
+            <p class="note">For a public question or idea others can join in on, there&rsquo;s also <a href="{{ discussions_url }}" target="_blank" rel="noopener">GitHub Discussions</a>. To report a fault, <a href="{{ bug_report_url }}" target="_blank" rel="noopener">report a bug</a>.</p>
+            <script>
+                (function () {
+                    const box = document.getElementById("contactBody"), count = document.getElementById("contactCount");
+                    const update = () => { count.textContent = box.value.length + " / {{ max_body }}"; };
+                    box.addEventListener("input", update);
+                    update();
+                })();
+            </script>
+            {% endif %}
+        </section>
+{% endblock %}

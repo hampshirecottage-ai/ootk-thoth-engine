@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Admin" %}
 {% set page_description = "Site admin." %}
-{% set titles = {"sessions": "Sessions"} %}
+{% set titles = {"sessions": "Sessions", "messages": "Messages"} %}
 {% set tagline = titles.get(view, "Admin") %}
 {% set active = "" %}
 {% block head %}
@@ -33,6 +33,10 @@
         .admin fieldset { border: none; padding: 0; margin: 0 0 10px; }
         .admin label.check { display: flex; gap: 8px; align-items: center; text-transform: none; letter-spacing: 0; font-size: 0.95em; color: var(--text); margin: 8px 0; cursor: pointer; }
         .admin label.check input { width: auto; margin: 0; flex: none; }
+        .admin .message { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin: 0 0 10px; background: var(--panel-3); }
+        .admin .message.unread { border-left: 4px solid var(--accent); }
+        .admin .message .body { white-space: pre-wrap; overflow-wrap: anywhere; margin: 4px 0 8px; }
+        .admin .message a { overflow-wrap: anywhere; }
         @media (max-width: 640px) { .admin .pair { grid-template-columns: 1fr; } }
         @media (max-width: 640px) {
             .admin thead { display: none; }
@@ -60,8 +64,39 @@
                 <form method="post" action="/admin/logout" class="inline"><button type="submit" class="secondary">Sign out</button></form>
             </div>
             <nav class="tabs" aria-label="Admin">
+                <a href="/admin/messages"{% if view == "messages" %} aria-current="page"{% endif %}>Messages</a>
                 <a href="/admin/sessions"{% if view == "sessions" %} aria-current="page"{% endif %}>Sessions</a>
             </nav>
+            {% if view == "messages" %}
+            <p class="note">{{ total }} message{{ "" if total == 1 else "s" }}, {{ unread }} unread, newest first. Dates are UTC. Messages are private: don't share this page.</p>
+            {% if messages %}
+            {% for m in messages %}
+            <article class="message{% if not m.is_read %} unread{% endif %}">
+                <p class="meta">{% if not m.is_read %}<b>New</b> · {% endif %}{{ m.created_at.strftime('%-d %b %Y, %H:%M') }} · {{ m.name or "No name" }}{% if m.reply_to %} · <a href="mailto:{{ m.reply_to }}">{{ m.reply_to }}</a>{% else %} · no reply address{% endif %}</p>
+                <p class="body">{{ m.body }}</p>
+                <div class="actions">
+                    <form method="post" action="/admin/messages/{{ m.message_id }}" class="inline">
+                        <input type="hidden" name="page" value="{{ page }}">
+                        {% if m.is_read %}<button type="submit" name="action" value="unread" class="secondary">Mark unread</button>{% else %}<button type="submit" name="action" value="read">Mark read</button>{% endif %}
+                    </form>
+                    <form method="post" action="/admin/messages/{{ m.message_id }}" class="inline" onsubmit="return confirm('Delete this message for good?');">
+                        <input type="hidden" name="page" value="{{ page }}">
+                        <button type="submit" name="action" value="delete" class="secondary">Delete</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+            {% if pages > 1 %}
+            <p class="pager">
+                {% if page > 1 %}<a href="/admin/messages?page={{ page - 1 }}">Newer</a>{% endif %}
+                <span>Page {{ page }} of {{ pages }}</span>
+                {% if page < pages %}<a href="/admin/messages?page={{ page + 1 }}">Older</a>{% endif %}
+            </p>
+            {% endif %}
+            {% else %}
+            <p>No messages{% if page > 1 %} on this page{% endif %}.</p>
+            {% endif %}
+            {% endif %}
             {% if view == "sessions" %}
             <p class="note">{{ total }} saved reading{{ "" if total == 1 else "s" }}, newest first. Dates are UTC. Questions are private: don't share this page.</p>
             {% if sessions %}
