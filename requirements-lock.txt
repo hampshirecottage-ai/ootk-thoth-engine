@@ -29,7 +29,7 @@ psycopg-binary==3.3.6
 pydantic==2.14.1
 pydantic_core==2.50.1
 Pygments==2.21.0
-pytest==9.1.1
+pytest==9.2.0
 python-dotenv==1.2.4
 python-multipart==0.0.32
 rich==15.0.0
