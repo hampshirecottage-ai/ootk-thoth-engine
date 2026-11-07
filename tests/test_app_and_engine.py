@@ -2922,3 +2922,11 @@ def test_admin_messages_does_not_exist_without_a_password(client, monkeypatch):
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
     assert client.get("/admin/messages").status_code == 404
     assert client.post("/admin/messages/1", data={"action": "read"}).status_code == 404
+
+
+@pytest.mark.parametrize("text, ok", [
+    ("a@b.co", True), ("first.last@mail.example.org", True), ("a@b", False), ("@b.co", False),
+    ("a@.co", False), ("a@b.", False), ("a@b@c.co", False), ("a b@c.co", False), ("a@" + "!" * 5000, False),
+])
+def test_reply_address_check(text, ok):
+    assert app_module.looks_like_email(text) is ok

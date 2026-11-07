@@ -1581,8 +1581,16 @@ def testimonial_page():
 CONTACT_MAX = 2000
 CONTACT_NAME_MAX = 60
 CONTACT_REPLY_MAX = 200
-# A reply address only needs to look like one; it is never mailed by the site.
-REPLY_ADDRESS = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+
+
+def looks_like_email(text: str) -> bool:
+    """Whether a reply address looks like one: name@domain.tld, no spaces. The site never mails
+    it, so this only catches typos. Plain string checks rather than a regular expression, so a
+    long run of odd characters can't make it slow."""
+    local, at, domain = text.partition("@")
+    name, dot, tld = domain.rpartition(".")
+    return (bool(local and at and name and dot and tld) and "@" not in domain
+            and not any(c.isspace() for c in text))
 # One address may send at most three messages an hour.
 contact_senders = FailedLogins(attempts=3, window=3600)
 # The form carries the time it was opened. Anything sent sooner than this, or without that time,
@@ -1658,7 +1666,7 @@ def send_contact(request: Request, background: BackgroundTasks, body: str = Form
         error = f"Please keep the message to {CONTACT_MAX} characters (this one has {len(body)})."
     elif len(name) > CONTACT_NAME_MAX:
         error = f"Please keep the name to {CONTACT_NAME_MAX} characters."
-    elif len(reply_to) > CONTACT_REPLY_MAX or (reply_to and not REPLY_ADDRESS.fullmatch(reply_to)):
+    elif len(reply_to) > CONTACT_REPLY_MAX or (reply_to and not looks_like_email(reply_to)):
         error = "That reply address doesn't look like an email address. Check it, or leave it empty."
     if error:
         return contact_page(request, status=400, error=error, **given)
