@@ -1412,7 +1412,9 @@ def test_start_here_sections_fold_with_only_the_first_reading_open(client, monke
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
     page = client.get("/start").text
     assert "<section" not in page.split("<main", 1)[1].split("</main>", 1)[0]
-    for sid in ("strengthsTitle", "stagesTitle", "historyTitle"):
+    assert "strengthsTitle" not in page                         # "What OOTK does best" is gone
+    assert page.index("site/question-to-ai.svg") < page.index('id="pathTitle"')   # the animation leads
+    for sid in ("stagesTitle", "historyTitle"):
         assert f'<details class="panel fold">\n            <summary class="fold-toggle"><h2 id="{sid}">' in page
     assert '<details class="panel fold" open>\n            <summary class="fold-toggle"><h2 id="pathTitle">' in page
     assert "js/fold.js" in page                                 # opens a section named in the link
