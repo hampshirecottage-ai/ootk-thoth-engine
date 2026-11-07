@@ -26,8 +26,8 @@ pillow==13.0.0
 pluggy==1.7.0
 psycopg==3.3.6
 psycopg-binary==3.3.6
-pydantic==2.14.1
-pydantic_core==2.50.1
+pydantic==2.14.2
+pydantic_core==2.50.2
 Pygments==2.21.0
 pytest==9.1.1
 python-dotenv==1.2.4
