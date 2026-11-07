@@ -153,6 +153,7 @@ Everything else is optional:
 | `BUSY_ALERT_MINUTES` | Minutes the average must stay at or above that before an alert | `5` |
 | `BUSY_ALERT_COOLDOWN_MINUTES` | Least time between two busy alerts | `60` |
 | `BUSY_ALERT_NTFY_SERVER` | ntfy server to post to | `https://ntfy.sh` |
+| `NTFY_TOKEN` | Access token from a free ntfy.sh account (Account, Access tokens), sent with every push. Without one, ntfy.sh limits pushes by IP address, and on a shared host such as Render's free plan other apps can use that limit up, so pushes fail with HTTP 429. A 429 is tried once more after 5 seconds | none |
 | `PGSSLMODE` | Standard PostgreSQL setting; set `require` for a hosted database such as Neon | libpq default |
 
 `DB_PORT`, `DB_CONNECT_TIMEOUT`, `DB_QUERY_TIMEOUT`, `DB_DOWN_SECONDS`, `WEB_THREADS`, `READINGS_PER_VISITOR` and the `BUSY_ALERT_` numbers must be whole numbers of 1 or more; a blank or unusable value is ignored (with a warning in the log) and the default is used.
