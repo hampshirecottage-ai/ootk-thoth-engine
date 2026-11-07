@@ -1,6 +1,7 @@
 """ootk.busy: reading the container's CPU and turning a sustained high average into one alert."""
 import asyncio
 import http.server
+import json
 import threading
 
 import pytest
@@ -91,6 +92,7 @@ def test_a_spell_that_outlasts_the_cooldown_alerts_once_it_has_passed():
 
 def test_start_is_off_without_a_topic(monkeypatch):
     monkeypatch.delenv("BUSY_ALERT_NTFY_TOPIC", raising=False)
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
     assert asyncio.run(_start()) is None
 
 
@@ -129,7 +131,7 @@ def test_watch_keeps_going_when_a_send_fails(monkeypatch):
     clock = iter(range(0, 100000, 30))
     used = iter(x * 0.1 * 0.9 for x in range(0, 100000, 30))   # 90% of 0.1 CPU throughout
 
-    def fail(*args):
+    def fail(*args, **kwargs):
         sent.append(args)
         raise OSError("no network")
 
@@ -143,7 +145,7 @@ def test_watch_keeps_going_when_a_send_fails(monkeypatch):
     monkeypatch.setattr(busy, "send_ntfy", fail)
     monkeypatch.setattr(busy.asyncio, "sleep", no_wait)
     with pytest.raises(asyncio.CancelledError):
-        asyncio.run(busy.watch("topic", "https://ntfy.sh", 70, 5, 60))
+        asyncio.run(busy.watch("topic", 70, 5, 60))
     assert sent and sent[0][2] == "Server busy"
 
 
@@ -196,3 +198,92 @@ def test_send_ntfy_gives_up_after_a_second_429_and_never_retries_other_errors(mo
         assert seen == [None] * posts                          # no token: no Authorization header
         if statuses[0] == 429:                                 # ntfy's own reason reaches the log
             assert "limit reached: too many requests" in str(caught.value)
+
+
+def _telegram_server(statuses):
+    """A local Telegram API stand-in; returns (server, seen) with each request's path and JSON."""
+    seen = []
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+            seen.append((self.path, json.loads(self.rfile.read(int(self.headers["Content-Length"])))))
+            status = statuses[len(seen) - 1]
+            body = (b'{"ok":false,"error_code":400,"description":"Bad Request: chat not found"}'
+                    if status == 400 else b'{"ok":true}')
+            self.send_response(status)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args):
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, seen
+
+
+def test_send_telegram_posts_to_the_bot_and_chat():
+    server, seen = _telegram_server([429, 200])
+    waits = []
+    try:
+        busy.send_telegram("123:ABC", "42", "Hello\nthere", api=f"http://127.0.0.1:{server.server_port}",
+                           sleep=waits.append)
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert waits == [busy.RETRY_SECONDS] and len(seen) == 2
+    path, payload = seen[-1]
+    assert path == "/bot123:ABC/sendMessage"
+    assert payload == {"chat_id": "42", "text": "Hello\nthere", "disable_web_page_preview": True}
+
+
+def test_telegram_refusal_gives_its_reason_but_never_the_token():
+    import urllib.error
+    server, seen = _telegram_server([400])
+    try:
+        with pytest.raises(urllib.error.HTTPError) as caught:
+            busy.send_telegram("123:SECRET", "42", "x", api=f"http://127.0.0.1:{server.server_port}")
+    finally:
+        server.shutdown()
+        server.server_close()
+    assert "chat not found" in str(caught.value) and "SECRET" not in str(caught.value)
+
+
+def test_send_alert_uses_every_channel_set_up(monkeypatch):
+    calls = []
+    monkeypatch.setattr(busy, "send_telegram", lambda token, chat, text, **k: calls.append(("tg", token, chat, text)))
+    monkeypatch.setattr(busy, "send_ntfy", lambda server, topic, title, message, tags, **k: calls.append(("ntfy", topic, k["click"])))
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
+    busy.send_alert("T", "m", "x", click="https://x/admin", ntfy_topic="top")
+    assert calls == [("ntfy", "top", "https://x/admin")]
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "1:A")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    calls.clear()
+    busy.send_alert("T", "m", "x", click="https://x/admin")
+    assert calls == [("tg", "1:A", "42", "T\nm\nhttps://x/admin")]
+
+
+def test_one_failing_channel_does_not_stop_the_other(monkeypatch):
+    calls = []
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "1:A")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+
+    def down(*a, **k):
+        raise OSError("quota reached")
+    monkeypatch.setattr(busy, "send_ntfy", down)
+    monkeypatch.setattr(busy, "send_telegram", lambda *a, **k: calls.append("tg"))
+    with pytest.raises(RuntimeError, match="ntfy: quota reached"):
+        busy.send_alert("T", "m", "x", ntfy_topic="top")
+    assert calls == ["tg"]
+
+
+def test_start_runs_with_telegram_alone(monkeypatch):
+    monkeypatch.delenv("BUSY_ALERT_NTFY_TOPIC", raising=False)
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "1:A")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    started = []
+    monkeypatch.setattr(busy, "watch", lambda *a: started.append(a) or asyncio.sleep(0))
+    asyncio.run(_start())
+    assert started and started[0][0] == ""

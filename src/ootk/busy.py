@@ -8,11 +8,15 @@ second message follows once the average drops back below the threshold. Busy ale
 BUSY_ALERT_COOLDOWN_MINUTES apart. The message carries the CPU figure only, never anything from
 a reading.
 
-It is off unless BUSY_ALERT_NTFY_TOPIC is set. Anyone who knows an ntfy topic's name can read
-it, so the name should be long and random, and kept with the other secrets. NTFY_TOKEN, an access
-token from a free ntfy.sh account, keeps pushes from being refused on a shared host (see send_ntfy).
+Alerts go to Telegram when TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set (a bot of the
+owner's own, messaging the owner's chat), and to ntfy when BUSY_ALERT_NTFY_TOPIC is set; the watch
+is off when neither is. Anyone who knows an ntfy topic's name can read it, so the name should be
+long and random, and kept with the other secrets. On a free host ntfy.sh's free limits are
+shared with other apps and can run out ("daily message quota reached"), which is why Telegram is
+offered: its limits are per bot.
 """
 import asyncio
+import json
 import logging
 import os
 import time
@@ -140,16 +144,71 @@ def send_ntfy(server, topic, title, message, tags, click=None, sleep=time.sleep)
                 return
         except urllib.error.HTTPError as error:
             if error.code != 429 or attempt == 2:
-                # ntfy explains a refusal in its reply (e.g. "limit reached: too many requests",
-                # or an unknown token), so the log says why, not just the status number.
-                try:
-                    reason = error.read(300).decode("utf-8", "replace").strip()
-                except Exception:
-                    reason = ""
-                if reason:
-                    error.msg = f"{error.msg}: {reason}"
-                raise
+                raise _explain(error)
         sleep(RETRY_SECONDS)
+
+
+TELEGRAM_API = "https://api.telegram.org"
+
+
+def _explain(error):
+    """Adds the service's own reply (ntfy and Telegram both say why they refused) to an
+    HTTPError's message, so the log shows the reason, not just the status number."""
+    try:
+        reason = error.read(300).decode("utf-8", "replace").strip()
+    except Exception:
+        reason = ""
+    if reason:
+        error.msg = f"{error.msg}: {reason}"
+    return error
+
+
+def telegram_settings():
+    """(bot token, chat id) when both TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are set, else None."""
+    token = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
+    chat = (os.getenv("TELEGRAM_CHAT_ID") or "").strip()
+    return (token, chat) if token and chat else None
+
+
+def send_telegram(token, chat_id, text, api=TELEGRAM_API, sleep=time.sleep):
+    """Sends one Telegram message from the bot to the chat. A 429 is tried once more after
+    RETRY_SECONDS. The bot token is part of the address, so errors never include the address."""
+    body = json.dumps({"chat_id": chat_id, "text": text, "disable_web_page_preview": True}).encode()
+    for attempt in (1, 2):
+        request = urllib.request.Request(f"{api.rstrip('/')}/bot{token}/sendMessage", data=body,
+                                         method="POST", headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(request, timeout=SEND_TIMEOUT):
+                return
+        except urllib.error.HTTPError as error:
+            if error.code != 429 or attempt == 2:
+                raise _explain(error) from None
+        sleep(RETRY_SECONDS)
+
+
+def alerts_configured(ntfy_topic="") -> bool:
+    return bool(telegram_settings() or ntfy_topic)
+
+
+def send_alert(title, message, tags, click=None, ntfy_topic="", sleep=time.sleep):
+    """Sends an alert to every channel that is set up: Telegram, and ntfy when `ntfy_topic` is
+    given. One channel failing doesn't stop the other; if any failed, raises with each reason."""
+    failures = []
+    telegram = telegram_settings()
+    if telegram:
+        text = f"{title}\n{message}" + (f"\n{click}" if click else "")
+        try:
+            send_telegram(*telegram, text, sleep=sleep)
+        except Exception as error:
+            failures.append(f"Telegram: {error}")
+    if ntfy_topic:
+        server = (os.getenv("BUSY_ALERT_NTFY_SERVER") or "").strip() or "https://ntfy.sh"
+        try:
+            send_ntfy(server, ntfy_topic, title, message, tags, click=click, sleep=sleep)
+        except Exception as error:
+            failures.append(f"ntfy: {error}")
+    if failures:
+        raise RuntimeError("; ".join(failures))
 
 
 def alert_text(event, average, percent, minutes):
@@ -159,7 +218,7 @@ def alert_text(event, average, percent, minutes):
     return "Server back to normal", f"CPU is down to {average:.0f}% over the last {minutes} minutes.", "white_check_mark"
 
 
-async def watch(topic, server, percent, minutes, cooldown_minutes):
+async def watch(topic, percent, minutes, cooldown_minutes):
     cores = cpu_allowance()
     watcher = BusyWatch(cores, percent, minutes, cooldown_minutes)
     log.warning("Busy alert on: %s%% of %.2g CPU for %s minutes", percent, cores, minutes)
@@ -169,19 +228,19 @@ async def watch(topic, server, percent, minutes, cooldown_minutes):
             title, message, tags = alert_text(event, average, percent, minutes)
             log.warning("%s: %s", title, message)
             try:
-                await asyncio.to_thread(send_ntfy, server, topic, title, message, tags)
+                await asyncio.to_thread(send_alert, title, message, tags, ntfy_topic=topic)
             except Exception as error:  # an alert that can't be sent must not stop the watch
                 log.warning("Busy alert not sent: %s", error)
         await asyncio.sleep(SAMPLE_SECONDS)
 
 
 def start():
-    """Start the watch as a background task if BUSY_ALERT_NTFY_TOPIC is set; returns the task."""
+    """Start the watch as a background task if Telegram or BUSY_ALERT_NTFY_TOPIC is set; returns
+    the task."""
     topic = (os.getenv("BUSY_ALERT_NTFY_TOPIC") or "").strip()
-    if not topic:
+    if not alerts_configured(topic):
         return None
-    server = (os.getenv("BUSY_ALERT_NTFY_SERVER") or "").strip() or "https://ntfy.sh"
     percent = env_int("BUSY_ALERT_PERCENT", 70, maximum=100)
     minutes = env_int("BUSY_ALERT_MINUTES", 5)
     cooldown = env_int("BUSY_ALERT_COOLDOWN_MINUTES", 60)
-    return asyncio.get_running_loop().create_task(watch(topic, server, percent, minutes, cooldown))
+    return asyncio.get_running_loop().create_task(watch(topic, percent, minutes, cooldown))
