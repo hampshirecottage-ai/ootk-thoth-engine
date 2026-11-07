@@ -56,7 +56,7 @@ ootk-thoth-engine/
 │   ├── assets.py           # Static files: versioned URLs, cache headers, compression
 │   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
 │   ├── lockout.py          # Locks out repeated wrong passwords (APP_PASSWORD, ADMIN_PASSWORD)
-│   ├── busy.py             # Busy-server alert: ntfy push when CPU stays high (BUSY_ALERT_*); also sends contact-message pushes
+│   ├── busy.py             # Busy-server alert when CPU stays high (BUSY_ALERT_*); sends alerts by Telegram and/or ntfy, contact messages too
 │   └── library.json        # Glossary and further reading (/library)
 ├── scripts/
 │   ├── check_run.py        # Sanity-checks a saved 4-operation run (run.txt)
@@ -147,8 +147,9 @@ Everything else is optional:
 | `DB_DOWN_SECONDS` | After the database fails to answer within `DB_CONNECT_TIMEOUT`, how many seconds pages show the "database down" page at once instead of waiting again | `15` |
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
 | `READINGS_PER_VISITOR` | Most reading pages (drawn, shared, saved, or their JSON) one visitor may open in 10 minutes; past it they wait out the 10 minutes | `60` |
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Sends the busy-server and new-contact-message alerts as Telegram messages from your own bot. Make the bot with @BotFather (`/newbot` gives the token), press **Start** in a chat with it, and get your chat id from @userinfobot. Works alongside ntfy, or instead of it; Telegram is the reliable choice on a shared free host, where ntfy.sh's free limits can run out | off |
 | `BUSY_ALERT_NTFY_TOPIC` | Turns on the busy-server alert: a push to this [ntfy](https://ntfy.sh) topic when CPU stays high, and another when it calms down. Anyone who knows the name can read the topic, so make it long and random | off |
-| `CONTACT_ALERT_NTFY_TOPIC` | ntfy topic that gets a push for each new contact message (the push says only that a message came, never what it says, and opens `/admin/messages`) | `BUSY_ALERT_NTFY_TOPIC`; with neither set, no pushes |
+| `CONTACT_ALERT_NTFY_TOPIC` | ntfy topic that gets a push for each new contact message (the alert, on ntfy or Telegram, says only that a message came, never what it says, and links to `/admin/messages`) | `BUSY_ALERT_NTFY_TOPIC`; with neither set, no pushes |
 | `BUSY_ALERT_PERCENT` | CPU use, as a share of what the host allows (a tenth of a CPU on Render's free plan), that counts as busy | `70` |
 | `BUSY_ALERT_MINUTES` | Minutes the average must stay at or above that before an alert | `5` |
 | `BUSY_ALERT_COOLDOWN_MINUTES` | Least time between two busy alerts | `60` |

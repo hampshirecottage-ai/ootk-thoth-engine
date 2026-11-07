@@ -35,3 +35,9 @@ services:
       # Access token from a free ntfy.sh account; without it ntfy.sh may refuse pushes from Render's shared addresses (HTTP 429).
       - key: NTFY_TOKEN
         sync: false
+      # Telegram alerts (busy server, new contact message) from your own bot: token from @BotFather,
+      # your chat id from @userinfobot. Both empty: no Telegram alerts.
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false

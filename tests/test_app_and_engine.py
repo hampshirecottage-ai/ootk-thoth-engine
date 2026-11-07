@@ -76,6 +76,8 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "send_contact_alert", lambda topic, url: alerts.append((topic, url)))
     monkeypatch.delenv("CONTACT_ALERT_NTFY_TOPIC", raising=False)
     monkeypatch.delenv("BUSY_ALERT_NTFY_TOPIC", raising=False)
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     # Drawn cards bypass the reference cache, so each reading's lookup is recorded.
     monkeypatch.setattr(app_module, "card_rows", lambda titles, system: fake_fetch(None, titles, system))
 
@@ -2844,15 +2846,15 @@ def test_no_alert_without_a_topic(client):
 
 def test_contact_alert_carries_no_message_details(monkeypatch):
     sent = []
-    monkeypatch.setattr(app_module.busy, "send_ntfy", lambda *a, **k: sent.append((a, k)))
+    monkeypatch.setattr(app_module.busy, "send_alert", lambda *a, **k: sent.append((a, k)))
     app_module.send_contact_alert("t", "https://x/admin/messages")
     [(args, kwargs)] = sent
-    assert args[1] == "t" and kwargs == {"click": "https://x/admin/messages"}
-    assert "Tap to read it" in args[3]
+    assert kwargs == {"click": "https://x/admin/messages", "ntfy_topic": "t"}
+    assert args[0] == "New contact message" and "Tap to read it" in args[1]
 
     def broken(*a, **k):
         raise OSError("ntfy down")
-    monkeypatch.setattr(app_module.busy, "send_ntfy", broken)
+    monkeypatch.setattr(app_module.busy, "send_alert", broken)
     app_module.send_contact_alert("t", "u")                   # logged, never raised
 
 
@@ -2930,3 +2932,10 @@ def test_admin_messages_does_not_exist_without_a_password(client, monkeypatch):
 ])
 def test_reply_address_check(text, ok):
     assert app_module.looks_like_email(text) is ok
+
+
+def test_contact_alert_goes_out_with_telegram_alone(client, monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "1:A")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
+    client.post("/contact", data={**OPENED, "body": "hi"})
+    assert client.alerts == [("", "http://testserver/admin/messages")]

@@ -95,7 +95,7 @@ def builds_a_reading(path: str) -> bool:
 
 @asynccontextmanager
 async def lifespan(app):
-    # The busy-server alert (off unless BUSY_ALERT_NTFY_TOPIC is set) runs for the server's life.
+    # The busy-server alert (off unless Telegram or BUSY_ALERT_NTFY_TOPIC is set) runs for the server's life.
     watch = busy.start()
     yield
     if watch:
@@ -1620,14 +1620,13 @@ def contact_alert_topic() -> str:
 
 
 def send_contact_alert(topic: str, admin_url: str):
-    """Pushes 'a new message came' to the owner's phone. The push never carries the message, the
-    name or the reply address: anyone who knows an ntfy topic's name can read it, so the message
-    stays in the database and is read on /admin/messages, which the notification opens."""
-    server = (os.getenv("BUSY_ALERT_NTFY_SERVER") or "").strip() or "https://ntfy.sh"
+    """Tells the owner's phone (Telegram and/or ntfy, whichever is set up) that a new message
+    came. The alert never carries the message, the name or the reply address: it stays in the
+    database and is read on /admin/messages, which the alert links to."""
     try:
-        busy.send_ntfy(server, topic, "New contact message",
-                       "Someone sent a message through the site's contact form. Tap to read it.",
-                       "envelope", click=admin_url)
+        busy.send_alert("New contact message",
+                        "Someone sent a message through the site's contact form. Tap to read it.",
+                        "envelope", click=admin_url, ntfy_topic=topic)
     except Exception as error:  # a failed alert must not lose or fail the message
         log.warning("contact alert not sent: %s", error)
 
@@ -1684,7 +1683,7 @@ def send_contact(request: Request, background: BackgroundTasks, body: str = Form
     contact_senders.failed(visitor)
     log.info("contact message received")
     topic = contact_alert_topic()
-    if topic:
+    if busy.alerts_configured(topic):
         background.add_task(send_contact_alert, topic, f"{site_url(request)}/admin/messages")
     return contact_page(request, sent=True)
 
