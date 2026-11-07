@@ -19,9 +19,10 @@
         ol.path > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-weight: 700; }
         ol.path h3 { margin: 4px 0 4px; }
         ol.path p { margin: 0 0 6px; }
-        .ops-anim { float: right; margin: 0 0 12px 20px; }
-        .ops-anim img { display: block; height: 340px; width: auto; }
-        @media (max-width: 640px) { .ops-anim { float: none; margin: 12px auto; } .ops-anim img { margin: 0 auto; } }
+        /* The question-to-AI animation leads the page, as large as fits. */
+        .hero-anim { margin: 0 0 16px; text-align: center; }
+        .hero-anim img { display: block; width: min(100%, 320px); height: auto; margin: 0 auto; }
+        .hero-anim figcaption { margin: 10px auto 0; max-width: 34em; font-size: 0.92em; color: var(--muted); }
         .stages { display: grid; gap: 12px; }
         .stage { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel-3); }
         .stage h3 { margin: 0 0 4px; }
@@ -32,14 +33,10 @@
     <script src="{{ static_url('js/fold.js') }}" defer></script>
 {% endblock %}
 {% block content %}
-        <details class="panel fold">
-            <summary class="fold-toggle"><h2 id="strengthsTitle">What OOTK does best</h2></summary>
-            <p>It takes care of the bookkeeping, so you can spend your time on the cards.</p>
-            <ul>
-                <li><strong>Careful lookups.</strong> Each card's dignities, aspects and correspondences come from the Book&nbsp;T and Liber&nbsp;777 tables and are scored the same way every time, so the same seed always gives the same figures.</li>
-                <li><strong>Pictures of the reading.</strong> The heap, the wheel of houses and signs, and the Cube of Space show where each card sits and how the cards link.</li>
-            </ul>
-        </details>
+        <figure class="panel hero-anim">
+            <img src="{{ static_url('site/question-to-ai.svg') }}" width="160" height="294" alt="An example question about a job, from start to finish. In Help me shape my question: Work and career is picked; Should I take the new job? is typed and flagged as a yes/no question; Help me weigh a decision suggests the Dyad; the question is mine, over the next three months; under Anything your AI should know? the situation and what I am unsure about are added. The finished question reads: What is drawing me toward the job offer, and what in me or the situation is resisting it, over the next three months? Two cards are drawn, Save prompt as Markdown (.md) saves the prompt as a file, and in your AI the + button attaches it and your AI replies.">
+            <figcaption>From question to your AI: shape the question, draw the cards, save the prompt as Markdown and attach it in your AI.</figcaption>
+        </figure>
 
         <details class="panel fold" open>
             <summary class="fold-toggle"><h2 id="pathTitle">Your first reading, step by step</h2></summary>
@@ -56,9 +53,6 @@
                 </li>
                 <li>
                     <h3>Draw three cards</h3>
-                    <figure class="ops-anim">
-                        <img src="{{ static_url('site/question-to-ai.svg') }}" width="160" height="294" loading="lazy" alt="An example question about a job, from start to finish. In Help me shape my question: Work and career is picked; Should I take the new job? is typed and flagged as a yes/no question; Help me weigh a decision suggests the Dyad; the question is mine, over the next three months; under Anything your AI should know? the situation and what I am unsure about are added. The finished question reads: What is drawing me toward the job offer, and what in me or the situation is resisting it, over the next three months? Two cards are drawn, Save prompt as Markdown (.md) saves the prompt as a file, and in your AI the + button attaches it and your AI replies.">
-                    </figure>
                     <p>Past, present and future. Add a question if you like, or leave it blank. <strong>Help me shape my question</strong>, under the Question box, turns a rough question into an open one and adds anything your AI should know.</p>
                     <div class="actions"><a class="btn" href="/?spread=3#readingForm">Draw three cards</a></div>
                 </li>
