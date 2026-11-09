@@ -170,7 +170,7 @@ def segment_pairs(layout_key, seg_len):
     whom. Neighbours are consecutive positions, except:
     - on a full ring (houses, signs, decans) the last position also neighbours the first
       (twelfth house <-> first house), closing the circle;
-    - a heap or the Celtic Cross (HEAP_PAIRS) pairs its named pairs instead of following deal
+    - a heap, the Celtic Cross, the Relationship spread or two rows of three (HEAP_PAIRS) pairs its named pairs instead of following deal
       order;
     - a Tree of Life layout (TREE_LAYOUTS) pairs Sephiroth joined by a path.
     """
@@ -287,7 +287,7 @@ def analyze_spatial_vectors(spread_results, spread_key):
     Master pipelines are analysed one operation at a time against that operation's own layout,
     so no pair spans two operations. Ring layouts (see RING_LAYOUT_ASPECTS) are paired by
     exact aspect between any two positions; all other layouts pair consecutive positions.
-    Named-pair layouts (NAMED_PAIR_LAYOUTS: the Op 1 heap, the Celtic Cross) link the same
+    Named-pair layouts (NAMED_PAIR_LAYOUTS: the Op 1 heap, the Celtic Cross, the Relationship spread, two rows of three) link the same
     pairs as their dignities (HEAP_PAIRS), by distance only, with no aspect: their drawing
     coordinates are not a wheel.
     Segments without a defined layout are skipped (no fake geometry). A position sitting on

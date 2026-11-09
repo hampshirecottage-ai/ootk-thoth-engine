@@ -344,9 +344,10 @@ SPREAD_STAGES = [
     ("Stage 2", "Elements in pairs", ["2", "4", "5"],
      "Elemental dignities: whether neighbouring cards strengthen or weaken each other, and the "
      "four worlds of the Tetragrammaton."),
-    ("Stage 3", "Whole layouts", ["6", "7", "14"],
-     "Cards placed on the planets of the hexagram, the Sephiroth of the Tree of Life and the "
-     "places of Waite&rsquo;s Celtic Cross, and how each position relates to the others."),
+    ("Stage 3", "Whole layouts", ["16", "15", "6", "7", "14"],
+     "Cards placed in two rows of three, on the six places of a relationship, the planets of the hexagram, the "
+     "Sephiroth of the Tree of Life and the places of Waite&rsquo;s Celtic Cross, and how each "
+     "position relates to the others."),
     ("Stage 4", "The Opening of the Key", ["8", "9", "10", "11", "12", BOOK_T_KEY],
      "The Golden Dawn&rsquo;s long method, one operation at a time: a significator, then the "
      "houses, the signs and the 36 decans, and finally all four together. Last, the whole "
@@ -357,7 +358,7 @@ SPREAD_STAGES = [
 SPREAD_DEPTHS = [
     ("A quick look", "1 or 3 cards, a minute to read"),
     ("How forces meet", "2 to 4 cards, elements in pairs"),
-    ("The whole picture", "7 or 10 cards on the hexagram, the Tree of Life or the Celtic Cross"),
+    ("The whole picture", "6 to 10 cards: two rows of three, a relationship, the hexagram, the Tree of Life or the Celtic Cross"),
     ("The Opening of the Key", "The Golden Dawn&rsquo;s long method, 12 to about 80 cards"),
 ]
 SPREAD_GUIDE = {
@@ -369,6 +370,10 @@ SPREAD_GUIDE = {
     "6": ("Hexagram", "Seven planetary forces around the matter: limits, luck, drive, love, mind, "
                       "the core and what lies beneath."),
     "7": ("Tree of Life", "The matter from its first impulse down to how it lands in daily life."),
+    "16": ("Two rows of three", "The situation across the top (past, present, near future), what "
+                                "stands in the way and the advice below, ending on the outcome."),
+    "15": ("Relationship", "Two people side by side: what each brings, what joins and what divides "
+                           "you, what would help and where it is heading."),
     "14": ("Celtic Cross", "The best-known ten-card spread: the matter, what crosses it, its roots "
                            "and aim, past and next, then you, your surroundings, hopes and fears "
                            "and the outcome."),
@@ -474,6 +479,27 @@ LANDING_PAGES = {
                  "next, then the staff of four. The report pairs the cards the way the cross is "
                  "read and gives each card’s attribution, element and King Scale colour.",
         "spread": "14"},
+    "relationship-spread": {
+        "title": "Relationship Tarot Spread",
+        "tagline": "Six cards on you, them and what lies between you.",
+        "description": "A six-card relationship tarot spread online with the Thoth deck: you, them, "
+                       "what joins and divides you, advice and where it is heading.",
+        "intro": "Lay six cards for two people: you and them side by side, what joins you and what "
+                 "divides you between, then the advice and where the relationship is heading. The "
+                 "report pairs the cards the way the spread is read and gives each card’s "
+                 "attribution, element and King Scale colour.",
+        "spread": "15"},
+    "six-card-spread": {
+        "title": "Six Card Tarot Spread",
+        "tagline": "Two rows of three: the situation, what acts on it, and the outcome.",
+        "description": "A six-card tarot spread online with the Thoth deck: past, present and near "
+                       "future, then what stands in the way, advice and the outcome.",
+        "intro": "Lay six cards in two rows of three. The top row is the situation: past, present "
+                 "and near future. The bottom row is what acts on it: what stands in the way, the "
+                 "advice, and last the outcome. The report pairs each card with the one beside it "
+                 "and the one below it, and gives each card’s attribution, element and King "
+                 "Scale colour.",
+        "spread": "16"},
 }
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = (["/", "/pick", "/start", "/library", "/maps", "/method"]

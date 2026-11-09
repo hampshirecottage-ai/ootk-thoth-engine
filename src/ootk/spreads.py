@@ -138,6 +138,32 @@ SPREADS = {
             "9. Hopes and Fears",
             "10. What Will Come (the outcome)"
         ]
+    },
+    # A six-card relationship spread: the two people side by side, what joins and what divides
+    # them between, then the advice and where the relationship is heading.
+    "15": {
+        "name": "Relationship (6 cards)",
+        "positions": [
+            "1. You (your side: what you bring and how you feel)",
+            "2. Them (their side: what they bring and how they feel)",
+            "3. What Joins You (the common ground and the bond)",
+            "4. What Divides You (the friction or what keeps you apart)",
+            "5. Advice (what would help)",
+            "6. Where It Is Heading (the likely course of the relationship)"
+        ]
+    },
+    # The common modern six-card spread in two rows of three: the situation along the top
+    # (past, present, near future), what acts on it along the bottom, ending on the outcome.
+    "16": {
+        "name": "Two Rows of Three (6 cards)",
+        "positions": [
+            "1. Past (what led here)",
+            "2. Present (where the matter stands now)",
+            "3. Near Future (what is coming next)",
+            "4. What Stands in the Way (the obstacle or challenge)",
+            "5. Advice (what would help)",
+            "6. Outcome (where it is likely to end)"
+        ]
     }
 }
 
@@ -207,6 +233,20 @@ SPREAD_DEFAULT_COORDINATES = {
         (-1.2, 0.0), (1.2, 0.0),
         (2.6, -1.95), (2.6, -0.65), (2.6, 0.65), (2.6, 1.95)
     ],
+    # Relationship: you on the left, them on the right, what joins you above and what divides
+    # you below, then advice and where it is heading in a column on the far right.
+    # A drawing convention only: its pairs are named, not angled (NAMED_PAIR_LAYOUTS).
+    "15": [
+        (-1.2, 0.0), (1.2, 0.0),
+        (0.0, 1.1), (0.0, -1.1),
+        (2.6, -0.65), (2.6, 0.65)
+    ],
+    # Two rows of three: the situation (1-3) along the top, what acts on it (4-6) below.
+    # A drawing convention only: its pairs are named, not angled (NAMED_PAIR_LAYOUTS).
+    "16": [
+        (-1.2, 0.6), (0.0, 0.6), (1.2, 0.6),
+        (-1.2, -0.6), (0.0, -0.6), (1.2, -0.6)
+    ],
 }
 
 # Ring layouts (houses, zodiac, decans) are paired by aspect, not by neighbour: consecutive
@@ -242,9 +282,18 @@ HEAP_LAYOUTS = {"8"}   # OOTK Op 1
 # the crown with what is beneath (the vertical axis), what is behind with what is before (the
 # time axis), the staff from 7 up to 10, and the matter now (1) with what will come (10).
 # Deal order would join unrelated places (2 with 3, 4 with 5, 6 with 7).
+#
+# The Relationship spread pairs you with them, what joins you with what divides you, and the
+# advice with where it is heading. Deal order would join them with what joins you, and so on.
+#
+# Two rows of three pairs each card with the one beside it in its row and the one below it:
+# the past with what stands in the way, the present with the advice, the near future with
+# the outcome. Deal order would join the near future (3) to what stands in the way (4).
 HEAP_PAIRS = {
     "8": ((1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (0, 13), (0, 14)),
     "14": ((0, 1), (2, 3), (4, 5), (6, 7), (7, 8), (8, 9), (0, 9)),
+    "15": ((0, 1), (2, 3), (4, 5)),
+    "16": ((0, 1), (1, 2), (3, 4), (4, 5), (0, 3), (1, 4), (2, 5)),
 }
 
 # Layouts whose pairs are named (HEAP_PAIRS) rather than measured: their drawing coordinates
@@ -253,8 +302,12 @@ HEAP_PAIRS = {
 NAMED_PAIR_LAYOUTS = {
     "8": ("Heap Pair", "Paired in the heap; a heap has no angular relation"),
     "14": ("Cross Pair", "Paired in the Celtic Cross; its places make no angular relation"),
+    "15": ("Relationship Pair", "Paired in the Relationship spread; its places make no angular relation"),
+    "16": ("Row Pair", "Paired in two rows of three; its places make no angular relation"),
 }
 CELTIC_CROSS_KEY = "14"
+RELATIONSHIP_KEY = "15"
+TWO_ROWS_KEY = "16"
 
 # Tree of Life layouts: positions are the ten Sephiroth in order, so cards are scored along
 # the 22 paths that join them (Binah and Chesed, 3 and 4, share no path).
