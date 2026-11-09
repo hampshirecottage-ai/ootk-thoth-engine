@@ -585,13 +585,18 @@ def link_explainer(layout_key, n_cards, has_layout):
         first = (f"The {n_cards} cards are laid out as a relationship spread and linked in its named "
                  f"pairs: you with them (1 with 2), what joins you with what divides you (3 with 4), "
                  f"and the advice with where it is heading (5 with 6).")
+    elif layout_key == "16":
+        first = (f"The {n_cards} cards are laid out in two rows of three, the situation on top and "
+                 f"what acts on it below. Each card is linked with the one beside it in its row "
+                 f"(1 with 2, 2 with 3, 4 with 5, 5 with 6) and with the one below it (1 with 4, "
+                 f"2 with 5, 3 with 6).")
     elif layout_key in TREE_LAYOUTS:
         first = ("The cards sit on the ten Sephiroth and are linked along the paths of the Tree of "
                  "Life: two cards are linked when a path joins their Sephiroth.")
     else:
         first = "The cards are linked in the order they were laid out: 1 with 2, 2 with 3, and so on."
     lines = [first, f"Each pair gets an element score. {SCORE_RULE}"]
-    if layout_key == "15":
+    if layout_key in ("15", "16"):
         lines.append("This spread is not a wheel, so these pairs get no astrological aspect: the "
                      "places in the drawing only show where each card lies.")
     elif layout_key == "14":

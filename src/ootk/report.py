@@ -19,7 +19,7 @@ from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
 from ootk.sky import sky_line
-from ootk.spreads import BOOK_T_KEY, CELTIC_CROSS_KEY, RELATIONSHIP_KEY, SPREADS, ZODIAC_SIGNS, spread_segments
+from ootk.spreads import BOOK_T_KEY, CELTIC_CROSS_KEY, RELATIONSHIP_KEY, SPREADS, TWO_ROWS_KEY, ZODIAC_SIGNS, spread_segments
 
 # The report header and the web form both name the systems from here, so the label always
 # says which way the Tzaddi/Heh swap goes (see db.fetch_cards_correspondences).
@@ -679,7 +679,12 @@ def _dignity_md(dignity_matrix, book_t_notes=None, off=frozenset()):
 _NAMED_LAYOUT_WHERE = {
     SPREADS[CELTIC_CROSS_KEY]["name"]: "in a Celtic Cross",
     SPREADS[RELATIONSHIP_KEY]["name"]: "in the Relationship spread",
+    SPREADS[TWO_ROWS_KEY]["name"]: "in two rows of three",
 }
+
+_ROWS_NOTE = ("\n* Two rows of three is not a wheel: its places make no angles. Its named pairs "
+              "(each card with the one beside it in its row, and with the one below it) are "
+              "scored in section {dignity}.\n")
 
 _RELATIONSHIP_NOTE = ("\n* The Relationship spread is not a wheel: its places make no angles. Its named "
                       "pairs (you with them, what joins you with what divides you, and the advice with "
@@ -745,6 +750,7 @@ def _spatial_md(spatial_matrix, off=frozenset()):
                 heaps_noted.add(last_segment)
                 md += (_CROSS_NOTE if s.get("aspect") == "Cross Pair" else
                        _RELATIONSHIP_NOTE if s.get("aspect") == "Relationship Pair" else
+                       _ROWS_NOTE if s.get("aspect") == "Row Pair" else
                        "\n* A heap is not a wheel: its cards make no angles. Its named pairs are "
                        "scored in section {dignity}.\n").format(dignity=DIGNITY)
         else:

@@ -23,6 +23,8 @@
                pos: [["Saturn", "what constrains it"], ["Jupiter", "what could expand it"], ["Mars", "what drives it"], ["Venus", "what you value in it"], ["Mercury", "how you think about it"], ["Sun", "who you are at its centre"], ["Moon", "what lies beneath the surface"]] },
         "7": { q: s => `How does ${s} unfold from its first spiritual impulse down to how it shows up in my daily life`,
                pos: [["Kether to Binah", "the first impulse, its force and its form"], ["Chesed to Tiphareth", "what expands, what must be cut, your core"], ["Netzach to Yesod", "feeling, thought and the unconscious foundation"], ["Malkuth", "how it shows up in daily life"]] },
+        "16": { q: s => `How did ${s} get here, where does it stand and what comes next, what stands in the way, what would help, and how is it likely to turn out`,
+               pos: [["1 to 3", "past, present and near future"], ["4 and 5", "what stands in the way and what would help"], ["6", "the outcome"]] },
         "15": { q: s => `What do I and the other person each bring to ${s}, what joins us and what divides us, what would help, and where is it heading`,
                pos: [["1 and 2", "you and them, side by side"], ["3 and 4", "what joins you and what divides you"], ["5 and 6", "what would help and where it is heading"]] },
         "14": { q: s => `What is at the heart of ${s}, what stands in the way, what is it built on and aiming for, what is passing and coming next, and how is it likely to turn out`,

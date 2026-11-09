@@ -867,6 +867,32 @@ def test_relationship_report_and_web(seeded_client):
     assert "Relationship" in seeded_client.get("/tarot/relationship-spread").text
 
 
+def test_two_rows_pairs_are_its_row_and_column_neighbours():
+    # Beside in each row, then down each column. Deal order would join 3 to 4.
+    pairs = [(0, 1), (1, 2), (3, 4), (4, 5), (0, 3), (1, 4), (2, 5)]
+    assert len(spreads.spread_positions("16")) == 6 == len(spreads.SPREAD_DEFAULT_COORDINATES["16"])
+    assert analysis.segment_pairs("16", 6) == pairs
+    cards = [fake_card(f"C{i}") for i in range(6)]
+    dignity = analysis.calculate_elemental_dignities(results_for(*cards), "16")
+    assert [(d["from_index"], d["to_index"]) for d in dignity] == pairs
+    out = analysis.analyze_spatial_vectors(results_for(*cards), "16")
+    assert [(o["from_index"], o["to_index"]) for o in out] == pairs
+    assert all(o["aspect"] == "Row Pair" and o["aspect_name"] is None for o in out)
+
+
+def test_two_rows_report_and_web(seeded_client):
+    results, dignity, spatial = _spread_parts("16", [fake_card(f"C{i}") for i in range(6)])
+    counts = analysis.analyze_elemental_balance(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, _, duals = analysis.analyze_platonic_topology(results, "16")
+    prompt = report.build_analytical_prompt(spreads.SPREADS["16"]["name"], "", "", "1", results, counts,
+                                            dignity, spatial, sdist, solids, duals)
+    assert "Two rows of three is not a wheel" in prompt and "heap" not in prompt.lower()
+    r = post(seeded_client, spread_key="16", draw_mode="seed", seed="1568", selected_cards="")
+    assert r.status_code == 200 and "Two rows of three" in r.text
+    assert "Six Card Tarot Spread" in seeded_client.get("/tarot/six-card-spread").text
+
+
 def test_spatial_centre_node_has_no_fake_aspect():
     cards = [fake_card(f"C{i}") for i in range(3)]
     out = analysis.analyze_spatial_vectors(results_for(*cards), "3")

@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--significator", type=str, default=None,
                         help="Significator card title, pinned to position 1 of OOTK Op 1 (e.g. 'Queen of Cups')")
     parser.add_argument("--spread", type=str, default=None,
-                        help="Spread key (1-12, 13 for the full Book T Opening of the Key, 14 for the Celtic Cross, or 15 for the Relationship spread)")
+                        help="Spread key (1-12, 13 for the full Book T Opening of the Key, 14 for the Celtic Cross, 15 for the Relationship spread, or 16 for two rows of three)")
     parser.add_argument("--expect", type=str, default=None,
                         help=f"Spread 13 only: where the Significator is expected, {book_t.EXPECT_HELP}")
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
@@ -128,7 +128,7 @@ def run_spread_session():
             print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
             
         print("\n--- HERMETIC & MACROCOSMIC LAYOUTS ---")
-        for key in ["15", "6", "7", "14"]:
+        for key in ["16", "15", "6", "7", "14"]:
             print(f" [{key:2s}] {SPREADS[key]['name']} ({len(SPREADS[key]['positions'])} cards)")
 
         print("\n--- OPENING OF THE KEY (OOTK) OPERATIONS ---")
@@ -138,9 +138,9 @@ def run_spread_session():
         print("\n--- MASTER PIPELINE ---")
         print(f" [12] {SPREADS['12']['name']} (75 cards total, reshuffled for each operation)")
 
-        spread_choice = input("\nEnter spread number (1-12, 14 or 15): ").strip()
+        spread_choice = input("\nEnter spread number (1-12 or 14-16): ").strip()
         while spread_choice not in SPREADS:
-            spread_choice = input("Invalid spread. Enter a number from 1 to 12, 14 or 15: ").strip()
+            spread_choice = input("Invalid spread. Enter a number from 1 to 12 or 14 to 16: ").strip()
 
     selected_spread = SPREADS[spread_choice]
     print(f"\n---> Selected Spread: {selected_spread['name']}\n")
