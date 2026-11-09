@@ -581,13 +581,20 @@ def link_explainer(layout_key, n_cards, has_layout):
                  f"pairs: what covers with what crosses (1 with 2), the crown with what is beneath "
                  f"(3 with 4), what is behind with what is before (5 with 6), the staff from 7 up "
                  f"to 10, and the matter now with what will come (1 with 10).")
+    elif layout_key == "15":
+        first = (f"The {n_cards} cards are laid out as a relationship spread and linked in its named "
+                 f"pairs: you with them (1 with 2), what joins you with what divides you (3 with 4), "
+                 f"and the advice with where it is heading (5 with 6).")
     elif layout_key in TREE_LAYOUTS:
         first = ("The cards sit on the ten Sephiroth and are linked along the paths of the Tree of "
                  "Life: two cards are linked when a path joins their Sephiroth.")
     else:
         first = "The cards are linked in the order they were laid out: 1 with 2, 2 with 3, and so on."
     lines = [first, f"Each pair gets an element score. {SCORE_RULE}"]
-    if layout_key == "14":
+    if layout_key == "15":
+        lines.append("This spread is not a wheel, so these pairs get no astrological aspect: the "
+                     "places in the drawing only show where each card lies.")
+    elif layout_key == "14":
         lines.append("The cross is not a wheel, so these pairs get no astrological aspect: the "
                      "places in the drawing only show where each card lies.")
     elif layout_key in HEAP_LAYOUTS:
@@ -660,7 +667,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
     for number, (layout_key, start, end, name) in enumerate(
             spread_segments(spread_results, spread_key), start=1):
         seg_cards = [dict(c, index=c["index"] - start) for c in cards[start:end]]
-        # A heap's "Heap Pair" (and a Celtic Cross's "Cross Pair") entries carry no aspect (its
+        # A heap's "Heap Pair" (and a Celtic Cross's or Relationship spread's) entries carry no aspect (its
         # links are its element pairs), so they are left out of every aspect count, list and
         # drawing.
         seg_aspects = [] if layout_key in NAMED_PAIR_LAYOUTS else [

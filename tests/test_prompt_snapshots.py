@@ -24,8 +24,8 @@ TOPIC = "Should I change jobs this year?"
 SIGNIFICATOR = "Queen of Cups"
 # One of each kind of layout: single card, line, hexagram (with a centre), Tree of Life,
 # Op 1 heap, a full wheel (Own-Place Check), the four-operation master pipeline and the
-# Celtic Cross (named pairs, no aspects).
-SPREAD_KEYS = ("1", "3", "6", "7", "8", "10", "12", "14")
+# Celtic Cross and Relationship (named pairs, no aspects).
+SPREAD_KEYS = ("1", "3", "6", "7", "8", "10", "12", "14", "15")
 
 with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-8") as f:
     REFERENCE = json.load(f)

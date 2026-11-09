@@ -835,6 +835,38 @@ def test_celtic_cross_report_and_web(seeded_client):
     assert "Celtic Cross" in seeded_client.get("/tarot/celtic-cross-spread").text
 
 
+def test_relationship_pairs_are_its_named_pairs():
+    # You with them, what joins with what divides, advice with where it is heading.
+    # Deal order would join 2-3 and 4-5.
+    assert len(spreads.spread_positions("15")) == 6 == len(spreads.SPREAD_DEFAULT_COORDINATES["15"])
+    assert analysis.segment_pairs("15", 6) == [(0, 1), (2, 3), (4, 5)]
+    cards = [fake_card(f"C{i}") for i in range(6)]
+    dignity = analysis.calculate_elemental_dignities(results_for(*cards), "15")
+    assert [(d["from_index"], d["to_index"]) for d in dignity] == [(0, 1), (2, 3), (4, 5)]
+    out = analysis.analyze_spatial_vectors(results_for(*cards), "15")
+    assert [(o["from_index"], o["to_index"]) for o in out] == [(0, 1), (2, 3), (4, 5)]
+    assert all(o["aspect"] == "Relationship Pair" and o["aspect_name"] is None for o in out)
+    assert all(o["score_modifier"] == 0 and o["delta_angle"] is None for o in out)
+
+
+def test_relationship_report_and_web(seeded_client):
+    from ootk import visual
+    results, dignity, spatial = _spread_parts("15", [fake_card(f"C{i}") for i in range(6)])
+    view = visual.build_report_view("15", results, analysis.analyze_elemental_balance(results),
+                                    dignity, spatial, "x", "y")
+    assert view["segments"][0]["drawing"]["kind"] == "layout"
+    assert not any(c["aspects"] for c in view["card_details"])   # named pairs, no aspect lines
+    counts = analysis.analyze_elemental_balance(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, _, duals = analysis.analyze_platonic_topology(results, "15")
+    prompt = report.build_analytical_prompt(spreads.SPREADS["15"]["name"], "", "", "1", results, counts,
+                                            dignity, spatial, sdist, solids, duals)
+    assert "The Relationship spread is not a wheel" in prompt and "heap" not in prompt.lower()
+    r = post(seeded_client, spread_key="15", draw_mode="seed", seed="1568", selected_cards="")
+    assert r.status_code == 200 and "Relationship" in r.text
+    assert "Relationship" in seeded_client.get("/tarot/relationship-spread").text
+
+
 def test_spatial_centre_node_has_no_fake_aspect():
     cards = [fake_card(f"C{i}") for i in range(3)]
     out = analysis.analyze_spatial_vectors(results_for(*cards), "3")
