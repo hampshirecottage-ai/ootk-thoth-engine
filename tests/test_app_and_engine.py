@@ -751,9 +751,12 @@ def test_significator_places_follow_the_book_t_deal():
     positions = spreads.spread_positions("12")
     places = shuffle.significator_places(deck, "1568", positions, sig)
     assert [p["op"] for p in places] == [1, 2, 3, 4]
-    # Op 1: the pack is cut into four equal quarters of the seed's own shuffle.
+    # Op 1: Book T's cut of the seed's own shuffle; the top quarter is Heh final.
     at = [c["card_id"] for c in shuffle.shuffle_deck(deck, "1568")].index(10)
-    assert places[0]["place"].startswith("the " + shuffle.IHVH_PACKS[at * 4 // 78][0] + " pack")
+    assert places[0]["place"].startswith("the " + shuffle.IHVH_PACKS[3 - at * 4 // 78][0] + " pack")
+    assert shuffle.ihvh_pack_index(0, 78) == 3 and shuffle.ihvh_pack_index(77, 78) == 0
+    # A seed given as the number 0 places the significator just as "0" does.
+    assert shuffle.significator_places(deck, 0, positions, sig) == shuffle.significator_places(deck, "0", positions, sig)
     # Later operations deal the whole deck round, one card to each place in turn, so the
     # drawn cards are the first dealt to each and the significator's pack is its index mod n.
     titles, _ = shuffle.draw_spread(deck, "1568", positions, sig)

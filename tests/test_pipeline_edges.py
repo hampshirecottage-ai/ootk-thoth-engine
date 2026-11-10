@@ -59,13 +59,14 @@ def test_draw_refuses_a_deck_too_small_for_the_spread():
 # ---------- significator names ----------
 
 DECK = [card(0, "XI - Lust", "Major"), card(1, "2 of Wands - Dominion"),
-        card(2, "Queen of Cups", "Court")]
+        card(2, "Queen of Cups", "Court"), card(3, "IV - The Emperor", "Major")]
 
 
 @pytest.mark.parametrize("name,title", [
     ("XI - Lust", "XI - Lust"), ("lust", "XI - Lust"), ("Queen of Cups", "Queen of Cups"),
     ("2 of Wands", "2 of Wands - Dominion"), ("dominion", "2 of Wands - Dominion"),
     (" 2 OF WANDS ", "2 of Wands - Dominion"),
+    ("The Emperor", "IV - The Emperor"), ("Emperor", "IV - The Emperor"), ("EMPEROR", "IV - The Emperor"),
 ])
 def test_significator_found_by_any_of_its_names(name, title):
     assert shuffle.resolve_significator(DECK, name)["title"] == title

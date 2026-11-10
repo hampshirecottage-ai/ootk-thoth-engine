@@ -36,6 +36,11 @@ def resolve_significator(cards, name):
         head, _, tail = t.partition(" - ")
         if wanted in (t, tail, head if c.get("arcana_type") == "Minor" else None):
             return c
+    # 'Emperor' for 'IV - The Emperor': a Trump's name may be typed without its 'The'.
+    for c in cards:
+        tail = c["title"].lower().partition(" - ")[2]
+        if c.get("arcana_type") == "Major" and tail.startswith("the ") and tail[4:] == wanted:
+            return c
     return None
 
 
@@ -111,17 +116,27 @@ IHVH_PACKS = (("Yod", "Wands", "work and business"), ("Heh", "Cups", "love and p
 _POSITION_PREFIX = re.compile(r"^(\[Op \d+\] )?(\d+\. )?")
 
 
+def ihvh_pack_index(at, deck_size):
+    """Which of the four packs (0 Yod, 1 Heh, 2 Vau, 3 Heh final) holds the card at `at`
+    (0 = top) when Operation 1 cuts the deck as Book T does: the top half to the left, each
+    half cut again with its top to the left, and the packs read I H V H from right to left.
+    So the top quarter is Heh final and the bottom quarter Yod. The cuts are as near equal
+    as the deck allows: 20, 19, 20, 19 for 78 cards, from the top. book_t.four_packs uses
+    this too, so the Book T reading and the significator's place always name the same pack."""
+    return 3 - at * 4 // deck_size
+
+
 def significator_places(cards, seed, positions, sig_card):
     """Where the significator falls in each operation when that operation's whole shuffled
     deck is laid out as Book T does, as [{"op", "place", "shown"}], plus "position" (the
     spread position number of that place) for the dealt operations.
 
-    Operation 1 cuts the deck into four equal packs (Yod, Heh, Vau, Heh final). Later
+    Operation 1 cuts the deck into four packs as Book T does (see ihvh_pack_index). Later
     operations deal the whole deck round, one card to each house, sign or decan in turn, so
     the cards the spread shows are the first card dealt to each, and the draw is unchanged;
     `shown` says the significator is one of those. Empty without a seed or a significator
     position, since the place comes from the seed's shuffle."""
-    if not (seed and sig_card and has_significator_position(positions)):
+    if seed is None or seed == "" or not (sig_card and has_significator_position(positions)):
         return []
     places = []
     for op_num in sorted({operation_number(p) for p in positions}):
@@ -131,7 +146,7 @@ def significator_places(cards, seed, positions, sig_card):
             return []
         at = deck.index(sig_card["card_id"])
         if indices[0] == 0:                    # the operation that opens on the significator
-            letter, suit, topic = IHVH_PACKS[at * len(IHVH_PACKS) // len(deck)]
+            letter, suit, topic = IHVH_PACKS[ihvh_pack_index(at, len(deck))]
             places.append({"op": op_num, "place": f"the {letter} pack ({suit}: {topic})",
                            "shown": True})
         else:

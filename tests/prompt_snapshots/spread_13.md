@@ -1,5 +1,5 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
-> **Before you start:** this prompt lists 78 positions and its very last line is `END OF OOTK PROMPT (78 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
+> **Before you start:** this prompt lists 79 positions and its very last line is `END OF OOTK PROMPT (79 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
 **Operation/Spread:** Book T Opening of the Key (counting and pairing, 5 operations)
 **Query/Intent Topic:** Should I change jobs this year?
@@ -118,6 +118,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Spatial Dimension**: `Double_Direction` (Center Core (Holy Temple))
 
 ### Position 14: [Op 1] The Heh final pack (money, goods, purely material matters): 13 to the right of the Significator
+- **Card Drawn**: II - The Priestess
+- **Arcana/Suit**: Major | N/A
+- **Path/Sephira**: Camel (ג (Gimel))
+- **Attribution**: Moon
+- **Element (used in scores)**: Water (the Moon via Cancer, its only sign)
+- **Spatial Dimension**: `Double_Direction` (Down (Nadir))
+
+### Position 15: [Op 1] The Heh final pack (money, goods, purely material matters): 14 to the right of the Significator
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
@@ -125,20 +133,20 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 
-### Position 15: [Op 1] The Heh final pack (money, goods, purely material matters): 14 to the right of the Significator
+### Position 16: [Op 1] The Heh final pack (money, goods, purely material matters): 15 to the right of the Significator
 - **Card Drawn**: 4 of Swords - Truce
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 
-### Position 16: [Op 1] The Heh final pack (money, goods, purely material matters): 15 to the right of the Significator
+### Position 17: [Op 1] The Heh final pack (money, goods, purely material matters): 16 to the right of the Significator
 - **Card Drawn**: 7 of Cups - Debauch
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Planet Strength**: in detriment (weakened)
 
-### Position 17: [Op 1] The Heh final pack (money, goods, purely material matters): 16 to the right of the Significator
+### Position 18: [Op 1] The Heh final pack (money, goods, purely material matters): 17 to the right of the Significator
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
@@ -147,7 +155,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Earth (via Taurus)
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 
-### Position 18: [Op 1] The Heh final pack (money, goods, purely material matters): 17 to the right of the Significator
+### Position 19: [Op 1] The Heh final pack (money, goods, purely material matters): 18 to the right of the Significator
 - **Card Drawn**: XI - Lust
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
@@ -156,54 +164,54 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (via Leo)
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 
-### Position 19: [Op 1] The Heh final pack (money, goods, purely material matters): 18 to the right of the Significator
+### Position 20: [Op 1] The Heh final pack (money, goods, purely material matters): 19 to the right of the Significator
 - **Card Drawn**: 2 of Wands - Dominion
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
 - **Planet Strength**: rules this sign (strong)
 
-### Position 20: [Op 2] The 3rd house: the Significator
+### Position 21: [Op 2] The 3rd house: the Significator
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
-### Position 21: [Op 2] The 3rd house: 1 to the right of the Significator
+### Position 22: [Op 2] The 3rd house: 1 to the right of the Significator
 - **Card Drawn**: 4 of Cups - Luxury
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Moon in Cancer
 - **Planet Strength**: rules this sign (strong)
 
-### Position 22: [Op 2] The 3rd house: 2 to the right of the Significator
+### Position 23: [Op 2] The 3rd house: 2 to the right of the Significator
 - **Card Drawn**: Knight of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 
-### Position 23: [Op 2] The 3rd house: 3 to the right of the Significator
+### Position 24: [Op 2] The 3rd house: 3 to the right of the Significator
 - **Card Drawn**: Ace of Disks
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Crown (כתר (Kether))
 - **Attribution**: Root of the Powers of Earth
 
-### Position 24: [Op 2] The 3rd house: 4 to the right of the Significator
+### Position 25: [Op 2] The 3rd house: 4 to the right of the Significator
 - **Card Drawn**: 4 of Swords - Truce
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 
-### Position 25: [Op 2] The 3rd house: 5 to the right of the Significator
+### Position 26: [Op 2] The 3rd house: 5 to the right of the Significator
 - **Card Drawn**: 10 of Disks - Wealth
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Mercury in Virgo
 - **Planet Strength**: rules this sign and is exalted (strong)
 
-### Position 26: [Op 2] The 3rd house: 6 to the right of the Significator
+### Position 27: [Op 2] The 3rd house: 6 to the right of the Significator
 - **Card Drawn**: XX - The Aeon
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Tooth (ש (Shin))
@@ -211,27 +219,27 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (the element Fire itself; Spirit is a secondary quality only)
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 
-### Position 27: [Op 3] Leo: the Significator
+### Position 28: [Op 3] Leo: the Significator
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
-### Position 28: [Op 3] Leo: 1 to the right of the Significator
+### Position 29: [Op 3] Leo: 1 to the right of the Significator
 - **Card Drawn**: 8 of Swords - Interference
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
 - **Planet Strength**: in detriment (weakened)
 
-### Position 29: [Op 3] Leo: 2 to the right of the Significator
+### Position 30: [Op 3] Leo: 2 to the right of the Significator
 - **Card Drawn**: Ace of Swords
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Crown (כתר (Kether))
 - **Attribution**: Root of the Powers of Air
 
-### Position 30: [Op 3] Leo: 3 to the right of the Significator
+### Position 31: [Op 3] Leo: 3 to the right of the Significator
 - **Card Drawn**: IV - The Emperor
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
@@ -241,7 +249,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 
-### Position 31: [Op 3] Leo: 4 to the right of the Significator
+### Position 32: [Op 3] Leo: 4 to the right of the Significator
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Mouth (פ (Pé))
@@ -249,14 +257,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Spatial Dimension**: `Double_Direction` (North)
 
-### Position 32: [Op 3] Leo: 5 to the right of the Significator
+### Position 33: [Op 3] Leo: 5 to the right of the Significator
 - **Card Drawn**: 7 of Cups - Debauch
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Planet Strength**: in detriment (weakened)
 
-### Position 33: [Op 3] Leo: 6 to the right of the Significator
+### Position 34: [Op 3] Leo: 6 to the right of the Significator
 - **Card Drawn**: XII - The Hanged Man
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Water (מ (Mem))
@@ -264,20 +272,20 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Water (the element Water itself)
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 
-### Position 34: [Op 4] The ring of 36: the Significator
+### Position 35: [Op 4] The ring of 36: the Significator
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
-### Position 35: [Op 4] The ring of 36: 1 to the right of the Significator
+### Position 36: [Op 4] The ring of 36: 1 to the right of the Significator
 - **Card Drawn**: 2 of Swords - Peace
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Moon in Libra
 
-### Position 36: [Op 4] The ring of 36: 2 to the right of the Significator
+### Position 37: [Op 4] The ring of 36: 2 to the right of the Significator
 - **Card Drawn**: VII - The Chariot
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
@@ -286,14 +294,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Water (via Cancer)
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
-### Position 37: [Op 4] The ring of 36: 3 to the right of the Significator
+### Position 38: [Op 4] The ring of 36: 3 to the right of the Significator
 - **Card Drawn**: 8 of Swords - Interference
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
 - **Planet Strength**: in detriment (weakened)
 
-### Position 38: [Op 4] The ring of 36: 4 to the right of the Significator
+### Position 39: [Op 4] The ring of 36: 4 to the right of the Significator
 - **Card Drawn**: XIX - The Sun
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Head (ר (Resh))
@@ -301,13 +309,13 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (the Sun via Leo, its only sign)
 - **Spatial Dimension**: `Double_Direction` (South)
 
-### Position 39: [Op 4] The ring of 36: 5 to the right of the Significator
+### Position 40: [Op 4] The ring of 36: 5 to the right of the Significator
 - **Card Drawn**: 9 of Swords - Cruelty
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Mars in Gemini
 
-### Position 40: [Op 4] The ring of 36: 6 to the right of the Significator
+### Position 41: [Op 4] The ring of 36: 6 to the right of the Significator
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Mouth (פ (Pé))
@@ -315,7 +323,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Spatial Dimension**: `Double_Direction` (North)
 
-### Position 41: [Op 4] The ring of 36: 7 to the right of the Significator
+### Position 42: [Op 4] The ring of 36: 7 to the right of the Significator
 - **Card Drawn**: XX - The Aeon
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Tooth (ש (Shin))
@@ -323,7 +331,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (the element Fire itself; Spirit is a secondary quality only)
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 
-### Position 42: [Op 4] The ring of 36: 8 to the right of the Significator
+### Position 43: [Op 4] The ring of 36: 8 to the right of the Significator
 - **Card Drawn**: XII - The Hanged Man
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Water (מ (Mem))
@@ -331,14 +339,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Water (the element Water itself)
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 
-### Position 43: [Op 4] The ring of 36: 9 to the right of the Significator
+### Position 44: [Op 4] The ring of 36: 9 to the right of the Significator
 - **Card Drawn**: 3 of Disks - Works
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
 - **Planet Strength**: exalted (strong)
 
-### Position 44: [Op 4] The ring of 36: 10 to the right of the Significator
+### Position 45: [Op 4] The ring of 36: 10 to the right of the Significator
 - **Card Drawn**: IV - The Emperor
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
@@ -348,14 +356,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 
-### Position 45: [Op 4] The ring of 36: 11 to the right of the Significator
+### Position 46: [Op 4] The ring of 36: 11 to the right of the Significator
 - **Card Drawn**: 4 of Wands - Completion
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
 - **Planet Strength**: in detriment (weakened)
 
-### Position 46: [Op 4] The ring of 36: 12 to the right of the Significator
+### Position 47: [Op 4] The ring of 36: 12 to the right of the Significator
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
@@ -363,27 +371,27 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 
-### Position 47: [Op 4] The ring of 36: 13 to the right of the Significator
+### Position 48: [Op 4] The ring of 36: 13 to the right of the Significator
 - **Card Drawn**: 10 of Wands - Oppression
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Saturn in Sagittarius
 
-### Position 48: [Op 4] The ring of 36: 14 to the right of the Significator
+### Position 49: [Op 4] The ring of 36: 14 to the right of the Significator
 - **Card Drawn**: Prince of Disks
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Taurus)**: Nail (ו (Vau))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 
-### Position 49: [Op 4] The ring of 36: 15 to the right of the Significator
+### Position 50: [Op 4] The ring of 36: 15 to the right of the Significator
 - **Card Drawn**: Princess of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Element (Fire)**: Tooth (ש (Shin))
 - **Attribution**: Earth of Fire - Cancer, Leo, Virgo quadrant
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 
-### Position 50: [Op 4] The ring of 36: 16 to the right of the Significator
+### Position 51: [Op 4] The ring of 36: 16 to the right of the Significator
 - **Card Drawn**: X - Fortune
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Palm (כ (Kaph))
@@ -391,7 +399,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
 - **Spatial Dimension**: `Double_Direction` (West)
 
-### Position 51: [Op 4] The ring of 36: 17 to the right of the Significator
+### Position 52: [Op 4] The ring of 36: 17 to the right of the Significator
 - **Card Drawn**: 0 - The Fool
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox (א (Aleph))
@@ -399,7 +407,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Air (the element Air itself)
 - **Spatial Dimension**: `Mother_Axis` (Vertical Axis (above to below))
 
-### Position 52: [Op 4] The ring of 36: 18 to the right of the Significator
+### Position 53: [Op 4] The ring of 36: 18 to the right of the Significator
 - **Card Drawn**: XVIII - The Moon
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Back of head (ק (Qoph))
@@ -408,34 +416,34 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Water (via Pisces)
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 
-### Position 53: [Op 4] The ring of 36: 19 to the right of the Significator
+### Position 54: [Op 4] The ring of 36: 19 to the right of the Significator
 - **Card Drawn**: Queen of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Libra)**: Ox Goad (ל (Lamed))
 - **Attribution**: Water of Air - 20° Virgo to 20° Libra
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 
-### Position 54: [Op 4] The ring of 36: 20 to the right of the Significator
+### Position 55: [Op 4] The ring of 36: 20 to the right of the Significator
 - **Card Drawn**: 10 of Swords - Ruin
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Sun in Gemini
 
-### Position 55: [Op 4] The ring of 36: 21 to the right of the Significator
+### Position 56: [Op 4] The ring of 36: 21 to the right of the Significator
 - **Card Drawn**: 9 of Cups - Happiness
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Jupiter in Pisces
 - **Planet Strength**: rules this sign (strong)
 
-### Position 56: [Op 4] The ring of 36: 22 to the right of the Significator
+### Position 57: [Op 4] The ring of 36: 22 to the right of the Significator
 - **Card Drawn**: 2 of Disks - Change
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
 - **Planet Strength**: in fall (weakest)
 
-### Position 57: [Op 4] The ring of 36: 23 to the right of the Significator
+### Position 58: [Op 4] The ring of 36: 23 to the right of the Significator
 - **Card Drawn**: XIV - Art
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
@@ -444,7 +452,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (via Sagittarius)
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 
-### Position 58: [Op 4] The ring of 36: 24 to the right of the Significator
+### Position 59: [Op 4] The ring of 36: 24 to the right of the Significator
 - **Card Drawn**: XI - Lust
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
@@ -453,7 +461,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (via Leo)
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 
-### Position 59: [Op 4] The ring of 36: 25 to the right of the Significator
+### Position 60: [Op 4] The ring of 36: 25 to the right of the Significator
 - **Card Drawn**: Queen of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
@@ -461,50 +469,50 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 
-### Position 60: [Op 4] The ring of 36: 26 to the right of the Significator
+### Position 61: [Op 4] The ring of 36: 26 to the right of the Significator
 - **Card Drawn**: 5 of Swords - Defeat
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Venus in Aquarius
 
-### Position 61: [Op 4] The ring of 36: 27 to the right of the Significator
+### Position 62: [Op 4] The ring of 36: 27 to the right of the Significator
 - **Card Drawn**: 9 of Wands - Strength
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Moon in Sagittarius
 
-### Position 62: [Op 4] The ring of 36: 28 to the right of the Significator
+### Position 63: [Op 4] The ring of 36: 28 to the right of the Significator
 - **Card Drawn**: 6 of Disks - Success
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Moon in Taurus
 - **Planet Strength**: exalted (strong)
 
-### Position 63: [Op 4] The ring of 36: 29 to the right of the Significator
+### Position 64: [Op 4] The ring of 36: 29 to the right of the Significator
 - **Card Drawn**: 10 of Cups - Satiety
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Mars in Pisces
 
-### Position 64: [Op 4] The ring of 36: 30 to the right of the Significator
+### Position 65: [Op 4] The ring of 36: 30 to the right of the Significator
 - **Card Drawn**: 6 of Wands - Victory
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Jupiter in Leo
 
-### Position 65: [Op 4] The ring of 36: 31 to the right of the Significator
+### Position 66: [Op 4] The ring of 36: 31 to the right of the Significator
 - **Card Drawn**: 4 of Disks - Power
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Sun in Capricorn
 
-### Position 66: [Op 4] The ring of 36: 32 to the right of the Significator
+### Position 67: [Op 4] The ring of 36: 32 to the right of the Significator
 - **Card Drawn**: 7 of Swords - Futility
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Moon in Aquarius
 
-### Position 67: [Op 4] The ring of 36: 33 to the right of the Significator
+### Position 68: [Op 4] The ring of 36: 33 to the right of the Significator
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
@@ -513,35 +521,35 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Earth (via Taurus)
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 
-### Position 68: [Op 4] The ring of 36: 34 to the right of the Significator
+### Position 69: [Op 4] The ring of 36: 34 to the right of the Significator
 - **Card Drawn**: 2 of Wands - Dominion
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
 - **Planet Strength**: rules this sign (strong)
 
-### Position 69: [Op 4] The ring of 36: 35 to the right of the Significator
+### Position 70: [Op 4] The ring of 36: 35 to the right of the Significator
 - **Card Drawn**: 5 of Cups - Disappointment
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Mars in Scorpio
 - **Planet Strength**: rules this sign (strong)
 
-### Position 70: [Op 4] The ring of 36: 36 to the right of the Significator
+### Position 71: [Op 4] The ring of 36: 36 to the right of the Significator
 - **Card Drawn**: 4 of Cups - Luxury
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Moon in Cancer
 - **Planet Strength**: rules this sign (strong)
 
-### Position 71: [Op 5] 6. Tiphareth: the Significator
+### Position 72: [Op 5] 6. Tiphareth: the Significator
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
-### Position 72: [Op 5] 6. Tiphareth: 1 to the right of the Significator
+### Position 73: [Op 5] 6. Tiphareth: 1 to the right of the Significator
 - **Card Drawn**: 0 - The Fool
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox (א (Aleph))
@@ -549,7 +557,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Air (the element Air itself)
 - **Spatial Dimension**: `Mother_Axis` (Vertical Axis (above to below))
 
-### Position 73: [Op 5] 6. Tiphareth: 2 to the right of the Significator
+### Position 74: [Op 5] 6. Tiphareth: 2 to the right of the Significator
 - **Card Drawn**: I - The Magus
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: House (ב (Beth))
@@ -557,7 +565,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 
-### Position 74: [Op 5] 6. Tiphareth: 3 to the right of the Significator
+### Position 75: [Op 5] 6. Tiphareth: 3 to the right of the Significator
 - **Card Drawn**: X - Fortune
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Palm (כ (Kaph))
@@ -565,26 +573,26 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
 - **Spatial Dimension**: `Double_Direction` (West)
 
-### Position 75: [Op 5] 6. Tiphareth: 4 to the right of the Significator
+### Position 76: [Op 5] 6. Tiphareth: 4 to the right of the Significator
 - **Card Drawn**: 2 of Disks - Change
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
 - **Planet Strength**: in fall (weakest)
 
-### Position 76: [Op 5] 6. Tiphareth: 5 to the right of the Significator
+### Position 77: [Op 5] 6. Tiphareth: 5 to the right of the Significator
 - **Card Drawn**: 3 of Cups - Abundance
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mercury in Cancer
 
-### Position 77: [Op 5] 6. Tiphareth: 6 to the right of the Significator
+### Position 78: [Op 5] 6. Tiphareth: 6 to the right of the Significator
 - **Card Drawn**: 4 of Swords - Truce
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 
-### Position 78: [Op 5] 6. Tiphareth: 7 to the right of the Significator
+### Position 79: [Op 5] 6. Tiphareth: 7 to the right of the Significator
 - **Card Drawn**: 2 of Wands - Dominion
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
@@ -595,49 +603,50 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 | 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
 |---|---|---|---|---|---|---|
-| Sephira 1 Crown | Admirable or Hidden Intelligence | Brilliance | White brilliance | White brilliance | White flecked gold | 23, 29 |
-| Sephira 2 Wisdom | Illuminating Intelligence | Pure soft blue | Grey | Blue pearl grey, like mother-of-pearl | White, flecked red, blue, and yellow | 3, 19, 35, 56, 68, 75, 78 |
-| Sephira 3 Understanding | Sanctifying Intelligence | Crimson | Black | Dark brown | Grey flecked pink | 6, 8, 43, 76 |
-| Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 15, 21, 24, 45, 65, 70, 77 |
-| Sephira 5 Strength | Radical Intelligence | Orange | Scarlet red | Bright scarlet | Red flecked black | 60, 69 |
-| Sephira 6 Beauty | Intelligence of the Mediating Influence | Clear pink rose | Yellow (gold) | Rich salmon | Gold amber | 62, 64 |
-| Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 4, 16, 32, 66 |
-| Sephira 8 Splendour | Absolute (Perfect) Intelligence | Violet purple | Orange | Red-russet | Yellow-brown flecked white | 28, 37 |
-| Sephira 9 Foundation | Pure (Clear) Intelligence | Indigo | Violet | Very dark purple | Citrine flecked azure | 39, 55, 61 |
-| Sephira 10 Kingdom | Resplendent Intelligence | Yellow | Citrine, olive, russet and black | As Queen scale, but flecked with gold | Black rayed yellow | 5, 25, 47, 54, 63 |
-| Path 11 Ox | Scintillating Intelligence | Bright pale yellow | Sky blue | Blue emerald green | Emerald flecked gold | 51, 72 |
-| Path 12 House | Intelligence of Transparency | Yellow | Purple | Grey | Indigo rayed violet | 9, 73 |
-| Path 15 Window | Constituting Intelligence | Scarlet | Red | Brilliant flame | Glowing red | 14 (title), 30 (colours), 44 (colours), 46 (title), 59 (colours) |
-| Path 16 Nail | Triumphal or Eternal Intelligence | Red orange | Deep indigo | Deep warm olive | Rich brown | 17, 48, 67 |
-| Path 18 Fence | Intelligence of the House of Influence | Amber | Maroon | Rich bright russet | Dark greenish brown | 1, 20, 27, 34, 36, 71 |
-| Path 19 Serpent | Intelligence of all the Activities of the Spiritual Being | Yellow, greenish | Deep purple | Grey | Reddish amber | 18, 58 |
+| Sephira 1 Crown | Admirable or Hidden Intelligence | Brilliance | White brilliance | White brilliance | White flecked gold | 24, 30 |
+| Sephira 2 Wisdom | Illuminating Intelligence | Pure soft blue | Grey | Blue pearl grey, like mother-of-pearl | White, flecked red, blue, and yellow | 3, 20, 36, 57, 69, 76, 79 |
+| Sephira 3 Understanding | Sanctifying Intelligence | Crimson | Black | Dark brown | Grey flecked pink | 6, 8, 44, 77 |
+| Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 16, 22, 25, 46, 66, 71, 78 |
+| Sephira 5 Strength | Radical Intelligence | Orange | Scarlet red | Bright scarlet | Red flecked black | 61, 70 |
+| Sephira 6 Beauty | Intelligence of the Mediating Influence | Clear pink rose | Yellow (gold) | Rich salmon | Gold amber | 63, 65 |
+| Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 4, 17, 33, 67 |
+| Sephira 8 Splendour | Absolute (Perfect) Intelligence | Violet purple | Orange | Red-russet | Yellow-brown flecked white | 29, 38 |
+| Sephira 9 Foundation | Pure (Clear) Intelligence | Indigo | Violet | Very dark purple | Citrine flecked azure | 40, 56, 62 |
+| Sephira 10 Kingdom | Resplendent Intelligence | Yellow | Citrine, olive, russet and black | As Queen scale, but flecked with gold | Black rayed yellow | 5, 26, 48, 55, 64 |
+| Path 11 Ox | Scintillating Intelligence | Bright pale yellow | Sky blue | Blue emerald green | Emerald flecked gold | 52, 73 |
+| Path 12 House | Intelligence of Transparency | Yellow | Purple | Grey | Indigo rayed violet | 9, 74 |
+| Path 13 Camel | Uniting Intelligence | Blue | Silver | Cold pale blue | Silver rayed sky-blue | 14 |
+| Path 15 Window | Constituting Intelligence | Scarlet | Red | Brilliant flame | Glowing red | 15 (title), 31 (colours), 45 (colours), 47 (title), 60 (colours) |
+| Path 16 Nail | Triumphal or Eternal Intelligence | Red orange | Deep indigo | Deep warm olive | Rich brown | 18, 49, 68 |
+| Path 18 Fence | Intelligence of the House of Influence | Amber | Maroon | Rich bright russet | Dark greenish brown | 1, 21, 28, 35, 37, 72 |
+| Path 19 Serpent | Intelligence of all the Activities of the Spiritual Being | Yellow, greenish | Deep purple | Grey | Reddish amber | 19, 59 |
 | Path 20 Hand | Intelligence of Will | Green, yellowish | Slate grey | Green grey | Plum colour | 12 |
-| Path 21 Palm | Intelligence of Conciliation | Violet | Blue | Rich purple | Bright blue rayed yellow | 50, 74 |
-| Path 22 Ox Goad | Faithful Intelligence | Emerald green | Blue | Deep blue-green | Pale green | 53 |
-| Path 23 Water | Stable Intelligence | Deep blue | Sea-green | Deep olive-green | White flecked purple | 33, 42 |
+| Path 21 Palm | Intelligence of Conciliation | Violet | Blue | Rich purple | Bright blue rayed yellow | 51, 75 |
+| Path 22 Ox Goad | Faithful Intelligence | Emerald green | Blue | Deep blue-green | Pale green | 54 |
+| Path 23 Water | Stable Intelligence | Deep blue | Sea-green | Deep olive-green | White flecked purple | 34, 43 |
 | Path 24 Fish | Imaginative Intelligence | Green blue | Dull brown | Very dark brown | Livid indigo brown (like a black beetle) | 11 |
-| Path 25 Prop | Intelligence of Probation (Tentative) | Blue | Yellow | Green | Dark vivid blue | 57 |
-| Path 27 Mouth | Exciting Intelligence | Scarlet | Red | Venetian red | Bright red, rayed azure or emerald | 7, 31, 40 |
-| Path 28 Fish-hook | Natural Intelligence | Violet | Sky blue | Bluish mauve | White tinged purple | 14 (colours), 30 (title), 44 (title), 46 (colours), 59 (title) |
-| Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 2, 10, 22, 52 |
-| Path 30 Head | Collecting Intelligence | Orange | Gold Yellow | Rich amber | Amber rayed red | 38 |
-| Path 31 Tooth | Perpetual Intelligence | Glowing orange scarlet | Vermillion | Scarlet, flecked gold | Vermillion flecked crimson & emerald | 26, 41, 49 |
+| Path 25 Prop | Intelligence of Probation (Tentative) | Blue | Yellow | Green | Dark vivid blue | 58 |
+| Path 27 Mouth | Exciting Intelligence | Scarlet | Red | Venetian red | Bright red, rayed azure or emerald | 7, 32, 41 |
+| Path 28 Fish-hook | Natural Intelligence | Violet | Sky blue | Bluish mauve | White tinged purple | 15 (colours), 31 (title), 45 (title), 47 (colours), 60 (title) |
+| Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 2, 10, 23, 53 |
+| Path 30 Head | Collecting Intelligence | Orange | Gold Yellow | Rich amber | Amber rayed red | 39 |
+| Path 31 Tooth | Perpetual Intelligence | Glowing orange scarlet | Vermillion | Scarlet, flecked gold | Vermillion flecked crimson & emerald | 27, 42, 50 |
 | Path 32 Cross | Administrative Intelligence | Indigo | Black | Blue black | Black rayed blue | 13 |
 
-**Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power; XVIII - The Moon: The Ruler of Flux and Reflux; XIII - Death: The Child of the Great Transformers; IX - The Hermit: The Prophet of the Eternal; Princess of Disks: Princess of the Echoing Hills; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; 4 of Cups - Luxury: Blended Pleasure; XX - The Aeon: The Spirit of the Primal Fire; 8 of Swords - Interference: Shortened Force; IV - The Emperor: The Son of the Morning; XII - The Hanged Man: The Spirit of the Mighty Waters; VII - The Chariot: The Child of the Powers of the Waters; XIX - The Sun: The Lord of the Fire of the World; 9 of Swords - Cruelty: Despair and Cruelty; 4 of Wands - Completion: Perfected Work; Prince of Disks: Prince of the Chariot of Earth; Princess of Wands: Princess of the Shining Flame; X - Fortune: The Lord of the Forces of Life; 0 - The Fool: The Spirit of Aethyr; Queen of Swords: Queen of the Thrones of Air; 9 of Cups - Happiness: Material Happiness; 2 of Disks - Change: Harmonious Change; XIV - Art: The Daughter of the Reconcilers; Queen of Wands: Queen of the Thrones of Flame; 9 of Wands - Strength: Great Strength; 6 of Disks - Success: Material Success; 10 of Cups - Satiety: Perfected Success; 4 of Disks - Power: Earthly Power; 5 of Cups - Disappointment: Loss in Pleasure.
+**Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power; XVIII - The Moon: The Ruler of Flux and Reflux; XIII - Death: The Child of the Great Transformers; IX - The Hermit: The Prophet of the Eternal; Princess of Disks: Princess of the Echoing Hills; II - The Priestess: The Priestess of the Silver Star; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; 4 of Cups - Luxury: Blended Pleasure; XX - The Aeon: The Spirit of the Primal Fire; 8 of Swords - Interference: Shortened Force; IV - The Emperor: The Son of the Morning; XII - The Hanged Man: The Spirit of the Mighty Waters; VII - The Chariot: The Child of the Powers of the Waters; XIX - The Sun: The Lord of the Fire of the World; 9 of Swords - Cruelty: Despair and Cruelty; 4 of Wands - Completion: Perfected Work; Prince of Disks: Prince of the Chariot of Earth; Princess of Wands: Princess of the Shining Flame; X - Fortune: The Lord of the Forces of Life; 0 - The Fool: The Spirit of Aethyr; Queen of Swords: Queen of the Thrones of Air; 9 of Cups - Happiness: Material Happiness; 2 of Disks - Change: Harmonious Change; XIV - Art: The Daughter of the Reconcilers; Queen of Wands: Queen of the Thrones of Flame; 9 of Wands - Strength: Great Strength; 6 of Disks - Success: Material Success; 10 of Cups - Satiety: Perfected Success; 4 of Disks - Power: Earthly Power; 5 of Cups - Disappointment: Loss in Pleasure.
 
 
 ---
 
 ## 2. ELEMENTAL VECTOR DISTRIBUTION
-* **Fire  **: ██████████████████████████████████████████████ 23 (29.5%)
-* **Water **: ██████████████████████████████████████████ 21 (26.9%)
-* **Air   **: ██████████████████████████████████████████ 21 (26.9%)
-* **Earth **: ██████████████████████████ 13 (16.7%)
-* **Spirit**: secondary quality only, on 2: Pos 26 (XX - The Aeon), Pos 41 (XX - The Aeon)
+* **Fire  **: ██████████████████████████████████████████████ 23 (29.1%)
+* **Water **: ████████████████████████████████████████████ 22 (27.8%)
+* **Air   **: ██████████████████████████████████████████ 21 (26.6%)
+* **Earth **: ██████████████████████████ 13 (16.5%)
+* **Spirit**: secondary quality only, on 2: Pos 27 (XX - The Aeon), Pos 42 (XX - The Aeon)
 
 **Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
-* Operation 1: 19 cards: 7 Trumps, 4 court cards, 0 Aces | Wands 2, Cups 3, Swords 5, Disks 2 | no rank three or more times
+* Operation 1: 20 cards: 8 Trumps, 4 court cards, 0 Aces | Wands 2, Cups 3, Swords 5, Disks 2 | no rank three or more times
 * Operation 2: 7 cards: 1 Trump, 2 court cards, 1 Ace | Wands 0, Cups 3, Swords 1, Disks 2 | no rank three or more times
 * Operation 3: 7 cards: 3 Trumps, 1 court card, 1 Ace | Wands 0, Cups 2, Swords 2, Disks 0 | no rank three or more times
 * Operation 4: 37 cards: 12 Trumps, 6 court cards, 0 Aces | Wands 7, Cups 5, Swords 8, Disks 5 | Three Twos (Wands, Swords, Disks); Three Fours (Wands, Cups, Disks); Three Nines (Wands, Cups, Swords); Three Tens (Wands, Cups, Swords); Three Queens (Wands, Cups, Swords)
@@ -652,79 +661,81 @@ Book T reads each operation in two passes. The **Count** starts at the Significa
 
 The question is about the Yod pack (work, business), but the Significator is in the Heh final pack (money, goods, purely material matters). Book T says to abandon the divination here; this site reads on with the Heh final pack (money, goods, purely material matters), so treat this operation with caution.
 
-**Count** (towards the left, numbers in brackets): Pos 1 (Queen of Cups) [4] → Pos 17 (V - The Hierophant) [12] → Pos 6 (3 of Disks - Works) [3] → Pos 4 (7 of Swords - Futility) [7]; the next count lands on Pos 17 (V - The Hierophant) again, so the count stops.
+**Count** (towards the left, numbers in brackets): Pos 1 (Queen of Cups) [4] → Pos 18 (V - The Hierophant) [12] → Pos 7 (XVI - The Tower) [9] → Pos 19 (XI - Lust) [12] → Pos 8 (3 of Swords - Sorrow) [3] → Pos 6 (3 of Disks - Works) [3] → Pos 4 (7 of Swords - Futility) [7]; the next count lands on Pos 18 (V - The Hierophant) again, so the count stops.
+
+Pos 11 (XIII - Death) is left over after pairing and is read on its own.
 
 **Pairs:**
-* **Pos 19 (2 of Wands - Dominion) <-> Pos 2 (Knight of Cups)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
-* **Pos 18 (XI - Lust) <-> Pos 3 (2 of Swords - Peace)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 17 (V - The Hierophant) <-> Pos 4 (7 of Swords - Futility)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 16 (7 of Cups - Debauch) <-> Pos 5 (10 of Wands - Oppression)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
-* **Pos 15 (4 of Swords - Truce) <-> Pos 6 (3 of Disks - Works)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
-* **Pos 14 (Prince of Swords) <-> Pos 7 (XVI - The Tower)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 13 (Princess of Disks) <-> Pos 8 (3 of Swords - Sorrow)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 12 (IX - The Hermit) <-> Pos 9 (I - The Magus)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 11 (XIII - Death) <-> Pos 10 (XVIII - The Moon)**: `Score: +2` | Strong / Same Element (Water + Water)
+* **Pos 20 (2 of Wands - Dominion) <-> Pos 2 (Knight of Cups)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
+* **Pos 19 (XI - Lust) <-> Pos 3 (2 of Swords - Peace)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 18 (V - The Hierophant) <-> Pos 4 (7 of Swords - Futility)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 17 (7 of Cups - Debauch) <-> Pos 5 (10 of Wands - Oppression)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
+* **Pos 16 (4 of Swords - Truce) <-> Pos 6 (3 of Disks - Works)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
+* **Pos 15 (Prince of Swords) <-> Pos 7 (XVI - The Tower)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 14 (II - The Priestess) <-> Pos 8 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 13 (Princess of Disks) <-> Pos 9 (I - The Magus)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 12 (IX - The Hermit) <-> Pos 10 (XVIII - The Moon)**: `Score: +1` | Friendly (Earth + Water)
 
 **Operation 2: The Twelve Houses**
 
 The Significator was not in the 10th house or the 6th house. Book T says to abandon the divination here; this site reads on with the 3rd house, where it is, so treat this operation with caution.
 
-**Count** (towards the left, numbers in brackets): Pos 20 (Queen of Cups) [4] → Pos 24 (4 of Swords - Truce) [4] → Pos 21 (4 of Cups - Luxury) [4] → Pos 25 (10 of Disks - Wealth) [10] → Pos 23 (Ace of Disks) [11]; the next count lands on Pos 20 (Queen of Cups) again, so the count stops.
+**Count** (towards the left, numbers in brackets): Pos 21 (Queen of Cups) [4] → Pos 25 (4 of Swords - Truce) [4] → Pos 22 (4 of Cups - Luxury) [4] → Pos 26 (10 of Disks - Wealth) [10] → Pos 24 (Ace of Disks) [11]; the next count lands on Pos 21 (Queen of Cups) again, so the count stops.
 
 **Pairs:**
-* **Pos 26 (XX - The Aeon) <-> Pos 21 (4 of Cups - Luxury)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
-* **Pos 25 (10 of Disks - Wealth) <-> Pos 22 (Knight of Cups)**: `Score: +1` | Friendly (Earth + Water)
-* **Pos 24 (4 of Swords - Truce) <-> Pos 23 (Ace of Disks)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
+* **Pos 27 (XX - The Aeon) <-> Pos 22 (4 of Cups - Luxury)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
+* **Pos 26 (10 of Disks - Wealth) <-> Pos 23 (Knight of Cups)**: `Score: +1` | Friendly (Earth + Water)
+* **Pos 25 (4 of Swords - Truce) <-> Pos 24 (Ace of Disks)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
 
 **Operation 3: The Twelve Signs**
 
 The Significator was not in Capricorn. Book T says to abandon the divination here; this site reads on with Leo, where it is, so treat this operation with caution.
 
-**Count** (towards the left, numbers in brackets): Pos 27 (Queen of Cups) [4] → Pos 31 (XVI - The Tower) [9] → Pos 30 (IV - The Emperor) [12] → Pos 33 (XII - The Hanged Man) [3]; the next count lands on Pos 31 (XVI - The Tower) again, so the count stops.
+**Count** (towards the left, numbers in brackets): Pos 28 (Queen of Cups) [4] → Pos 32 (XVI - The Tower) [9] → Pos 31 (IV - The Emperor) [12] → Pos 34 (XII - The Hanged Man) [3]; the next count lands on Pos 32 (XVI - The Tower) again, so the count stops.
 
 **Pairs:**
-* **Pos 33 (XII - The Hanged Man) <-> Pos 28 (8 of Swords - Interference)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 32 (7 of Cups - Debauch) <-> Pos 29 (Ace of Swords)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 31 (XVI - The Tower) <-> Pos 30 (IV - The Emperor)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 34 (XII - The Hanged Man) <-> Pos 29 (8 of Swords - Interference)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 33 (7 of Cups - Debauch) <-> Pos 30 (Ace of Swords)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 32 (XVI - The Tower) <-> Pos 31 (IV - The Emperor)**: `Score: +2` | Strong / Same Element (Fire + Fire)
 
 **Operation 4: The Ring of Thirty-Six**
 
 Book T sets the Significator down and lets the 36 cards that follow it in the deck form a ring round it.
 
-**Count** (towards the left, numbers in brackets): Pos 34 (Queen of Cups) [4] → Pos 68 (2 of Wands - Dominion) [2] → Pos 67 (V - The Hierophant) [12] → Pos 56 (2 of Disks - Change) [2] → Pos 55 (9 of Cups - Happiness) [9] → Pos 47 (10 of Wands - Oppression) [10] → Pos 38 (XIX - The Sun) [9]; the next count lands on Pos 67 (V - The Hierophant) again, so the count stops.
+**Count** (towards the left, numbers in brackets): Pos 35 (Queen of Cups) [4] → Pos 69 (2 of Wands - Dominion) [2] → Pos 68 (V - The Hierophant) [12] → Pos 57 (2 of Disks - Change) [2] → Pos 56 (9 of Cups - Happiness) [9] → Pos 48 (10 of Wands - Oppression) [10] → Pos 39 (XIX - The Sun) [9]; the next count lands on Pos 68 (V - The Hierophant) again, so the count stops.
 
 **Pairs:**
-* **Pos 70 (4 of Cups - Luxury) <-> Pos 35 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 69 (5 of Cups - Disappointment) <-> Pos 36 (VII - The Chariot)**: `Score: +2` | Strong / Same Element (Water + Water)
-* **Pos 68 (2 of Wands - Dominion) <-> Pos 37 (8 of Swords - Interference)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 67 (V - The Hierophant) <-> Pos 38 (XIX - The Sun)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 66 (7 of Swords - Futility) <-> Pos 39 (9 of Swords - Cruelty)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 65 (4 of Disks - Power) <-> Pos 40 (XVI - The Tower)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 64 (6 of Wands - Victory) <-> Pos 41 (XX - The Aeon)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 63 (10 of Cups - Satiety) <-> Pos 42 (XII - The Hanged Man)**: `Score: +2` | Strong / Same Element (Water + Water)
-* **Pos 62 (6 of Disks - Success) <-> Pos 43 (3 of Disks - Works)**: `Score: +2` | Strong / Same Element (Earth + Earth)
-* **Pos 61 (9 of Wands - Strength) <-> Pos 44 (IV - The Emperor)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 60 (5 of Swords - Defeat) <-> Pos 45 (4 of Wands - Completion)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 59 (Queen of Wands) <-> Pos 46 (Prince of Swords)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 58 (XI - Lust) <-> Pos 47 (10 of Wands - Oppression)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 57 (XIV - Art) <-> Pos 48 (Prince of Disks)**: `Score: +1` | Friendly (Fire + Earth)
-* **Pos 56 (2 of Disks - Change) <-> Pos 49 (Princess of Wands)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 55 (9 of Cups - Happiness) <-> Pos 50 (X - Fortune)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
-* **Pos 54 (10 of Swords - Ruin) <-> Pos 51 (0 - The Fool)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 53 (Queen of Swords) <-> Pos 52 (XVIII - The Moon)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 71 (4 of Cups - Luxury) <-> Pos 36 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 70 (5 of Cups - Disappointment) <-> Pos 37 (VII - The Chariot)**: `Score: +2` | Strong / Same Element (Water + Water)
+* **Pos 69 (2 of Wands - Dominion) <-> Pos 38 (8 of Swords - Interference)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 68 (V - The Hierophant) <-> Pos 39 (XIX - The Sun)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 67 (7 of Swords - Futility) <-> Pos 40 (9 of Swords - Cruelty)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 66 (4 of Disks - Power) <-> Pos 41 (XVI - The Tower)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 65 (6 of Wands - Victory) <-> Pos 42 (XX - The Aeon)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 64 (10 of Cups - Satiety) <-> Pos 43 (XII - The Hanged Man)**: `Score: +2` | Strong / Same Element (Water + Water)
+* **Pos 63 (6 of Disks - Success) <-> Pos 44 (3 of Disks - Works)**: `Score: +2` | Strong / Same Element (Earth + Earth)
+* **Pos 62 (9 of Wands - Strength) <-> Pos 45 (IV - The Emperor)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 61 (5 of Swords - Defeat) <-> Pos 46 (4 of Wands - Completion)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 60 (Queen of Wands) <-> Pos 47 (Prince of Swords)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 59 (XI - Lust) <-> Pos 48 (10 of Wands - Oppression)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 58 (XIV - Art) <-> Pos 49 (Prince of Disks)**: `Score: +1` | Friendly (Fire + Earth)
+* **Pos 57 (2 of Disks - Change) <-> Pos 50 (Princess of Wands)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 56 (9 of Cups - Happiness) <-> Pos 51 (X - Fortune)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
+* **Pos 55 (10 of Swords - Ruin) <-> Pos 52 (0 - The Fool)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 54 (Queen of Swords) <-> Pos 53 (XVIII - The Moon)**: `Score: +1` | Friendly (Air + Water)
 
 **Operation 5: The Ten Sephiroth**
 
 The Significator is in 6. Tiphareth, the Sephira expected for this question.
 
-**Count** (towards the left, numbers in brackets): Pos 71 (Queen of Cups) [4] → Pos 76 (3 of Cups - Abundance) [3] → Pos 74 (X - Fortune) [9]; the last card counts round the whole pile back to itself, so the count stops.
+**Count** (towards the left, numbers in brackets): Pos 72 (Queen of Cups) [4] → Pos 77 (3 of Cups - Abundance) [3] → Pos 75 (X - Fortune) [9]; the last card counts round the whole pile back to itself, so the count stops.
 
-Pos 75 (2 of Disks - Change) is left over after pairing and is read on its own.
+Pos 76 (2 of Disks - Change) is left over after pairing and is read on its own.
 
 **Pairs:**
-* **Pos 78 (2 of Wands - Dominion) <-> Pos 72 (0 - The Fool)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 77 (4 of Swords - Truce) <-> Pos 73 (I - The Magus)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 76 (3 of Cups - Abundance) <-> Pos 74 (X - Fortune)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
+* **Pos 79 (2 of Wands - Dominion) <-> Pos 73 (0 - The Fool)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 78 (4 of Swords - Truce) <-> Pos 74 (I - The Magus)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 77 (3 of Cups - Abundance) <-> Pos 75 (X - Fortune)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
 
 ---
 
@@ -747,6 +758,6 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 **How to read the numbers:**
 * `Score` in section 3 is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
 * Section 2 counts each card once, under its primary element. Its Book T Counts are per operation, never across one.
-* Counting numbers (Book T): Knights, Queens and Princes 4; Princesses 7; Aces 11; small cards their own number; Trumps 3 (elements), 9 (planets), 12 (signs). Where Book T is silent this site's rules are: the deck is cut into four equal packs (Book T does not say where to cut); stacks are dealt one card to each stack in turn (Book T says only 'deal into stacks'); Operation 4's ring wraps round to the top of the deck when fewer than 36 cards follow; counting stops on reaching a card already counted; a card left over when pairing is read on its own; each court card faces the way it looks on the Thoth card, read from the deck; one facing straight out, or a significator that is not a court card, is counted from right to left.
+* Counting numbers (Book T): Knights, Queens and Princes 4; Princesses 7; Aces 11; small cards their own number; Trumps 3 (elements), 9 (planets), 12 (signs). Where Book T is silent this site's rules are: the deck is cut into four packs as near equal as it allows, 20, 19, 20 and 19 cards from the top (Book T does not say where to cut); stacks are dealt one card to each stack in turn (Book T says only 'deal into stacks'); Operation 4's ring wraps round to the top of the deck when fewer than 36 cards follow; counting stops on reaching a card already counted; a card left over when pairing is read on its own; each court card faces the way it looks on the Thoth card, read from the deck; one facing straight out, or a significator that is not a court card, is counted from right to left.
 
-END OF OOTK PROMPT (78 positions)
+END OF OOTK PROMPT (79 positions)

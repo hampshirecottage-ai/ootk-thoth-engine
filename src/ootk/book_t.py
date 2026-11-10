@@ -39,7 +39,8 @@ OP4_RING = 36                        # cards following the significator in Opera
 
 # Choices this module makes where Book T is silent, worded for the prompt.
 SITE_RULES = {
-    "cut": "the deck is cut into four equal packs (Book T does not say where to cut)",
+    "cut": ("the deck is cut into four packs as near equal as it allows, 20, 19, 20 and 19 cards "
+            "from the top (Book T does not say where to cut)"),
     "deal": "stacks are dealt one card to each stack in turn (Book T says only 'deal into stacks')",
     "ring": "Operation 4's ring wraps round to the top of the deck when fewer than 36 cards follow",
     "stop": "counting stops on reaching a card already counted",
@@ -134,10 +135,14 @@ def _read_pile(op, place, pile, sig_card, facing, **extra):
 def four_packs(deck):
     """Operation 1's packs as Book T lays them: the deck is cut and the top half put to the
     left, then each half cut and its top put to the left; the four stacks are I H V H from
-    right to left. Returns the packs in I H V H order, each top card first."""
-    q = len(deck) // 4
-    left_to_right = [deck[:q], deck[q:2 * q], deck[2 * q:3 * q], deck[3 * q:]]
-    return list(reversed(left_to_right))
+    right to left. Returns the packs in I H V H order, each top card first. The cut points
+    come from shuffle.ihvh_pack_index, which significator_places uses too."""
+    from ootk.shuffle import ihvh_pack_index                  # shuffle imports nothing from here
+
+    packs = [[], [], [], []]
+    for at, card in enumerate(deck):
+        packs[ihvh_pack_index(at, len(deck))].append(card)
+    return packs
 
 
 def deal_stacks(deck, count):
