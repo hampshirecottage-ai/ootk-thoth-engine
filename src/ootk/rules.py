@@ -13,7 +13,7 @@ CONTRARY_ELEMENTS = {"Fire": "Water", "Water": "Fire", "Air": "Earth", "Earth": 
 DIGNITY_SAME = 2         # same element: strongly dignified
 DIGNITY_FRIENDLY = 1     # friendly elements
 DIGNITY_CONTRARY = -2    # contrary elements: ill-dignified
-DIGNITY_NEUTRAL = 0      # Spirit (or an unmapped card) on either side
+DIGNITY_NEUTRAL = 0      # Spirit on either side (analysis gives an unmapped card Spirit)
 
 
 def element_dignity(elem1, elem2):

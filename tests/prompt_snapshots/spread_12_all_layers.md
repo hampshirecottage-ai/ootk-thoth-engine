@@ -5,7 +5,7 @@
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **Where the Significator Falls:** Book T's key to each operation, worked out from the shuffle each operation was dealt from by laying out the whole deck, not only the cards printed in section 1. For Operation 1 the deck is cut into four packs for I H V H and the pack holding the Significator is named; the printed Operation 1 cards are still the 15-card heap. Later operations deal the whole deck round into one pile per house, sign or decan, and section 1 prints only the top card of each pile, so the Significator usually lies inside its pile, under the card printed there, and is not one of the printed cards. That is expected, not a mismatch.
-  * Operation 1: the Yod pack (Wands: work and business)
+  * Operation 1: the Heh final pack (Disks: money and goods)
   * Operation 2: Third House (Local Mind & Travel), inside that pile, under the card printed at position 18
   * Operation 3: Leo, inside that pile, under the card printed at position 32
   * Operation 4: Decan 10: Mars in Scorpio (5 of Cups), the Significator is the card printed at position 49

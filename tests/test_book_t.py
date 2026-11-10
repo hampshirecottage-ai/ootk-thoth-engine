@@ -59,8 +59,23 @@ def test_four_packs_are_ihvh_from_right_to_left():
     deck = list(range(78))
     packs = book_t.four_packs([{"card_id": i} for i in deck])
     # Top half to the left, each half cut again with its top to the left; I H V H from the right.
-    assert [(p[0]["card_id"], p[-1]["card_id"]) for p in packs] == [(57, 77), (38, 56), (19, 37), (0, 18)]
-    assert sum(len(p) for p in packs) == 78
+    # The cuts are as near equal as 78 cards allow: 20, 19, 20, 19 from the top.
+    assert [(p[0]["card_id"], p[-1]["card_id"]) for p in packs] == [(59, 77), (39, 58), (20, 38), (0, 19)]
+    assert [len(p) for p in packs] == [19, 20, 19, 20]
+
+
+def test_four_packs_agree_with_significator_places():
+    """The Book T reading (spread 13) and the significator's place on spreads 8 and 12 name
+    the same pack for the same shuffle, wherever the significator lies."""
+    from ootk import shuffle, spreads
+    deck = [{"card_id": i, "title": f"C{i}"} for i in range(78)]
+    positions = spreads.spread_positions("12")
+    shuffled = shuffle.shuffle_deck(deck, "1568")
+    packs = book_t.four_packs(shuffled)
+    for sig in deck:
+        found = next(i for i, p in enumerate(packs) if sig in p)
+        place = shuffle.significator_places(deck, "1568", positions, sig)[0]["place"]
+        assert place.startswith(f"the {book_t.IHVH_PACKS[found]['letter']} pack")
 
 
 def test_stacks_are_dealt_one_card_each_in_turn():

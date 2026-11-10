@@ -493,7 +493,7 @@ def analyze_platonic_topology(spread_results, spread_key=None):
 # Auto-detection of the macro framework looks at where the whole draw sits on the Tree of Life,
 # not just its first and last card. Tunable thresholds:
 FRAMEWORK_MIN_CARDS = 6        # fewer Sephirothic cards than this -> not enough evidence
-FRAMEWORK_TREND_Z = 1.64       # |r| * sqrt(n) needed to call a trend (~90% two-sided)
+FRAMEWORK_TREND_Z = 1.64       # |r| * sqrt(n) needed to call a trend (rule of thumb; see below)
 
 SEPHIROTH_RANKS = {
     "kether": 1, "chokmah": 2, "binah": 3, "chesed": 4, "geburah": 5,
@@ -547,8 +547,11 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
     Auto mode takes every card that names a Sephira or path, in position order, and measures
     the trend: Pearson r between position order and Sephirothic rank. Rank rising toward
     Malkuth = descent; falling toward Kether = ascent. A trend only counts when
-    |r| * sqrt(n) >= FRAMEWORK_TREND_Z; for a random shuffle that happens about 10% of the
-    time (5% each way). Descent -> 1 Divine Light Flow. Ascent -> 4 Post-Mortem Return.
+    |r| * sqrt(n) >= FRAMEWORK_TREND_Z. This is a rule of thumb, not an exact significance
+    test (that would be t = r * sqrt((n-2)/(1-r^2))). Measured over 3,000 random draws per
+    spread (2026-11-10), a random shuffle crosses it about 14% of the time on 10-card spreads
+    (Tree of Life, Celtic Cross), 11-13% on the 12- and 36-card wheels and about 5.5% on the
+    full four-operation Opening of the Key, roughly evenly each way. Descent -> 1 Divine Light Flow. Ascent -> 4 Post-Mortem Return.
     No significant trend -> 3 Incarnational Life Path, the default lens.
 
     Framework 2 (Soul Formation) is never auto-selected: it has no reliable signature in a

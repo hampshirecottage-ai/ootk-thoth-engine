@@ -5,7 +5,7 @@
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **Where the Significator Falls:** Book T's key to each operation, worked out from the shuffle each operation was dealt from by laying out the whole deck, not only the cards printed in section 1. For Operation 1 the deck is cut into four packs for I H V H and the pack holding the Significator is named; the printed Operation 1 cards are still the 15-card heap.
-  * Operation 1: the Yod pack (Wands: work and business)
+  * Operation 1: the Heh final pack (Disks: money and goods)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
