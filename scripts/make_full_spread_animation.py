@@ -285,9 +285,9 @@ def build():
             f'<text class="o" x="{fx + 36}" y="{fy + 12}">All 75 cards and every</text>'
             f'<text class="o" x="{fx + 36}" y="{fy + 20}">part you switched on,</text>'
             f'<text class="o" x="{fx + 36}" y="{fy + 28}">in one file</text>', 1.1)
-    note = wrap("With every layer on, a full Opening of the Key can be too long for some AIs to read "
-                "to the end. Then the prompt drops the gods, angels or decan dates first, and says "
-                "so under:", 36)
+    note = wrap("With every layer on, a full Opening of the Key comes close to the most some AIs "
+                "will read. If one runs over, the prompt drops the gods first, then the angels and "
+                "decan dates, and names them under:", 36)
     ny = PY + 88
     s.timed(f'<rect class="hn" x="{PX + 8}" y="{ny}" width="{PW - 16}" height="{14 + 7 * len(note)}" rx="2"/>'
             f'<rect x="{PX + 8}" y="{ny}" width="2" height="{14 + 7 * len(note)}" fill="{WARN}"/>'
