@@ -1,6 +1,9 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 75 positions and its very last line is `END OF OOTK PROMPT (75 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
+**In Plain Words:** 75 cards were drawn, in 4 operations, each dealt from its own shuffle. The Significator, Queen of Cups, stands for the querent. Air leads with 27 of 75 cards; Earth is least, with 12. Book T would note Three Queens and Four Princes in Operation 4 (section 2).
+**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
+
 **Operation/Spread:** Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups

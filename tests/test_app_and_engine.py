@@ -1042,7 +1042,7 @@ def test_prompt_states_repeated_facts_once():
     body = prompt.split("**Active Mapping System:**", 1)[1]
     assert "גבורה (Geburah)" in body and "גְּבוּרָה" not in body  # points dropped, name kept
     assert "Sephira (both systems)" not in prompt and "`Sephira_Point` (Nodal" not in prompt
-    assert prompt.count("Faces 4, Vertices 4 | Dual: `Tetrahedron` | Role: Node") == 1
+    assert "Role: Node" not in prompt                      # fixed solid properties are not restated
     assert prompt.count("- **Platonic Solid**: `Tetrahedron`") == 2
     assert prompt.count("A heap is not a wheel") == 1      # one sentence, not its drawing distances
     assert "Spatial Distance" not in prompt

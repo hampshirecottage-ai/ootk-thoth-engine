@@ -103,13 +103,14 @@ def render_elements(section):
 
 
 def render_hebrew(section):
-    counts = Table(title="Hebrew Letter Spatial Dimensions", border_style="magenta", header_style="bold cyan")
+    counts = Table(title="Hebrew Letter Spatial Dimensions", border_style="magenta", header_style="bold cyan",
+                   min_width=40)
     counts.add_column("Category", style="bold yellow")
     counts.add_column("Count", justify="center", style="bold white")
     for line in section.split("\n"):
-        m = re.match(r"\* \*\*(.+?)\*\*:\s*`(\d+)`", line.strip())
-        if m:
-            counts.add_row(escape(m.group(1)), m.group(2))
+        if line.startswith("* Mother axes"):            # "* Mother axes 5, double directions 8, ..."
+            for name, n in re.findall(r"([A-Za-z][A-Za-z ]*?) (\d+)", line.split("(")[0][2:]):
+                counts.add_row(escape(name.strip().capitalize()), n)
     console.print(counts)
 
 
@@ -120,11 +121,12 @@ def render_platonic(section):
     duals = []
     for line in section.split("\n"):
         line = line.strip()
-        m = re.match(r"\* \*\*(.+?)\s*\*\*:\s*`(\d+)`", line)
-        if m:
-            table.add_row(escape(m.group(1).strip()), m.group(2))
-        elif line.startswith("* Positions"):
-            duals.append(line[2:].strip())
+        if line.startswith("* Solids drawn:"):         # "* Solids drawn: Tetrahedron 15, ...; none drawn: ..."
+            drawn = line.split(":", 1)[1].split(";")[0].rstrip(".")
+            for name, n in re.findall(r"\s*(.+?) (\d+)(?:,|$)", drawn):
+                table.add_row(escape(name.strip()), n)
+        elif line.startswith("* Neighbours whose solids are duals"):
+            duals.extend(d.strip() for d in line.split("): ", 1)[1].rstrip(".").split(";"))
     console.print(table)
     if duals:
         console.print(Panel("\n".join(escape(d) for d in duals), title="Dual Pairings", border_style="cyan"))
