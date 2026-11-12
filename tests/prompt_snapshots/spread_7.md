@@ -1,6 +1,9 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 10 positions and its very last line is `END OF OOTK PROMPT (10 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
+**In Plain Words:** 10 cards were drawn. Air leads with 4 of 10 cards; Earth is least, with 1.
+**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 how to write the reading.
+
 **Operation/Spread:** Tree of Life Layout (10 Sephiroth Mapping)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
@@ -147,12 +150,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 
 ---
 
-## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS
-* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.
-
----
-
-## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 

@@ -1,6 +1,9 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 75 positions and its very last line is `END OF OOTK PROMPT (75 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
+**In Plain Words:** 75 cards were drawn, in 4 operations, each dealt from its own shuffle. The Significator, Queen of Cups, stands for the querent. Air leads with 27 of 75 cards; Earth is least, with 12. Book T would note Three Queens and Four Princes in Operation 4 (section 2).
+**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 Hebrew letters on the Cube of Space; 4 Platonic solids; 5 how neighbouring cards get on; 6 the angles between positions; 7 how to write the reading.
+
 **Operation/Spread:** Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
@@ -18,7 +21,7 @@
   * Op 4 (decans): none of 36 cards on their own decan - expected 0.46 at random, z=-0.68
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
-**Left Out to Fit:** Angels of the decans, Gods (Liber 777), Court card hexagrams. This reading is long, so these were dropped to keep the prompt short enough for every AI to read to the end. Do not bring them in from your own knowledge.
+**Left Out to Fit:** Angels of the decans, Gods (Liber 777). This reading is long, so these were dropped to keep the prompt short enough for every AI to read to the end. Do not bring them in from your own knowledge.
 
 ---
 
@@ -726,6 +729,8 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power; 8 of Swords - Interference: Shortened Force; X - Fortune: The Lord of the Forces of Life; 2 of Disks - Change: Harmonious Change; VI - The Lovers: The Children of the Voice; VII - The Chariot: The Child of the Powers of the Waters; 7 of Disks - Failure: Success Unfulfilled; 9 of Swords - Cruelty: Despair and Cruelty; Queen of Disks: Queen of the Thrones of Earth; 5 of Disks - Worry: Material Trouble; XVII - The Star: The Daughter of the Firmament; XIV - Art: The Daughter of the Reconcilers; 4 of Wands - Completion: Perfected Work; Knight of Disks: Lord of the Wide and Fertile Land; 6 of Disks - Success: Material Success; Prince of Wands: Prince of the Chariot of Fire; VIII - Adjustment: The Daughter of the Lords of Truth; Prince of Cups: Prince of the Chariot of the Waters; Princess of Cups: Princess of the Waters; XIX - The Sun: The Lord of the Fire of the World; XX - The Aeon: The Spirit of the Primal Fire; XII - The Hanged Man: The Spirit of the Mighty Waters; IV - The Emperor: The Son of the Morning; Prince of Disks: Prince of the Chariot of Earth; Princess of Wands: Princess of the Shining Flame; 0 - The Fool: The Spirit of Aethyr; XVIII - The Moon: The Ruler of Flux and Reflux; Queen of Swords: Queen of the Thrones of Air; 9 of Cups - Happiness: Material Happiness; Queen of Wands: Queen of the Thrones of Flame.
 
+**Court Hexagrams** (Crowley, Book of Thoth: the rank's trigram over the suit's; Fire thunder, Water lake, Air wind, Earth mountain): Queen of Cups: 58 Tui, The Joyous; Prince of Swords: 57 Sun, The Gentle; Knight of Cups: 54 Kuei Mei, The Marrying Maiden (Crowley: Kwei Mei); Queen of Disks: 31 Hsien, Influence; Knight of Disks: 62 Hsiao Kuo, Preponderance of the Small (Crowley: Hsiao Kwo); Prince of Wands: 42 Yi, Increase; Prince of Cups: 61 Chung Fu, Inner Truth (Crowley: Kung Fu); Princess of Cups: 41 Sun, Decrease; Prince of Disks: 53 Chien, Development (Crowley: Kien); Princess of Wands: 27 I, Nourishment; Queen of Swords: 28 Ta Kuo, Preponderance of the Great (Crowley: Ta Kwo); Queen of Wands: 17 Sui, Following.
+
 
 ---
 
@@ -745,52 +750,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ---
 
 ## 3. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)
-* **3 Mother Axes (Core Planes)**: `5`
-* **7 Double Directions (Cardinal Faces)**: `8`
-* **12 Simple Edges (Polyhedral Boundaries)**: `27`
-* **Nodal Sephiroth Spheres**: `35`
-
-Section 1 gives each card's letter and spatial type.
-
-**Letter Values (standard gematria, Aleph 1 to Tav 400):** the letters from section 1 added up (pips have none). Plain sums to weigh, not a verdict.
-* **Operation 1**: ח 8 + ה 5 + ו 6 + ט 9 + ק 100 + פ 80 + ב 2 = **210**
-* **Operation 2**: ק 100 + כ 20 + ז 7 + ח 8 + ע 70 = **205**
-* **Operation 3**: ה 5 + ה 5 + ס 60 + פ 80 + י 10 + ב 2 = **162**
-* **Operation 4**: ט 9 + ז 7 + ל 30 + נ 50 + מ 40 + ח 8 + ח 8 + ר 200 + פ 80 + ש 300 + מ 40 + צ 90 + ה 5 + ו 6 + ש 300 + כ 20 + א 1 + ק 100 + ל 30 + ס 60 + ט 9 + צ 90 = **1483**
+* Mother axes 5, double directions 8, simple edges 27, Sephira points 35 (section 1 gives each card's).
+* **Letter Values (standard gematria, Aleph 1 to Tav 400):** Operation 1 210; Operation 2 205; Operation 3 162; Operation 4 1483. The letters from section 1 added up (pips have none); plain sums, not a verdict.
 
 ---
 
 ## 4. PLATONIC SOLID TOPOLOGY MATRIX
-* **Dodecahedron        **: `8`
-* **Tetrahedron         **: `15`
-* **Icosahedron         **: `15`
-* **Octahedron          **: `25`
-* **Hexahedron (Cube)   **: `12`
-
-**Solid properties** (fixed for each solid; section 1 names only the card's solid):
-* **Icosahedron**: Faces 20, Vertices 12 | Dual: `Dodecahedron` | Role: Receptive Matrix (Fluid Volume)
-* **Octahedron**: Faces 8, Vertices 6 | Dual: `Hexahedron (Cube)` | Role: Dynamic Axis (Mediating Air)
-* **Hexahedron (Cube)**: Faces 6, Vertices 8 | Dual: `Octahedron` | Role: Crystallized Vessel (Physical Boundary)
-* **Tetrahedron**: Faces 4, Vertices 4 | Dual: `Tetrahedron (Self-Dual)` | Role: Primary Ignis Vector (Expansion)
-* **Dodecahedron**: Faces 12, Vertices 20 | Dual: `Icosahedron` | Role: Planetary Celestial Face
-
-**Topological Dual Pairings / Polyhedral Inversions:**
-These are the pairs scored in section 5 (in a heap, only its named pairs).
-* Positions 6 & 7: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
-* Positions 1 & 15: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
-* Positions 18 & 19: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
-* Positions 19 & 20: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
-* Positions 21 & 22: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 25 & 26: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 26 & 27: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 27 & 16: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 28 & 29: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 32 & 33: Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)
-* Positions 35 & 36: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 41 & 42: Earth/Air Inversion Dual (Cube <-> Octahedron)
-* Positions 59 & 60: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
-* Positions 72 & 73: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
-* Positions 73 & 74: Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)
+* Solids drawn: Dodecahedron 8, Tetrahedron 15, Icosahedron 15, Octahedron 25, Hexahedron (Cube) 12.
+* Neighbours whose solids are duals (scored in section 5, in a heap, only its named pairs): 6 & 7 (Tetrahedron-Tetrahedron); 1 & 15 (Dodecahedron-Icosahedron); 18 & 19 (Dodecahedron-Icosahedron); 19 & 20 (Dodecahedron-Icosahedron); 21 & 22 (Cube-Octahedron); 25 & 26 (Cube-Octahedron); 26 & 27 (Cube-Octahedron); 27 & 16 (Cube-Octahedron); 28 & 29 (Cube-Octahedron); 32 & 33 (Dodecahedron-Icosahedron); 35 & 36 (Cube-Octahedron); 41 & 42 (Cube-Octahedron); 59 & 60 (Tetrahedron-Tetrahedron); 72 & 73 (Tetrahedron-Tetrahedron); 73 & 74 (Tetrahedron-Tetrahedron).
 
 ---
 

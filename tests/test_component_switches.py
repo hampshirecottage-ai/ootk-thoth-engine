@@ -170,3 +170,20 @@ def test_gematria_values():
         (3, "[Op 2] One", {"arcana_type": "Major", "hebrew_letter": "ת (Tau)"}),
         (4, "[Op 2] Two", {"arcana_type": "Court", "hebrew_letter": "ש (Shin)"}))]
     assert [(op, total) for op, _, total in gematria.operation_totals(cards)] == [(1, 1), (2, 700)]
+
+
+def test_plain_summary_on_top_and_no_empty_geometry_section():
+    """The prompt opens with a plain summary and a guide to its sections; Opening of the Key has
+    no layout, so with every layer on it still has no geometry section; the extra totals are
+    one line each."""
+    full = prompt(BOOK_T_KEY)
+    top = full.split("**Operation/Spread:**", 1)[0]
+    assert "**In Plain Words:** 79 cards were drawn, in 5 operations" in top
+    assert "The Significator, Queen of Cups, stands for the querent." in top
+    layout = next(line for line in top.splitlines() if line.startswith("**How This Prompt Is Laid Out:**"))
+    assert layout.count(";") == len(headings(full)) - 1          # one entry per section kept
+    assert "SPATIAL & GEOMETRIC VECTOR ANALYSIS" not in headings(full)
+    assert "No spatial layout" not in full
+    assert len([l for l in full.splitlines() if "Letter Values" in l]) == 1
+    assert "Solid properties" not in full and "Topological Dual Pairings" not in full
+    assert "SPATIAL & GEOMETRIC VECTOR ANALYSIS" in headings(prompt("10"))   # a wheel keeps it

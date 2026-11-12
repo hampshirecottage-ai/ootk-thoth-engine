@@ -1,6 +1,9 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 1 position and its very last line is `END OF OOTK PROMPT (1 position)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
+**In Plain Words:** 1 card was drawn.
+**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 how to write the reading.
+
 **Operation/Spread:** Single Card / Daily Operations
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
@@ -48,12 +51,7 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 
 ---
 
-## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS
-* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.
-
----
-
-## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 

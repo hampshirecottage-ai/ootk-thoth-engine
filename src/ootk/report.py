@@ -214,8 +214,9 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
 # order changes. The cards come first: every later section names positions, and the AI
 # reads them better once it knows which card sits where.
 CARDS, ELEMENTS, HEBREW, SOLIDS, DIGNITY, SPATIAL = range(1, 7)   # section 7 is the instructions
-# Sections 3 and 4 hold only extra layers when Cube counts, gematria and solids are off; then
-# they are left out and the later sections move up, references included.
+# Sections 3 and 4 hold only extra layers when Cube counts, gematria and solids are off, and
+# section 6 is empty for a spread with no layout (Opening of the Key, one card); then they are
+# left out and the later sections move up, references included.
 _SECTION_REF = re.compile(r"\b([Ss]ections?) (\d)(?:-(\d))?\b")
 
 def _renumber(text, new):
@@ -257,7 +258,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
     header_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists {_positions(len(spread_results))} and its very last line is `{end_marker}`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
-{reading_time_markdown(drawn_at, local_zone, sky="astrology" not in off)}**Operation/Spread:** {spread_name}
+{_GLANCE_SLOT}{reading_time_markdown(drawn_at, local_zone, sky="astrology" not in off)}**Operation/Spread:** {spread_name}
 **Query/Intent Topic:** {query_prompt or 'General Operation'}
 **Significator:** {significator}
 {significator_places_markdown(significator_places)}{birth_line}**PRNG Seed:** {seed_val or 'Manual Entry'}
@@ -278,15 +279,67 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
                          significator_places, book_t, book_t_notes, off),
     )
     kept = [(n, body) for n, body in enumerate(sections, start=1)
-            if n not in (HEBREW, SOLIDS) or body.split("\n", 1)[1].strip()]
+            if n not in (HEBREW, SOLIDS, SPATIAL) or body.split("\n", 1)[1].strip()]
     new, at = {}, 0
     for n in range(1, len(sections) + 1):     # a left-out section points at the one before it
         at += any(k == n for k, _ in kept)
         new[n] = at
+    glance = at_a_glance_markdown(significator, spread_results, element_counts, book_t,
+                                  [n for n, _ in kept], new, off, bool(book_t_notes))
+    header_md = header_md.replace(_GLANCE_SLOT, glance, 1)
     prompt_md = "".join(f"\n---\n\n## {new[n]}. {_renumber(body, new)}" for n, body in kept)
     prompt_md += f"\n{end_marker}\n"
     # The header keeps the querent's own text exactly as typed.
     return header_md + strip_hebrew_points(prompt_md)
+
+_GLANCE_SLOT = "\0AT-A-GLANCE\0"
+
+# What each section holds, in plain words, for the layout line at the top of the prompt.
+_SECTION_WORDS = {
+    CARDS: "the cards, position by position",
+    ELEMENTS: "the balance of elements",
+    HEBREW: "Hebrew letters on the Cube of Space",
+    SOLIDS: "Platonic solids",
+    DIGNITY: "how neighbouring cards get on",
+    SPATIAL: "the angles between positions",
+    SPATIAL + 1: "how to write the reading",
+}
+
+def _join(words):
+    return words[0] if len(words) == 1 else ", ".join(words[:-1]) + " and " + words[-1]
+
+def at_a_glance_markdown(significator, spread_results, element_counts, book_t, kept,
+                         new, off=frozenset(), counted=False):
+    """A few plain sentences at the top of the prompt: what was drawn, what stands out in the
+    numbers and which section holds what, so a reader can find their way before the detail."""
+    n = len(spread_results)
+    ops = len({operation_number(i["position_name"]) for i in spread_results})
+    said = [f"{_plural(n, 'card was', 'cards were')} drawn"
+            + (f", in {ops} operations, each dealt from its own shuffle" if ops > 1 else "") + "."]
+    if significator and not str(significator).startswith("None"):
+        said.append(f"The Significator, {significator}, stands for the querent.")
+    counts = {e: c for e, c in (element_counts or {}).items() if e != "Spirit"}
+    if "elements" not in off and n > 1 and counts and len(set(counts.values())) > 1:
+        most, least = max(counts.values()), min(counts.values())
+        top = [e for e, c in counts.items() if c == most]
+        low = [e for e, c in counts.items() if c == least]
+        said.append(f"{_join(top)} {'leads' if len(top) == 1 else 'lead'} with {most} of {n} cards; "
+                    f"{_join(low)} {'is' if len(low) == 1 else 'are'} least, with {least}.")
+    if book_t and "numerology" not in off:
+        kinds = []
+        for seg in book_t:
+            where = (seg["segment_name"] or "").split(":")[0]
+            these = [f"{_COUNT_WORDS.get(k, k)} {rank}" for rank, k, _ in seg["kinds"]]
+            if these:
+                kinds.append(_join(these) + (f" in {where}" if where and ops > 1 else ""))
+        if kinds:
+            said.append(f"Book T would note {'; '.join(kinds)} (section {new[ELEMENTS]}).")
+    words = dict(_SECTION_WORDS)
+    if counted:
+        words[DIGNITY] = "Book T's count and pairs, the heart of the method"
+    layout = "; ".join(f"{new[k]} {words[k]}" for k in kept)
+    return (f"**In Plain Words:** {' '.join(said)}\n"
+            f"**How This Prompt Is Laid Out:** {layout}.\n\n")
 
 def drawn_now():
     """This minute in UTC: the time a new reading is drawn, as the prompt gives it."""
@@ -598,11 +651,9 @@ def _hebrew_md(spatial_dist, off=frozenset(), spread_results=()):
     elif gone:
         md += _left_out(*gone)
     else:
-        md += (f"* **3 Mother Axes (Core Planes)**: `{spatial_dist['Mother_Axis']}`\n"
-               f"* **7 Double Directions (Cardinal Faces)**: `{spatial_dist['Double_Direction']}`\n"
-               f"* **12 Simple Edges (Polyhedral Boundaries)**: `{spatial_dist['Simple_Edge']}`\n"
-               f"* **Nodal Sephiroth Spheres**: `{spatial_dist['Sephira_Point']}`\n"
-               f"\nSection {CARDS} gives each card's letter and spatial type.\n")
+        md += (f"* Mother axes {spatial_dist['Mother_Axis']}, double directions "
+               f"{spatial_dist['Double_Direction']}, simple edges {spatial_dist['Simple_Edge']}, "
+               f"Sephira points {spatial_dist['Sephira_Point']} (section {CARDS} gives each card's).\n")
     if "hebrew" not in off:
         md += _gematria_md(spread_results, off)
     return md
@@ -614,14 +665,10 @@ def _gematria_md(spread_results, off):
     totals = gematria.operation_totals(spread_results)
     if not totals:
         return ""
-    md = ("\n**Letter Values (standard gematria, Aleph 1 to Tav 400):** the letters from section "
-          f"{CARDS} added up (pips have none). Plain sums to weigh, not a verdict.\n")
     several = len({operation_number(i["position_name"]) for i in spread_results}) > 1
-    for op, rows, total in totals:
-        parts = " + ".join(f"{letter.split()[0]} {value}" for _, letter, value in rows)
-        label = f"Operation {op}" if several else "Total"
-        md += f"* **{label}**: {parts} = **{total}**\n"
-    return md
+    sums = "; ".join(f"Operation {op} {total}" if several else str(total) for op, _, total in totals)
+    return (f"* **Letter Values (standard gematria, Aleph 1 to Tav 400):** {sums}. The letters "
+            f"from section {CARDS} added up (pips have none); plain sums, not a verdict.\n")
 
 def _solids_md(solid_counts, legend, dual_pairings, off=frozenset(), named="in a heap"):
     md = "PLATONIC SOLID TOPOLOGY MATRIX\n"
@@ -629,24 +676,21 @@ def _solids_md(solid_counts, legend, dual_pairings, off=frozenset(), named="in a
         return md
     if "geometry" in off:
         return md + _left_out("geometry")
-    for solid, count in solid_counts.items():
-        if count:
-            md += f"* **{solid:20s}**: `{count}`\n"
+    drawn = ", ".join(f"{solid} {count}" for solid, count in solid_counts.items() if count)
     absent = [s for s, c in solid_counts.items() if not c and s != "Unmapped"]
-    if absent:
-        md += f"* None drawn: {', '.join(absent)}\n"
-
-    if legend:
-        md += f"\n**Solid properties** (fixed for each solid; section {CARDS} names only the card's solid):\n"
-        for solid, (faces, vertices, dual, role) in legend.items():
-            md += f"* **{solid}**: Faces {faces}, Vertices {vertices} | Dual: `{dual}` | Role: {role}\n"
-
+    md += f"* Solids drawn: {drawn or 'none'}" + (f"; none drawn: {', '.join(absent)}" if absent else "") + ".\n"
     if dual_pairings:
-        md += "\n**Topological Dual Pairings / Polyhedral Inversions:**\n"
-        md += f"These are the pairs scored in section {DIGNITY} ({named}, only its named pairs).\n"
-        for dp in dual_pairings:
-            md += f"* {dp}\n"
+        pairs = "; ".join(_short_dual(dp) for dp in dual_pairings)
+        md += (f"* Neighbours whose solids are duals (scored in section {DIGNITY}, {named}, only "
+               f"its named pairs): {pairs}.\n")
     return md
+
+_DUAL = re.compile(r"^Positions (\d+) & (\d+): .*\((.+) <-> (.+)\)$")
+
+def _short_dual(line):
+    """"Positions 18 & 4: Earth/Air Inversion Dual (Cube <-> Octahedron)" -> "18 & 4 (Cube-Octahedron)"."""
+    m = _DUAL.match(line)
+    return f"{m[1]} & {m[2]} ({m[3]}-{m[4]})" if m else line
 
 def _dignity_md(dignity_matrix, book_t_notes=None, off=frozenset()):
     md = "PAIRWISE ELEMENTAL DIGNITY INTERACTIONS\n"
@@ -699,14 +743,13 @@ def _is_heap(s):
 
 def _spatial_md(spatial_matrix, off=frozenset()):
     md = "SPATIAL & GEOMETRIC VECTOR ANALYSIS\n"
+    if not spatial_matrix:
+        return md     # no layout (Opening of the Key, one card): the section is left out
     if "geometry" in off:
         return md + _left_out("geometry")
     # A pair touching a centre card has no angle, and a heap's drawing coordinates are not a
     # wheel, so neither says anything about the reading: they are left out.
     shown = [s for s in spatial_matrix or () if s.get("aspect") != "Centre Node"]
-    if not spatial_matrix:
-        return md + ("* No spatial layout is defined for this spread (or only one card was drawn), "
-                     "so no geometric relations were evaluated.\n")
     if not shown:
         return md + (f"* Every pair in this layout meets at the centre card, so no pair makes an angle "
                      f"and there is no geometry to report. The cards' pairs are scored in section {DIGNITY}.\n")

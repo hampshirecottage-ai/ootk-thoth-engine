@@ -1,6 +1,9 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 10 positions and its very last line is `END OF OOTK PROMPT (10 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
+**In Plain Words:** 10 cards were drawn. Air leads with 4 of 10 cards; Earth is least, with 1.
+**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
+
 **Operation/Spread:** Celtic Cross (Waite, 10 cards)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)

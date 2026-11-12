@@ -1,6 +1,9 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 79 positions and its very last line is `END OF OOTK PROMPT (79 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
+**In Plain Words:** 79 cards were drawn, in 5 operations, each dealt from its own shuffle. The Significator, Queen of Cups, stands for the querent. Fire leads with 23 of 79 cards; Earth is least, with 13. Book T would note Three Twos, Three Fours, Three Nines, Three Tens and Three Queens in Operation 4 (section 2).
+**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 Book T's count and pairs, the heart of the method; 4 how to write the reading.
+
 **Operation/Spread:** Book T Opening of the Key (counting and pairing, 5 operations)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
@@ -739,12 +742,7 @@ Pos 76 (2 of Disks - Change) is left over after pairing and is read on its own.
 
 ---
 
-## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS
-* No spatial layout is defined for this spread (or only one card was drawn), so no geometric relations were evaluated.
-
----
-
-## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 4. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 
