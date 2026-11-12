@@ -5,7 +5,7 @@ from contextlib import nullcontext
 import psycopg
 import pytest
 
-from ootk import analysis, cli, db, shuffle, spreads
+from ootk import cli, db, shuffle, spreads
 
 
 def card(i, title=None, arcana="Minor", solid="Tetrahedron"):
@@ -13,33 +13,6 @@ def card(i, title=None, arcana="Minor", solid="Tetrahedron"):
             "attribution": "Fire", "platonic_solid": solid, "key_scale": 2,
             "path_or_sephira": "Chokmah", "hebrew_letter": "Chokmah", "element": "Fire",
             "king_scale_color": "Blue", "spatial_type": None, "spatial_dimension": None}
-
-
-# ---------- dual pairings stay inside an operation ----------
-
-def test_dual_pairings_never_cross_an_operation_boundary():
-    positions = spreads.spread_positions("12")
-    results = [{"position_number": i + 1, "position_name": p, "card_data": card(i)}
-               for i, p in enumerate(positions)]
-    _, _, duals = analysis.analyze_platonic_topology(results, "12")
-    pairs = {d.split(":")[0] for d in duals}
-    for last in (15, 27, 39):                    # the last card of operations 1, 2 and 3
-        assert f"Positions {last} & {last + 1}" not in pairs
-    assert len(duals) == 8 + 12 + 12 + 36        # the dignities' pairs: heap pairs, closed wheels
-    # A single spread is one segment, as before.
-    _, _, duals = analysis.analyze_platonic_topology(results[:3], "3")
-    assert len(duals) == 2
-
-
-def test_dual_pairs_name_the_cards_and_match_the_report_lines():
-    solids = ["Hexahedron (Cube)", "Octahedron", "Icosahedron", "Dodecahedron", "Tetrahedron", "Tetrahedron",
-              "Icosahedron", "Icosahedron"]
-    results = [{"position_number": i + 1, "position_name": f"P{i}", "card_data": card(i, solid=s)}
-               for i, s in enumerate(solids)]
-    pairs = analysis.dual_pairs(results)               # one row: each card and the next
-    assert [(i, j) for i, j, _ in pairs] == [(0, 1), (2, 3), (4, 5)]   # two Icosahedra are not duals
-    _, _, lines = analysis.analyze_platonic_topology(results)
-    assert lines == [f"Positions {i + 1} & {j + 1}: {label}" for i, j, label in pairs]
 
 
 # ---------- drawing from a short deck ----------

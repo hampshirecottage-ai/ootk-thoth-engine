@@ -85,13 +85,16 @@ def _prompt(*titles, **kw):
     return analyze_reading("Triad", "3", "q", "None", "1", _items(*titles), drawn_at=DRAWN, **kw)
 
 
-def test_extra_layers_are_off_by_default_and_titles_on():
+def test_extra_layers_are_off_by_default_and_titles_angels_and_dates_on():
+    """Keep: titles, angels, decan dates. Move to the report: gods, hexagrams, geomancy, the
+    Cube of Space and solids. Gone: gematria."""
     from ootk.report import DEFAULT_OFF
     text = _prompt("4 of Swords - Truce", "XVII - The Star", "Prince of Swords",
                    without=DEFAULT_OFF)["analytical_prompt"]
-    assert "**Golden Dawn Titles**" in text
-    for mark in ("**Angels of the Decans**", "**Decan Dates**", "**Day Ruler:**", "**Gods (Liber 777)**",
-                 "**Court Hexagrams**", "**Letter Values", "Platonic Solid", "Left out on purpose"):
+    for mark in ("**Golden Dawn Titles**", "**Angels of the Decans**", "**Decan Dates**", "**Day Ruler:**"):
+        assert mark in text, mark
+    for mark in ("**Gods (Liber 777)**", "**Court Hexagrams**", "**Letter Values", "Platonic Solid",
+                 "Geomantic Figure", "Spatial Dimension", "Cube of Space", "Left out on purpose"):
         assert mark not in text, mark
 
 

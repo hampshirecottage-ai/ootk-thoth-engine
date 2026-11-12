@@ -12,15 +12,15 @@
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 
 ---
 
 ## 1. CARD-BY-CARD CORRESPONDENCE MATRIX
 
-Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
+Minor (pip) cards sit on the same Sephira in every mapping system, so their entries name the Sephira once.
 
-Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
+Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice.
 
 Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
 
@@ -29,15 +29,13 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
 ### Position 2: 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 3: 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -57,18 +55,14 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
-- **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
-- **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 
 ### Position 6: 6. Unexpected / External Factors (Center Pair A)
 - **Card Drawn**: XI - Lust
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
-- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
-- **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 
 ### Position 7: 7. Unexpected / External Factors (Center Pair B)
 - **Card Drawn**: 2 of Wands - Dominion
@@ -82,7 +76,6 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 
 ### Position 9: 9. Psychological / Subconscious Basis (Base Left B)
 - **Card Drawn**: 2 of Swords - Peace
@@ -115,7 +108,6 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Spatial Dimension**: `Double_Direction` (North)
 
 ### Position 14: 14. Key Counter-Balance / Receptivity
 - **Card Drawn**: 3 of Swords - Sorrow
@@ -130,7 +122,6 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
-- **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 
 **Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
 
@@ -151,6 +142,8 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 | Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8 |
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power.
+
+**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Laviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24); 2 of Wands: Vehuel (49) and Daniel (50); 2 of Swords: Yezalel (13) and Mebahel (14); 7 of Swords: Hahahel (41) and Mikael (42); 10 of Wands: Reiyel (29) and Omael (30); 3 of Disks: Yehuiah (33) and Lehahiah (34); 3 of Swords: Hariel (15) and Hakamiah (16).
 
 
 ---

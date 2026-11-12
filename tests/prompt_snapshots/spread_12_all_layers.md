@@ -20,8 +20,7 @@
   * Op 3 (signs): none of 12 cards on their own sign - expected 0.77 at random, z=-0.90
   * Op 4 (decans): none of 36 cards on their own decan - expected 0.46 at random, z=-0.68
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
-**Left Out to Fit:** Angels of the decans, Gods (Liber 777). This reading is long, so these were dropped to keep the prompt short enough for every AI to read to the end. Do not bring them in from your own knowledge.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign. So does their Cube of Space edge, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
 
 ---
 
@@ -29,7 +28,7 @@
 
 Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
 
-Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
+Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice.
 
 Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
 
@@ -42,7 +41,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -51,7 +49,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -77,7 +75,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Taurus
 - **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
-- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
@@ -88,7 +85,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Leo
 - **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
-- **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -105,7 +101,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -144,7 +139,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
 
@@ -162,7 +156,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
-- **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
 
@@ -186,7 +179,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -196,7 +188,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
-- **Comparative Hebrew Mapping**: Thoth: `כ (Kaph)` | Golden Dawn: `כ (Kaph)` | French/Egyptian: `Yod (י)`
 - **Spatial Dimension**: `Double_Direction` (West)
 - **Platonic Solid**: `Dodecahedron`
 
@@ -222,7 +213,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Gemini
 - **Geomantic Figure**: Albus (Golden Dawn, by Gemini)
 - **Element (used in scores)**: Air (via Gemini)
-- **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -240,7 +230,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Cancer
 - **Geomantic Figure**: Populus and Via (Golden Dawn, by Cancer)
 - **Element (used in scores)**: Water (via Cancer)
-- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -263,7 +252,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Capricorn)**: Eye (ע (Ayin))
 - **Attribution**: Water of Earth - 20° Sagittarius to 20° Capricorn
-- **Comparative Hebrew Mapping**: Thoth: `ע (Ayin)` | Golden Dawn: `ע (Ayin)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-West Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
@@ -281,7 +269,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Aquarius
 - **Geomantic Figure**: Tristitia (Golden Dawn, by Aquarius)
 - **Element (used in scores)**: Air (via Aquarius)
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -290,7 +278,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -301,7 +289,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Sagittarius
 - **Geomantic Figure**: Acquisitio (Golden Dawn, by Sagittarius)
 - **Element (used in scores)**: Fire (via Sagittarius)
-- **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -311,7 +298,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
 
@@ -335,7 +321,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Virgo)**: Hand (י (Yod))
 - **Attribution**: Fire of Earth - 20° Leo to 20° Virgo
-- **Comparative Hebrew Mapping**: Thoth: `י (Yod)` | Golden Dawn: `י (Yod)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-North Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
@@ -359,7 +344,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
-- **Comparative Hebrew Mapping**: Thoth: `ב (Beth)` | Golden Dawn: `ב (Beth)` | French/Egyptian: `Aleph (א)`
 - **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 - **Platonic Solid**: `Dodecahedron`
 
@@ -376,7 +360,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Leo)**: Serpent (ט (Teth))
 - **Attribution**: Air of Fire - 20° Cancer to 20° Leo
-- **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -394,7 +377,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Gemini
 - **Geomantic Figure**: Albus (Golden Dawn, by Gemini)
 - **Element (used in scores)**: Air (via Gemini)
-- **Comparative Hebrew Mapping**: Thoth: `ז (Zain)` | Golden Dawn: `ז (Zain)` | French/Egyptian: `Vav (ו)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -405,7 +387,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Libra
 - **Geomantic Figure**: Puella (Golden Dawn, by Libra)
 - **Element (used in scores)**: Air (via Libra)
-- **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `Cheth (ח)`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -414,7 +395,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Scorpio)**: Fish (נ (Nun))
 - **Attribution**: Air of Water - 20° Libra to 20° Scorpio
-- **Comparative Hebrew Mapping**: Thoth: `נ (Nun)` | Golden Dawn: `נ (Nun)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (South-West Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -445,7 +425,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Element (Water)**: Water (מ (Mem))
 - **Attribution**: Earth of Water - Libra, Scorpio, Sagittarius quadrant
-- **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 - **Platonic Solid**: `Icosahedron`
 
@@ -454,7 +433,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -472,7 +450,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Cancer
 - **Geomantic Figure**: Populus and Via (Golden Dawn, by Cancer)
 - **Element (used in scores)**: Water (via Cancer)
-- **Comparative Hebrew Mapping**: Thoth: `ח (Cheth)` | Golden Dawn: `ח (Cheth)` | French/Egyptian: `Zain (ז)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -490,7 +467,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Head (ר (Resh))
 - **Attribution**: Sun
 - **Element (used in scores)**: Fire (the Sun via Leo, its only sign)
-- **Comparative Hebrew Mapping**: Thoth: `ר (Resh)` | Golden Dawn: `ר (Resh)` | French/Egyptian: `Qoph (ק)`
 - **Spatial Dimension**: `Double_Direction` (South)
 - **Platonic Solid**: `Dodecahedron`
 
@@ -507,7 +483,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Comparative Hebrew Mapping**: Thoth: `פ (Pé)` | Golden Dawn: `פ (Pé)` | French/Egyptian: `Ayin (ע)`
 - **Spatial Dimension**: `Double_Direction` (North)
 - **Platonic Solid**: `Dodecahedron`
 
@@ -517,7 +492,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Tooth (ש (Shin))
 - **Attribution**: Fire / Spirit
 - **Element (used in scores)**: Fire (the element Fire itself; Spirit is a secondary quality only)
-- **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `Resh (ר)`
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 - **Platonic Solid**: `Tetrahedron`
 
@@ -527,7 +501,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Water (מ (Mem))
 - **Attribution**: Water
 - **Element (used in scores)**: Water (the element Water itself)
-- **Comparative Hebrew Mapping**: Thoth: `מ (Mem)` | Golden Dawn: `מ (Mem)` | French/Egyptian: `Lamed (ל)`
 - **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 - **Platonic Solid**: `Icosahedron`
 
@@ -546,7 +519,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Aries
 - **Geomantic Figure**: Puer (Golden Dawn, by Aries)
 - **Element (used in scores)**: Fire (via Aries)
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -563,7 +536,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -579,7 +552,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Taurus)**: Nail (ו (Vau))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
-- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 
@@ -588,7 +560,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Element (Fire)**: Tooth (ש (Shin))
 - **Attribution**: Earth of Fire - Cancer, Leo, Virgo quadrant
-- **Comparative Hebrew Mapping**: Thoth: `ש (Shin)` | Golden Dawn: `ש (Shin)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 - **Platonic Solid**: `Tetrahedron`
 
@@ -598,7 +569,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
-- **Comparative Hebrew Mapping**: Thoth: `כ (Kaph)` | Golden Dawn: `כ (Kaph)` | French/Egyptian: `Yod (י)`
 - **Spatial Dimension**: `Double_Direction` (West)
 - **Platonic Solid**: `Dodecahedron`
 
@@ -608,7 +578,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Ox (א (Aleph))
 - **Attribution**: Air
 - **Element (used in scores)**: Air (the element Air itself)
-- **Comparative Hebrew Mapping**: Thoth: `א (Aleph)` | Golden Dawn: `א (Aleph)` | French/Egyptian: `Shin (ש)`
 - **Spatial Dimension**: `Mother_Axis` (Vertical Axis (above to below))
 - **Platonic Solid**: `Octahedron`
 
@@ -619,7 +588,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Pisces
 - **Geomantic Figure**: Laetitia (Golden Dawn, by Pisces)
 - **Element (used in scores)**: Water (via Pisces)
-- **Comparative Hebrew Mapping**: Thoth: `ק (Qoph)` | Golden Dawn: `ק (Qoph)` | French/Egyptian: `Tzaddi (צ)`
 - **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 - **Platonic Solid**: `Icosahedron`
 
@@ -628,7 +596,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Libra)**: Ox Goad (ל (Lamed))
 - **Attribution**: Water of Air - 20° Virgo to 20° Libra
-- **Comparative Hebrew Mapping**: Thoth: `ל (Lamed)` | Golden Dawn: `ל (Lamed)` | French/Egyptian: `none`
 - **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -662,7 +629,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Sagittarius
 - **Geomantic Figure**: Acquisitio (Golden Dawn, by Sagittarius)
 - **Element (used in scores)**: Fire (via Sagittarius)
-- **Comparative Hebrew Mapping**: Thoth: `ס (Samekh)` | Golden Dawn: `ס (Samekh)` | French/Egyptian: `Nun (נ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -673,7 +639,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Leo
 - **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
-- **Comparative Hebrew Mapping**: Thoth: `ט (Teth)` | Golden Dawn: `ט (Teth)` | French/Egyptian: `Kaph (כ)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -682,7 +647,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `none`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -729,6 +694,10 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power; 8 of Swords - Interference: Shortened Force; X - Fortune: The Lord of the Forces of Life; 2 of Disks - Change: Harmonious Change; VI - The Lovers: The Children of the Voice; VII - The Chariot: The Child of the Powers of the Waters; 7 of Disks - Failure: Success Unfulfilled; 9 of Swords - Cruelty: Despair and Cruelty; Queen of Disks: Queen of the Thrones of Earth; 5 of Disks - Worry: Material Trouble; XVII - The Star: The Daughter of the Firmament; XIV - Art: The Daughter of the Reconcilers; 4 of Wands - Completion: Perfected Work; Knight of Disks: Lord of the Wide and Fertile Land; 6 of Disks - Success: Material Success; Prince of Wands: Prince of the Chariot of Fire; VIII - Adjustment: The Daughter of the Lords of Truth; Prince of Cups: Prince of the Chariot of the Waters; Princess of Cups: Princess of the Waters; XIX - The Sun: The Lord of the Fire of the World; XX - The Aeon: The Spirit of the Primal Fire; XII - The Hanged Man: The Spirit of the Mighty Waters; IV - The Emperor: The Son of the Morning; Prince of Disks: Prince of the Chariot of Earth; Princess of Wands: Princess of the Shining Flame; 0 - The Fool: The Spirit of Aethyr; XVIII - The Moon: The Ruler of Flux and Reflux; Queen of Swords: Queen of the Thrones of Air; 9 of Cups - Happiness: Material Happiness; Queen of Wands: Queen of the Thrones of Flame.
 
+**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Laviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24); 2 of Wands: Vehuel (49) and Daniel (50); 2 of Swords: Yezalel (13) and Mebahel (14); 7 of Swords: Hahahel (41) and Mikael (42); 10 of Wands: Reiyel (29) and Omael (30); 3 of Disks: Yehuiah (33) and Lehahiah (34); 3 of Swords: Hariel (15) and Hakamiah (16); 8 of Swords: Umabel (61) and Iahhel (62); 5 of Swords: Aniel (37) and Haamiah (38); 6 of Cups: Nelchael (21) and Yeiayel (22); 2 of Disks: Lecabel (31) and Vasariah (32); 10 of Swords: Damabiah (65) and Manakel (66); 7 of Disks: Harahel (59) and Mitzrael (60); 9 of Swords: Anauel (63) and Mehiel (64); 5 of Disks: Mebahiah (55) and Poyel (56); 4 of Wands: Nanael (53) and Nithael (54); 6 of Disks: Nemamiah (57) and Yeialel (58); 9 of Cups: Sealiah (45) and Ariel (46).
+
+**Gods (Liber 777)** (Egyptian, column XIX / Greek, column XXXIV, from the row the card's colours follow, so the Star and Emperor go by their signs, Aquarius 28 and Aries 15, not their letters; [ ] and [[ ]] are 777's own additions): V - The Hierophant (row 16): Asar, Ameshet, Apis / [Heré]; XI - Lust (row 19): Ra-Hoor-Khuit, Pasht, Sekhet, Mau / Demeter [borne by lions]; XVI - The Tower (row 27): Horus / Ares, [[Athena]]; I - The Magus (row 12): Thoth and Cynocephalus / Hermes; X - Fortune (row 21): Amoun-Ra / Zeus; VI - The Lovers (row 17): Various twin Deities, Rekht, Merti, &c. [[Heru-Ra-Ha]] / Castor and Pollux, Apollo the Diviner [[Eros]]; VII - The Chariot (row 18): Khephra / Apollo the Charioteer; XVII - The Star (row 28): Ahepi, Aroueris / [Athena] Ganymede; XIV - Art (row 25): Nephthys / Apollo, Artemis (hunters); VIII - Adjustment (row 22): Ma / Themis, Minos, Aeacus and Rhadamanthus; XIX - The Sun (row 30): Ra and many others / Helios, Apollo; XX - The Aeon (row 31): Thoum-Aesh-Neith, Mau, Kabeshunt, Horus, Tarpesheth / Hades; XII - The Hanged Man (row 23): Tum, Ptah, Auramoth (as △, Water), Asar (as Hanged Man), Hekar, Isis [[Hathor]] / Poseidon; IV - The Emperor (row 15): Men Thu / Athena; 0 - The Fool (row 11): Nu [[Hoor-pa-kraat as ATU 0]] / Zeus; XVIII - The Moon (row 29): Khephra (as Scarab in Tarot Trump) / Poseidon [[Hermes Psychopompos]].
+
 **Court Hexagrams** (Crowley, Book of Thoth: the rank's trigram over the suit's; Fire thunder, Water lake, Air wind, Earth mountain): Queen of Cups: 58 Tui, The Joyous; Prince of Swords: 57 Sun, The Gentle; Knight of Cups: 54 Kuei Mei, The Marrying Maiden (Crowley: Kwei Mei); Queen of Disks: 31 Hsien, Influence; Knight of Disks: 62 Hsiao Kuo, Preponderance of the Small (Crowley: Hsiao Kwo); Prince of Wands: 42 Yi, Increase; Prince of Cups: 61 Chung Fu, Inner Truth (Crowley: Kung Fu); Princess of Cups: 41 Sun, Decrease; Prince of Disks: 53 Chien, Development (Crowley: Kien); Princess of Wands: 27 I, Nourishment; Queen of Swords: 28 Ta Kuo, Preponderance of the Great (Crowley: Ta Kwo); Queen of Wands: 17 Sui, Following.
 
 
@@ -751,13 +720,11 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 ## 3. HEBREW LETTER SPATIAL DIMENSIONS (Sefer Yetzirah / Cube of Space)
 * Mother axes 5, double directions 8, simple edges 27, Sephira points 35 (section 1 gives each card's).
-* **Letter Values (standard gematria, Aleph 1 to Tav 400):** Operation 1 210; Operation 2 205; Operation 3 162; Operation 4 1483. The letters from section 1 added up (pips have none); plain sums, not a verdict.
 
 ---
 
 ## 4. PLATONIC SOLID TOPOLOGY MATRIX
 * Solids drawn: Dodecahedron 8, Tetrahedron 15, Icosahedron 15, Octahedron 25, Hexahedron (Cube) 12.
-* Neighbours whose solids are duals (scored in section 5, in a heap, only its named pairs): 6 & 7 (Tetrahedron-Tetrahedron); 1 & 15 (Dodecahedron-Icosahedron); 18 & 19 (Dodecahedron-Icosahedron); 19 & 20 (Dodecahedron-Icosahedron); 21 & 22 (Cube-Octahedron); 25 & 26 (Cube-Octahedron); 26 & 27 (Cube-Octahedron); 27 & 16 (Cube-Octahedron); 28 & 29 (Cube-Octahedron); 32 & 33 (Dodecahedron-Icosahedron); 35 & 36 (Cube-Octahedron); 41 & 42 (Cube-Octahedron); 59 & 60 (Tetrahedron-Tetrahedron); 72 & 73 (Tetrahedron-Tetrahedron); 73 & 74 (Tetrahedron-Tetrahedron).
 
 ---
 
@@ -1114,7 +1081,7 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header. Before reading any card, restate it in one or two sentences as an open question framed in this spread's terms: its positions (section 1) and the Incarnational Life Path & Psychological Evolution lens. If it asks yes or no, or whether something will happen, turn it toward what the querent can understand or do. Keep the querent's subject and intent and change only the wording; show the reframed question first so the querent can correct it, then read each position as answering part of it.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
-4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Dodecahedron, Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5 and the aspects in section 6). Take the operations one at a time, in order, then draw them together. Section 4 lists the neighbouring cards whose solids are duals (polyhedral inversions). Where the Significator Falls (in the header) is the Golden Dawn's key to each operation: read the pack, house, sign or decan it falls in as where the matter turns, alongside the cards drawn. It names a place, not a printed card: unless a line says the Significator is the card printed there, do not look for it among the cards at that place. The Own-Place Check in the header compares the cards on their own place with chance; give it weight only where it is marked unusual.
+4. **Suggested order:** First the overall balance of elements, Cube of Space letters and solids (Dodecahedron, Tetrahedron, Icosahedron, Octahedron, Hexahedron (Cube)) in sections 2-4; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 5 and the aspects in section 6). Take the operations one at a time, in order, then draw them together. Where the Significator Falls (in the header) is the Golden Dawn's key to each operation: read the pack, house, sign or decan it falls in as where the matter turns, alongside the cards drawn. It names a place, not a printed card: unless a line says the Significator is the card printed there, do not look for it among the cards at that place. The Own-Place Check in the header compares the cards on their own place with chance; give it weight only where it is marked unusual.
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Answer the reframed question directly. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 

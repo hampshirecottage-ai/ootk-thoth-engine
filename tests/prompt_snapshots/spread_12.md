@@ -15,15 +15,15 @@
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
-**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales and Cube of Space edge follow the sign, so a card on Tzaddi can sit on Heh's edge (North-East, Aries) and the reverse.
+**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 
 ---
 
 ## 1. CARD-BY-CARD CORRESPONDENCE MATRIX
 
-Minor (pip) cards sit on the same Sephira in every mapping system and are nodal Sephira points on the Cube of Space, so their entries name the Sephira once and leave out the spatial dimension.
+Minor (pip) cards sit on the same Sephira in every mapping system, so their entries name the Sephira once.
 
-Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice. The French/Egyptian system gives courts no path letter, so `none` there is by design, not missing data.
+Court cards take their Hebrew letter through their sign (a Princess through her element), a Golden Dawn and Thoth practice.
 
 Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
 
@@ -36,15 +36,13 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
 ### Position 2: [Op 1] 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 3: [Op 1] 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -64,18 +62,14 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Nail (ו (Vau))
 - **Attribution**: Taurus
-- **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
-- **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 
 ### Position 6: [Op 1] 6. Unexpected / External Factors (Center Pair A)
 - **Card Drawn**: XI - Lust
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
-- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
-- **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 
 ### Position 7: [Op 1] 7. Unexpected / External Factors (Center Pair B)
 - **Card Drawn**: 2 of Wands - Dominion
@@ -89,7 +83,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 
 ### Position 9: [Op 1] 9. Psychological / Subconscious Basis (Base Left B)
 - **Card Drawn**: 2 of Swords - Peace
@@ -122,7 +115,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Spatial Dimension**: `Double_Direction` (North)
 
 ### Position 14: [Op 1] 14. Key Counter-Balance / Receptivity
 - **Card Drawn**: 3 of Swords - Sorrow
@@ -137,7 +129,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
-- **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 
 ### Position 16: [Op 2] 1. First House (Ascendant / Physical Self)
 - **Card Drawn**: 8 of Swords - Interference
@@ -157,7 +148,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-- **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 
 ### Position 19: [Op 2] 4. Fourth House (Home & Roots)
 - **Card Drawn**: X - Fortune
@@ -165,7 +155,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
-- **Spatial Dimension**: `Double_Direction` (West)
 
 ### Position 20: [Op 2] 5. Fifth House (Creativity & Will)
 - **Card Drawn**: 6 of Cups - Pleasure
@@ -185,9 +174,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
-- **Geomantic Figure**: Albus (Golden Dawn, by Gemini)
 - **Element (used in scores)**: Air (via Gemini)
-- **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 
 ### Position 23: [Op 2] 8. Eighth House (Shared Assets & Death)
 - **Card Drawn**: 10 of Swords - Ruin
@@ -200,9 +187,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
-- **Geomantic Figure**: Populus and Via (Golden Dawn, by Cancer)
 - **Element (used in scores)**: Water (via Cancer)
-- **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
 ### Position 25: [Op 2] 10. Tenth House (Career & Public Standing)
 - **Card Drawn**: 7 of Disks - Failure
@@ -221,7 +206,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Capricorn)**: Eye (ע (Ayin))
 - **Attribution**: Water of Earth - 20° Sagittarius to 20° Capricorn
-- **Spatial Dimension**: `Simple_Edge` (Lower-West Edge)
 
 ### Position 28: [Op 3] 1. Aries
 - **Card Drawn**: 5 of Disks - Worry
@@ -234,27 +218,22 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Window (ה (Hé))
 - **Attribution**: Aquarius
-- **Geomantic Figure**: Tristitia (Golden Dawn, by Aquarius)
 - **Element (used in scores)**: Air (via Aquarius)
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `Peh (פ)`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 30: [Op 3] 3. Gemini
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 31: [Op 3] 4. Cancer
 - **Card Drawn**: XIV - Art
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
-- **Geomantic Figure**: Acquisitio (Golden Dawn, by Sagittarius)
 - **Element (used in scores)**: Fire (via Sagittarius)
-- **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 
 ### Position 32: [Op 3] 5. Leo
 - **Card Drawn**: XVI - The Tower
@@ -262,7 +241,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Spatial Dimension**: `Double_Direction` (North)
 
 ### Position 33: [Op 3] 6. Virgo
 - **Card Drawn**: Ace of Cups
@@ -282,7 +260,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Virgo)**: Hand (י (Yod))
 - **Attribution**: Fire of Earth - 20° Leo to 20° Virgo
-- **Spatial Dimension**: `Simple_Edge` (Lower-North Edge)
 
 ### Position 36: [Op 3] 9. Sagittarius
 - **Card Drawn**: 4 of Swords - Truce
@@ -302,7 +279,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
-- **Spatial Dimension**: `Double_Direction` (Up (Zenith))
 
 ### Position 39: [Op 3] 12. Pisces
 - **Card Drawn**: 6 of Disks - Success
@@ -316,7 +292,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Leo)**: Serpent (ט (Teth))
 - **Attribution**: Air of Fire - 20° Cancer to 20° Leo
-- **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 
 ### Position 41: [Op 4] Decan 2: Jupiter in Leo (6 of Wands)
 - **Card Drawn**: 5 of Disks - Worry
@@ -329,25 +304,20 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
-- **Geomantic Figure**: Albus (Golden Dawn, by Gemini)
 - **Element (used in scores)**: Air (via Gemini)
-- **Spatial Dimension**: `Simple_Edge` (Upper-East Edge)
 
 ### Position 43: [Op 4] Decan 4: Sun in Virgo (8 of Disks)
 - **Card Drawn**: VIII - Adjustment
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox Goad (ל (Lamed))
 - **Attribution**: Libra
-- **Geomantic Figure**: Puella (Golden Dawn, by Libra)
 - **Element (used in scores)**: Air (via Libra)
-- **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 
 ### Position 44: [Op 4] Decan 5: Venus in Virgo (9 of Disks)
 - **Card Drawn**: Prince of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Scorpio)**: Fish (נ (Nun))
 - **Attribution**: Air of Water - 20° Libra to 20° Scorpio
-- **Spatial Dimension**: `Simple_Edge` (South-West Edge)
 
 ### Position 45: [Op 4] Decan 6: Mercury in Virgo (10 of Disks)
 - **Card Drawn**: 3 of Swords - Sorrow
@@ -373,14 +343,12 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Cups
 - **Letter via Element (Water)**: Water (מ (Mem))
 - **Attribution**: Earth of Water - Libra, Scorpio, Sagittarius quadrant
-- **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 
 ### Position 49: [Op 4] Decan 10: Mars in Scorpio (5 of Cups)
 - **Card Drawn**: Queen of Cups
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-- **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
 ### Position 50: [Op 4] Decan 11: Sun in Scorpio (6 of Cups)
 - **Card Drawn**: 2 of Swords - Peace
@@ -393,9 +361,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
-- **Geomantic Figure**: Populus and Via (Golden Dawn, by Cancer)
 - **Element (used in scores)**: Water (via Cancer)
-- **Spatial Dimension**: `Simple_Edge` (Lower-East Edge)
 
 ### Position 52: [Op 4] Decan 13: Mercury in Sagittarius (8 of Wands)
 - **Card Drawn**: 8 of Swords - Interference
@@ -410,7 +376,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Head (ר (Resh))
 - **Attribution**: Sun
 - **Element (used in scores)**: Fire (the Sun via Leo, its only sign)
-- **Spatial Dimension**: `Double_Direction` (South)
 
 ### Position 54: [Op 4] Decan 15: Saturn in Sagittarius (10 of Wands)
 - **Card Drawn**: 9 of Swords - Cruelty
@@ -424,7 +389,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Mouth (פ (Pé))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-- **Spatial Dimension**: `Double_Direction` (North)
 
 ### Position 56: [Op 4] Decan 17: Mars in Capricorn (3 of Disks)
 - **Card Drawn**: XX - The Aeon
@@ -432,7 +396,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Tooth (ש (Shin))
 - **Attribution**: Fire / Spirit
 - **Element (used in scores)**: Fire (the element Fire itself; Spirit is a secondary quality only)
-- **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 
 ### Position 57: [Op 4] Decan 18: Sun in Capricorn (4 of Disks)
 - **Card Drawn**: XII - The Hanged Man
@@ -440,7 +403,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Water (מ (Mem))
 - **Attribution**: Water
 - **Element (used in scores)**: Water (the element Water itself)
-- **Spatial Dimension**: `Mother_Axis` (Horizontal Axis (east to west))
 
 ### Position 58: [Op 4] Decan 19: Venus in Aquarius (5 of Swords)
 - **Card Drawn**: 3 of Disks - Works
@@ -454,10 +416,8 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
-- **Geomantic Figure**: Puer (Golden Dawn, by Aries)
 - **Element (used in scores)**: Fire (via Aries)
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `Daleth (ד)`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
 
 ### Position 60: [Op 4] Decan 21: Moon in Aquarius (7 of Swords)
 - **Card Drawn**: 4 of Wands - Completion
@@ -471,8 +431,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Aquarius)**: Window (ה (Hé))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)` | French/Egyptian: `none`
-- **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
+- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 62: [Op 4] Decan 23: Jupiter in Pisces (9 of Cups)
 - **Card Drawn**: 10 of Wands - Oppression
@@ -485,14 +444,12 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Taurus)**: Nail (ו (Vau))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
-- **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 
 ### Position 64: [Op 4] Decan 25: Mars in Aries (2 of Wands)
 - **Card Drawn**: Princess of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Element (Fire)**: Tooth (ש (Shin))
 - **Attribution**: Earth of Fire - Cancer, Leo, Virgo quadrant
-- **Spatial Dimension**: `Mother_Axis` (Longitudinal Axis (north to south))
 
 ### Position 65: [Op 4] Decan 26: Sun in Aries (3 of Wands)
 - **Card Drawn**: X - Fortune
@@ -500,7 +457,6 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
-- **Spatial Dimension**: `Double_Direction` (West)
 
 ### Position 66: [Op 4] Decan 27: Venus in Aries (4 of Wands)
 - **Card Drawn**: 0 - The Fool
@@ -508,23 +464,19 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Ox (א (Aleph))
 - **Attribution**: Air
 - **Element (used in scores)**: Air (the element Air itself)
-- **Spatial Dimension**: `Mother_Axis` (Vertical Axis (above to below))
 
 ### Position 67: [Op 4] Decan 28: Mercury in Taurus (5 of Disks)
 - **Card Drawn**: XVIII - The Moon
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Back of head (ק (Qoph))
 - **Attribution**: Pisces
-- **Geomantic Figure**: Laetitia (Golden Dawn, by Pisces)
 - **Element (used in scores)**: Water (via Pisces)
-- **Spatial Dimension**: `Simple_Edge` (Lower-South Edge)
 
 ### Position 68: [Op 4] Decan 29: Moon in Taurus (6 of Disks)
 - **Card Drawn**: Queen of Swords
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Libra)**: Ox Goad (ל (Lamed))
 - **Attribution**: Water of Air - 20° Virgo to 20° Libra
-- **Spatial Dimension**: `Simple_Edge` (North-West Edge)
 
 ### Position 69: [Op 4] Decan 30: Saturn in Taurus (7 of Disks)
 - **Card Drawn**: 10 of Swords - Ruin
@@ -551,26 +503,21 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
-- **Geomantic Figure**: Acquisitio (Golden Dawn, by Sagittarius)
 - **Element (used in scores)**: Fire (via Sagittarius)
-- **Spatial Dimension**: `Simple_Edge` (Upper-West Edge)
 
 ### Position 73: [Op 4] Decan 34: Venus in Cancer (2 of Cups)
 - **Card Drawn**: XI - Lust
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
-- **Geomantic Figure**: Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)
 - **Element (used in scores)**: Fire (via Leo)
-- **Spatial Dimension**: `Simple_Edge` (Upper-North Edge)
 
 ### Position 74: [Op 4] Decan 35: Mercury in Cancer (3 of Cups)
 - **Card Drawn**: Queen of Wands
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)` | French/Egyptian: `none`
-- **Spatial Dimension**: `Simple_Edge` (North-East Edge)
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
 
 ### Position 75: [Op 4] Decan 36: Moon in Cancer (4 of Cups)
 - **Card Drawn**: 5 of Swords - Defeat
@@ -613,6 +560,8 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 | Path 31 Tooth | Perpetual Intelligence | Glowing orange scarlet | Vermillion | Scarlet, flecked gold | Vermillion flecked crimson & emerald | 56, 64 |
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power; 8 of Swords - Interference: Shortened Force; X - Fortune: The Lord of the Forces of Life; 2 of Disks - Change: Harmonious Change; VI - The Lovers: The Children of the Voice; VII - The Chariot: The Child of the Powers of the Waters; 7 of Disks - Failure: Success Unfulfilled; 9 of Swords - Cruelty: Despair and Cruelty; Queen of Disks: Queen of the Thrones of Earth; 5 of Disks - Worry: Material Trouble; XVII - The Star: The Daughter of the Firmament; XIV - Art: The Daughter of the Reconcilers; 4 of Wands - Completion: Perfected Work; Knight of Disks: Lord of the Wide and Fertile Land; 6 of Disks - Success: Material Success; Prince of Wands: Prince of the Chariot of Fire; VIII - Adjustment: The Daughter of the Lords of Truth; Prince of Cups: Prince of the Chariot of the Waters; Princess of Cups: Princess of the Waters; XIX - The Sun: The Lord of the Fire of the World; XX - The Aeon: The Spirit of the Primal Fire; XII - The Hanged Man: The Spirit of the Mighty Waters; IV - The Emperor: The Son of the Morning; Prince of Disks: Prince of the Chariot of Earth; Princess of Wands: Princess of the Shining Flame; 0 - The Fool: The Spirit of Aethyr; XVIII - The Moon: The Ruler of Flux and Reflux; Queen of Swords: Queen of the Thrones of Air; 9 of Cups - Happiness: Material Happiness; Queen of Wands: Queen of the Thrones of Flame.
+
+**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small card's decan, numbered 1-72 from 0° Leo as Book T counts them): 4 of Swords: Laviah (17) and Caliel (18); 7 of Cups: Melahel (23) and Haheuiah (24); 2 of Wands: Vehuel (49) and Daniel (50); 2 of Swords: Yezalel (13) and Mebahel (14); 7 of Swords: Hahahel (41) and Mikael (42); 10 of Wands: Reiyel (29) and Omael (30); 3 of Disks: Yehuiah (33) and Lehahiah (34); 3 of Swords: Hariel (15) and Hakamiah (16); 8 of Swords: Umabel (61) and Iahhel (62); 5 of Swords: Aniel (37) and Haamiah (38); 6 of Cups: Nelchael (21) and Yeiayel (22); 2 of Disks: Lecabel (31) and Vasariah (32); 10 of Swords: Damabiah (65) and Manakel (66); 7 of Disks: Harahel (59) and Mitzrael (60); 9 of Swords: Anauel (63) and Mehiel (64); 5 of Disks: Mebahiah (55) and Poyel (56); 4 of Wands: Nanael (53) and Nithael (54); 6 of Disks: Nemamiah (57) and Yeialel (58); 9 of Cups: Sealiah (45) and Ariel (46).
 
 
 ---

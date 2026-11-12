@@ -34,7 +34,6 @@ from ootk.db import (
     save_contact_message, save_spread_session, set_contact_message_read, unread_contact_messages,
 )
 from ootk.lockout import FailedLogins
-from ootk.birth_cards import parse_birth_cards
 from ootk.report import (
     COMPONENTS, DEFAULT_OFF, MAPPING_LABELS, analyze_reading, choose_components, cli_switches, drawn_now,
     time_stamp,
@@ -617,20 +616,18 @@ PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
     ("hebrew", "Each card's Hebrew letter"),
     ("tree", "Each card's path or Sephira on the Tree of Life, its four Liber 777 colour scales and its Yetziratic title"),
     ("courts", "A court card's element of an element, such as Fire of Water"),
-    ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks, and your birth cards if you gave a birth date"),
-    ("geomancy", "The geomantic figure on each sign Trump"),
-    ("geometry", "Each card's place on the Cube of Space and the oppositions on the house, sign and decan wheels"),
-    ("solids", "Each card's Platonic solid (it follows the element), the solids' properties and dual pairs"),
-    ("cube_counts", "How many cards fell on the Cube's axes, faces and edges"),
+    ("numerology", "Book T's counts of Trumps, court cards, Aces, suits and ranks"),
+    ("geomancy", "The geomantic figure on each sign Trump (always in the report's card panel)"),
+    ("geometry", "The oppositions on the house, sign and decan wheels"),
+    ("solids", "Each card's Platonic solid (it follows the element) and the solids' properties"),
+    ("cube", "Each card's place on the Cube of Space and how many fell on its axes, faces and edges (always in the report's maps)"),
     ("all_aspects", "The squares, trines and sextiles on the wheels as well as the oppositions, with their weights"),
-    ("hebrew_compare", "Every Trump's and court card's letter under the Golden Dawn and French systems too (always given where Thoth and Golden Dawn differ)"),
     ("statistics", "How the lens was chosen (trend test) and the odds behind the Own-Place Check, even when no card is on its own place"),
-    ("gematria", "Each Trump's and court card's letter value (Aleph 1 to Tav 400) and their totals"),
     ("titles", "The Golden Dawn's long name for each card, such as Lord of Rest from Strife"),
     ("angels", "The two Shem ha-Mephorash angels of each small card's decan"),
     ("timing", "The days the Sun is in each small card's decan, and the planet ruling the day"),
-    ("gods", "The Egyptian and Greek gods of each Trump's path, from Liber 777"),
-    ("hexagrams", "Crowley's I Ching hexagram for each court card"),
+    ("gods", "The Egyptian and Greek gods of each Trump's path, from Liber 777 (always in the report's card panel)"),
+    ("hexagrams", "Crowley's I Ching hexagram for each court card (always in the report's card panel)"),
 ))
 assert [k for k, _, _ in PROMPT_PARTS] == list(COMPONENTS)
 
@@ -1309,7 +1306,6 @@ def generate_report(
     bt_sephira: str = Form("8"),
     include: list[str] = Form([]),
     parts_shown: str = Form(""),
-    birth_cards: str = Form(""),
 ):
     """Builds the spread, executes geometric/vector analysis, and renders the synthesis report.
 
@@ -1319,8 +1315,6 @@ def generate_report(
     `include` holds the COMPONENTS switched on in the form's "Parts of the AI prompt" fold; it
     counts only when `parts_shown` says the fold was sent, so a form without it takes the defaults
     (main parts on, the extra layers in DEFAULT_OFF off).
-    `birth_cards` is "19-7-2026" (birth_cards.py), worked out in the browser from a birth date
-    that is never sent.
     """
     topic = topic.strip()
     significator = significator.strip()
@@ -1351,12 +1345,6 @@ def generate_report(
         raise HTTPException(status_code=400, detail=f"The question can be at most {TOPIC_MAX} characters; "
                                                     f"this one has {len(topic)}.")
     with_, without = chosen_parts(include, parts_shown)
-    birth_cards = birth_cards.strip()
-    check_lengths(birth_cards=birth_cards)
-    try:
-        parse_birth_cards(birth_cards)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
 
     expect = ""
     if spread_key == BOOK_T_KEY:
@@ -1395,7 +1383,7 @@ def generate_report(
     settings = {
         "spread_key": spread_key, "topic": topic, "significator": significator,
         "framework": framework, "mapping_system": mapping_system, "draw_mode": draw_mode,
-        "seed": seed, "expect": expect, "with": with_, "without": without, "birth_cards": birth_cards,
+        "seed": seed, "expect": expect, "with": with_, "without": without,
         "selected_cards": ",".join(card_titles) if draw_mode == "manual" else "",
         # When the cards were drawn, and the visitor's own zone (from the browser) to show it in.
         "drawn_at": time_stamp(drawn_now()), "tz": tz.strip() if time_zone(tz.strip()) else "",
@@ -1975,7 +1963,6 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         drawn_at=parse_drawn_at(settings.get("drawn_at")), local_zone=time_zone(settings.get("tz")),
         book_t_ops=ops,
         without=reading_off(settings),
-        birth_cards=settings.get("birth_cards", ""),
     )
     return {
         "book_t": book_t_view(ops, spread_results) if ops else None,
@@ -2054,7 +2041,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "prompt": r["analytical_prompt"],
             "left_out": [COMPONENTS[k] for k in COMPONENTS if k in reading_off(settings) - DEFAULT_OFF],
             "layers_added": [COMPONENTS[k] for k in COMPONENTS if k in DEFAULT_OFF - reading_off(settings)],
-            "show_solids": bool({"solids", "cube_counts"} - reading_off(settings)),
+            "show_solids": bool({"solids", "cube"} - reading_off(settings)),
             "spread_results": r["spread_results"],
             "dignity_matrix": r["dignity_matrix"],
             "element_counts": r["element_counts"],
@@ -2075,7 +2062,6 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "spatial_dist": r["spatial_dist"],
             "solid_counts": r["solid_counts"],
             "topology_details": r["topology_details"],
-            "dual_pairings": r["dual_pairings"],
             "withheld": withheld_view(r["withheld"]),
             "view": view,
             "json_url": json_url,

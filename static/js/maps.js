@@ -10,7 +10,7 @@
         cube: "Twelve edges for the twelve signs' letters, six faces and the centre for the seven planets' letters, three axes for the mother letters. Dashed circles are faces.",
         ring: "Outer ring: the twelve signs, counter-clockwise from 0° Aries on the left. Middle: the 36 decans with their ruling planets (one small card each). Inner rings: the court cards' thirty-degree spans, then the Princesses' quadrants.",
         solid: "The five solids and how many cards take each. A card's solid follows its element; the planetary Majors keep the Dodecahedron.",
-        dual: "Put a corner at the centre of each face of a solid and the corners make its dual. The Cube of Space's dual is an octahedron whose six corners are the centres of the cube's six faces: the six directions, each held by a double letter, with Tav at the centre both share. Below, the three dual pairs and how many cards take each solid. The report notes neighbouring cards whose solids are duals.",
+        dual: "Put a corner at the centre of each face of a solid and the corners make its dual. The Cube of Space's dual is an octahedron whose six corners are the centres of the cube's six faces: the six directions, each held by a double letter, with Tav at the centre both share. Below, the three dual pairs and how many cards take each solid.",
         grid: "The sixteen court cards: the rank gives the first element (Knight Fire, Queen Water, Prince Air, Princess Earth), the suit the second.",
     };
     // One card's caption: its solid and dual, and its corner of the octahedron if it has one.
@@ -20,7 +20,7 @@
         const other = A.dualOf(c.solid.name), own = A.solidName(c.solid.name);
         let t = other === c.solid.name
             ? `The ${own} is its own dual: turned through its centre it makes another ${own}.`
-            : `The ${own}'s dual is the ${A.solidName(other)}; in a reading, a neighbouring card with that solid makes a dual pair.`;
+            : `The ${own}'s dual is the ${A.solidName(other)}.`;
         if (FACES.includes(c.cube.place) && !c.cube.derived) t += ` The card's letter holds the ${c.cube.place} face, one corner of the cube's dual octahedron.`;
         return t;
     }

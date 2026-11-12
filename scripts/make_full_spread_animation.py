@@ -6,7 +6,7 @@ It walks the start page's step-by-step form (templates/index.html, static/js/wiz
 visitor would: a question typed in; "How deep do you want to go?" set to The Opening of the Key
 and the Full Opening of the Key picked; a significator described (me, the person asking, Feel
 first, Young and driving things forward: the Prince of Cups); the options left at their
-defaults; under "Parts of the AI prompt" the nine main parts already on and all ten extra layers
+defaults; under "Parts of the AI prompt" the ten main parts already on and all seven extra layers
 ticked; the review; Draw my cards; the report's four operations; and Save prompt as Markdown.
 The last scene says what the prompt does when every layer makes it too long: it drops the
 layers in FIT_ORDER and names them under "Left Out to Fit".
@@ -83,7 +83,7 @@ def check_against_site():
     assert [len(spread_positions(k)) for k in SPREADS[FULL]["operations"]] == [n for _, _, n in OPS]
     assert len(spread_positions(FULL)) == 75
     assert TEMPERAMENTS[SUIT].startswith("Feel first") and LIFE_STAGES[RANK] == "Young, and driving things forward"
-    assert len(MAIN) == 9 and len(EXTRA) == 10
+    assert len(MAIN) == 10 and len(EXTRA) == 7
     assert list(FIT_ORDER[:3]) == ["gods", "angels", "timing"]
     report = (PROJECT_ROOT / "templates" / "report.html").read_text(encoding="utf-8")
     for s in (SAVE, "Send the prompt to your AI", "Where the significator falls", "Operations"):
@@ -214,24 +214,23 @@ def build():
                                     ("What kind of story should your AI tell?", "Let the cards decide")]):
         legend(s, y + 2 + i * 24, leg)
         radio(s, x0, y + 14 + i * 24, val, default=True)
-    s.add(f'<text class="sm" x="{PX + 8}" y="{y + 82}">▸ Birth cards · optional</text>'
-          f'<text class="sm" x="{PX + 8}" y="{y + 95}">▸ Parts of the AI prompt · standard</text>')
-    s.press(PX + 6, y + 88, PW - 12, 9, 2.8)
+    s.add(f'<text class="sm" x="{PX + 8}" y="{y + 82}">▸ Parts of the AI prompt · standard</text>')
+    s.press(PX + 6, y + 75, PW - 12, 9, 2.8)
 
     # 7. The main parts, on already
-    s = a.scene(3.4, "Parts of the AI prompt", "the nine main parts", "are already on")
+    s = a.scene(3.4, "Parts of the AI prompt", "the ten main parts", "are already on")
     y = wizard_frame(s, 3)
     s.add(f'<text class="sm" x="{PX + 8}" y="{y + 2}">▾ Parts of the AI prompt · standard</text>'
           f'<text class="hd" x="{PX + 8}" y="{y + 13}">MAIN PARTS</text>')
     for i, name in enumerate(MAIN):
-        check(s, PX + 10, y + 24 + i * 10.5, name, on=True)
+        check(s, PX + 10, y + 24 + i * 10, name, on=True)
 
     # 8. Every extra layer
-    s = a.scene(5.0, "Add every extra layer", "all 19 parts of the prompt", "on: every correspondence")
+    s = a.scene(5.0, "Add every extra layer", "all 17 parts of the prompt", "on: every correspondence")
     y = wizard_frame(s, 3)
     s.add(f'<text class="sm" x="{PX + 8}" y="{y + 2}">▾ Parts of the AI prompt</text>')
     s.timed(f'<text class="sm" x="{PX + 79}" y="{y + 2}">· standard</text>', 0, 4.0, still=False)
-    s.timed(f'<text class="sm" x="{PX + 79}" y="{y + 2}">· 10 added</text>', 4.0)
+    s.timed(f'<text class="sm" x="{PX + 79}" y="{y + 2}">· 7 added</text>', 4.0)
     s.add(f'<text class="hd" x="{PX + 8}" y="{y + 13}">EXTRA LAYERS (OFF UNLESS YOU ADD THEM)</text>')
     for i, name in enumerate(EXTRA):
         check(s, PX + 10, y + 23 + i * 10, name, on_at=0.6 + 0.33 * i)
@@ -243,7 +242,7 @@ def build():
     rows = [("Question", "What do I need to understand…"), ("Spread", "Full Opening of the Key, 75 cards"),
             ("Significator", SIGNIFICATOR), ("Tradition", "Thoth, Crowley’s deck"),
             ("Story", "Let the cards decide (Auto)"), ("Cards", "New cards, random seed"),
-            ("Extra layers", "all ten, from Platonic solids"), ("", "to Court card hexagrams")]
+            ("Extra layers", "all seven, from Geomantic"), ("", "figures to Court card hexagrams")]
     for i, (k, v) in enumerate(rows):
         s.add(f'<text class="sub" x="{PX + 8}" y="{y + 14 + i * 10}">{k}</text>'
               f'<text class="o" x="{PX + 42}" y="{y + 14 + i * 10}">{esc(v)}</text>')

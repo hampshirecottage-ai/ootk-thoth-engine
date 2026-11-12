@@ -106,7 +106,10 @@ def test_thoth_prompt_explains_the_swapped_cards_edges():
     an AI that knows Paul Case's cube reads that as a mix-up (Heh is the North-East edge)."""
     thoth = build_prompt("12")
     assert "**Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs" in thoth
-    assert "Cube of Space edge follow the sign" in thoth
+    assert "Their colour scales follow the sign." in thoth
+    assert "Cube of Space" not in thoth                     # the Cube is a report picture now
+    cube = build_prompt("12", without=DEFAULT_OFF - {"cube"})
+    assert "So does their Cube of Space edge" in cube
 
 
 def test_planetary_majors_say_which_sign_gives_their_element():
@@ -136,13 +139,14 @@ def test_every_major_states_its_element():
         if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in MAJOR_ELEMENTS)
 
 
-def test_courts_say_they_have_no_french_letter():
-    # The French/Egyptian system gives courts no path letter on purpose: the prompt says so
-    # once, and the court's mapping line reads "none" rather than a missing-data "N/A".
-    prompt = build_prompt("12")
-    assert "The French/Egyptian system gives courts no path letter" in prompt
-    assert "French/Egyptian: `none`" in prompt
-    assert "French/Egyptian: `N/A`" not in prompt
+def test_no_french_comparison_column():
+    # The French/Egyptian comparison column was let go: a Trump or court shows its Thoth and
+    # Golden Dawn letters only where the two differ, and the French system stays a mapping choice.
+    for system in ("thoth", "french_egyptian"):
+        prompt = build_prompt("12", mapping_system=system)
+        assert "French/Egyptian: `" not in prompt and "gives courts no path letter" not in prompt
+        lines = [l for l in prompt.splitlines() if l.startswith("- **Comparative Hebrew Mapping**")]
+        assert lines and all(l.split("Thoth: ")[1].split(" |")[0] != l.split("Golden Dawn: ")[1] for l in lines)
 
 
 def test_book_t_prompt_counts_and_pairs_each_operation():

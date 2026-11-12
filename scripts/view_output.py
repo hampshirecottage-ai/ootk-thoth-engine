@@ -118,18 +118,13 @@ def render_platonic(section):
     table = Table(title="Platonic Solid Topology", border_style="cyan", header_style="bold magenta")
     table.add_column("Solid", style="bold yellow")
     table.add_column("Count", justify="center", style="bold white")
-    duals = []
     for line in section.split("\n"):
         line = line.strip()
         if line.startswith("* Solids drawn:"):         # "* Solids drawn: Tetrahedron 15, ...; none drawn: ..."
             drawn = line.split(":", 1)[1].split(";")[0].rstrip(".")
             for name, n in re.findall(r"\s*(.+?) (\d+)(?:,|$)", drawn):
                 table.add_row(escape(name.strip()), n)
-        elif line.startswith("* Neighbours whose solids are duals"):
-            duals.extend(d.strip() for d in line.split("): ", 1)[1].rstrip(".").split(";"))
     console.print(table)
-    if duals:
-        console.print(Panel("\n".join(escape(d) for d in duals), title="Dual Pairings", border_style="cyan"))
 
 
 def render_dignity(section):

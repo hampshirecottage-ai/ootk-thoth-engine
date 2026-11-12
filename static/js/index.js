@@ -59,7 +59,6 @@ function updateMoreSummary() {
     const off = promptPartsOff(), added = promptLayersAdded();
     if (off.length) parts.push(`${off.length} prompt part${off.length === 1 ? "" : "s"} off`);
     if (added.length) parts.push(`${added.length} extra layer${added.length === 1 ? "" : "s"}`);
-    if ($("birthCardsInput") && $("birthCardsInput").value) parts.push("birth cards");
     $("moreSummary").textContent = "· " + parts.filter(Boolean).join(" · ");
     $("partsSummary").textContent = "· " + ([off.length && `${off.length} off`, added.length && `${added.length} added`]
         .filter(Boolean).join(", ") || "standard");
@@ -75,39 +74,6 @@ function promptParts(isDefault, checked) {
 }
 function promptPartsOff() { return promptParts("on", false); }
 function promptLayersAdded() { return promptParts("off", true); }
-
-// ---------- Birth cards (birth_cards.py has the method) ----------
-// Worked out here so the birth date is never sent: only "personality-year card-year" is.
-const ATU = ["The Fool", "The Magus", "The Priestess", "The Empress", "The Emperor", "The Hierophant",
-             "The Lovers", "The Chariot", "Adjustment", "The Hermit", "Fortune", "Lust", "The Hanged Man",
-             "Death", "Art", "The Devil", "The Tower", "The Star", "The Moon", "The Sun", "The Aeon", "The Universe"];
-const digitSum = n => String(n).split("").reduce((a, d) => a + Number(d), 0);
-function reduceToCard(total) {
-    let n = total <= 22 ? total : digitSum(total);
-    while (n > 22) n = digitSum(n);
-    return n;
-}
-function birthCards(isoDate, today = new Date()) {
-    const [y, m, d] = isoDate.split("-").map(Number);
-    if (!y || !m || !d) return null;
-    const [bm, bd] = m === 2 && d === 29 ? [3, 1] : [m, d];
-    const tm = today.getMonth() + 1, td = today.getDate();
-    const year = tm > bm || (tm === bm && td >= bd) ? today.getFullYear() : today.getFullYear() - 1;
-    return { personality: reduceToCard(m + d + y), yearCard: reduceToCard(m + d + year), year };
-}
-const atuName = n => ATU[n === 22 ? 0 : n];
-function updateBirthCards() {
-    const value = $("birthCardsDate").value;
-    const cards = value ? birthCards(value) : null;
-    $("birthCardsInput").value = cards ? `${cards.personality}-${cards.yearCard}-${cards.year}` : "";
-    $("birthCardsSummary").textContent = cards ? `· ${atuName(cards.personality)}` : "· optional";
-    $("birthCardsResult").textContent = cards
-        ? `Birth card: ${atuName(cards.personality)}. Year card from your birthday in ${cards.year}: ${atuName(cards.yearCard)}. Only these numbers are sent, and they are left out of share links.`
-        : "Stays in your browser; only the card numbers are sent, and they are left out of share links.";
-}
-$("birthCardsDate").addEventListener("input", updateBirthCards);
-$("birthCardsDate").addEventListener("change", updateBirthCards);
-updateBirthCards();
 
 // ---------- significator ----------
 // Seed mode: Book T description asked as a few questions (who it is about, person or matter,
