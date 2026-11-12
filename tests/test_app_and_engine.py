@@ -225,6 +225,20 @@ def test_method_page_shows_the_birthday_significator_animation(client):
     assert "prefers-reduced-motion" in svg and "<script" not in svg
 
 
+def test_start_here_shows_the_full_opening_of_the_key_animation(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
+    page = client.get("/start").text
+    assert 'id="full-spread"' in page and "site/full-spread.svg" in page
+    assert page.index('id="stagesTitle"') < page.index("site/full-spread.svg")   # in Stage 4
+    svg = (PROJECT_ROOT / "static" / "site" / "full-spread.svg").read_text(encoding="utf-8")
+    # the Full Opening of the Key, the significator described, all ten extra layers ticked
+    assert ">Full Opening of the Key<" in svg and ">75 cards<" in svg and ">Prince of Cups<" in svg
+    for name in ("Platonic solids", "Gods (Liber 777)", "Court card hexagrams"):
+        assert f">{name}<" in svg
+    assert ">Left Out to Fit<" in svg and ">Draw my cards<" in svg
+    assert "prefers-reduced-motion" in svg and "<script" not in svg
+
+
 def test_start_page_is_settings_only_and_pick_page_has_the_catalog(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [{"title": "X - Fortune"}])
     start = client.get("/").text
