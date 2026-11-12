@@ -231,7 +231,7 @@ def test_start_here_shows_the_full_opening_of_the_key_animation(client, monkeypa
     assert 'id="full-spread"' in page and "site/full-spread.svg" in page
     assert page.index('id="stagesTitle"') < page.index("site/full-spread.svg")   # in Stage 4
     svg = (PROJECT_ROOT / "static" / "site" / "full-spread.svg").read_text(encoding="utf-8")
-    # the Full Opening of the Key, the significator described, all ten extra layers ticked
+    # the Full Opening of the Key, the significator described, all seven extra layers ticked
     assert ">Full Opening of the Key<" in svg and ">75 cards<" in svg and ">Prince of Cups<" in svg
     for name in ("Platonic solids", "Gods (Liber 777)", "Court card hexagrams"):
         assert f">{name}<" in svg
@@ -843,9 +843,9 @@ def test_celtic_cross_report_and_web(seeded_client):
     assert not any(c["aspects"] for c in view["card_details"])   # named pairs, no aspect lines
     counts = analysis.analyze_elemental_balance(results)
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
-    solids, _, duals = analysis.analyze_platonic_topology(results, "14")
+    solids, _ = analysis.analyze_platonic_topology(results)
     prompt = report.build_analytical_prompt(spreads.SPREADS["14"]["name"], "", "", "1", results, counts,
-                                            dignity, spatial, sdist, solids, duals)
+                                            dignity, spatial, sdist, solids)
     assert "The Celtic Cross is not a wheel" in prompt and "heap" not in prompt.lower()
     r = post(seeded_client, spread_key="14", draw_mode="seed", seed="1568", selected_cards="")
     assert r.status_code == 200 and "Celtic Cross" in r.text
@@ -875,9 +875,9 @@ def test_relationship_report_and_web(seeded_client):
     assert not any(c["aspects"] for c in view["card_details"])   # named pairs, no aspect lines
     counts = analysis.analyze_elemental_balance(results)
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
-    solids, _, duals = analysis.analyze_platonic_topology(results, "15")
+    solids, _ = analysis.analyze_platonic_topology(results)
     prompt = report.build_analytical_prompt(spreads.SPREADS["15"]["name"], "", "", "1", results, counts,
-                                            dignity, spatial, sdist, solids, duals)
+                                            dignity, spatial, sdist, solids)
     assert "The Relationship spread is not a wheel" in prompt and "heap" not in prompt.lower()
     r = post(seeded_client, spread_key="15", draw_mode="seed", seed="1568", selected_cards="")
     assert r.status_code == 200 and "Relationship" in r.text
@@ -901,9 +901,9 @@ def test_two_rows_report_and_web(seeded_client):
     results, dignity, spatial = _spread_parts("16", [fake_card(f"C{i}") for i in range(6)])
     counts = analysis.analyze_elemental_balance(results)
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
-    solids, _, duals = analysis.analyze_platonic_topology(results, "16")
+    solids, _ = analysis.analyze_platonic_topology(results)
     prompt = report.build_analytical_prompt(spreads.SPREADS["16"]["name"], "", "", "1", results, counts,
-                                            dignity, spatial, sdist, solids, duals)
+                                            dignity, spatial, sdist, solids)
     assert "Two rows of three is not a wheel" in prompt and "heap" not in prompt.lower()
     r = post(seeded_client, spread_key="16", draw_mode="seed", seed="1568", selected_cards="")
     assert r.status_code == 200 and "Two rows of three" in r.text
@@ -971,10 +971,10 @@ def build_report(tmp_path, monkeypatch, topic="Love & War <3", pos_prefix="[Op 1
     dignity = analysis.calculate_elemental_dignities(results)
     spatial = analysis.analyze_spatial_vectors(results, "3")
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
-    solids, topo, duals = analysis.analyze_platonic_topology(results)
+    solids, topo = analysis.analyze_platonic_topology(results)
     framework, basis = analysis.evaluate_macro_framework(results)
     prompt = report.build_analytical_prompt("Triad <test>", topic, "Knight of Swords", "1568", results, counts,
-                                        dignity, spatial, sdist, solids, duals, framework,
+                                        dignity, spatial, sdist, solids, framework,
                                         framework_basis=basis, without=frozenset())
     report.generate_html_output(7, "Triad <test>", topic, prompt)
     return prompt, tmp_path / "output" / "ootk_output_7.html"
@@ -1046,12 +1046,12 @@ def test_prompt_states_repeated_facts_once():
     results = [{"position_number": i + 1, "position_name": f"Pos {i+1}", "card_data": c}
                for i, c in enumerate([minor, major])]
     counts = analysis.analyze_elemental_balance(results)
-    solids, topo, duals = analysis.analyze_platonic_topology(results)
+    solids, topo = analysis.analyze_platonic_topology(results)
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
     heap = [{"pair": "Pos 1 <-> Pos 2", "distance": 0.5, "delta_angle": None, "aspect": "Heap Pair",
              "description": "Neighbours in the deal", "score_modifier": 0}] * 2
     prompt = report.build_analytical_prompt("Test", "גְּבוּרָה?", "", "1", results, counts, [], heap,
-                                            sdist, solids, duals, without=frozenset())
+                                            sdist, solids, without=frozenset())
     assert "**Query/Intent Topic:** גְּבוּרָה?" in prompt          # the querent's text is untouched
     body = prompt.split("**Active Mapping System:**", 1)[1]
     assert "גבורה (Geburah)" in body and "גְּבוּרָה" not in body  # points dropped, name kept
@@ -1060,7 +1060,15 @@ def test_prompt_states_repeated_facts_once():
     assert prompt.count("- **Platonic Solid**: `Tetrahedron`") == 2
     assert prompt.count("A heap is not a wheel") == 1      # one sentence, not its drawing distances
     assert "Spatial Distance" not in prompt
-    assert "Comparative Hebrew Mapping" in prompt and "Spatial Dimension**: `Simple_Edge`" in prompt
+    assert "Spatial Dimension**: `Simple_Edge`" in prompt
+    # Thoth and Golden Dawn agree on this card, so no comparison line; never a French column.
+    assert "Comparative Hebrew Mapping" not in prompt and "French/Egyptian" not in prompt
+    swapped = dict(major, title="XVII - The Star", attribution="Aquarius", hebrew_letter="ה (Hé)",
+                   thoth_hebrew_letter="ה (Hé)", gd_hebrew_letter="צ (Tzaddi)", french_hebrew_letter="Peh")
+    results[1]["card_data"] = swapped
+    prompt = report.build_analytical_prompt("Test", "", "", "1", results, counts, [], heap,
+                                            sdist, solids, without=frozenset())
+    assert "- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`\n" in prompt
 
 
 def test_prompt_names_its_last_line_so_a_cut_copy_is_noticed(tmp_path, monkeypatch):
@@ -1120,10 +1128,10 @@ def _elements_section(cards):
     results = [{"position_number": i + 1, "position_name": f"Pos {i+1}", "card_data": c}
                for i, c in enumerate(cards)]
     counts = analysis.analyze_elemental_balance(results)
-    solids, topo, duals = analysis.analyze_platonic_topology(results)
+    solids, topo = analysis.analyze_platonic_topology(results)
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
     prompt = report.build_analytical_prompt("Test", "", "", "1", results, counts, [], [],
-                                            sdist, solids, duals)
+                                            sdist, solids)
     return counts, prompt.split("## 2. ELEMENTAL VECTOR DISTRIBUTION", 1)[1].split("---", 1)[0]
 
 
@@ -2426,9 +2434,9 @@ def test_prompt_says_layout_aspects_are_fixed():
     results, dignity, spatial = _spread_parts("6", [fake_card(f"C{i}") for i in range(7)])
     counts = analysis.analyze_elemental_balance(results)
     sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
-    solids, topo, duals = analysis.analyze_platonic_topology(results, "6")
+    solids, topo = analysis.analyze_platonic_topology(results)
     prompt = report.build_analytical_prompt("Hexagram", "", "", "1", results, counts, dignity, spatial,
-                                            sdist, solids, duals)
+                                            sdist, solids)
     assert "same in every reading of this spread" in prompt
 
 
@@ -2501,13 +2509,6 @@ def test_tree_of_life_pairs_follow_the_paths():
     assert (0, 5) in pairs and (8, 9) in pairs          # Kether-Tiphareth, Yesod-Malkuth
 
 
-def test_wheel_dual_pairings_close_the_circle():
-    cards = [fake_card(f"C{i}") for i in range(12)]       # all Wands: Tetrahedron pairs
-    results = results_for(*cards)
-    _, _, duals = analysis.analyze_platonic_topology(results, "10")
-    assert len(duals) == 12 and duals[-1].startswith("Positions 12 & 1:")
-
-
 def test_manual_ootk_may_repeat_a_card_in_another_operation(client):
     titles = [f"Card {i}" for i in range(15)] + [f"Card {i}" for i in range(60)]
     assert post(client, spread_key="12", selected_cards=",".join(titles)).status_code == 200
@@ -2516,25 +2517,34 @@ def test_manual_ootk_may_repeat_a_card_in_another_operation(client):
     assert r.status_code == 400 and "twice in one operation" in r.text
 
 
-def test_card_panel_lists_each_cards_dual_inversions():
+def test_card_panel_shows_the_layers_kept_out_of_the_prompt():
+    """Geomantic figures, gods and court hexagrams left the AI prompt for the report's card
+    panel; neighbouring 'dual' solids are no longer claimed to mean anything."""
     from ootk import visual
-    cards = [fake_card(f"C{i}") for i in range(3)]          # three Tetrahedra: each neighbour is a dual
-    cards[2] = dict(cards[2], platonic_solid="Icosahedron")
-    results = [{"position_number": i + 1, "position_name": f"P{i}", "card_data": c} for i, c in enumerate(cards)]
+    star = dict(fake_card("XVII - The Star", suit=None, arcana="Major", attribution="Aquarius"),
+                colour_key_scale=28)
+    knight = fake_card("Knight of Wands", arcana="Court", attribution="Fire of Fire - 20° Scorpio to 20° Sagittarius")
+    pip = fake_card("2 of Wands - Dominion")
+    results = [{"position_number": i + 1, "position_name": f"P{i}", "card_data": c}
+               for i, c in enumerate((star, knight, pip))]
     dignity = analysis.calculate_elemental_dignities(results, "3")
     view = visual.build_report_view("3", results, analysis.analyze_elemental_balance(results), dignity,
                                     analysis.analyze_spatial_vectors(results, "3"), "x", "y")
-    duals = [d["duals"] for d in view["card_details"]]
-    assert duals == [["Tetrahedron ⇄ Tetrahedron with Pos 2 (C1)"],
-                     ["Tetrahedron ⇄ Tetrahedron with Pos 1 (C0)"], []]
+    fields = [dict(d["fields"]) for d in view["card_details"]]
+    assert fields[0]["Geomantic figure"] == "Tristitia"
+    assert fields[0]["Gods (Liber 777)"].startswith("Egyptian: Ahepi, Aroueris")
+    assert fields[1]["I Ching hexagram"].startswith("51, ")
+    assert not {"Geomantic figure", "Gods (Liber 777)", "I Ching hexagram"} & set(fields[2])
+    assert all("duals" not in d for d in view["card_details"])
 
 
 def test_method_and_maps_show_the_cube_of_space_and_its_dual(client):
     method = client.get("/method").text
-    assert 'id="space"' in method and "Cube of Space from the Sefer Yetzirah" in method
-    assert "polyhedral dual inversions" in method
+    assert 'id="space"' in method and "The Cube of Space.</strong>" in method
+    assert "polyhedral dual inversions" not in method and "given no meaning" in method
+    assert 'id="birth-cards"' not in method and "Hebrew letter values" not in method
     maps = client.get("/maps", headers={"Accept": "text/html"}).text
-    assert 'id="mapDual"' in maps and "Dual inversions" in maps
+    assert 'id="mapDual"' in maps and "Solids and their duals" in maps
 
 
 def test_missing_table_or_column_gives_the_update_page(client, monkeypatch):
@@ -2784,15 +2794,15 @@ def test_switched_off_parts_leave_the_prompt_and_stay_with_the_reading(seeded_cl
              parts_shown="1", include=on)
     assert r.status_code == 200
     assert "**Components Left Out:** Astrology, Geometry" in r.text
-    assert "Left out of the AI prompt</span>Astrology, Geometry (Cube of Space, aspects)" in r.text
-    assert "Extra layers in the AI prompt</span>Platonic solids" in r.text     # every box ticked
+    assert "Left out of the AI prompt</span>Astrology, Geometry (aspects on the wheels)" in r.text
+    assert "Extra layers in the AI prompt</span>Geomantic figures, Platonic solids" in r.text     # every box ticked
     stored = seeded_client.saved["report_settings"]
     assert stored["without"] == "astrology,geometry"
     assert stored["with"] == ",".join(k for k in app_module.COMPONENTS if k in app_module.DEFAULT_OFF)
     assert "without=astrology%2Cgeometry" in r.text                      # the share link keeps them
-    assert "with=solids%2Ccube_counts" in r.text
+    assert "with=geomancy%2Csolids" in r.text
     assert "--without astrology,geometry" in r.text                     # and so does the command
-    assert "--with solids,cube_counts" in r.text
+    assert "--with geomancy,solids" in r.text
     again = seeded_client.get(f"/report/{stored['link']}")
     assert "**Components Left Out:** Astrology, Geometry" in again.text
 
@@ -2847,30 +2857,21 @@ def test_admin_journal_is_gone(seeded_client, monkeypatch):
     assert seeded_client.get("/admin/journal").status_code == 404
 
 
-# ---------- birth cards ----------
+# ---------- removed layers ----------
 
-def test_birth_cards_reach_the_prompt_and_settings_but_not_the_share_link(seeded_client):
+def test_old_links_naming_removed_or_renamed_parts_still_work(seeded_client):
+    """Gematria and the French/Egyptian comparison were removed and Cube of Space counts became
+    `cube`: older share links that name them still draw, and birth cards no longer exist."""
+    r = seeded_client.get("/reading?seed=7&spread=12&significator=Knight+of+Swords"
+                          "&with=gematria,hebrew_compare,cube_counts")
+    assert r.status_code == 200
+    assert "Letter Values" not in r.text and "French/Egyptian: `" not in r.text
+    assert "- **Spatial Dimension**:" in r.text                          # cube_counts -> cube
     r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
              significator="Knight of Swords", birth_cards="19-7-2026")
-    assert r.status_code == 200
-    assert "**Birth Cards**" in r.text and "XIX - The Sun" in r.text
-    assert seeded_client.saved["report_settings"]["birth_cards"] == "19-7-2026"
-    share = re.search(r'data-path="([^"]+)"', r.text).group(1)
-    assert "birth" not in share and "19-7" not in share
-    shared = seeded_client.get(html.unescape(share))
-    assert shared.status_code == 200 and "**Birth Cards**" not in shared.text
-
-
-def test_reading_without_birth_cards_has_no_line(seeded_client):
-    r = post(seeded_client, spread_key="12", draw_mode="seed", seed="918851", selected_cards="",
-             significator="Knight of Swords")
-    assert "**Birth Cards**" not in r.text
-    assert seeded_client.saved["report_settings"]["birth_cards"] == ""
-
-
-@pytest.mark.parametrize("bad", ["1983-07-14", "0-1-2026", "23-1-2026", "x" * 200])
-def test_bad_birth_cards_are_refused(client, bad):
-    assert post(client, birth_cards=bad).status_code == 400
+    assert r.status_code == 200 and "**Birth Cards**" not in r.text
+    assert "birth_cards" not in seeded_client.saved["report_settings"]
+    assert 'id="birthCardsFold"' not in seeded_client.get("/").text
 
 
 def test_method_says_what_the_ai_tests_show(client):
@@ -2879,7 +2880,7 @@ def test_method_says_what_the_ai_tests_show(client):
     assert "Astrology does most of the work" in page and "scrambled" in page
     assert 'id="ranking"' in page and "Ranked by what they add" in page
     assert page.index("Astrology (signs") < page.index("Elemental dignities</td>") < page.index("Angels of the decans, decan dates")
-    assert "Birth and year cards (only with a birth date)" in page and "68%" in page
+    assert "Birth and year cards" not in page and "were let go" in page
     corr = page.index('id="correspondences"')
     assert page.index('id="howTitle"') < corr < page.index('id="tested"') < page.index('id="space"')
     assert "Calculated with" in page and "Looked up and handed to your AI" in page and "From your birth date" in page

@@ -46,6 +46,9 @@ def test_parse_component_list():
     assert component_keys("hebrew tree") == {"hebrew", "tree"}
     with pytest.raises(ValueError, match="Use any of"):
         component_keys("astrology,tarot")
+    # Older links: removed parts are ignored, a renamed one maps to its new key.
+    assert component_keys("gematria, hebrew_compare, tree") == {"tree"}
+    assert component_keys("cube_counts") == {"cube"}
 
 
 def test_defaults_round_trip_through_links_and_the_command_line():
@@ -53,8 +56,8 @@ def test_defaults_round_trip_through_links_and_the_command_line():
     assert choose_components() == DEFAULT_OFF                  # no choice made: the defaults
     assert choose_components("solids", "astrology") == (DEFAULT_OFF - {"solids"}) | {"astrology"}
     assert choose_components("all") == frozenset()
-    off = (DEFAULT_OFF - {"gematria"}) | {"tree"}
-    assert cli_switches(off) == ("gematria", "tree")
+    off = (DEFAULT_OFF - {"cube"}) | {"tree"}
+    assert cli_switches(off) == ("cube", "tree")
     assert choose_components(*cli_switches(off)) == off
 
 
@@ -133,9 +136,13 @@ def test_numerology_geomancy_geometry_off(spread_key):
     assert "Book T Counts" not in prompt(spread_key, "numerology")
     assert "Geomantic Figure" not in prompt(spread_key, "geomancy")
     text = prompt(spread_key, "geometry")
-    for gone in ("Platonic Solid", "Platonic Topology", "Spatial Dimension", "Modifier", "Faces"):
+    assert "Modifier" not in text and "_Opposition (180" not in text
+    text = prompt(spread_key, "cube")
+    assert "**Spatial Dimension" not in text and "Mother axes" not in text
+    assert "Cube of Space" not in text
+    text = prompt(spread_key, "solids")
+    for gone in ("Platonic Solid", "Platonic Topology", "Faces"):
         assert f"**{gone}" not in text and f"`{gone}" not in text
-    assert "Cube of Space letters" not in text
 
 
 def test_book_t_keeps_count_and_pairs_without_scores():
@@ -150,26 +157,13 @@ def test_cli_rejects_unknown_component(monkeypatch):
 
 
 @pytest.mark.parametrize("spread_key", SPREADS)
-def test_gematria_totals_and_switch(spread_key):
-    assert "Letter Values (standard gematria" in prompt(spread_key)
-    for off in ("gematria", "hebrew"):
-        assert "Letter Values (standard gematria" not in prompt(spread_key, off)
-
-
-def test_gematria_values():
-    from ootk import gematria
-    assert gematria.letter_value("ס (Samekh)") == 60
-    assert gematria.letter_value("Tav (ת)") == 400
-    assert gematria.letter_value("Aleph") is None
-    assert sum(gematria.STANDARD_VALUES.values()) == 1495
-    assert gematria.card_value({"arcana_type": "Minor", "hebrew_letter": "כֶּתֶר (Kether)"}) is None
-    assert gematria.card_value({"arcana_type": "Court", "hebrew_letter": "ה (Hé)"}) == 5
-    cards = [{"position_number": n, "position_name": name, "card_data": data} for n, name, data in (
-        (1, "[Op 1] One", {"arcana_type": "Major", "hebrew_letter": "א (Aleph)"}),
-        (2, "[Op 1] Two", {"arcana_type": "Minor", "hebrew_letter": "כֶּתֶר (Kether)"}),
-        (3, "[Op 2] One", {"arcana_type": "Major", "hebrew_letter": "ת (Tau)"}),
-        (4, "[Op 2] Two", {"arcana_type": "Court", "hebrew_letter": "ש (Shin)"}))]
-    assert [(op, total) for op, _, total in gematria.operation_totals(cards)] == [(1, 1), (2, 700)]
+def test_removed_layers_never_reach_the_prompt(spread_key):
+    """Gematria sums, the French/Egyptian comparison column, birth cards and the dual-solid
+    pairings were let go: not even every layer switched on brings them back."""
+    text = prompt(spread_key)
+    for gone in ("Letter Values", "gematria", "French/Egyptian: `", "Birth Cards", "duals",
+                 "Dual:", "polyhedral inversion"):
+        assert gone not in text, gone
 
 
 def test_plain_summary_on_top_and_no_empty_geometry_section():
@@ -184,6 +178,5 @@ def test_plain_summary_on_top_and_no_empty_geometry_section():
     assert layout.count(";") == len(headings(full)) - 1          # one entry per section kept
     assert "SPATIAL & GEOMETRIC VECTOR ANALYSIS" not in headings(full)
     assert "No spatial layout" not in full
-    assert len([l for l in full.splitlines() if "Letter Values" in l]) == 1
     assert "Solid properties" not in full and "Topological Dual Pairings" not in full
     assert "SPATIAL & GEOMETRIC VECTOR ANALYSIS" in headings(prompt("10"))   # a wheel keeps it

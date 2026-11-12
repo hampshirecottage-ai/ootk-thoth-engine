@@ -3,14 +3,12 @@ import argparse
 import copy
 import secrets
 import sys
-from datetime import date
 
 import psycopg
 
 from ootk.db import (
     CardNotFound, DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
-from ootk.birth_cards import birth_cards_param
 from ootk.report import (COMPONENTS, DEFAULT_OFF, analyze_reading, choose_components, drawn_now,
                          generate_html_output, this_computer_zone)
 from ootk.shuffle import (
@@ -46,10 +44,6 @@ def parse_args():
     parser.add_argument("--with", dest="with_parts", type=str, default=None, metavar="PARTS",
                         help="Add extra layers, off by default, to the AI prompt: a comma-separated "
                              f"list of {', '.join(k for k in COMPONENTS if k in DEFAULT_OFF)}, or all.")
-    parser.add_argument("--birth-date", type=str, default=None, metavar="YYYY-MM-DD",
-                        help="Add the querent's birth card and year card (Greer and Arrien tarot "
-                             "numerology) to the prompt header. Only the card numbers are used; "
-                             "the date is not saved.")
     return parser.parse_args()
 
 def ask_significator():
@@ -91,12 +85,6 @@ def run_spread_session():
         args.without = choose_components(args.with_parts, args.without)
     except ValueError as e:
         raise CliError(str(e)) from e
-    args.birth_cards = ""
-    if args.birth_date:
-        try:
-            args.birth_cards = birth_cards_param(date.fromisoformat(args.birth_date.strip()))
-        except ValueError as e:
-            raise CliError(f"--birth-date must be a date such as 1983-07-14, not {args.birth_date!r}.") from e
     if args.expect and args.spread != BOOK_T_KEY:
         raise CliError(f"--expect is only for --spread {BOOK_T_KEY}.")
     if args.expect:
@@ -223,7 +211,6 @@ def run_spread_session():
             spread_results, framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             significator_places=significator_places(cards, args.seed, target_positions, sig_card),
             drawn_at=drawn_now(), local_zone=this_computer_zone(), without=args.without,
-            birth_cards=args.birth_cards,
         )
         analytical_prompt = reading["analytical_prompt"]
 
@@ -271,7 +258,7 @@ def run_book_t_session(args, cards):
             BOOK_T_SPREAD["name"], BOOK_T_KEY, query_prompt, sig_card["title"], seed, spread_results,
             framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             drawn_at=drawn_now(), local_zone=this_computer_zone(), book_t_ops=ops,
-            without=args.without, birth_cards=args.birth_cards,
+            without=args.without,
         )
         analytical_prompt = reading["analytical_prompt"]
         print("\n" + analytical_prompt)

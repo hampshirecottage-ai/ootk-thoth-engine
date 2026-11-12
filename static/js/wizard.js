@@ -139,8 +139,6 @@
         if (off.length) rows.push(["Left out of the prompt", off.join(", "), "options"]);
         const added = promptLayersAdded();
         if (added.length) rows.push(["Extra layers", added.join(", "), "options"]);
-        const birth = el("birthCardsInput").value;
-        if (birth) rows.push(["Birth cards", el("birthCardsSummary").textContent.replace(/^· /, ""), "options"]);
         el("wizReview").replaceChildren(...rows.flatMap(([label, value, step]) => {
             const dt = document.createElement("dt"), dd = document.createElement("dd");
             const edit = document.createElement("button");

@@ -193,7 +193,7 @@ function maps(c) {
         fig("Cube of Space", A.cube(a, null, { compact: true }), a.cube.note) +
         fig("Zodiac and decans", A.ring(a, null, { compact: true }), a.zodiac.note) +
         fig("Platonic solid", A.solid(a, null, { compact: true }), solid) +
-        fig("Dual inversion", A.dual(a, null, { compact: true }), dual) +
+        fig("Its dual solid", A.dual(a, null, { compact: true }), dual) +
         `</div><p style="margin:0 0 12px;font-size:0.85em"><a href="${esc(href)}">Open the card maps</a></p>`;
 }
 
@@ -210,7 +210,7 @@ function openCard(i) {
     const list = (title, items) => items.length
         ? `<h3>${title} (${items.length})</h3><ul>${items.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
     const art = c.art ? `<p class="art-note">${esc(c.art)}</p>` : "";
-    document.getElementById("dBody").innerHTML = img + art + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities) + list("Dual inversions", c.duals || []);
+    document.getElementById("dBody").innerHTML = img + art + `<dl>${fields}</dl>` + maps(c) + list("Aspects", c.aspects) + list("Elemental dignities", c.dignities);
     document.querySelectorAll("[data-card]").forEach(el => el.classList.toggle("selected", el.dataset.card === String(i)));
     panel.classList.add("open");
     panel.setAttribute("aria-hidden", "false");

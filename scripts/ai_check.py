@@ -203,7 +203,6 @@ def truth_for(reading, positions, titles, significator, withheld, seed, spread_k
         "most_strained_pairs": [d for d in dignities if scores and d["score"] == min(scores) and min(scores) < max(scores)],
         "aspects": aspects,
         "pairs_without_aspect": no_aspect,
-        "dual_pairings": reading["dual_pairings"],
         "framework": {"chosen": chosen, "basis": reading["framework_basis"],
                       "others": [f for f in FRAMEWORKS if f not in chosen]},
         "own_place": reading["own_place"] or [],

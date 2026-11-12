@@ -166,8 +166,7 @@ def _closes_ring(layout_key, seg_len):
 def segment_pairs(layout_key, seg_len):
     """The neighbouring positions of one segment, as 0-based (a, b) pairs within it.
 
-    Dignities and dual pairings both use these, so the two never disagree on who neighbours
-    whom. Neighbours are consecutive positions, except:
+    Neighbours are consecutive positions, except:
     - on a full ring (houses, signs, decans) the last position also neighbours the first
       (twelfth house <-> first house), closing the circle;
     - a heap, the Celtic Cross, the Relationship spread or two rows of three (HEAP_PAIRS) pairs its named pairs instead of following deal
@@ -424,37 +423,8 @@ def analyze_hebrew_spatial_distribution(spread_results):
 
     return distribution, spatial_details
 
-# The three dual pairs: put a corner at the centre of each face of one solid and the corners
-# make the other. The tetrahedron is its own dual.
-DUAL_LABELS = {
-    frozenset(["Hexahedron (Cube)", "Octahedron"]): "Earth/Air Inversion Dual (Cube <-> Octahedron)",
-    frozenset(["Dodecahedron", "Icosahedron"]): "Planetary/Water Inversion Dual (Dodecahedron <-> Icosahedron)",
-    frozenset(["Tetrahedron"]): "Self-Dual Ignis Resonance (Tetrahedron <-> Tetrahedron)",
-}
-
-
-def dual_pairs(spread_results, spread_key=None):
-    """(i, j, label) for neighbouring cards whose solids are each other's duals.
-
-    Neighbours are the dignities' (segment_pairs): never across an operation boundary, and on
-    a full wheel the last position neighbours the first."""
-    out = []
-    for layout, start, end, _ in spread_segments(spread_results, spread_key):
-        for a, b in segment_pairs(layout, end - start):
-            i, j = start + a, start + b
-            label = DUAL_LABELS.get(frozenset([spread_results[i]["card_data"].get("platonic_solid"),
-                                               spread_results[j]["card_data"].get("platonic_solid")]))
-            if label:
-                out.append((i, j, label))
-    return out
-
-
-def analyze_platonic_topology(spread_results, spread_key=None):
-    """Solid counts, per-card topology and dual pairings between neighbouring cards.
-
-    Dual pairings use the same neighbours as the dignities (segment_pairs): they never cross an
-    operation boundary, and on a full wheel the last position neighbours the first.
-    """
+def analyze_platonic_topology(spread_results):
+    """Solid counts and per-card topology (each card's solid follows its element)."""
     solid_counts = {
         "Dodecahedron": 0,
         "Tetrahedron": 0,
@@ -486,9 +456,7 @@ def analyze_platonic_topology(spread_results, spread_key=None):
             "role": role
         })
 
-    dual_pairings = [f"Positions {topology_details[i]['position']} & {topology_details[j]['position']}: {label}"
-                     for i, j, label in dual_pairs(spread_results, spread_key)]
-    return solid_counts, topology_details, dual_pairings
+    return solid_counts, topology_details
 
 # Auto-detection of the macro framework looks at where the whole draw sits on the Tree of Life,
 # not just its first and last card. Tunable thresholds:

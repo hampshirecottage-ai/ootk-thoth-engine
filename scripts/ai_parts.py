@@ -21,11 +21,6 @@ For each part it reports:
   A part whose removal changes these no more than a repeat does is one the AI does not lean on.
 Scrambled answers also count how often the AI says something does not match.
 
-Birth and year cards are added rather than switched off: they appear only when a birth date is
-given, so each reading also goes out once with a fixed birth date ("birth" variant), compared
-with the full answers the same way. Running `round` again on a folder from an earlier round
-adds just those prompts and sends just their answers.
-
 Usage (needs `pip install anthropic` and ANTHROPIC_API_KEY, like scripts/ai_score.py):
     python scripts/ai_parts.py round [--out output/ai_parts] [--model claude-haiku-5-5]
     python scripts/ai_parts.py build --out output/ai_parts/build     # prompts only, free
@@ -49,7 +44,7 @@ import random
 import re
 import sys
 import time
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from itertools import combinations
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,7 +53,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from ai_check import MAPPING, QUESTION, SEEDS, SIGNIFICATOR, card_names, load_reference  # noqa: E402
 from ootk.analysis import withheld_summary  # noqa: E402
-from ootk.birth_cards import birth_cards_param  # noqa: E402
 from ootk.decans import ANGELS  # noqa: E402
 from ootk.report import COMPONENTS, analyze_reading  # noqa: E402
 from ootk.rules import GEOMANTIC_FIGURES  # noqa: E402
@@ -72,7 +66,6 @@ SPREAD_KEYS = ("9", "12")         # Houses, and the four-operation Opening of th
 RUNS = 3                          # answers per prompt: the repeats measure the noise
 DRAWN_AT = datetime(2026, 11, 4, 12, 0, tzinfo=timezone.utc)   # fixed, so the decan dates show
 SCRAMBLE_SEED = 777
-BIRTH_DATE = date(1985, 7, 14)    # any fixed date: birth card VIII Adjustment, year card XIII Death (2026)
 ANSWER_TOKENS = {"9": 9_000, "12": 14_000}   # rough answer + thinking, for the estimate
 KEEP = {"title", "card_id", "arcana_type", "suit", "number_or_rank"}
 EFFORT = {"claude-sonnet-5-5": "medium", "claude-opus-5-5": "medium"}   # Haiku: its own default
@@ -114,26 +107,21 @@ TERMS = {
     "tree": re.compile(r"\b(" + "|".join(SEPHIROTH) + r")\b|\bTree of Life\b|\bpath \d+|\bYetziratic\b|"
                        r"\b(King|Queen|Prince|Princess) Scale", re.I),
     "courts": re.compile(r"\b(Fire|Water|Air|Earth) of (Fire|Water|Air|Earth)\b", re.I),
-    "numerology": re.compile(r"\bBook T count|\bcounts? of (Trumps|court|Aces)|\b(three|four) of a kind\b|"
-                             r"\bbirth card|\byear card", re.I),
+    "numerology": re.compile(r"\bBook T count|\bcounts? of (Trumps|court|Aces)|\b(three|four) of a kind\b", re.I),
     "geomancy": re.compile(r"\bgeomant|\b(" + "|".join(re.escape(f) for f in FIGURES) + r")\b"),
-    "geometry": re.compile(r"\bCube of Space\b|\bplatonic\b|\b(tetrahedron|octahedron|icosahedron|"
-                           r"dodecahedron)\b|\b(trine|sextile|square|opposition|conjunction)s?\b", re.I),
-    "gematria": re.compile(r"\bgematria\b|\bletter values?\b", re.I),
+    "geometry": re.compile(r"\b(trine|sextile|square|opposition|conjunction)s?\b", re.I),
     "titles": re.compile(r"\bLord of\b|\bGolden Dawn titles?\b|\bDaughter of\b|\bSon of\b", re.I),
     "angels": re.compile(r"\bangels?\b|\b(" + "|".join(ANGELS) + r")\b", re.I),
     "timing": re.compile(r"\bday ruler\b|\bdecan dates?\b|\b\d{1,2} (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|"
                          r"Nov|Dec)[a-z]*\b", re.I),
     "gods": re.compile(r"\bgods?\b|\bgoddess", re.I),
     "hexagrams": re.compile(r"\bhexagrams?\b|\bI Ching\b", re.I),
-    "solids": re.compile(r"\bplatonic\b|\b(tetrahedron|octahedron|icosahedron|dodecahedron)\b|\bdual\b", re.I),
-    "cube_counts": re.compile(r"\bmother ax[ei]s\b|\bdouble directions?\b|\bsimple edges\b", re.I),
+    "solids": re.compile(r"\bplatonic\b|\b(tetrahedron|octahedron|icosahedron|dodecahedron)\b", re.I),
+    "cube": re.compile(r"\bCube of Space\b|\bmother ax[ei]s\b|\bdouble directions?\b|\bsimple edges?\b", re.I),
     "all_aspects": re.compile(r"\b(trine|sextile|square)s?\b", re.I),
-    "hebrew_compare": re.compile(r"\bFrench\b|\bEgyptian\b|\bGolden Dawn letter", re.I),
     "statistics": re.compile(r"\bz ?=|\btrend test\b|\bat random\b|\bodds\b", re.I),
 }
 assert set(TERMS) == set(COMPONENTS)
-BIRTH_TERMS = re.compile(r"\bbirth card|\byear card|\bpersonality card", re.I)
 MISMATCH = re.compile(r"\b(does not|doesn't|do not|don't) match|\bmismatch|\binconsisten|\bnormally\b|"
                       r"\busually\b|\btraditionally\b|\berror\b|\bunusual attribution", re.I)
 
@@ -159,10 +147,9 @@ def scramble(rows, seed=SCRAMBLE_SEED):
     return out
 
 
-def build_prompt(ref, seed, spread_key, without=frozenset(), rows=None, birth_cards=""):
-    """The prompt the site would build for this draw, with `without` switched off, the card
-    rows taken from `rows` (scrambled ones) when given, and `birth_cards` ("16-14-2026") added
-    when given. The cards drawn never change."""
+def build_prompt(ref, seed, spread_key, without=frozenset(), rows=None):
+    """The prompt the site would build for this draw, with `without` switched off and the card
+    rows taken from `rows` (scrambled ones) when given. The cards drawn never change."""
     rows = rows or ref["rows"]
     deck = ref["deck"]
     positions = spread_positions(spread_key)
@@ -175,8 +162,7 @@ def build_prompt(ref, seed, spread_key, without=frozenset(), rows=None, birth_ca
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, QUESTION, significator, seed,
                               spread_results, mapping_system=MAPPING, withheld=withheld,
                               significator_places=significator_places(deck, seed, positions, sig_card),
-                              drawn_at=DRAWN_AT, local_zone=timezone.utc, without=frozenset(without),
-                              birth_cards=birth_cards)
+                              drawn_at=DRAWN_AT, local_zone=timezone.utc, without=frozenset(without))
     return reading["analytical_prompt"]
 
 
@@ -198,7 +184,6 @@ def build(out, ref=None):
                 else:
                     variants.append((f"no-{part}", cut))
             variants.append(("scrambled", build_prompt(ref, seed, key, rows=scrambled_rows)))
-            variants.append(("birth", build_prompt(ref, seed, key, birth_cards=BIRTH_CARDS)))
             for variant, prompt in variants:
                 case_id = f"s{seed}_sp{key}_{variant}"
                 with open(os.path.join(out, "prompts", f"{case_id}.md"), "w", encoding="utf-8") as f:
@@ -207,34 +192,6 @@ def build(out, ref=None):
     with open(os.path.join(out, "cases.json"), "w", encoding="utf-8") as f:
         json.dump({"cases": cases, "no_change": skipped}, f, indent=1)
     return cases, skipped
-
-
-BIRTH_CARDS = birth_cards_param(BIRTH_DATE, DRAWN_AT.date())
-
-
-def add_birth(build_dir, ref=None):
-    """Adds the "birth" variant to a build folder from a round made before it existed, leaving
-    every other prompt as it is. Returns how many prompts were added."""
-    path = os.path.join(build_dir, "cases.json")
-    with open(path, encoding="utf-8") as f:
-        info = json.load(f)
-    have = {c["id"] for c in info["cases"]}
-    readings = sorted({(c["seed"], c["spread"]) for c in info["cases"]})
-    added = 0
-    for seed, key in readings:
-        case_id = f"s{seed}_sp{key}_birth"
-        if case_id in have:
-            continue
-        ref = ref or load_reference()
-        prompt = build_prompt(ref, seed, key, birth_cards=BIRTH_CARDS)
-        with open(os.path.join(build_dir, "prompts", f"{case_id}.md"), "w", encoding="utf-8") as f:
-            f.write(prompt)
-        info["cases"].append({"id": case_id, "seed": seed, "spread": key, "variant": "birth", "chars": len(prompt)})
-        added += 1
-    if added:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(info, f, indent=1)
-    return added
 
 
 # --- sending --------------------------------------------------------------------------------
@@ -373,8 +330,6 @@ def round_(out, model=MODEL, ask=input, client=None, wait=60):
     batch_file = os.path.join(out, "batch.json")
     if not os.path.exists(os.path.join(build_dir, "cases.json")):
         build(build_dir)
-    elif not os.path.exists(batch_file) and add_birth(build_dir):
-        print("Added the birth card prompts to this folder's earlier round.")
     with open(os.path.join(build_dir, "cases.json"), encoding="utf-8") as f:
         cases = json.load(f)["cases"]
     client = client or make_client()
@@ -532,14 +487,6 @@ def report(out):
         rows.append((score, f"| {name} | {full_uses[part]:.1f} | {left:.1f} | {m[0] - noise[0]:+.2f} | "
                             f"{m[1] - noise[1]:+.2f} | {m[2]:.0%} | {n_readings} |"))
     lines += [row for _, row in sorted(rows, key=lambda r: (r[0] is None, -(r[0] or 0)))]
-    births = [a for r in readings for a in texts.get((r, "birth"), [])]
-    m = measures("birth")
-    if births and m:
-        named = mean(len(BIRTH_TERMS.findall(a["text"])) for a in births)
-        lines += ["", f"**Birth and year cards added** (born {BIRTH_DATE.isoformat()}): summary words "
-                      f"{m[0] - noise[0]:+.2f}, cards named {m[1] - noise[1]:+.2f}, same lean {m[2]:.0%} "
-                      f"({sum(1 for r in readings if texts.get((r, 'birth')))} readings); birth or year card "
-                      f"mentioned {named:.1f} times per answer."]
     scr = [a for r in readings for a in texts.get((r, "scrambled"), [])]
     m = measures("scrambled")
     if scr and m:
