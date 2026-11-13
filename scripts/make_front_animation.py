@@ -66,8 +66,8 @@ SIGN_GLYPHS = [g + "\ufe0e" for g in "♈♉♊♋♌♍♎♏♐♑♒♓"]   #
 # sign's and planet's path: Aries is Heh (Path 15, scarlet) ... Pisces is Qoph (Path 29, crimson);
 # Saturn is Tav (Path 32, indigo), Jupiter Kaph (21, violet), Mars Peh (27, scarlet), the Sun
 # Resh (30, orange), Venus Daleth (14, emerald), Mercury Beth (12, yellow), the Moon Gimel (13, blue).
-SIGN_KING = ["#FF2400", "#FF4500", "#FFA500", "#FFBF00", "#ADFF2F", "#ADFF2F",
-             "#00C957", "#006400", "#0000FF", "#4B0082", "#EE82EE", "#8A2BE2"]
+SIGN_KING = ["#FF2400", "#FF4500", "#FFA500", "#FFBF00", "#DFFF00", "#ADFF2F",
+             "#00C957", "#0D98BA", "#0000FF", "#4B0082", "#EE82EE", "#DC143C"]
 PLANET_KING = {"Saturn": "#4B0082", "Jupiter": "#EE82EE", "Mars": "#FF2400", "Sun": "#FFA500",
                "Venus": "#00C957", "Mercury": "#FFFF00", "Moon": "#0000FF"}
 

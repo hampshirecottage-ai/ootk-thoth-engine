@@ -214,6 +214,17 @@ def test_king_scale_colour_follows_the_sign_not_the_letter(conn, system, title, 
     assert (card["king_scale_color"], card["king_scale_hex"]) == (colour, hex_colour)
 
 
+@pytest.mark.parametrize("title,colour,hex_colour", [
+    ("XI - Lust", "Yellow, greenish", "#DFFF00"),        # Leo, not Virgo's #ADFF2F
+    ("IX - The Hermit", "Green, yellowish", "#ADFF2F"),  # Virgo
+    ("XIII - Death", "Green blue", "#0D98BA"),           # Scorpio
+    ("XVIII - The Moon", "Crimson (ultra violet)", "#DC143C"),  # Pisces
+])
+def test_king_scale_swatch_matches_its_colour_name(conn, title, colour, hex_colour):
+    card = fetch(conn, title, "thoth")
+    assert (card["king_scale_color"], card["king_scale_hex"]) == (colour, hex_colour)
+
+
 def test_thoth_and_golden_dawn_give_every_card_the_same_colour(conn):
     titles = [c["title"] for c in db.fetch_all_cards(conn)]
     thoth = db.fetch_cards_correspondences(conn, titles, system="thoth")
