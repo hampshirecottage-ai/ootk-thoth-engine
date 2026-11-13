@@ -1,0 +1,13 @@
+{# A list of journal entries: date, spread, question and cards, linking to the entry. -#}
+            <ul class="j-entries">
+                {% for e in entries %}
+                <li>
+                    <a class="j-entry" href="/journal/entry/{{ e.entry_id }}">
+                        <span class="j-date">{{ e.drawn_at.strftime('%-d %b %Y') }}</span>
+                        <span class="j-what"><strong>{{ spread_label(e.spread_key) }}</strong>{% if e.question %} · {{ e.question }}{% endif %}</span>
+                        <span class="j-cards">{% for t in e.card_titles[:8] %}<img src="{{ card_image_url(t) }}" alt="{{ t }}" title="{{ t }}" loading="lazy" decoding="async">{% endfor %}{% if e.card_titles | length > 8 %}<span class="muted">+{{ e.card_titles | length - 8 }}</span>{% endif %}</span>
+                        <span class="j-flags muted">{% if e.answer %}AI answer{% if e.answer_ai %} ({{ e.answer_ai }}){% endif %}{% else %}No answer yet{% endif %}{% if e.outcome %} · outcome noted{% endif %}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>

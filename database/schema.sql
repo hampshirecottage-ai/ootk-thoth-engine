@@ -542,6 +542,51 @@ CREATE INDEX idx_contact_messages_unread ON public.contact_messages USING btree 
 
 
 --
+-- Name: reading_journals, reading_journal_threads, reading_journal_entries; Type: TABLE; Schema: public; Owner: -
+-- (database/migrations/add_reading_journal.sql)
+--
+CREATE TABLE public.reading_journals (
+    journal_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    key_hash character(64) NOT NULL UNIQUE,
+    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.reading_journal_threads (
+    thread_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    journal_id bigint NOT NULL REFERENCES public.reading_journals (journal_id) ON DELETE CASCADE,
+    name text NOT NULL CHECK (char_length(name) <= 2000),
+    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.reading_journal_entries (
+    entry_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    journal_id bigint NOT NULL REFERENCES public.reading_journals (journal_id) ON DELETE CASCADE,
+    thread_id bigint REFERENCES public.reading_journal_threads (thread_id) ON DELETE CASCADE,
+    session_id integer NOT NULL REFERENCES public.tarot_sessions (session_id) ON DELETE CASCADE,
+    added_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    answer text CHECK (char_length(answer) <= 300000),
+    answer_ai character varying(40),
+    notes text CHECK (char_length(notes) <= 20000),
+    outcome text CHECK (char_length(outcome) <= 20000),
+    outcome_at timestamp with time zone,
+    UNIQUE (journal_id, session_id)
+);
+
+CREATE TABLE public.reading_journal_windows (
+    window_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    entry_id bigint NOT NULL REFERENCES public.reading_journal_entries (entry_id) ON DELETE CASCADE,
+    label text NOT NULL CHECK (char_length(label) <= 1000),
+    starts date NOT NULL,
+    ends date NOT NULL CHECK (ends >= starts)
+);
+
+CREATE INDEX idx_reading_journal_threads_journal ON public.reading_journal_threads (journal_id);
+CREATE INDEX idx_reading_journal_entries_thread ON public.reading_journal_entries (journal_id, thread_id, added_at);
+CREATE INDEX idx_reading_journal_windows_entry ON public.reading_journal_windows (entry_id);
+
+
+--
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -
 --
 

@@ -79,6 +79,13 @@
         .end-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
         .end-actions form { margin: 0; }
         @media (max-width: 600px) { .simple-cards { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; } .simple-card figcaption { font-size: 0.8em; } }
+        .journal-box h3 { margin: 0 0 4px; }
+        .journal-box .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+        .journal-add { display: grid; gap: 6px; max-width: 420px; margin-top: 8px; }
+        .journal-add label { font-size: 0.9em; font-weight: 600; }
+        .journal-add select, .journal-add input { margin: 0; }
+        .journal-add button { justify-self: start; }
+        .journal-box form.actions { margin: 0; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
         /* Banner, as on the start page: what the reading is on the left, the prompt actions on the right. */
         .report-head { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 0 26px; align-items: start; }
@@ -734,6 +741,33 @@
     </details>
 
     <!-- ===== FINAL STEP ===== -->
+    {% if journal_box %}
+    <section class="panel journal-box no-print" id="journalBox">
+        <h3>Keep it in your journal</h3>
+        {% if journal_box.entry_id %}
+        <p class="muted">This reading is in your journal.</p>
+        <div class="actions"><a class="btn secondary" href="/journal/entry/{{ journal_box.entry_id }}">Open it in my journal</a></div>
+        {% elif journal_box.has_journal %}
+        <form method="post" action="/journal/add" class="journal-add">
+            <input type="hidden" name="link" value="{{ journal_box.link }}">
+            <label for="jThread">Question</label>
+            <select id="jThread" name="thread" onchange="document.getElementById('jNewRow').hidden = this.value !== 'new'">
+                <option value="">Not in a question yet</option>
+                {% for t in journal_box.threads %}<option value="{{ t.thread_id }}">{{ t.name }}</option>{% endfor %}
+                <option value="new"{% if not journal_box.threads %} selected{% endif %}>+ New question…</option>
+            </select>
+            <div id="jNewRow"{% if journal_box.threads %} hidden{% endif %}><label for="jNew">New question</label><input id="jNew" name="new_thread" maxlength="200" value="{{ topic or '' }}"></div>
+            <button type="submit" class="btn">Add to my journal</button>
+        </form>
+        {% else %}
+        <p class="muted">A private journal keeps your readings with your AI&rsquo;s answers and what happened, on a timeline. No account needed.</p>
+        <form method="post" action="/journal/start" class="actions">
+            <input type="hidden" name="link" value="{{ journal_box.link }}">
+            <button type="submit" class="btn secondary">Start a journal with this reading</button>
+        </form>
+        {% endif %}
+    </section>
+    {% endif %}
     <div class="end-actions no-print" id="nextStep">
         <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn">New reading</a>
         <form action="/generate_report" method="POST" style="display:inline">

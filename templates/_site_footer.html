@@ -14,6 +14,7 @@
     <a href="/method">How it works</a> ·
     <a href="/cards">All 78 cards</a> ·
     <a href="/today">Card of the day</a> ·
+    {% if journal_enabled() %}<a href="/journal">My journal</a> ·{% endif %}
     <a href="{{ bug_report_url }}" target="_blank" rel="noopener">Report a bug</a> ·
     <a href="{{ contact_url }}">Contact</a>
 </footer>

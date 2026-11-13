@@ -55,6 +55,7 @@ ootk-thoth-engine/
 │   ├── visual.py           # Web report view: summary figures, drawable layouts, link notes
 │   ├── assets.py           # Static files: versioned URLs, cache headers, compression
 │   ├── atlas.py            # Card maps: Tree, Cube of Space, decans, solids and elements (/maps)
+│   ├── journal.py          # Private reading journal: encryption (JOURNAL_KEY), threads, entries, dates found in an AI answer, the timeline layout
 │   ├── lockout.py          # Locks out repeated wrong passwords (APP_PASSWORD, ADMIN_PASSWORD)
 │   ├── busy.py             # Busy-server alert when CPU stays high (BUSY_ALERT_*); sends alerts by Telegram and/or ntfy, contact messages too
 │   └── library.json        # Glossary and further reading (/library)
@@ -140,6 +141,7 @@ Everything else is optional:
 | Variable | What it does | Default |
 |---|---|---|
 | `APP_PASSWORD` | Every web page asks for this password | off |
+| `JOURNAL_KEY` | Turns on the private reading journal (`/journal`) and is the key its answers, notes, outcomes, question names and dates' names are encrypted with. Make one with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"` and keep a second copy: without it those texts can't be read | off (no journal) |
 | `ADMIN_PASSWORD` | Turns on `/admin` for reading contact messages and listing saved readings | off (no `/admin` page) |
 | `SITE_URL` | Public address used in link previews, `robots.txt` and `sitemap.xml` | Render's address, then the request's |
 | `DB_CONNECT_TIMEOUT` | Seconds to wait for the database before showing the "database down" page | `10` |
@@ -241,6 +243,11 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/reading?seed=...&spread=...` | A shared seeded reading, rebuilt from the link and not saved |
 | `/report/<link>` | A saved reading |
 | `/contact` | Contact form: a private message to the site owner (message, optional name and reply address), saved to `contact_messages`; footer **Contact** links here |
+| `/journal` | The private reading journal (only when `JOURNAL_KEY` is set): start one, its questions, readings not in a question, the journal link, Markdown download, forget on this device, delete |
+| `/journal/k/<key>` | The secret journal link: opens that journal in this browser (a cookie remembers it) |
+| `/journal/entry/<n>` | One reading in the journal: its cards, the AI's answer pasted in, the dates for the timeline (found in the answer, editable), notes and what actually happened |
+| `/journal/thread/<n>` | One question's readings, newest first; rename or delete it |
+| `/journal/timeline` | Every question's dates and readings under the zodiac and the months; hover or tap a marker for its details, the report and the journal entry |
 | `/admin` | Admin sign-in, then on to `/admin/messages` when any are unread, else `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
 | `/admin/messages` | Contact messages, newest first, with Mark read, Mark unread and Delete; behind the same `ADMIN_PASSWORD` sign-in |
 | `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
@@ -302,6 +309,7 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
 | `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
 | `add_contact_messages.sql` | `contact_messages` is missing (the contact form shows a "needs an update" page) |
+| `add_reading_journal.sql` | Before turning on the journal with `JOURNAL_KEY`: adds `reading_journals`, `reading_journal_threads`, `reading_journal_entries` and `reading_journal_windows` |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 
@@ -347,6 +355,7 @@ The repository holds only the engine and reference data. Your own readings stay 
 - **Credentials live in `.env`**, which is ignored. Commit changes to `.env.example` only, with empty values.
 - **Use dummy seeds in anything you share.** A seed reproduces a reading exactly, so avoid seeds built from birthdates or other personal numbers in examples, tests and issues. `examples/` shows the expected format with seed `12345`.
 - **Put anything else personal in `private/`**, which is ignored.
+- **On the site, the journal is opt-in and private.** It needs no account: a secret link opens it, and only a hash of that link is stored. Answers, notes, outcomes and names are encrypted with `JOURNAL_KEY` before they reach the database. Journal pages are never cached or indexed, share links never carry them, and deleting an entry, a question or the whole journal removes the rows at once.
 
 ---
 
@@ -360,6 +369,10 @@ The repository holds only the engine and reference data. Your own readings stay 
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |
 | `testimonials` | Left from the retired testimonials feature (removed November 2026). Nothing reads it now; export it before dropping it. |
+| `reading_journals` | Private journals: only a SHA-256 hash of each secret journal link, and when it was made and last opened. A journal nobody opens for 24 months is deleted the next time someone starts one |
+| `reading_journal_threads` | A journal's questions (name encrypted) |
+| `reading_journal_entries` | A saved reading filed in a journal: the AI's answer, which AI, notes and what happened (texts encrypted with `JOURNAL_KEY`) |
+| `reading_journal_windows` | Dates on the journal timeline: a name (encrypted) and the days it covers |
 | `journal_entries` | Left from the retired prediction journal (removed November 2026). Nothing reads it now; it is kept so any saved entries are not lost. Export it before dropping it. |
 
 Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`. Platonic solids, duals and layout coordinates are not stored: the engine works them out from each card's element and from `spreads.py`.
