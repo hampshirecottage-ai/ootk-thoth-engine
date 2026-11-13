@@ -627,6 +627,20 @@ def test_report_opens_on_the_next_step_not_the_settings(client):
     assert page.index('class="site-bar"') < page.index('id="nowStep"')   # same OOTK bar as the start page
 
 
+def test_report_shows_cards_first_and_folds_the_workings(client):
+    page = post(client).text
+    cards, fold = page.index('id="yourCards"'), page.index('<details class="workings" id="workings">')
+    end = page.index('id="nextStep"')
+    assert page.index('id="nowStep"') < cards < fold < end
+    # Every card of a one-operation spread is shown large, before the fold.
+    assert page[cards:fold].count('class="simple-card"') == 3
+    # The totals, the operations, the reading details and the full prompt sit inside the fold.
+    for part in ('id="summary"', 'id="filters"', 'id="readingDetails"', 'id="promptSection"'):
+        assert fold < page.index(part) < end
+    # One main action in the banner.
+    assert page[:cards].count("data-download-md") == 1 and "data-download-json" not in page[:cards]
+
+
 def test_examples_page_is_retired_and_forwards_to_the_sample(client):
     r = client.get("/examples", follow_redirects=False)
     assert r.status_code == 301 and r.headers["location"] == "/start#sample"

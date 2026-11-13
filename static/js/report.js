@@ -3,9 +3,9 @@ function copyText(text, btn, sourceId) {
     ootkCopyButton(btn, text, sourceId && document.getElementById(sourceId));
 }
 
+// Opens a fold and every fold around it (the operations sit inside "The workings").
 function openSection(id) {
-    const el = document.getElementById(id);
-    if (el) el.open = true;
+    for (let el = document.getElementById(id); el; el = el.parentElement?.closest("details")) el.open = true;
 }
 if (location.hash) openSection(location.hash.slice(1));
 
