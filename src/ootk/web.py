@@ -40,7 +40,6 @@ from ootk.report import (
 )
 from ootk.rules import element_dignity
 from ootk import atlas
-from ootk import journal
 from ootk import book_t
 from ootk import busy
 from ootk import sky
@@ -307,8 +306,7 @@ app.add_middleware(HeadAsGet)
 
 
 def is_private_path(path: str) -> bool:
-    return (path.startswith(("/report/", "/admin", "/journal"))
-            or path in ("/generate_report", "/contact"))
+    return (path.startswith(("/report/", "/admin")) or path in ("/generate_report", "/contact"))
 
 
 class RedactReportLinks(logging.Filter):
@@ -318,14 +316,12 @@ class RedactReportLinks(logging.Filter):
     def filter(self, record):
         if isinstance(record.args, tuple) and len(record.args) >= 3 and isinstance(record.args[2], str):
             args = list(record.args)
-            args[2] = JOURNAL_KEY_IN_PATH.sub("/journal/k/<redacted>",
-                                              REPORT_LINK_IN_PATH.sub("/report/<redacted>", args[2]))
+            args[2] = REPORT_LINK_IN_PATH.sub("/report/<redacted>", args[2])
             record.args = tuple(args)
         return True
 
 
 REPORT_LINK_IN_PATH = re.compile(r"/report/[^/?#\s]+")
-JOURNAL_KEY_IN_PATH = re.compile(r"/journal/k/[^/?#\s]+")
 logging.getLogger("uvicorn.access").addFilter(RedactReportLinks())
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -635,7 +631,7 @@ PROMPT_PARTS = tuple((key, COMPONENTS[key], hint) for key, hint in (
 ))
 assert [k for k, _, _ in PROMPT_PARTS] == list(COMPONENTS)
 
-templates.env.globals.update(journal_enabled=journal.enabled, prompt_parts=PROMPT_PARTS, default_off=DEFAULT_OFF, static_url=static_url, card_image_url=card_image_url, art_note=art_note, element_colors=ELEMENT_COLORS,
+templates.env.globals.update(prompt_parts=PROMPT_PARTS, default_off=DEFAULT_OFF, static_url=static_url, card_image_url=card_image_url, art_note=art_note, element_colors=ELEMENT_COLORS,
                              card_srcset=card_srcset, bug_report_url=BUG_REPORT_URL,
                              contact_url=CONTACT_URL, repo_url=REPO_URL, site_url=site_url,
                              site_description=SITE_DESCRIPTION, spread_stages=SPREAD_STAGES,
@@ -1116,7 +1112,6 @@ def robots_txt(request: Request):
             "Disallow: /generate_report\n"
             "Disallow: /reading\n"
             "Disallow: /sample/\n"
-            "Disallow: /journal\n"
             f"\nSitemap: {site_url(request)}/sitemap.xml\n")
 
 
@@ -1707,366 +1702,6 @@ def send_contact(request: Request, background: BackgroundTasks, body: str = Form
     return contact_page(request, sent=True)
 
 
-# ---------- private reading journal ----------
-
-# A journal is opened by a secret link; the browser keeps its key in this cookie. SameSite=Lax
-# means another site can't post a form to the journal with the visitor's cookie attached, and
-# same_site_form() also turns away a post whose Origin names another site.
-JOURNAL_COOKIE = "ootk_journal"
-JOURNAL_COOKIE_AGE = 2 * 365 * 24 * 3600
-JOURNAL_KEY_RE = re.compile(journal.KEY_PATTERN)
-# New journals: at most 5 an hour from one address, and 100 an hour across the site.
-journal_starters = FailedLogins(attempts=5, window=3600)
-JOURNALS_PER_HOUR = 100
-
-
-def journal_off():
-    if not journal.enabled():
-        raise HTTPException(status_code=404, detail="There is no page at this address.")
-
-
-def same_site_form(request: Request):
-    origin = request.headers.get("origin")
-    if origin and origin != "null" and urlsplit(origin).netloc != request.url.netloc:
-        raise HTTPException(status_code=403, detail="This form can only be sent from this site.")
-
-
-def journal_cookie_key(request: Request):
-    key = request.cookies.get(JOURNAL_COOKIE, "")
-    return key if JOURNAL_KEY_RE.fullmatch(key) else None
-
-
-def set_journal_cookie(response, request: Request, key):
-    response.set_cookie(JOURNAL_COOKIE, key, max_age=JOURNAL_COOKIE_AGE, httponly=True, samesite="lax",
-                        secure=request.url.scheme == "https", path="/")
-    return response
-
-
-def current_journal(conn, request: Request):
-    key = journal_cookie_key(request)
-    return journal.open_journal(conn, key) if key else None
-
-
-def journal_page(request: Request, name: str, status: int = 200, **context):
-    response = guide_page(request, name, ai_names=journal.AI_NAMES, spread_label=spread_label,
-                          card_image_url=card_image_url, short_card_name=short_card_name, **context)
-    response.status_code = status
-    return response
-
-
-def journal_text(value: str, limit: int, what: str) -> str:
-    """A form field's text, trimmed; 400 when too long or holding a NUL."""
-    value = (value or "").strip().replace("\r\n", "\n")
-    if "\x00" in value:
-        raise HTTPException(status_code=400, detail=f"The {what} contains a character that can't be saved.")
-    if len(value) > limit:
-        raise HTTPException(status_code=400, detail=f"Please keep the {what} to {limit:,} characters "
-                                                    f"(this one has {len(value):,}).")
-    return value
-
-
-def journal_or_start(request: Request):
-    return RedirectResponse("/journal", status_code=303)
-
-
-def entry_thread(conn, journal_id, thread: str, new_thread: str):
-    """The thread_id a form picked: "" for none, an existing thread's id, or "new" with a name."""
-    if thread == "new":
-        name = journal_text(new_thread, journal.NAME_MAX, "thread name")
-        if not name:
-            raise HTTPException(status_code=400, detail="Please give the new thread a name.")
-        if journal.count_threads(conn, journal_id) >= journal.THREADS_MAX:
-            raise HTTPException(status_code=400, detail=f"A journal can hold {journal.THREADS_MAX} threads.")
-        return journal.create_thread(conn, journal_id, name)
-    if not thread:
-        return None
-    if not thread.isdigit() or not journal.get_thread(conn, journal_id, int(thread)):
-        raise HTTPException(status_code=404, detail="There is no such thread in this journal.")
-    return int(thread)
-
-
-def file_reading(conn, journal_id, link, thread="", new_thread=""):
-    """Adds the saved reading at /report/<link> to the journal; returns the entry_id."""
-    found = load_report_by_link(conn, link) if REPORT_LINK.fullmatch(link or "") else None
-    if not found:
-        raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
-    session_id = found[0]
-    if (not journal.entry_for_session(conn, journal_id, session_id)
-            and journal.count_entries(conn, journal_id) >= journal.ENTRIES_MAX):
-        raise HTTPException(status_code=400, detail=f"A journal can hold {journal.ENTRIES_MAX:,} readings.")
-    return journal.add_entry(conn, journal_id, session_id, entry_thread(conn, journal_id, thread, new_thread))
-
-
-@app.get("/journal", response_class=HTMLResponse)
-def journal_home(request: Request):
-    """The journal's threads and the readings in no thread; without a journal, how to start one."""
-    journal_off()
-    key = journal_cookie_key(request)
-    with get_db_connection() as conn:
-        journal_id = journal.open_journal(conn, key) if key else None
-        if not journal_id:
-            response = journal_page(request, "journal.html", intro=True,
-                                    deleted="deleted" in request.query_params)
-            if key:
-                response.delete_cookie(JOURNAL_COOKIE, path="/")
-            return response
-        threads = journal.list_threads(conn, journal_id)
-        unfiled = journal.list_entries(conn, journal_id, unfiled=True)
-    return journal_page(request, "journal.html", threads=threads, unfiled=unfiled,
-                        journal_link=f"{site_url(request)}/journal/k/{key}",
-                        new="new" in request.query_params)
-
-
-@app.post("/journal/start")
-def journal_start(request: Request, link: str = Form("")):
-    """Starts a journal, remembers it in this browser and, from a report, files that reading."""
-    journal_off()
-    same_site_form(request)
-    visitor = visitor_address(request)
-    if journal_starters.retry_after(visitor):
-        raise HTTPException(status_code=429, detail="Several journals were started from here recently. "
-                                                    "Please try again in an hour.")
-    key = journal.new_key()
-    with get_db_connection() as conn:
-        if journal.journals_started_since(conn, 60) >= JOURNALS_PER_HOUR:
-            log.warning("journal start refused: %d started in the last hour", JOURNALS_PER_HOUR)
-            raise HTTPException(status_code=429, detail="A lot of journals were started in the last hour. "
-                                                        "Please try again later.")
-        journal_id = journal.create_journal(conn, key)
-        target = "/journal?new=1"
-        if link:
-            entry_id = file_reading(conn, journal_id, link)
-            target = f"/journal/entry/{entry_id}?new=1"
-    journal_starters.failed(visitor)
-    log.info("journal started")
-    return set_journal_cookie(RedirectResponse(target, status_code=303), request, key)
-
-
-@app.get("/journal/k/{key}")
-def journal_open_link(request: Request, key: str):
-    """The secret journal link: opens the journal in this browser."""
-    journal_off()
-    if not JOURNAL_KEY_RE.fullmatch(key):
-        raise HTTPException(status_code=404, detail="There is no journal at this address.")
-    with get_db_connection() as conn:
-        if not journal.open_journal(conn, key):
-            raise HTTPException(status_code=404, detail="There is no journal at this address. It may "
-                                                        "have been deleted.")
-    return set_journal_cookie(RedirectResponse("/journal", status_code=303), request, key)
-
-
-@app.post("/journal/leave")
-def journal_leave(request: Request):
-    """Forgets the journal in this browser; the journal itself stays and its link still opens it."""
-    journal_off()
-    same_site_form(request)
-    response = RedirectResponse("/journal", status_code=303)
-    response.delete_cookie(JOURNAL_COOKIE, path="/")
-    return response
-
-
-@app.post("/journal/delete")
-def journal_delete(request: Request):
-    """Deletes the whole journal: its threads, entries, answers, notes and outcomes."""
-    journal_off()
-    same_site_form(request)
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if journal_id:
-            journal.delete_journal(conn, journal_id)
-            log.info("journal deleted")
-    response = RedirectResponse("/journal?deleted=1", status_code=303)
-    response.delete_cookie(JOURNAL_COOKIE, path="/")
-    return response
-
-
-@app.post("/journal/add")
-def journal_add(request: Request, link: str = Form(""), thread: str = Form(""), new_thread: str = Form("")):
-    """Files a saved reading (from its report page) in the journal."""
-    journal_off()
-    same_site_form(request)
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        entry_id = file_reading(conn, journal_id, link, thread, new_thread)
-    return RedirectResponse(f"/journal/entry/{entry_id}", status_code=303)
-
-
-@app.post("/journal/thread")
-def journal_new_thread(request: Request, name: str = Form("")):
-    journal_off()
-    same_site_form(request)
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        thread_id = entry_thread(conn, journal_id, "new", name)
-    return RedirectResponse(f"/journal/thread/{thread_id}", status_code=303)
-
-
-@app.get("/journal/thread/{thread_id}", response_class=HTMLResponse)
-def journal_thread(request: Request, thread_id: int):
-    """One thread's timeline: its readings, newest first, with their answers and outcomes."""
-    journal_off()
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        thread = journal.get_thread(conn, journal_id, thread_id)
-        if not thread:
-            raise HTTPException(status_code=404, detail="There is no such thread in this journal.")
-        entries = journal.list_entries(conn, journal_id, thread_id=thread_id)
-    return journal_page(request, "journal_thread.html", thread=thread, entries=entries)
-
-
-@app.post("/journal/thread/{thread_id}")
-def journal_thread_change(request: Request, thread_id: int, name: str = Form(""), action: str = Form("rename")):
-    """Renames a thread, or (action=delete) deletes it with its entries."""
-    journal_off()
-    same_site_form(request)
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        if action == "delete":
-            journal.delete_thread(conn, journal_id, thread_id)
-            return RedirectResponse("/journal", status_code=303)
-        name = journal_text(name, journal.NAME_MAX, "thread name")
-        if not name or not journal.rename_thread(conn, journal_id, thread_id, name):
-            raise HTTPException(status_code=400, detail="Please give the thread a name.")
-    return RedirectResponse(f"/journal/thread/{thread_id}", status_code=303)
-
-
-def form_windows(labels, starts, ends, keep):
-    """The entry form's timing windows that are ticked and have a start date, as (label, starts,
-    ends); a missing end is the start day, and dates given the wrong way round are swapped."""
-    windows = []
-    kept = {k for k in keep if k.isdigit()}
-    for i, (label, s, e) in enumerate(zip(labels, starts, ends)):
-        if str(i) not in kept or not s:
-            continue
-        try:
-            first = date.fromisoformat(s)
-            last = date.fromisoformat(e) if e else first
-        except ValueError:
-            raise HTTPException(status_code=400, detail="A date on the timeline isn't a real date.") from None
-        label = journal_text(label, journal.WINDOW_LABEL_MAX, "date's name") or "Window"
-        windows.append((label, min(first, last), max(first, last)))
-    return windows[:journal.WINDOWS_MAX]
-
-
-@app.get("/journal/timeline", response_class=HTMLResponse)
-def journal_timeline(request: Request):
-    """Every question's readings and dates on one timeline, under the zodiac and the months."""
-    journal_off()
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        threads = journal.list_threads(conn, journal_id)
-        entries = journal.list_entries(conn, journal_id)
-        windows = journal.list_windows(conn, journal_id)
-    timeline = journal.build_timeline(threads, entries, windows, datetime.now(timezone.utc).date(), spread_label)
-    return journal_page(request, "journal_timeline.html", timeline=timeline, empty=not entries)
-
-
-@app.get("/journal/entry/{entry_id}", response_class=HTMLResponse)
-def journal_entry(request: Request, entry_id: int):
-    """One reading in the journal: its cards, the AI's answer, notes and what happened."""
-    journal_off()
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        entry = journal.get_entry(conn, journal_id, entry_id)
-        if not entry:
-            raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
-        threads = journal.list_threads(conn, journal_id)
-        saved = journal.list_windows(conn, journal_id, entry_id)
-    windows = [dict(w, keep=True) for w in saved]
-    if not windows and entry["answer"]:
-        windows = [{"label": label, "starts": starts, "ends": ends, "keep": True, "found": True}
-                   for label, starts, ends in journal.find_windows(entry["answer"], entry["drawn_at"].date())]
-    shown = bool(windows)
-    windows += [{"label": "", "starts": None, "ends": None, "keep": True}] * 2
-    return journal_page(request, "journal_entry.html", entry=entry, threads=threads, windows=windows,
-                        windows_shown=shown,
-                        thread=next((t for t in threads if t["thread_id"] == entry["thread_id"]), None),
-                        new="new" in request.query_params, saved="saved" in request.query_params,
-                        limits={"answer": journal.ANSWER_MAX, "note": journal.NOTE_MAX, "name": journal.NAME_MAX})
-
-
-@app.post("/journal/entry/{entry_id}")
-def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), answer_ai: str = Form(""),
-                       notes: str = Form(""), outcome: str = Form(""), thread: str = Form(""),
-                       new_thread: str = Form(""), action: str = Form("save"),
-                       w_label: list[str] = Form([]), w_starts: list[str] = Form([]), w_ends: list[str] = Form([]),
-                       w_keep: list[str] = Form([]), windows_shown: str = Form("1")):
-    """Saves an entry's answer, notes, outcome and thread, or (action=delete) removes the entry.
-    Deleting an entry leaves the reading itself on the site, as before it was filed."""
-    journal_off()
-    same_site_form(request)
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        if action == "delete":
-            entry = journal.get_entry(conn, journal_id, entry_id)
-            journal.delete_entry(conn, journal_id, entry_id)
-            back = f"/journal/thread/{entry['thread_id']}" if entry and entry["thread_id"] else "/journal"
-            return RedirectResponse(back, status_code=303)
-        answer = journal_text(answer, journal.ANSWER_MAX, "answer")
-        notes = journal_text(notes, journal.NOTE_MAX, "notes")
-        outcome = journal_text(outcome, journal.NOTE_MAX, "outcome")
-        answer_ai = answer_ai if answer_ai in journal.AI_NAMES else ""
-        windows = form_windows(w_label, w_starts, w_ends, w_keep)
-        thread_id = entry_thread(conn, journal_id, thread, new_thread)
-        if not journal.update_entry(conn, journal_id, entry_id, answer, answer_ai, notes, outcome, thread_id):
-            raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
-        if windows_shown == "0" and not windows and answer:
-            # First answer pasted: the dates it names go on the timeline, shown for checking next.
-            entry = journal.get_entry(conn, journal_id, entry_id)
-            windows = journal.find_windows(answer, entry["drawn_at"].date())
-        journal.replace_windows(conn, journal_id, entry_id, windows)
-    return RedirectResponse(f"/journal/entry/{entry_id}?saved=1", status_code=303)
-
-
-@app.get("/journal/export.md")
-def journal_export(request: Request):
-    """The whole journal as one Markdown file."""
-    journal_off()
-    with get_db_connection() as conn:
-        journal_id = current_journal(conn, request)
-        if not journal_id:
-            return journal_or_start(request)
-        text = journal.export_markdown(journal.list_threads(conn, journal_id),
-                                       journal.list_entries(conn, journal_id), spread_label)
-    return Response(text, media_type="text/markdown; charset=utf-8",
-                    headers={"Content-Disposition": 'attachment; filename="my_reading_journal.md"'})
-
-
-def report_journal_box(request: Request, session_id, link):
-    """What the report's journal panel shows: nothing when journals are off or the reading has no
-    link; a "start a journal" offer; or this browser's journal threads and whether the reading
-    is already in it."""
-    if not (journal.enabled() and session_id and link):
-        return None
-    box = {"link": link, "has_journal": False, "threads": [], "entry_id": None}
-    if not journal_cookie_key(request):
-        return box
-    try:
-        with get_db_connection() as conn:
-            journal_id = current_journal(conn, request)
-            if journal_id:
-                entry = journal.entry_for_session(conn, journal_id, session_id)
-                box.update(has_journal=True, threads=journal.list_threads(conn, journal_id),
-                           entry_id=entry and entry["entry_id"])
-    except psycopg.Error as e:          # the report still shows without the journal panel
-        log.warning("report without the journal panel: %s", e)
-    return box
-
-
 # ---------- admin: saved readings ----------
 
 # /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
@@ -2198,7 +1833,7 @@ NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was co
 def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
     session_id, stored, reading, seed_redraws = saved_reading_parts(link)
-    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json", link=link,
+    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json",
                          seed_redraws=seed_redraws)
 
 
@@ -2385,7 +2020,7 @@ def reading_json_response(settings, r):
 
 
 def render_report(request, session_id, settings, r, shared=False, json_url=None, unsaved=False,
-                  seed_redraws=True, link=None):
+                  seed_redraws=True):
     """The visual report for a reading from run_reading().
 
     A full Opening of the Key export is about 300 KB, so a report that has an address of its
@@ -2430,7 +2065,6 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "withheld": withheld_view(r["withheld"]),
             "view": view,
             "json_url": json_url,
-            "journal_box": report_journal_box(request, session_id, link),
             "reading": None if json_url else export_reading(settings, r, view),
         }
     )
