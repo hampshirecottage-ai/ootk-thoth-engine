@@ -7,6 +7,8 @@ updates:
     groups:
       pydantic:                        # pydantic pins pydantic-core exactly, so bump them together
         patterns: ["pydantic", "pydantic-core", "pydantic_core"]
+      psycopg:                         # psycopg[binary] pins psycopg-binary exactly, so bump them together
+        patterns: ["psycopg", "psycopg-binary"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
