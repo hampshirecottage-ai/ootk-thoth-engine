@@ -191,24 +191,6 @@
                 </div>
                 <p class="hint">The seed is the starting point for the shuffle: it decides which cards come up and in what order. Leave it blank for a new random shuffle. The same seed and settings always draw the same cards.</p>
                 </div>
-                <fieldset class="sig-q wiz-only" data-g="mapping">
-                    <legend>Which tradition should the cards follow?</legend>
-                    <label><input type="radio" name="g_mapping" value="thoth" form="noPost"><span>Thoth, Crowley&rsquo;s deck <small>Recommended: matches the card pictures here. The Emperor is on the letter Tzaddi and the Star on Heh</small></span></label>
-                    <label><input type="radio" name="g_mapping" value="golden_dawn" form="noPost"><span>Golden Dawn, as in Rider-Waite style decks <small>The Emperor is on Heh and the Star on Tzaddi; everything else is the same</small></span></label>
-                    <label><input type="radio" name="g_mapping" value="french_egyptian" form="noPost"><span>French / Egyptian, as in L&eacute;vi, Papus and Wirth <small>The older French way of giving the trumps their Hebrew letters; court cards have none</small></span></label>
-                    <p class="hint">This changes the letters, paths and colours your AI is given, not which cards are drawn.</p>
-                </fieldset>
-                {% endif %}
-                <div class="wiz-hide">
-                <label for="mappingSelect">Mapping system</label>
-                <select name="mapping_system" id="mappingSelect">
-                    <option value="thoth">Thoth / Crowley (Emperor on Tzaddi, Star on Heh)</option>
-                    <option value="golden_dawn">Golden Dawn (Emperor on Heh, Star on Tzaddi)</option>
-                    <option value="french_egyptian">French / Egyptian (Lévi / Papus / Wirth)</option>
-                </select>
-                </div>
-
-                {% if mode == "seed" %}
                 <fieldset class="sig-q wiz-only" data-g="framework">
                     <legend>What kind of story should your AI tell?</legend>
                     <label><input type="radio" name="g_framework" value="auto" form="noPost"><span>Let the cards decide <small>Auto, recommended: Everyday growth, unless the cards clearly run down or up the Tree of Life</small></span></label>
@@ -233,6 +215,18 @@
                 {# The main parts are on and the extra layers (DEFAULT_OFF) off unless changed here.
                    parts_shown tells the server the switches were sent, so a form without them (or an
                    older one) takes the defaults. #}
+                {# Tradition (mapping system): folded away rather than asked, since Thoth matches the card
+                   pictures and it never changes which cards are drawn. #}
+                <details class="parts" id="traditionFold">
+                    <summary>Tradition <span class="parts-sum" id="traditionSummary">· Thoth / Crowley</span></summary>
+                    <label for="mappingSelect">Mapping system</label>
+                    <select name="mapping_system" id="mappingSelect">
+                        <option value="thoth">Thoth / Crowley (Emperor on Tzaddi, Star on Heh)</option>
+                        <option value="golden_dawn">Golden Dawn (Emperor on Heh, Star on Tzaddi)</option>
+                        <option value="french_egyptian">French / Egyptian (Lévi / Papus / Wirth)</option>
+                    </select>
+                    <p class="hint">Thoth matches the card pictures here. Golden Dawn, as in Rider-Waite style decks, swaps the letters of the Emperor and the Star; French / Egyptian, as in L&eacute;vi, Papus and Wirth, gives each trump the letter of its number, and court cards none. This changes the letters, paths and colours your AI is given, not which cards are drawn.</p>
+                </details>
                 <details class="parts" id="promptParts">
                     <summary>Parts of the AI prompt <span class="parts-sum" id="partsSummary">· standard</span></summary>
                     <input type="hidden" name="parts_shown" value="1">

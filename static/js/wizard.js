@@ -2,7 +2,8 @@
 // options, then a review with the Draw button). Runs after index.js and uses its
 // hasSigPosition() and positionsData. Without this script every field shows at once.
 // The guided answers (the g_* radios, outside the form so never sent) only set the real
-// fields: the question box, and the spread, mapping and framework selects.
+// fields: the question box, and the spread and framework selects. The tradition (mapping)
+// is not asked: it stays Thoth unless changed in its own fold.
 (function () {
     const form = document.getElementById("readingForm");
     const el = id => document.getElementById(id);
@@ -97,11 +98,10 @@
         el(id).dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // Options: the seed box shows only for a repeat; mapping and framework follow their selects.
+    // Options: the seed box shows only for a repeat; the framework answer follows its select.
     function syncOptions() {
         if (!picked("g_seed")) setPicked("g_seed", el("seedInput").value.trim() ? "own" : "new");
         form.querySelector(".seed-box").hidden = picked("g_seed") === "new";
-        setPicked("g_mapping", el("mappingSelect").value);
         setPicked("g_framework", el("frameworkSelect").value);
     }
     radios("g_seed").forEach(r => r.addEventListener("change", () => {
@@ -109,7 +109,6 @@
         syncOptions();
         if (picked("g_seed") !== "new") el("seedInput").focus({ preventScroll: true });
     }));
-    radios("g_mapping").forEach(r => r.addEventListener("change", () => setSelect("mappingSelect", r.value)));
     radios("g_framework").forEach(r => r.addEventListener("change", () => setSelect("frameworkSelect", r.value)));
 
     function renderSpreadPreview() {
@@ -132,8 +131,9 @@
             const opt = id => el(id).options[el(id).selectedIndex].text.split(":")[0];
             rows.push(["Expected in", `${opt("btPack")} pack, ${opt("btHouse")}, ${opt("btSign")}, ${opt("btSephira").replace(/^\d+\.\s*/, "")}`, "significator"]);
         }
-        rows.push(["Tradition", answerText("g_mapping", el("mappingSelect").value), "options"],
-                  ["Story", answerText("g_framework", fw) + (fw === "auto" ? " (Auto)" : ` (${smallText("g_framework", fw).split(":")[0]})`), "options"],
+        // Tradition only when changed from Thoth, the default that matches the card pictures.
+        if (el("mappingSelect").value !== "thoth") rows.push(["Tradition", selectedText(el("mappingSelect")).split(" (")[0], "options"]);
+        rows.push(["Story", answerText("g_framework", fw) + (fw === "auto" ? " (Auto)" : ` (${smallText("g_framework", fw).split(":")[0]})`), "options"],
                   ["Cards", seed ? `Seed ${seed}` : "New cards, random seed", "options"]);
         const off = promptPartsOff();
         if (off.length) rows.push(["Left out of the prompt", off.join(", "), "options"]);
@@ -226,7 +226,6 @@
         else ask.use();
     });
     el("spreadSelect").addEventListener("change", () => { renderSpreadPreview(); render(); });
-    el("mappingSelect").addEventListener("change", syncOptions);
     el("frameworkSelect").addEventListener("change", syncOptions);
     el("sigPicker").addEventListener("change", () => showError(""));
 

@@ -60,6 +60,7 @@ function updateMoreSummary() {
     if (off.length) parts.push(`${off.length} prompt part${off.length === 1 ? "" : "s"} off`);
     if (added.length) parts.push(`${added.length} extra layer${added.length === 1 ? "" : "s"}`);
     $("moreSummary").textContent = "· " + parts.filter(Boolean).join(" · ");
+    $("traditionSummary").textContent = "· " + short($("mappingSelect"));
     $("partsSummary").textContent = "· " + ([off.length && `${off.length} off`, added.length && `${added.length} added`]
         .filter(Boolean).join(", ") || "standard");
 }

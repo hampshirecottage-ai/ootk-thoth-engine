@@ -2652,7 +2652,12 @@ def test_guided_options_post_nothing_and_cover_every_choice(client, monkeypatch)
     guided = lambda name: set(re.findall(rf'name="{name}" value="([^"]+)"', html))
     assert guided("g_spread") == set(spreads.SPREADS) | {spreads.BOOK_T_KEY}
     assert guided("g_depth") == {str(i) for i in range(len(app_module.SPREAD_STAGES))}
-    assert guided("g_mapping") == set(re.findall(r'<option value="([^"]+)"', html[html.index('id="mappingSelect"'):html.index("</select>", html.index('id="mappingSelect"'))]))
+    # The tradition is not asked: Thoth unless changed in its own fold, which keeps all three.
+    assert guided("g_mapping") == set()
+    assert "Which tradition should the cards follow?" not in html
+    fold = html[html.index('id="traditionFold"'):html.index("</details>", html.index('id="traditionFold"'))]
+    assert set(re.findall(r'<option value="([^"]+)"', fold)) == {"thoth", "golden_dawn", "french_egyptian"}
+    assert 'name="mapping_system"' in fold and html.index('id="moreOptions"') < html.index('id="traditionFold"')
     assert guided("g_framework") == {"auto", "light_descent", "soul_formation", "life_path", "post_mortem"}
     assert guided("g_seed") == {"new", "repeat", "own"}
     assert len(app_module.SPREAD_DEPTHS) == len(app_module.SPREAD_STAGES)
