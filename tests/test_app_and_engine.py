@@ -538,6 +538,20 @@ def test_sitemap_survives_the_database_being_down(client, monkeypatch):
     assert sitemap.status_code == 200 and "/card/" not in sitemap.text and "/cards</loc>" in sitemap.text
 
 
+def test_health_check_needs_no_database_password_or_redirect(client, monkeypatch):
+    def no_db():
+        raise AssertionError("the health check must not touch the database")
+    monkeypatch.setattr(app_module, "get_db_connection", no_db)
+    monkeypatch.setenv("APP_PASSWORD", "s3cret")
+    monkeypatch.setenv("SITE_URL", "https://tarotthoth.com")
+    for url in ["/healthz", "https://ootk.onrender.com/healthz"]:
+        r = client.get(url, follow_redirects=False)
+        assert r.status_code == 200 and r.text == "ok", url
+        assert r.headers["cache-control"] == "no-store"
+        assert client.head(url, follow_redirects=False).status_code == 200
+    assert client.get("/").status_code == 401                        # everything else still asks
+
+
 def test_start_page_describes_the_app_to_search_engines(client):
     page = client.get("/").text
     data = json.loads(page.split('<script type="application/ld+json">')[1].split("</script>")[0])
