@@ -59,7 +59,8 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
 4. **Suggested order:** Start with the card in section 1 and its correspondences, then its element (section 2).
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Answer the reframed question directly. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
-6. **Plain-Language Recap:** End with a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
+6. **Plain-Language Recap:** Then give a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
+7. **Timeline:** After the recap, add a heading `## Timeline` with one line per time the reading points to, as `- what it is: YYYY-MM-DD to YYYY-MM-DD` (a single day: `- what it is: YYYY-MM-DD`), dated from the reading's own timing and the draw date. If it points to no particular time, write `- none`.
 
 **How to read the numbers:**
 * Section 2 counts each card once, under its primary element.

@@ -327,10 +327,53 @@ def _label(line, match_start):
     return text[:WINDOW_LABEL_MAX]
 
 
+_TIMELINE_HEAD = re.compile(r"^\s*(?:#{1,6}\s*|\*\*)\s*Timeline\b", re.I)
+_ANY_HEAD = re.compile(r"^\s*(?:#{1,6}\s|\*\*[^*]+\*\*\s*$)")
+_ISO = r"(\d{4})-(\d{1,2})-(\d{1,2})"
+_ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|–|—|-)\s*{_ISO})?")
+
+
+def timeline_windows(text):
+    """The windows listed under the `## Timeline` heading the prompt asks the AI to end with,
+    as (label, starts, ends), or [] when the answer has no such list with dates in it."""
+    found, inside = [], False
+    for line in (text or "").splitlines():
+        if _TIMELINE_HEAD.match(line):
+            inside, found = True, []           # the last Timeline list in the answer wins
+            continue
+        if not inside:
+            continue
+        if _ANY_HEAD.match(line):
+            inside = False
+            continue
+        m = _ISO_RANGE.search(line)
+        if not m:
+            continue
+        g = [int(x) if x else None for x in m.groups()]
+        try:
+            starts = date(g[0], g[1], g[2])
+            ends = date(g[3], g[4], g[5]) if g[3] else starts
+        except ValueError:
+            continue
+        if ends < starts:
+            starts, ends = ends, starts
+        found.append((_label(line, m.start()) or "Window", starts, ends))
+    seen, out = set(), []
+    for w in found:
+        if w[1:] not in seen:
+            seen.add(w[1:])
+            out.append(w)
+    return out[:WINDOWS_MAX]
+
+
 def find_windows(text, after):
-    """Date ranges an AI answer names, as (label, starts, ends) with the year filled in: each
-    range is taken as the next one on or after `after` (the day the cards were drawn).
-    Lines without words before the date get "Window" as their name."""
+    """Date ranges an AI answer names, as (label, starts, ends). The `## Timeline` list the
+    prompt asks for is used when there is one; otherwise ranges anywhere in the answer are
+    found, with the year filled in: each taken as the next one on or after `after` (the day
+    the cards were drawn). Lines without words before the date get "Window" as their name."""
+    listed = timeline_windows(text)
+    if listed:
+        return listed
     found, seen = [], set()
     for line in (text or "").splitlines():
         for pattern in _RANGES:

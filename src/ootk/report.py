@@ -840,9 +840,13 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
                             "together, then the outcome they lean toward and which findings point there."
                             + summary_answer + " Offer it as a likely outcome to weigh, not a "
                             "certainty, and leave the decision to the querent."),
-        ("Plain-Language Recap", "End with a short recap in simple everyday words, free of technical "
+        ("Plain-Language Recap", "Then give a short recap in simple everyday words, free of technical "
                                  "terms, that someone new to tarot could follow: what the cards "
                                  "show and the likely outcome."),
+        ("Timeline", "After the recap, add a heading `## Timeline` with one line per time the "
+                     "reading points to, as `- what it is: YYYY-MM-DD to YYYY-MM-DD` (a single day: "
+                     "`- what it is: YYYY-MM-DD`), dated from the reading's own timing and the draw date. "
+                     "If it points to no particular time, write `- none`."),
     ]
     md = ("SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM\n\n"
           "Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the "
