@@ -215,3 +215,22 @@ def test_find_dates_button_shows_dates_for_checking_without_saving_them(key):
     assert "Move goes ahead" not in c.get("/journal/timeline").text
     assert "Text." in c.get(entry_url).text
     c.post("/journal/delete")
+
+
+def test_a_timeline_copied_as_plain_text_from_a_chat_app_is_found():
+    # Chat apps copy rendered text: the heading loses its ##, the line its bullet, and the
+    # name can carry a colon and an aside in brackets before the dates.
+    answer = ("Plain-language recap. It looks likely, after a pause.\n"
+              "Timeline\n"
+              "the pause, then the move (the cards give no date; this matches the earlier reading): "
+              "2026-11-13 to 2027-03-31\n"
+              "Advice / action points\n"
+              "Say it once, kindly.\n"
+              "A later note 2028-01-01 to 2028-02-01\n")
+    assert journal.find_windows(answer, date(2026, 11, 13)) == [
+        ("The pause, then the move", date(2026, 11, 13), date(2027, 3, 31))]
+
+
+def test_iso_dates_are_found_even_without_a_timeline_list():
+    assert journal.find_windows("Expect news 2026-12-01 to 2026-12-21.", date(2026, 11, 13)) == [
+        ("Expect news", date(2026, 12, 1), date(2026, 12, 21))]
