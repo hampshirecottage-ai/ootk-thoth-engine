@@ -1010,6 +1010,8 @@ def build_report(tmp_path, monkeypatch, topic="Love & War <3", pos_prefix="[Op 1
 
 def load_view_output():
     import importlib.util
+    # scripts/view_output.py needs rich, which comes with the dev extra (pip install -e ".[dev]").
+    pytest.importorskip("rich", reason='scripts/view_output.py needs rich: pip install -e ".[dev]"')
     path = Path(__file__).resolve().parent.parent / "scripts" / "view_output.py"
     spec = importlib.util.spec_from_file_location("view_output", path)
     mod = importlib.util.module_from_spec(spec)
@@ -1048,9 +1050,9 @@ def test_unsaved_html_exports_dont_overwrite_each_other(tmp_path, monkeypatch):
 
 def test_view_output_roundtrip_and_all_sections(tmp_path, monkeypatch):
     import io
+    vo = load_view_output()                                # skips when rich isn't installed
     from rich.console import Console
     prompt, html_path = build_report(tmp_path, monkeypatch)
-    vo = load_view_output()
 
     raw = vo.parse_html_report(html_path)
     assert raw == prompt                                   # lossless round trip, incl. & < >
