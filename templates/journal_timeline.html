@@ -1,0 +1,94 @@
+{% extends "_guide_base.html" %}
+{% set page_title = "Timeline" %}
+{% set page_description = "Your journal's readings and dates on one timeline." %}
+{% set tagline = "Hover or tap a marker for details." %}
+{% set active = "" %}
+{% set T = timeline %}
+{% block head %}
+{% include "_journal_styles.html" %}
+    <style>
+        :root { --page-width: 1180px; --fire: #d9774f; --earth: #4f9e6a; --air: #c9a43c; --water: #4f86c6; }
+        .tl { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+        .tl-grid { display: grid; grid-template-columns: var(--label-w, 220px) minmax(calc(var(--months) * 62px), 1fr); min-width: calc(var(--label-w, 220px) + var(--months) * 62px); }
+        .tl-label { position: sticky; left: 0; z-index: 2; background: var(--panel); padding: 0 10px 0 14px; display: flex; align-items: center; gap: 8px; min-height: 40px; border-right: 1px solid var(--line); font-size: 0.92em; }
+        .tl-label .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; }
+        .tl-label span.txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .tl-group { overflow: hidden; white-space: nowrap; font-family: "JetBrains Mono", monospace; font-size: 0.8em; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; padding-top: 14px; }
+        .tl-group a { color: var(--text); text-decoration: none; }
+        .tl-track { position: relative; min-height: 40px; background-image: repeating-linear-gradient(to right, transparent 0, transparent calc(100% / var(--months) - 1px), var(--line) calc(100% / var(--months) - 1px), var(--line) calc(100% / var(--months))); }
+        .tl-head .tl-track { background: none; }
+        .tl-sign, .tl-month { position: absolute; top: 6px; bottom: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.75em; overflow: hidden; white-space: nowrap; }
+        .tl-sign { border-radius: 4px; color: #fff; border: 1px solid rgba(0,0,0,0.15); }
+        .tl-month { color: var(--muted); font-family: "JetBrains Mono", monospace; }
+        .tl-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--accent); opacity: 0.6; pointer-events: none; }
+        .el-fire { background: var(--fire); } .el-earth { background: var(--earth); } .el-air { background: var(--air); } .el-water { background: var(--water); }
+        .mk { position: absolute; top: 50%; transform: translateY(-50%); height: 14px; z-index: 1; }
+        .mk:hover, .mk:focus-within { z-index: 3; }
+        .mk button { all: unset; cursor: pointer; display: block; box-sizing: border-box; width: 100%; height: 14px; border-radius: 999px; background: currentColor; box-shadow: 0 0 0 2px var(--panel); }
+        .mk.dot, .mk.reading { width: 14px; margin-left: -7px; }
+        .mk.bar { min-width: 14px; }
+        .mk button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+        .mk.reading button { background: var(--panel); border: 3px solid currentColor; }
+        .mk .when { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font-size: 0.78em; white-space: nowrap; color: var(--muted); }
+        .mk.flip .when { left: auto; right: calc(100% + 8px); }
+        .tip { display: none; position: absolute; top: 22px; left: 0; width: min(260px, 64vw); background: var(--panel-2); color: var(--text); border: 1px solid var(--control); border-radius: 8px; padding: 10px 12px; font-size: 0.85em; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+        .mk.tip-left .tip { left: auto; right: 0; }
+        .mk:hover .tip, .mk:focus-within .tip { display: block; }
+        .mk.up .tip { top: auto; bottom: 22px; }
+        .tip b { display: block; font-size: 1.05em; }
+        .tip p { margin: 4px 0; }
+        .tip .links { display: flex; gap: 12px; margin-top: 6px; }
+        .tl-empty { padding: 18px; }
+        @media (max-width: 640px) { .tl-grid { --label-w: 130px; } .tl-sign .nm { display: none; } }
+    </style>
+{% endblock %}
+{% block content %}
+        <p class="note"><a href="/journal">&larr; My journal</a></p>
+        {% if empty %}
+        <section class="panel"><p>Nothing on the timeline yet. Add a reading to your journal from the bottom of its report.</p></section>
+        {% else %}
+        <div class="tl" role="region" aria-label="Timeline" tabindex="0">
+            <div class="tl-grid" style="--months: {{ T.months_count }}">
+                <div class="tl-label tl-head muted">Zodiac</div>
+                <div class="tl-track tl-head">{% for z in T.signs %}<span class="tl-sign el-{{ z.element }}" style="left:{{ '%.3f' % z.left }}%;width:{{ '%.3f' % z.width }}%" title="{{ z.name }}, {{ z.dates }}">{{ z.glyph }}&#xFE0E;<span class="nm">&nbsp;{{ z.short }}</span></span>{% endfor %}</div>
+                <div class="tl-label tl-head muted">{{ T.start.year }}{% if T.end.year - 1 > T.start.year or (T.end.year > T.start.year and T.end.month > 1) %}&ndash;{{ T.end.year if T.end.month > 1 else T.end.year - 1 }}{% endif %}</div>
+                <div class="tl-track tl-head">{% for m in T.months %}<span class="tl-month" style="left:{{ '%.3f' % m.left }}%;width:{{ '%.3f' % m.width }}%">{{ m.label }}{% if m.year and not loop.first %}&nbsp;{{ m.year }}{% endif %}</span>{% endfor %}<span class="tl-today" style="left:{{ '%.3f' % T.today }}%" title="Today"></span></div>
+                {% for g in T.groups %}
+                <div class="tl-label tl-group">{% if g.thread_id %}<a href="/journal/thread/{{ g.thread_id }}">{{ g.name }}</a>{% else %}{{ g.name }}{% endif %}&nbsp;<span class="muted">· {{ g.rows | length }}</span></div>
+                <div class="tl-track"><span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span></div>
+                {% for r in g.rows %}
+                <div class="tl-label"><span class="dot el-{{ r.element }}"></span><span class="txt" title="{{ r.label }}">{{ r.label }}</span></div>
+                <div class="tl-track">
+                    <span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span>
+                    {% set flip = r.left + r.width > 72 %}
+                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}{{ ' tip-left' if r.left > 45 }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
+                        <button type="button" aria-label="{{ r.label }}, {{ r.when }}"></button>
+                        <span class="when">{{ r.when }}</span>
+                        <div class="tip" role="tooltip">
+                            <b>{{ r.label }}</b>
+                            <p>{{ r.when }}</p>
+                            {% if r.question %}<p>{{ r.question }}</p>{% endif %}
+                            <p class="muted">{{ r.spread }} · drawn {{ r.drawn }}{% if r.ai %} · {{ r.ai }}{% endif %}</p>
+                            <p class="muted">{{ r.cards }}</p>
+                            <div class="links">{% if r.link %}<a href="/report/{{ r.link }}">Open report</a>{% endif %}<a href="/journal/entry/{{ r.entry_id }}">Journal entry</a></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+        <script>
+            // A tip that would run past the bottom of the timeline opens upward instead.
+            document.querySelectorAll(".mk").forEach(mk => {
+                const place = () => {
+                    mk.classList.remove("up");
+                    const box = mk.closest(".tl").getBoundingClientRect(), tip = mk.querySelector(".tip").getBoundingClientRect();
+                    if (tip.bottom > box.bottom - 4) mk.classList.add("up");
+                };
+                mk.addEventListener("mouseenter", place);
+                mk.addEventListener("focusin", place);
+            });
+        </script>
+        {% endif %}
+{% endblock %}
