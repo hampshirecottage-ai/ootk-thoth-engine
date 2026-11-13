@@ -85,7 +85,6 @@
         .steps-done li::before { content: counter(step); display: inline-grid; place-items: center; width: 1.5em; height: 1.5em; margin-right: 6px; border-radius: 50%; border: 1px solid currentColor; font-size: 0.85em; }
         .steps-done li.done::before { content: "✓"; }
         .steps-done li.here { opacity: 1; font-weight: 600; }
-        .steps-done a { color: inherit; }
         .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 20px; }
         .meta div span { display: block; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
         .seed { font-family: "JetBrains Mono", monospace; font-size: 1.3em; color: var(--accent-2); font-weight: 700; }
@@ -268,22 +267,6 @@
             details.sub > summary { padding: 8px 0; }
             .card-row td { padding-top: 10px; padding-bottom: 10px; }
         }
-        /* Your AI's answer */
-        .ai-answer h2 { margin-top: 0; }
-        .ai-answer textarea { min-height: 9em; }
-        .answer-check { border-left: 3px solid var(--line); padding: 2px 0 2px 12px; margin: 0 0 14px; font-size: 0.9em; }
-        .answer-check p { margin: 4px 0; }
-        .answer-check.warn { border-left-color: var(--bad); }
-        .answer-body { line-height: 1.55; overflow-wrap: anywhere; }
-        .answer-body h3, .answer-body h4 { margin: 18px 0 6px; }
-        .answer-body blockquote { margin: 8px 0; padding-left: 12px; border-left: 3px solid var(--line); color: var(--muted); }
-        .answer-table { overflow-x: auto; margin: 8px 0; }
-        .answer-table table { border-collapse: collapse; font-size: 0.9em; }
-        .answer-table th, .answer-table td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
-        .card-ref { font: inherit; color: inherit; background: var(--mark); border: none; border-bottom: 1px dotted currentColor; padding: 0 2px; border-radius: 2px; cursor: pointer; }
-        .card-ref:hover, .card-ref:focus-visible { border-bottom-style: solid; }
-        .card-ref.not-drawn { background: none; cursor: help; border-bottom: 1px dashed var(--bad); }
-        @media print { .card-ref { background: none; border: none; } }
         @media print {
             :root, :root[data-theme="light"] { --bg: #fff; --panel: #fff; --panel-2: #fff; --text: #000; --muted: #555; --line: #ccc; --code-bg: #fff; --pre-text: #000; --svg-face: #fff; --svg-hole: #fff; --card-base: #eee; --badge: #fff; }
             .drawing { --drawing-bg: #fff; --text: #000; --muted: #555; --svg-face: #fff; --svg-hole: #fff; --svg-rule: #c9bca4; --svg-sector: #e3d7c2; --card-base: #eee; --badge: #fff; }
@@ -332,7 +315,6 @@
                 <li class="done">Cards drawn</li>
                 <li class="here">Save the prompt</li>
                 <li>Attach it in your AI</li>
-                <li><a href="#aiAnswer">Paste its answer here</a></li>
             </ol>
             <p class="tagline no-print"><a href="#promptSection" onclick="openSection('promptSection')">See the prompt</a></p>
         </div>
@@ -342,27 +324,6 @@
         It has no link of its own and won't come back if you leave or reload this page.
         {% if share_path %}The share link further down redraws the same cards.{% else %}Save the prompt as Markdown now if you want to keep it.{% endif %}</p>
     {% endif %}
-
-    <!-- ===== THE AI'S ANSWER, PASTED BACK (kept in this browser only) ===== -->
-    <section class="panel ai-answer no-print" id="aiAnswer" aria-labelledby="aiAnswerTitle">
-        <h2 id="aiAnswerTitle">Your AI&rsquo;s answer</h2>
-        <div id="answerEditor">
-            <p class="form-lede">Got the answer back? Paste it here to read it next to the cards. Card names in it
-                open their details. It stays in this browser only and is never sent to the site.</p>
-            <textarea id="answerInput" rows="7" maxlength="200000" aria-label="Your AI's answer" placeholder="Paste your AI's answer here"></textarea>
-            <button type="button" class="btn" id="answerSave">Show it with the reading</button>
-        </div>
-        <div id="answerView" hidden>
-            <div class="answer-check" id="answerCheck" aria-live="polite"></div>
-            <div class="answer-body" id="answerBody"></div>
-            <p class="muted no-print" id="answerStatus" style="font-size:0.85em;margin:14px 0 0"></p>
-            <div class="action-row no-print">
-                <button type="button" class="btn secondary" id="answerEdit">Edit</button>
-                <button type="button" class="btn secondary" id="answerCopy">Copy</button>
-                <button type="button" class="btn secondary" id="answerRemove">Remove</button>
-            </div>
-        </div>
-    </section>
 
     <!-- ===== SUMMARY FIRST ===== -->
     <section class="panel" id="summary">
@@ -734,8 +695,7 @@
     <!-- ===== FINAL STEP ===== -->
     <section class="panel next-step no-print" id="nextStep">
         <h2>Next</h2>
-        <p class="muted">Attach the saved prompt in your AI to get the interpretation, then paste its answer into
-            <a href="#aiAnswer">Your AI&rsquo;s answer</a> to read it next to the cards.{% if session_id %} This reading is saved.{% endif %}</p>
+        <p class="muted">Attach the saved prompt in your AI to get the interpretation.{% if session_id %} This reading is saved.{% endif %}</p>
         <div class="actions">
             <a href="{{ '/pick' if settings.get('draw_mode') == 'manual' else '/' }}" class="btn">New reading</a>
             <form action="/generate_report" method="POST" style="display:inline">
@@ -756,7 +716,6 @@
 <script src="{{ static_url('js/atlas.js') }}" defer></script>
 <script src="{{ static_url('js/copy.js') }}" defer></script>
 <script src="{{ static_url('js/report.js') }}" defer></script>
-<script src="{{ static_url('js/ai-answer.js') }}" defer></script>
 {% include "_site_footer.html" %}
 </body>
 </html>
