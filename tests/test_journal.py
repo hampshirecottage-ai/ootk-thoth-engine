@@ -172,3 +172,22 @@ def test_journal_flow_from_report_to_timeline_and_delete(key):
     with db.get_db_connection() as conn, conn.cursor() as cur:
         cur.execute("SELECT count(*) AS n FROM reading_journals WHERE key_hash = %s;", (journal.key_hash(jkey),))
         assert cur.fetchone()["n"] == 0
+
+
+def test_the_timeline_list_the_prompt_asks_for_is_read_first():
+    answer = ("The tide turns Nov 12 to Nov 22.\n\n## Plain-Language Recap\nGo ahead.\n\n## Timeline\n"
+              "- Move goes ahead: 2026-12-01 to 2026-12-21\n- **Contract signed:** 2027-01-15\n"
+              "- Pisces window 2027-02-19 – 2027-03-20\n\n## Notes\n- Later: 2028-01-01\n")
+    assert journal.find_windows(answer, date(2026, 11, 13)) == [
+        ("Move goes ahead", date(2026, 12, 1), date(2026, 12, 21)),
+        ("Contract signed", date(2027, 1, 15), date(2027, 1, 15)),
+        ("Pisces window", date(2027, 2, 19), date(2027, 3, 20))]
+    # No list with dates in it: dates anywhere in the answer are still found.
+    assert journal.find_windows("## Timeline\n- none\n\nThe tide turns Nov 12 to Nov 22.", date(2026, 11, 13)) == [
+        ("The tide turns", date(2026, 11, 12), date(2026, 11, 22))]
+
+
+def test_the_prompt_asks_for_a_timeline_list():
+    with open(os.path.join(os.path.dirname(__file__), "prompt_snapshots", "spread_3.md"), encoding="utf-8") as f:
+        text = f.read()
+    assert "`## Timeline`" in text and "YYYY-MM-DD to YYYY-MM-DD" in text
