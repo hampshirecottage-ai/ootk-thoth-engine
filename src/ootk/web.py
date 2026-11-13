@@ -196,7 +196,7 @@ async def require_password(request: Request, call_next):
     Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15
     minutes; while locked out, even the right password is refused, so guessing gains nothing."""
     password = os.getenv("APP_PASSWORD")
-    if not password:
+    if not password or request.url.path == HEALTH_PATH:
         return await call_next(request)
     visitor = visitor_address(request)
     wait = failed_logins.retry_after(visitor)
@@ -271,7 +271,7 @@ async def redirect_to_own_domain(request: Request, call_next):
     site = urlsplit(os.getenv("SITE_URL") or "")
     host = request.url.hostname or ""
     if (site.hostname and host.endswith(".onrender.com") and host != site.hostname
-            and request.method in ("GET", "HEAD")):
+            and request.method in ("GET", "HEAD") and request.url.path != HEALTH_PATH):
         target = f"{site.scheme}://{site.netloc}{request.url.path}"
         if request.url.query:
             target += "?" + request.url.query
@@ -1148,6 +1148,17 @@ def favicon():
     """Browsers and crawlers ask for /favicon.ico whatever the page links to."""
     return FileResponse(static_dir / "site" / "favicon.ico", media_type="image/x-icon",
                         headers={"Cache-Control": "public, max-age=86400"})
+
+
+# Render's health check (Settings > Health Check Path). It answers from memory, without the
+# database, so a slow or sleeping Neon never marks the site down or blocks a deploy (readings
+# have their own outage fallbacks), and it skips the password and the old-address redirect.
+HEALTH_PATH = "/healthz"
+
+
+@app.get(HEALTH_PATH, response_class=PlainTextResponse, include_in_schema=False)
+async def healthz():
+    return PlainTextResponse("ok", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/", response_class=HTMLResponse)
