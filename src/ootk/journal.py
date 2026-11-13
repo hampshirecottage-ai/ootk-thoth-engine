@@ -342,15 +342,39 @@ def _heading(line):
 
 
 def _is_timeline_head(line):
+    """`## Timeline`, `**Timeline**`, or (in an answer copied as plain text from a chat app,
+    where the marks are gone) a line that is just `Timeline` or `Timeline:`."""
     words = _heading(line)
-    return words is not None and words.lower().split(" ")[0].rstrip(":") == "timeline"
+    if words is None:
+        words = line.strip().rstrip(":").strip()
+        return words.lower() == "timeline"
+    return words.lower().split(" ")[0].rstrip(":") == "timeline"
+
+
 _ISO = r"(\d{4})-(\d{1,2})-(\d{1,2})"
 _ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|–|—|-)\s*{_ISO})?")
 
 
+def _iso_window(line):
+    """(label, starts, ends) for the first `YYYY-MM-DD [to YYYY-MM-DD]` on a line, or None."""
+    m = _ISO_RANGE.search(line)
+    if not m:
+        return None
+    g = [int(x) if x else None for x in m.groups()]
+    try:
+        starts = date(g[0], g[1], g[2])
+        ends = date(g[3], g[4], g[5]) if g[3] else starts
+    except ValueError:
+        return None
+    label = re.sub(r"\([^()]*\)", " ", line[:m.start()])     # asides in brackets make long names
+    label = _label(label, len(label))
+    return (label[:1].upper() + label[1:]) or "Window", min(starts, ends), max(starts, ends)
+
+
 def timeline_windows(text):
-    """The windows listed under the `## Timeline` heading the prompt asks the AI to end with,
-    as (label, starts, ends), or [] when the answer has no such list with dates in it."""
+    """The windows listed under the Timeline heading the prompt asks the AI to end with, as
+    (label, starts, ends), or [] when the answer has no such list with dates in it. The list
+    ends at the next heading or, in plain pasted text, at the first line after it without a date."""
     found, inside = [], False
     for line in (text or "").splitlines():
         if len(line) > 1000:                   # no list line is this long
@@ -358,23 +382,16 @@ def timeline_windows(text):
         if _is_timeline_head(line):
             inside, found = True, []           # the last Timeline list in the answer wins
             continue
-        if not inside:
+        if not inside or not line.strip():
             continue
         if _heading(line) is not None:
             inside = False
             continue
-        m = _ISO_RANGE.search(line)
-        if not m:
-            continue
-        g = [int(x) if x else None for x in m.groups()]
-        try:
-            starts = date(g[0], g[1], g[2])
-            ends = date(g[3], g[4], g[5]) if g[3] else starts
-        except ValueError:
-            continue
-        if ends < starts:
-            starts, ends = ends, starts
-        found.append((_label(line, m.start()) or "Window", starts, ends))
+        w = _iso_window(line)
+        if w:
+            found.append(w)
+        elif found:
+            inside = False
     seen, out = set(), []
     for w in found:
         if w[1:] not in seen:
@@ -417,6 +434,10 @@ def find_windows(text, after):
                     continue
                 seen.add((starts, ends))
                 found.append((_label(line, m.start()) or "Window", starts, ends))
+        w = _iso_window(line) if len(line) <= 1000 else None    # 2026-12-01 to 2026-12-21
+        if w and w[1:] not in seen:
+            seen.add(w[1:])
+            found.append(w)
         if len(found) >= WINDOWS_MAX:
             break
     return found[:WINDOWS_MAX]
