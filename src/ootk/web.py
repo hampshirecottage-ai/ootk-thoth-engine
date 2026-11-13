@@ -2041,7 +2041,8 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
         if action == "find":
             # Save what was typed, then show the dates found for checking (nothing added yet).
             journal.replace_windows(conn, journal_id, entry_id, windows)
-            return RedirectResponse(f"/journal/entry/{entry_id}?find=1#windowsTitle", status_code=303)
+            # A query-only URL stays on this same entry page and carries nothing from the request.
+            return RedirectResponse("?find=1#windowsTitle", status_code=303)
         if windows_shown == "0" and not windows and answer:
             # First answer pasted: the dates it names go on the timeline, shown for checking next.
             entry = journal.get_entry(conn, journal_id, entry_id)

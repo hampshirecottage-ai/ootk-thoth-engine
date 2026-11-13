@@ -208,8 +208,8 @@ def test_find_dates_button_shows_dates_for_checking_without_saving_them(key):
     entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
     answer = "Text.\n\n## Timeline\n- Move goes ahead: 2026-12-01 to 2026-12-21\n"
     r = c.post(entry_url, data={"answer": answer, "action": "find", "windows_shown": "1"}, follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"].endswith("?find=1#windowsTitle")
-    page = c.get(r.headers["location"].split("#")[0]).text
+    assert r.status_code == 303 and r.headers["location"] == "?find=1#windowsTitle"
+    page = c.get(entry_url + "?find=1").text
     assert "Found 1 date in the answer" in page and 'value="Move goes ahead"' in page
     # Saved answer, but nothing is on the timeline until Save.
     assert "Move goes ahead" not in c.get("/journal/timeline").text
