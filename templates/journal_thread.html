@@ -1,0 +1,27 @@
+{% extends "_guide_base.html" %}
+{% set page_title = thread.name %}
+{% set page_description = "One question in your reading journal." %}
+{% set tagline = "Readings on this question, newest first." %}
+{% set active = "" %}
+{% block head %}
+{% include "_journal_styles.html" %}
+{% endblock %}
+{% block content %}
+        <p class="note"><a href="/journal">&larr; My journal</a> · <a href="/journal/timeline">Timeline</a></p>
+        <section class="panel" aria-label="Readings">
+            {% if entries %}{% include "_journal_entries.html" %}
+            {% else %}<p class="muted">No readings on this question yet. Add one from the bottom of a reading&rsquo;s report.</p>{% endif %}
+        </section>
+        <section class="panel" aria-labelledby="editTitle">
+            <h2 id="editTitle">This question</h2>
+            <form method="post" action="/journal/thread/{{ thread.thread_id }}" class="j-inline">
+                <label for="threadName" class="sr-only">Name</label>
+                <input id="threadName" name="name" maxlength="200" value="{{ thread.name }}" required>
+                <button type="submit" class="btn-small">Rename</button>
+            </form>
+            <form method="post" action="/journal/thread/{{ thread.thread_id }}" class="actions" onsubmit="return confirm('Delete this question and the {{ entries | length }} reading(s) filed in it from your journal? The readings stay on the site.')">
+                <input type="hidden" name="action" value="delete">
+                <button type="submit" class="btn-small j-danger">Delete this question</button>
+            </form>
+        </section>
+{% endblock %}
