@@ -62,8 +62,8 @@ def check_against_site():
                "Describe", "Birth date", "Any card", "Who is the reading about?", "Me", "Someone else",
                "What should the card stand for?", "Me, the person asking", "The matter the question is about",
                "How do you usually meet life?", "Which fits you best right now?",
-               "Which cards should be drawn?", "New cards", "Which tradition should the cards follow?",
-               "Thoth, Crowley’s deck", "What kind of story should your AI tell?", "Let the cards decide",
+               "Which cards should be drawn?", "New cards", "Tradition",
+               "What kind of story should your AI tell?", "Let the cards decide",
                "Parts of the AI prompt", "Main parts", "Extra layers (off unless you add them)"] + ASK):
         assert s in fields, f"not in the settings form: {s!r}"
     for t in RAIL:
@@ -72,7 +72,7 @@ def check_against_site():
     for s in ("Ask your question", "Check your choices, then draw.", "Draw my cards"):
         assert s in index, f"not on the start page: {s!r}"
     wizard = (PROJECT_ROOT / "static" / "js" / "wizard.js").read_text(encoding="utf-8")
-    for s in ("Step ${current + 1} of ${steps.length}", '"Extra layers"', '"Significator"', '"Tradition"', '"Story"'):
+    for s in ("Step ${current + 1} of ${steps.length}", '"Extra layers"', '"Significator"', '"Story"'):
         assert s in wizard, f"not in wizard.js: {s!r}"
     assert [html.unescape(d[0]) for d in web.SPREAD_DEPTHS] == DEPTHS
     stage4 = web.SPREAD_STAGES[3]
@@ -207,14 +207,14 @@ def build():
             f'<text class="sub" x="{PX + 31}" y="{cy + 19}">Air of Water</text>', 2.6)
 
     # 6. Options, left at their defaults
-    s = a.scene(3.6, "Options", "keep the defaults: new cards,", "Thoth, and let the cards decide")
+    s = a.scene(3.6, "Options", "keep the defaults: new cards", "and let the cards decide")
     y = wizard_frame(s, 3)
     for i, (leg, val) in enumerate([("Which cards should be drawn?", "New cards"),
-                                    ("Which tradition should the cards follow?", "Thoth, Crowley’s deck"),
                                     ("What kind of story should your AI tell?", "Let the cards decide")]):
         legend(s, y + 2 + i * 24, leg)
         radio(s, x0, y + 14 + i * 24, val, default=True)
-    s.add(f'<text class="sm" x="{PX + 8}" y="{y + 82}">▸ Parts of the AI prompt · standard</text>')
+    s.add(f'<text class="sm" x="{PX + 8}" y="{y + 58}">▸ Tradition · Thoth / Crowley</text>'
+          f'<text class="sm" x="{PX + 8}" y="{y + 82}">▸ Parts of the AI prompt · standard</text>')
     s.press(PX + 6, y + 75, PW - 12, 9, 2.8)
 
     # 7. The main parts, on already
@@ -240,7 +240,7 @@ def build():
     y = wizard_frame(s, 4, nav=False)
     s.add(f'<text class="o" x="{PX + 8}" y="{y + 2}">Check your choices, then draw.</text>')
     rows = [("Question", "What do I need to understand…"), ("Spread", "Full Opening of the Key, 75 cards"),
-            ("Significator", SIGNIFICATOR), ("Tradition", "Thoth, Crowley’s deck"),
+            ("Significator", SIGNIFICATOR),
             ("Story", "Let the cards decide (Auto)"), ("Cards", "New cards, random seed"),
             ("Extra layers", "all seven, from Geomantic"), ("", "figures to Court card hexagrams")]
     for i, (k, v) in enumerate(rows):
