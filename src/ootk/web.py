@@ -1985,13 +1985,27 @@ def journal_entry(request: Request, entry_id: int):
         threads = journal.list_threads(conn, journal_id)
         saved = journal.list_windows(conn, journal_id, entry_id)
     windows = [dict(w, keep=True) for w in saved]
-    if not windows and entry["answer"]:
+    if not windows and entry["answer"] and "find" not in request.query_params:
         windows = [{"label": label, "starts": starts, "ends": ends, "keep": True, "found": True}
                    for label, starts, ends in journal.find_windows(entry["answer"], entry["drawn_at"].date())]
+    found = None
+    if "find" in request.query_params:
+        # The "Find dates" button: dates in the answer (ticked) and the drawn small cards'
+        # decan dates (unticked), added under the saved ones for checking before Save.
+        have = {(w["starts"], w["ends"]) for w in windows}
+        found = {"answer": 0, "cards": 0}
+        for source, keep, rows in (
+                ("answer", True, journal.find_windows(entry["answer"], entry["drawn_at"].date()) if entry["answer"] else []),
+                ("cards", False, journal.card_windows(entry["card_titles"], entry["drawn_at"]))):
+            for label, starts, ends in rows:
+                if (starts, ends) not in have:
+                    have.add((starts, ends))
+                    windows.append({"label": label, "starts": starts, "ends": ends, "keep": keep, "found": True})
+                    found[source] += 1
     shown = bool(windows)
     windows += [{"label": "", "starts": None, "ends": None, "keep": True}] * 2
     return journal_page(request, "journal_entry.html", entry=entry, threads=threads, windows=windows,
-                        windows_shown=shown,
+                        windows_shown=shown, found=found,
                         thread=next((t for t in threads if t["thread_id"] == entry["thread_id"]), None),
                         new="new" in request.query_params, saved="saved" in request.query_params,
                         limits={"answer": journal.ANSWER_MAX, "note": journal.NOTE_MAX, "name": journal.NAME_MAX})
@@ -2024,6 +2038,10 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
         thread_id = entry_thread(conn, journal_id, thread, new_thread)
         if not journal.update_entry(conn, journal_id, entry_id, answer, answer_ai, notes, outcome, thread_id):
             raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
+        if action == "find":
+            # Save what was typed, then show the dates found for checking (nothing added yet).
+            journal.replace_windows(conn, journal_id, entry_id, windows)
+            return RedirectResponse(f"/journal/entry/{entry_id}?find=1#windowsTitle", status_code=303)
         if windows_shown == "0" and not windows and answer:
             # First answer pasted: the dates it names go on the timeline, shown for checking next.
             entry = journal.get_entry(conn, journal_id, entry_id)

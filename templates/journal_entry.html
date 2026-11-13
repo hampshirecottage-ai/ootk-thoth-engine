@@ -15,6 +15,8 @@
         .j-windows td.j-del { width: 3em; text-align: center; }
         .j-windows input[type=checkbox] { width: auto; }
         .j-found { color: var(--muted); }
+        .j-found input:not([type=checkbox]) { font-style: italic; }
+        .j-default { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
         @media (max-width: 560px) { .j-windows thead { display: none; } .j-windows tr { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--line); } .j-windows td:first-child { grid-column: 1 / -1; } }
     </style>
 {% endblock %}
@@ -28,6 +30,7 @@
             {% if entry.card_titles | length > 24 %}<p class="muted">and {{ entry.card_titles | length - 24 }} more in the report.</p>{% endif %}
         </section>
         <form method="post" action="/journal/entry/{{ entry.entry_id }}">
+        <button type="submit" class="j-default" tabindex="-1" aria-hidden="true">Save</button>
         <section class="panel" aria-labelledby="answerTitle">
             <h2 id="answerTitle">Your AI&rsquo;s answer</h2>
             <label for="answerAi">Which AI</label>
@@ -40,7 +43,9 @@
         </section>
         <section class="panel" aria-labelledby="windowsTitle">
             <h2 id="windowsTitle">Dates on the timeline</h2>
-            <p class="note">Each line becomes a dot or bar on your timeline. The dates in the answer&rsquo;s <b>Timeline</b> list (the prompt asks the AI for one) are filled in, or any dates found in the answer if it has no list; untick any you don&rsquo;t want.</p>
+            <p class="note">Each line becomes a dot or bar on your timeline. <b>Find dates</b> reads the answer&rsquo;s <b>Timeline</b> list (the prompt asks the AI for one), or any dates in the answer if it has no list, and adds the decan dates of the small cards you drew, unticked. Tick the ones you want and press Save.</p>
+            <div class="actions"><button type="submit" name="action" value="find" class="btn secondary">Find dates</button></div>
+            {% if found is not none %}<p class="j-ok" role="status">{% if found.answer or found.cards %}Found {{ found.answer }} date{{ '' if found.answer == 1 else 's' }} in the answer and {{ found.cards }} from the cards (shown lighter below). Check them, then press Save.{% else %}No new dates found{% if not entry.answer %}: paste the answer first{% endif %}.{% endif %}</p>{% endif %}
             <table class="j-windows">
                 <thead><tr><th>Name</th><th>From</th><th>To</th><th>Keep</th></tr></thead>
                 <tbody>
