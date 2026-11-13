@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Timeline" %}
 {% set page_description = "Your journal's readings and dates on one timeline." %}
-{% set tagline = "Hover or tap a marker for details." %}
+{% set tagline = "Hover or tap a marker for details. Tap again or press Esc to close." %}
 {% set active = "" %}
 {% set T = timeline %}
 {% block head %}
@@ -31,13 +31,16 @@
         .mk.reading button { background: var(--panel); border: 3px solid currentColor; }
         .mk .when { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font-size: 0.78em; white-space: nowrap; color: var(--muted); }
         .mk.flip .when { left: auto; right: calc(100% + 8px); }
-        .tip { display: none; position: absolute; top: 22px; left: 0; width: min(260px, 64vw); background: var(--panel-2); color: var(--text); border: 1px solid var(--control); border-radius: 8px; padding: 10px 12px; font-size: 0.85em; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
-        .mk.tip-left .tip { left: auto; right: 0; }
-        .mk:hover .tip, .mk:focus-within .tip { display: block; }
-        .mk.up .tip { top: auto; bottom: 22px; }
-        .tip b { display: block; font-size: 1.05em; }
-        .tip p { margin: 4px 0; }
-        .tip .links { display: flex; gap: 12px; margin-top: 6px; }
+        .mk .tip { display: none; }
+        .mk.open button { outline: 2px solid var(--text); outline-offset: 3px; }
+        #tlTip { position: fixed; z-index: 50; left: 0; top: 0; width: min(280px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto; box-sizing: border-box; background: var(--panel-2); color: var(--text); border: 1px solid var(--control); border-radius: 8px; padding: 10px 12px; font-size: 0.85em; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+        #tlTip[hidden] { display: none; }
+        #tlTip .x { all: unset; cursor: pointer; float: right; margin: -4px -4px 0 8px; padding: 2px 7px; border-radius: 6px; font-size: 1.1em; line-height: 1; color: var(--muted); }
+        #tlTip .x:hover, #tlTip .x:focus-visible { color: var(--text); background: var(--panel); }
+        #tlTip .links a { padding: 4px 0; }
+        #tlTip b { display: block; font-size: 1.05em; }
+        #tlTip p { margin: 4px 0; }
+        #tlTip .links { display: flex; gap: 12px; margin-top: 6px; }
         .tl-empty { padding: 18px; }
         @media (max-width: 640px) { .tl-grid { --label-w: 130px; } .tl-sign .nm { display: none; } }
     </style>
@@ -61,10 +64,10 @@
                 <div class="tl-track">
                     <span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span>
                     {% set flip = r.left + r.width > 72 %}
-                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}{{ ' tip-left' if r.left > 45 }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
-                        <button type="button" aria-label="{{ r.label }}, {{ r.when }}"></button>
+                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
+                        <button type="button" aria-label="{{ r.label }}, {{ r.when }}" aria-haspopup="dialog" aria-expanded="false"></button>
                         <span class="when">{{ r.when }}</span>
-                        <div class="tip" role="tooltip">
+                        <div class="tip">
                             <b>{{ r.label }}</b>
                             <p>{{ r.when }}</p>
                             {% if r.question %}<p>{{ r.question }}</p>{% endif %}
@@ -78,17 +81,61 @@
                 {% endfor %}
             </div>
         </div>
+        <div id="tlTip" role="dialog" aria-label="Reading details" hidden><button type="button" class="x" aria-label="Close">&times;</button><div class="body"></div></div>
         <script>
-            // A tip that would run past the bottom of the timeline opens upward instead.
-            document.querySelectorAll(".mk").forEach(mk => {
+            // One shared balloon outside the scrolling timeline, so it is never clipped.
+            // Hover shows it and it stays while the pointer moves into it; a click or tap pins it.
+            (() => {
+                const tip = document.getElementById("tlTip"), body = tip.querySelector(".body");
+                let cur = null, pinned = false, hideTimer = 0;
                 const place = () => {
-                    mk.classList.remove("up");
-                    const box = mk.closest(".tl").getBoundingClientRect(), tip = mk.querySelector(".tip").getBoundingClientRect();
-                    if (tip.bottom > box.bottom - 4) mk.classList.add("up");
+                    if (!cur) return;
+                    const m = cur.getBoundingClientRect(), gap = 8, pad = 12;
+                    const w = tip.offsetWidth, h = tip.offsetHeight, vw = innerWidth, vh = innerHeight;
+                    let left = Math.min(Math.max(m.left, pad), vw - w - pad);
+                    let top = m.bottom + gap;
+                    if (top + h > vh - pad && m.top - gap - h >= pad) top = m.top - gap - h;
+                    top = Math.min(Math.max(top, pad), Math.max(pad, vh - h - pad));
+                    tip.style.left = Math.max(pad, left) + "px";
+                    tip.style.top = top + "px";
                 };
-                mk.addEventListener("mouseenter", place);
-                mk.addEventListener("focusin", place);
-            });
+                const show = (mk, pin) => {
+                    clearTimeout(hideTimer);
+                    if (cur !== mk) {
+                        if (cur) { cur.classList.remove("open"); cur.querySelector("button").setAttribute("aria-expanded", "false"); }
+                        cur = mk;
+                        body.replaceChildren(...Array.from(mk.querySelector(".tip").childNodes, n => n.cloneNode(true)));
+                        mk.classList.add("open");
+                        mk.querySelector("button").setAttribute("aria-expanded", "true");
+                    }
+                    if (pin) pinned = true;
+                    tip.hidden = false;
+                    place();
+                };
+                const hide = () => {
+                    clearTimeout(hideTimer);
+                    if (cur) { cur.classList.remove("open"); cur.querySelector("button").setAttribute("aria-expanded", "false"); }
+                    tip.hidden = true; cur = null; pinned = false;
+                };
+                const later = () => { if (!pinned) { clearTimeout(hideTimer); hideTimer = setTimeout(hide, 300); } };
+                document.querySelectorAll(".mk").forEach(mk => {
+                    const btn = mk.querySelector("button");
+                    mk.addEventListener("pointerenter", e => { if (e.pointerType === "mouse" && !pinned) show(mk, false); });
+                    mk.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") later(); });
+                    btn.addEventListener("click", () => {
+                        if (cur === mk && pinned) hide(); else show(mk, true);
+                    });
+                    btn.addEventListener("focus", () => { if (!pinned) show(mk, false); });
+                });
+                tip.addEventListener("pointerenter", () => clearTimeout(hideTimer));
+                tip.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") later(); });
+                tip.querySelector(".x").addEventListener("click", () => { const b = cur && cur.querySelector("button"); hide(); if (b) b.focus(); });
+                document.addEventListener("keydown", e => { if (e.key === "Escape" && !tip.hidden) { const b = cur && cur.querySelector("button"); hide(); if (b) b.focus(); } });
+                document.addEventListener("pointerdown", e => { if (!tip.hidden && !tip.contains(e.target) && !(cur && cur.contains(e.target))) hide(); });
+                document.addEventListener("focusin", e => { if (!pinned && !tip.hidden && !tip.contains(e.target) && !(cur && cur.contains(e.target))) hide(); });
+                addEventListener("resize", place);
+                document.addEventListener("scroll", place, true);
+            })();
         </script>
         {% endif %}
 {% endblock %}
