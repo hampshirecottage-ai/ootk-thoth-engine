@@ -69,6 +69,37 @@
             <p>To learn what the numbers mean, the <a href="/library">Library</a> explains each term in the report, and <a href="/method">How it works</a> shows how it is all worked out.</p>
         </details>
 
+        {% if journal_enabled() %}
+        <details class="panel fold" id="journalHelp">
+            <summary class="fold-toggle"><h2 id="journalHelpTitle">Keep a journal of your readings</h2></summary>
+            <p>The journal keeps your readings, what your AI said about them, and what actually happened, so you can look back over weeks and months. It is optional and needs no account.</p>
+            <ol class="path">
+                <li>
+                    <h3>Start it from a report</h3>
+                    <p>At the bottom of any report, press <strong>Start a journal with this reading</strong> (or <strong>Add to my journal</strong> once you have one). You can file each reading under a question, such as &ldquo;The house move&rdquo;, so readings on the same matter line up together.</p>
+                </li>
+                <li>
+                    <h3>Save your journal link</h3>
+                    <p>Your journal opens with a secret link instead of a password. This browser remembers it, but bookmark it or email it to yourself: it is the only way back in on another device, or if the browser forgets it. Anyone who has the link can open the journal, so keep it private.</p>
+                </li>
+                <li>
+                    <h3>Paste in your AI&rsquo;s answer</h3>
+                    <p>When your AI has answered, open the reading in your journal and paste the whole answer in. The prompt asks your AI to end with a short <strong>Timeline</strong> list of dates.</p>
+                </li>
+                <li>
+                    <h3>Find dates, then Save</h3>
+                    <p>Under <strong>Dates on the timeline</strong>, press <strong>Find dates</strong>. It reads the answer&rsquo;s Timeline list (or any dates in the answer if there is none) and adds, unticked, the decan dates of the small cards you drew. Tick the ones you want, change any name or date, and press <strong>Save</strong>.</p>
+                </li>
+                <li>
+                    <h3>Watch the timeline, note what happened</h3>
+                    <p>The <strong>Timeline</strong> shows every question&rsquo;s dates under the zodiac signs and the months. Hover or tap a marker for its details, the report and the journal entry. Later, write what actually happened in the entry, to see how the readings bore out.</p>
+                </li>
+            </ol>
+            <p class="muted">Private by design: no account or email, and only a scrambled copy of your link is stored. Answers, notes, outcomes and names are encrypted. You can delete one entry or the whole journal, or download it all as Markdown, at any time. A journal nobody opens for 24 months is deleted.</p>
+            <div class="actions"><a class="btn secondary" href="/journal">My journal</a></div>
+        </details>
+        {% endif %}
+
         {% if sample %}
 {% include "_sample_reading.html" %}
         {% set w = sample.walkthrough %}
