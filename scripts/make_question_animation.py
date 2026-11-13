@@ -4,7 +4,7 @@ page (templates/start.html, "Your first reading, step by step").
 One example question goes through the six steps of "Help me shape my question" (the part of
 life, a rough question in your own words, what the reading should do, whose question and over
 what span, "Anything your AI should know?", and the finished question), then the cards are
-drawn, the prompt is saved with "Save prompt as Markdown (.md)", and the file is attached in an
+drawn, the prompt is saved with "Save the prompt for your AI", and the file is attached in an
 AI with its + button.
 
 The words on screen are the site's own: build() checks each label against the question helper
@@ -49,7 +49,9 @@ SITUATION = "Offered a lead role last week."
 UNSURE = "Leaving a team I like."
 POSITIONS = [("Active Force", "what draws you forward"),
              ("Resistance", "what in you or the situation holds back")]
-SAVE = "Save prompt as Markdown (.md)"
+SAVE = "Save the prompt for your AI"
+PANEL = "Get your interpretation"
+LEDE = "Save this one file, then attach it in your AI with"
 FILE = "attach_this_to_your_ai_2026-11-07.md"
 
 
@@ -70,7 +72,7 @@ def check_against_site():
     for p, a in POSITIONS:
         assert f'["{p}", "{a}"]' in ask, p
     report = (PROJECT_ROOT / "templates" / "report.html").read_text(encoding="utf-8")
-    for s in (SAVE, "Send the prompt to your AI", "Save as PDF (print)", "Save as JSON"):
+    for s in (SAVE, PANEL, LEDE):
         assert s in report, f"not on the report page: {s!r}"
     assert "attach_this_to_your_ai_" in (PROJECT_ROOT / "static" / "js" / "report.js").read_text(encoding="utf-8")
 
@@ -297,15 +299,11 @@ def build():
     # 8. Save the prompt as Markdown
     s = a.scene(4.2, "Save as Markdown", "one .md file holds the cards,", "the sums and your question")
     s.add(f'<rect class="pn" x="{PX}" y="{PY}" width="{PW}" height="{PH}" rx="6"/>'
-          f'<text class="ld" x="{PX + 8}" y="{PY + 15}">Send the prompt to your AI</text>'
-          f'<text class="sub" x="{PX + 8}" y="{PY + 26}">Save the prompt as a file, then attach</text>'
-          f'<text class="sub" x="{PX + 8}" y="{PY + 33}">it in your AI with +.</text>')
+          f'<text class="ld" x="{PX + 8}" y="{PY + 15}">{PANEL}</text>'
+          f'<text class="sub" x="{PX + 8}" y="{PY + 26}">Save this one file, then attach it</text>'
+          f'<text class="sub" x="{PX + 8}" y="{PY + 33}">in your AI with +.</text>')
     s.add(f'<rect class="pr" x="{PX + 8}" y="{PY + 40}" width="{PW - 16}" height="14" rx="3"/>'
-          f'<text class="bp" x="{W / 2}" y="{PY + 49.5}">{esc(SAVE)}</text>'
-          f'<rect class="bt dim" x="{PX + 8}" y="{PY + 58}" width="62" height="11" rx="3"/>'
-          f'<text class="b dim" x="{PX + 39}" y="{PY + 65.5}">Save as PDF (print)</text>'
-          f'<rect class="bt dim" x="{PX + 74}" y="{PY + 58}" width="62" height="11" rx="3"/>'
-          f'<text class="b dim" x="{PX + 105}" y="{PY + 65.5}">Save as JSON</text>')
+          f'<text class="bp" x="{W / 2}" y="{PY + 49.5}">{esc(SAVE)}</text>')
     s.press(PX + 8, PY + 40, PW - 16, 14, 0.8)
     fx, fy = W / 2 - 14, PY + 88
     s.timed(f'<path class="fi" d="M{fx} {fy}h20l8 8v30h-28z"/><path class="fo" d="M{fx + 20} {fy}v8h8"/>'
