@@ -7,7 +7,7 @@ visitor would: a question typed in; "How deep do you want to go?" set to The Ope
 and the Full Opening of the Key picked; a significator described (me, the person asking, Feel
 first, Young and driving things forward: the Prince of Cups); the options left at their
 defaults; under "Parts of the AI prompt" the ten main parts already on and all seven extra layers
-ticked; the review; Draw my cards; the report's four operations; and Save prompt as Markdown.
+ticked; the review; Draw my cards; the report's four operations; and Save the prompt for your AI.
 The last scene says what the prompt does when every layer makes it too long: it drops the
 layers in FIT_ORDER and names them under "Left Out to Fit".
 
@@ -52,7 +52,9 @@ EXTRA = [COMPONENTS[k] for k in COMPONENTS if k in DEFAULT_OFF]
 # The full Opening of the Key's four operations, as the report's Operations table counts them.
 OPS = [("Operation 1", "15-card heap", 15), ("Operation 2", "12 houses", 12),
        ("Operation 3", "12 signs", 12), ("Operation 4", "36 decans", 36)]
-SAVE = "Save prompt as Markdown (.md)"
+SAVE = "Save the prompt for your AI"
+PANEL = "Get your interpretation"
+LEDE = "Save this one file, then attach it in your AI with"
 
 
 def check_against_site():
@@ -86,7 +88,7 @@ def check_against_site():
     assert len(MAIN) == 10 and len(EXTRA) == 7
     assert list(FIT_ORDER[:3]) == ["gods", "angels", "timing"]
     report = (PROJECT_ROOT / "templates" / "report.html").read_text(encoding="utf-8")
-    for s in (SAVE, "Send the prompt to your AI", "Where the significator falls", "Operations"):
+    for s in (SAVE, PANEL, LEDE, "Where the significator falls", "Operations"):
         assert s in report, f"not on the report page: {s!r}"
     assert "**Left Out to Fit:**" in (PROJECT_ROOT / "src" / "ootk" / "report.py").read_text(encoding="utf-8")
 
@@ -275,7 +277,7 @@ def build():
     # 11. Save the long prompt
     s = a.scene(6.0, "Save as Markdown", "attach the .md in your AI;", "it names anything left out")
     s.add(f'<rect class="pn" x="{PX}" y="{PY}" width="{PW}" height="{PH}" rx="6"/>'
-          f'<text class="ld" x="{PX + 8}" y="{PY + 15}">Send the prompt to your AI</text>'
+          f'<text class="ld" x="{PX + 8}" y="{PY + 15}">{PANEL}</text>'
           f'<rect class="pr" x="{PX + 8}" y="{PY + 22}" width="{PW - 16}" height="14" rx="3"/>'
           f'<text class="bp" x="{W / 2}" y="{PY + 31.5}">{esc(SAVE)}</text>')
     s.press(PX + 8, PY + 22, PW - 16, 14, 0.7)
