@@ -327,8 +327,23 @@ def _label(line, match_start):
     return text[:WINDOW_LABEL_MAX]
 
 
-_TIMELINE_HEAD = re.compile(r"^\s*(?:#{1,6}\s*|\*\*)\s*Timeline\b", re.I)
-_ANY_HEAD = re.compile(r"^\s*(?:#{1,6}\s|\*\*[^*]+\*\*\s*$)")
+def _heading(line):
+    """The words of a Markdown heading line (`## Words` or a line that is all `**Words**`),
+    or None for any other line. Plain string work, no regex, so long lines stay cheap."""
+    s = line.strip()
+    if s.startswith("#"):
+        return s.lstrip("#").strip(" *:")
+    if s.startswith("**") and s.endswith("**") and len(s) > 4:
+        return s.strip("* :")
+    if s.startswith("**"):                     # **Timeline:** with nothing after it
+        words = s.strip("* :")
+        return words if words.lower() == "timeline" else None
+    return None
+
+
+def _is_timeline_head(line):
+    words = _heading(line)
+    return words is not None and words.lower().split(" ")[0].rstrip(":") == "timeline"
 _ISO = r"(\d{4})-(\d{1,2})-(\d{1,2})"
 _ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|–|—|-)\s*{_ISO})?")
 
@@ -338,12 +353,14 @@ def timeline_windows(text):
     as (label, starts, ends), or [] when the answer has no such list with dates in it."""
     found, inside = [], False
     for line in (text or "").splitlines():
-        if _TIMELINE_HEAD.match(line):
+        if len(line) > 1000:                   # no list line is this long
+            continue
+        if _is_timeline_head(line):
             inside, found = True, []           # the last Timeline list in the answer wins
             continue
         if not inside:
             continue
-        if _ANY_HEAD.match(line):
+        if _heading(line) is not None:
             inside = False
             continue
         m = _ISO_RANGE.search(line)
