@@ -761,6 +761,44 @@ def card_is_dignified(index, dignity_matrix):
     return sum(touching) >= 0 if touching else True
 
 
+# What a random shuffle gives. The scores are not centred on zero (+2 same, +1 friendly, -2
+# contrary, and half of all pairs are friendly), so a positive total is the usual result, not a
+# sign of anything. The deck's own elements (14 per suit plus the Trumps' MAJOR_ELEMENTS) fix
+# the score of a pair of two cards drawn at random from it.
+DECK_ELEMENTS = {e: 14 + sum(1 for m in MAJOR_ELEMENTS.values() if m == e)
+                 for e in ("Fire", "Water", "Air", "Earth")}
+CHANCE_UNUSUAL_Z = 1.64       # the 5% bar each way, as the framework trend and Own-Place Check use
+
+def _pair_score_moments():
+    """(mean, sd) of one pair's dignity score when both cards are drawn at random from the deck."""
+    total = sum(DECK_ELEMENTS.values())
+    ways = s1 = s2 = 0
+    for a, na in DECK_ELEMENTS.items():
+        for b, nb in DECK_ELEMENTS.items():
+            n = na * (na - 1) if a == b else na * nb
+            score, _ = element_dignity(a, b)
+            ways, s1, s2 = ways + n, s1 + n * score, s2 + n * score * score
+    assert ways == total * (total - 1)
+    mean = s1 / ways
+    return mean, math.sqrt(s2 / ways - mean * mean)
+
+PAIR_SCORE_MEAN, PAIR_SCORE_SD = _pair_score_moments()    # about +0.48 and 1.50
+
+def dignity_chance(pairs, net):
+    """How a dignity total compares with a random shuffle of the same number of pairs.
+
+    Returns {"mean", "sd", "z", "lean"}: the average and spread a random draw gives, and "above",
+    "below" or "usual" (within CHANCE_UNUSUAL_Z of the average). The spread treats the pairs as
+    independent, which is close (measured on 400 random Book T and full Opening of the Key draws,
+    2026-11-14: sd 8.2 and 12.7 against 8.9 and 12.4 from this); a pinned Significator and a Book T
+    pile are not quite a random draw from the whole deck, so the figures are "about"."""
+    mean = pairs * PAIR_SCORE_MEAN
+    sd = math.sqrt(pairs) * PAIR_SCORE_SD
+    z = (net - mean) / sd if sd else 0.0
+    lean = "above" if z >= CHANCE_UNUSUAL_Z else "below" if z <= -CHANCE_UNUSUAL_Z else "usual"
+    return {"mean": mean, "sd": sd, "z": z, "lean": lean}
+
+
 def _suit_rank(suit):
     return SUIT_ORDER.index(suit) if suit in SUIT_ORDER else len(SUIT_ORDER)
 

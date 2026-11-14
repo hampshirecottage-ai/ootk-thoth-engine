@@ -9,7 +9,7 @@ import re
 from collections import Counter
 
 from ootk.analysis import (
-    card_is_dignified, derive_primary_element, own_place_sentence, spirit_bearing_cards,
+    CHANCE_UNUSUAL_Z, card_is_dignified, derive_primary_element, dignity_chance, own_place_sentence, spirit_bearing_cards,
 )
 from ootk.assets import static_url
 from ootk.atlas import card_atlas
@@ -464,7 +464,17 @@ def _dignity_counts(entries):
         "contrary": sum(s == DIGNITY_CONTRARY for s in scores),
         "net": sum(scores),
         "net_text": _signed(sum(scores)),
+        "chance": _chance_view(len(scores), sum(scores)),
     }
+
+
+def _chance_view(pairs, net):
+    """dignity_chance() with its average and its usual range as text: "+17", "+3" and "+32".
+    The range is the one the headline calls usual (CHANCE_UNUSUAL_Z either side)."""
+    chance = dignity_chance(pairs, net)
+    reach = CHANCE_UNUSUAL_Z * chance["sd"]
+    return dict(chance, mean_text=f"{chance['mean']:+.0f}", low_text=_signed(round(chance["mean"] - reach)),
+                high_text=_signed(round(chance["mean"] + reach)))
 
 
 def _aspect_counts(aspects):
@@ -515,9 +525,19 @@ def _headline(element_rows, dignity, aspects):
                         else f"{_and(lows)} are weakest ({low['pct']:g}% each)")
             lines.append(f"{lead}; {tail}.")
     if dignity["pairs"]:
-        lean = ("favourable" if dignity["net"] > 0 else "unfavourable" if dignity["net"] < 0 else "even")
-        lines.append(f"Elemental dignities lean {lean}: net {dignity['net_text']} across "
-                     f"{dignity['pairs']} neighbouring pairs ({dignity['contrary']} contrary).")
+        # The scores average about +0.5 a pair at random, so a positive total is the usual result:
+        # the line says how this one compares with a random shuffle, not just its sign.
+        chance = dignity.get("chance") or _chance_view(dignity["pairs"], dignity["net"])
+        n = dignity["pairs"]
+        said = (f"net {dignity['net_text']} across {n} scored pair{'s' if n != 1 else ''} "
+                f"({dignity['contrary']} contrary)")
+        if chance["lean"] == "usual":
+            lines.append(f"Elemental dignities: {said}, about what a random shuffle gives "
+                         f"(average {chance['mean_text']}).")
+        else:
+            word = "favourable" if chance["lean"] == "above" else "unfavourable"
+            lines.append(f"Elemental dignities are unusually {word}: {said}, where a random "
+                         f"shuffle averages {chance['mean_text']}.")
     if aspects["total"]:
         # Aspects come from where two positions sit in the layout, never from the cards, so
         # their balance is the same in every reading of a spread and says nothing about this one.

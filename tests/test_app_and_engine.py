@@ -2443,6 +2443,34 @@ def test_error_messages_echo_at_most_40_characters(client):
     assert r.status_code == 400 and "s" * 41 not in r.text
 
 
+
+def test_pair_score_at_random_comes_from_the_deck():
+    # 21 Fire, 19 each of Water, Air and Earth: 1,446 same-element ordered pairs (+2), 1,520
+    # contrary (-2) and 3,040 friendly (+1) out of 78 x 77.
+    assert analysis.DECK_ELEMENTS == {"Fire": 21, "Water": 19, "Air": 19, "Earth": 19}
+    assert analysis.PAIR_SCORE_MEAN == pytest.approx(2892 / 6006)
+    assert analysis.PAIR_SCORE_SD == pytest.approx((14904 / 6006 - (2892 / 6006) ** 2) ** 0.5)
+
+
+def test_dignity_headline_compares_with_chance():
+    from ootk.visual import _dignity_counts, _element_rows, _headline
+    def line(scores):
+        dignity = _dignity_counts([{"score": s} for s in scores])
+        return _headline(_element_rows({"Fire": 1}), dignity, {"total": 0})[1]
+    usual = line([2] * 10 + [1] * 17 + [-2] * 9)          # +19 over 36 pairs; chance about +17
+    assert usual == ("Elemental dignities: net +19 across 36 scored pairs (9 contrary), about what a "
+                     "random shuffle gives (average +17).")
+    assert "favourable" not in usual
+    assert line([2] * 30 + [1] * 6).startswith("Elemental dignities are unusually favourable: net +66")
+    assert line([-2] * 20 + [1] * 16).startswith("Elemental dignities are unusually unfavourable: net -24")
+    assert "1 scored pair (" in line([1])
+
+
+def test_dignity_tile_gives_the_random_range():
+    from ootk.visual import _dignity_counts
+    chance = _dignity_counts([{"score": 1}] * 36)["chance"]
+    assert (chance["mean_text"], chance["low_text"], chance["high_text"]) == ("+17", "+3", "+32")
+
 # ---------- logic consistency (2026-10-05 audit) ----------
 
 def _spread_parts(key, cards):
