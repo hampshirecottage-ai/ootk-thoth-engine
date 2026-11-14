@@ -196,9 +196,10 @@ def test_the_prompt_asks_for_a_timeline_list():
 def test_the_cards_own_decan_dates_match_the_prompts_year():
     drawn = datetime(2026, 11, 13, tzinfo=timezone.utc)
     titles = ["8 of Wands - Swiftness", "9 of Disks - Gain", "Ace of Cups", "8 of Wands - Swiftness", "Prince of Swords"]
+    # The 9 of Disks' decan (September) is past by 13 November, so its next one is given.
     assert journal.card_windows(titles, drawn) == [
-        ("9 of Disks decan", date(2026, 9, 2), date(2026, 9, 12)),
-        ("8 of Wands decan", date(2026, 11, 22), date(2026, 12, 2))]
+        ("8 of Wands decan", date(2026, 11, 22), date(2026, 12, 2)),
+        ("9 of Disks decan", date(2027, 9, 2), date(2027, 9, 12))]
 
 
 @needs_db

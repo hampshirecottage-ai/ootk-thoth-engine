@@ -65,6 +65,19 @@ def test_decan_dates():
     assert solar_year(datetime(2026, 11, 4, tzinfo=timezone.utc)) == 2026
 
 
+def test_decan_dates_are_never_before_the_draw():
+    from ootk.decans import decan_dates_after, decan_window
+    drawn = datetime(2026, 11, 11, 18, tzinfo=timezone.utc)
+    assert decan_dates_after("7 of Cups - Debauch", drawn) == "12 Nov - 22 Nov 2026"     # starts the next day
+    assert decan_dates_after("6 of Cups - Pleasure", drawn) == decan_dates("6 of Cups - Pleasure", 2026)  # the Sun is in it now
+    assert decan_dates_after("2 of Wands - Dominion", drawn) == decan_dates("2 of Wands - Dominion", 2027)  # March 2026 is past
+    assert decan_dates_after("3 of Disks - Works", drawn) == "31 Dec 2026 - 10 Jan 2027"
+    assert decan_dates_after("Ace of Cups", drawn) is None
+    for title in ("2 of Wands - Dominion", "5 of Wands - Strife", "10 of Cups - Satiety", "9 of Disks - Gain"):
+        start, end = decan_window(title, drawn)
+        assert end >= drawn and (end - start).days < 12
+
+
 def test_day_ruler():
     assert day_ruler(datetime(2026, 11, 4, 12, tzinfo=timezone.utc)) == ("Wednesday", "Mercury")
     assert day_ruler(datetime(2026, 11, 8, 12, tzinfo=timezone.utc)) == ("Sunday", "Sun")
