@@ -3122,3 +3122,24 @@ def test_contact_alert_goes_out_with_telegram_alone(client, monkeypatch):
     monkeypatch.setenv("TELEGRAM_CHAT_ID", "42")
     client.post("/contact", data={**OPENED, "body": "hi"})
     assert client.alerts == [("", "http://testserver/admin/messages")]
+
+
+def test_book_t_report_leads_with_the_count_not_an_arbitrary_last_card(book_t_client):
+    text = book_t_post(book_t_client).text
+    simple = text.split('id="yourCards"', 1)[1].split('id="workings"', 1)[0]
+    assert "<h2>The Count</h2>" in simple and "<h2>Key cards</h2>" not in simple
+    assert simple.count('class="count-op"') == 5          # one row per operation read
+    assert "Step 2" in simple
+
+
+def test_count_rows_follow_each_operations_chain():
+    from ootk import visual
+    cards = [fake_card(f"C{i}") for i in range(6)]
+    results = [{"position_number": i + 1, "position_name": f"[Op 1] P{i}", "card_data": c} for i, c in enumerate(cards)]
+    view = visual.build_report_view("13", results, analysis.analyze_elemental_balance(results), [], [], "x", "y",
+                                    book_t=[{"lines": [], "chain": [0, 3, 1], "stop": 3, "leftover": 5,
+                                             "missed": True}])
+    row, = view["count_rows"]
+    assert [c["title"] for c in row["cards"]] == ["C3", "C1"]          # the Significator is shown once, above
+    assert row["leftover"]["title"] == "C5" and row["missed"]
+    assert [c["title"] for c in view["key_cards"]] == ["C0"]

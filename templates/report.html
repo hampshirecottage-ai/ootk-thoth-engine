@@ -66,6 +66,10 @@
         .simple-card figcaption { display: flex; flex-direction: column; font-size: 0.88em; margin-top: 6px; line-height: 1.3; }
         .simple-card figcaption .muted { font-size: 0.85em; }
         .simple-card.selected img { outline: 3px solid var(--accent-2); }
+        .count-sig { grid-template-columns: repeat(auto-fill, minmax(110px, 130px)); }
+        .count-op { margin: 14px 0 4px; font-size: 1em; }
+        .count-strip { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+        .count-strip .simple-card figcaption { font-size: 0.8em; }
         .tap-hint { font-size: 0.82em; margin: 8px 0 0; }
         .element-strip { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--panel-2); }
         .element-strip span { display: block; }
@@ -79,6 +83,7 @@
         .end-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
         .end-actions form { margin: 0; }
         @media (max-width: 600px) { .simple-cards { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; } .simple-card figcaption { font-size: 0.8em; } }
+        @media (max-width: 600px) { .count-strip { grid-template-columns: repeat(4, 1fr); gap: 8px; } .count-strip .simple-card figcaption { font-size: 0.72em; } .count-sig { grid-template-columns: 92px; } }
         .journal-box h3 { margin: 0 0 4px; }
         .journal-box .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
         .journal-add { display: grid; gap: 6px; max-width: 420px; margin-top: 8px; }
@@ -340,6 +345,32 @@
             </figure>
             {% endfor %}
         </div>
+        {% elif S.count_rows %}
+        <h2>The Count</h2>
+        <p class="muted" style="margin:0 0 8px">Book&nbsp;T&rsquo;s story: from the Significator, the cards the Count lands on in each operation, in order.</p>
+        <div class="simple-cards count-sig">
+            {% for c in S.key_cards %}
+            <figure class="simple-card" data-card="{{ c.gindex }}" tabindex="0" role="button">
+                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                <figcaption><span class="muted">The Significator</span><strong>{{ c.title }}</strong><span><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}</span></figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        {% for row in S.count_rows %}
+        <h3 class="count-op">{{ row.name }}{% if row.missed %} <span class="muted" style="font-weight:normal; font-size:0.85em">· not where the question expected it: read with caution</span>{% endif %}</h3>
+        {% if row.cards %}
+        <div class="simple-cards count-strip">
+            {% for c in row.cards %}
+            <figure class="simple-card" data-card="{{ c.gindex }}" tabindex="0" role="button">
+                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" loading="lazy" decoding="async" style="border-color:{{ c.color }}">{% else %}<div class="noimg" style="border-color:{{ c.color }}">{{ c.short }}</div>{% endif %}
+                <figcaption><span class="muted">Step {{ loop.index + 1 }}</span><strong>{{ c.title }}</strong></figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        {% else %}<p class="muted" style="margin:0">The count comes straight back to the Significator.</p>{% endif %}
+        {% if row.leftover %}<p class="muted" style="margin:6px 0 0; font-size:0.9em">Read on its own (left over after pairing): <span class="count-left" data-card="{{ row.leftover.gindex }}" tabindex="0" role="button" style="text-decoration:underline; cursor:pointer">{{ row.leftover.title }}</span></p>{% endif %}
+        {% endfor %}
+        <p class="muted" style="margin:8px 0 0; font-size:0.9em">All {{ S.card_count }} {{ 'positions' if S.distinct_count and S.distinct_count < S.card_count else 'cards' }}, with the pairs, are in the workings below.</p>
         {% else %}
         <h2>Key cards</h2>
         <div class="simple-cards">
