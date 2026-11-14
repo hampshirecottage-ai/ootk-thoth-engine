@@ -44,14 +44,14 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Attribution**: Venus in Scorpio
 - **Planet Strength**: in detriment (weakened)
 
-**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path. A dash means no position in this reading takes that part of the row.
 
 | 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
 |---|---|---|---|---|---|---|
 | Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 2 |
 | Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 3 |
-| Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
-| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
+| Path 15 Window | Constituting Intelligence | — | — | — | — | 1 (title) |
+| Path 28 Fish-hook | — | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success.
 
