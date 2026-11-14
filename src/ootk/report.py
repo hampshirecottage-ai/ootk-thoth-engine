@@ -143,8 +143,10 @@ def day_ruler_markdown(drawn_at, local_zone=None):
         return ""
     local = drawn_at.astimezone(local_zone) if local_zone is not None else drawn_at.astimezone(timezone.utc)
     day, planet = day_ruler(local)
-    return (f"**Day Ruler:** {day}, ruled by {planet} (the planetary day, by the querent's own "
-            "clock; context only, not used in any score)\n")
+    clock = ("by the querent's own clock" if local_zone is not None
+             else "by UTC, as no time zone was given, so near midnight the querent's own day may differ")
+    return (f"**Day Ruler:** {day}, ruled by {planet} (the planetary day, {clock}; "
+            "context only, not used in any score)\n")
 
 def _left_out(*keys):
     return ("* Left out on purpose: " + " and ".join(COMPONENTS[k] for k in keys)

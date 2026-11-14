@@ -83,6 +83,16 @@ def test_day_ruler():
     assert day_ruler(datetime(2026, 11, 8, 12, tzinfo=timezone.utc)) == ("Sunday", "Sun")
 
 
+def test_day_ruler_line_says_utc_when_no_time_zone_was_given():
+    from zoneinfo import ZoneInfo
+    from ootk.report import day_ruler_markdown
+    drawn = datetime(2026, 11, 5, 3, tzinfo=timezone.utc)   # Wednesday evening in Vancouver
+    assert "Thursday" in day_ruler_markdown(drawn) and "by UTC" in day_ruler_markdown(drawn)
+    assert "own clock" not in day_ruler_markdown(drawn)
+    local = day_ruler_markdown(drawn, ZoneInfo("America/Vancouver"))
+    assert "Wednesday" in local and "own clock" in local and "UTC" not in local
+
+
 # ---------- the prompt ----------
 
 def _items(*titles):
