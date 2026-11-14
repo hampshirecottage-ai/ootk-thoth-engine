@@ -751,6 +751,8 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "aspects": aspects,
         "ill_dignified_count": sum(not c["dignified"] for c in cards),
         "card_count": len(cards),
+        # Different cards: fewer than card_count when operations reshuffle and a card falls again.
+        "distinct_count": len({item["card_data"]["title"] for item in spread_results}),
         "key_cards": key_cards,
         "segments": segments,
         "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix, sign_carriers),
