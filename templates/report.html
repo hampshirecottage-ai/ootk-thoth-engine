@@ -312,7 +312,7 @@
     <!-- ===== BANNER: WHAT THIS IS AND WHAT TO DO NOW ===== -->
     <section class="band report-head" id="nowStep" aria-labelledby="pageTitle">
         <div class="band-text">
-            <p class="chips"><span>{% if shared %}Shared reading{% else %}Your reading{% endif %}</span><span>{{ S.card_count }} card{{ 's' if S.card_count != 1 }}</span><span>{{ mapping_label.split(' (')[0] }}</span>{% if seed %}<span>Seed {{ seed }}</span>{% endif %}</p>
+            <p class="chips"><span>{% if shared %}Shared reading{% else %}Your reading{% endif %}</span>{% if S.distinct_count and S.distinct_count < S.card_count %}<span title="Each operation reshuffles the whole deck, so some cards fall more than once">{{ S.card_count }} positions · {{ S.distinct_count }} different cards</span>{% else %}<span>{{ S.card_count }} card{{ 's' if S.card_count != 1 }}</span>{% endif %}<span>{{ mapping_label.split(' (')[0] }}</span>{% if seed %}<span>Seed {{ seed }}</span>{% endif %}</p>
             <h1 id="pageTitle">{{ spread_name }}</h1>
             {% if topic %}<p class="tagline now-question">Your question: <strong>{{ topic }}</strong></p>{% endif %}
         </div>
@@ -356,7 +356,7 @@
             {% for p in S.significator_places %}<li><strong>Operation {{ p.op }}:</strong> {{ p.place }}</li>{% endfor %}
         </ul>
         {% endif %}
-        <p class="muted" style="margin:8px 0 0; font-size:0.9em">All {{ S.card_count }} cards, operation by operation, are in the workings below.</p>
+        <p class="muted" style="margin:8px 0 0; font-size:0.9em">All {{ S.card_count }} {{ 'positions' if S.distinct_count and S.distinct_count < S.card_count else 'cards' }}, operation by operation, are in the workings below.</p>
         {% endif %}
         <p class="tap-hint muted">Tap a card to see its correspondences.</p>
 

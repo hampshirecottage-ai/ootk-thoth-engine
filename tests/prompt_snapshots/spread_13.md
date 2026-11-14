@@ -1,7 +1,7 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 79 positions and its very last line is `END OF OOTK PROMPT (79 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
-**In Plain Words:** 79 cards were drawn, in 5 operations, each dealt from its own shuffle. The Significator, Queen of Cups, stands for the querent. Fire leads with 23 of 79 cards; Earth is least, with 13. Book T would note Three Twos, Three Fours, Three Nines, Three Tens and Three Queens in Operation 4 (section 2).
+**In Plain Words:** 79 positions were dealt in 5 operations, each from its own shuffle of the whole deck, so some cards fall more than once: 50 different cards in all, with the Significator in all 5. The Significator, Queen of Cups, stands for the querent. Fire leads with 23 of 79 positions; Earth is least, with 13. Book T would note Three Twos, Three Fours, Three Nines, Three Tens and Three Queens in Operation 4 (section 2).
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 Book T's count and pairs, the heart of the method; 4 how to write the reading.
 
 **Operation/Spread:** Book T Opening of the Key (counting and pairing, 5 operations)
@@ -706,7 +706,7 @@ Act as an expert Hermetic scholar and Tarot authority. Interpret the reading fro
 
 **How to read the numbers:**
 * `Score` in section 3 is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
-* Section 2 counts each card once, under its primary element. Its Book T Counts are per operation, never across one.
+* Section 2 counts each position once, under its card's primary element, so a card that falls in more than one operation (the Significator among them) counts each time it falls. Its Book T Counts are per operation, never across one.
 * Counting numbers (Book T): Knights, Queens and Princes 4; Princesses 7; Aces 11; small cards their own number; Trumps 3 (elements), 9 (planets), 12 (signs). Where Book T is silent this site's rules are: the deck is cut into four packs as near equal as it allows, 20, 19, 20 and 19 cards from the top (Book T does not say where to cut); stacks are dealt one card to each stack in turn (Book T says only 'deal into stacks'); Operation 4's ring wraps round to the top of the deck when fewer than 36 cards follow; counting stops on reaching a card already counted; a card left over when pairing is read on its own; each court card faces the way it looks on the Thoth card, read from the deck; one facing straight out, or a significator that is not a court card, is counted from right to left.
 
 END OF OOTK PROMPT (79 positions)

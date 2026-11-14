@@ -1964,6 +1964,16 @@ def test_framework_basis_explains_n():
 
 
 
+
+def test_one_shuffle_spread_still_says_cards_drawn():
+    results = [{"position_number": i + 1, "position_name": "x", "card_data": fake_card(f"C{i}")} for i in range(3)]
+    counts = analysis.analyze_elemental_balance(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, _ = analysis.analyze_platonic_topology(results)
+    text = report.build_analytical_prompt("Triad", "", "", "1", results, counts, [], [], sdist, solids)
+    assert "**In Plain Words:** 3 cards were drawn." in text
+    assert "counts each card once" in text and "positions were dealt" not in text
+
 def test_short_framework_basis_says_who_chose_the_lens():
     def basis(ranks, forced="auto"):
         cards = [{"position_number": i, "position_name": "", "card_data": dict(fake_card(f"C{i}"), key_scale=k, path_or_sephira="")}

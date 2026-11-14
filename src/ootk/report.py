@@ -317,8 +317,21 @@ def at_a_glance_markdown(significator, spread_results, element_counts, book_t, k
     numbers and which section holds what, so a reader can find their way before the detail."""
     n = len(spread_results)
     ops = len({operation_number(i["position_name"]) for i in spread_results})
-    said = [f"{_plural(n, 'card was', 'cards were')} drawn"
-            + (f", in {ops} operations, each dealt from its own shuffle" if ops > 1 else "") + "."]
+    distinct = len({i["card_data"]["title"] for i in spread_results})
+    if distinct < n:
+        # Each operation reshuffles the whole deck, so a card (the Significator above all) can
+        # fall in several: the positions outnumber the cards, and a 79-position Book T reading
+        # is not 79 cards from a 78-card deck.
+        sig = str(significator or "")
+        sig_ops = sum(1 for i in spread_results if i["card_data"]["title"] == sig)
+        said = [f"{n} positions were dealt in {ops} operations, each from its own shuffle of the "
+                f"whole deck, so some cards fall more than once: {distinct} different cards in all"
+                + (f", with the Significator in all {sig_ops}" if sig_ops == ops and ops > 1 else "")
+                + "."]
+    else:
+        said = [f"{_plural(n, 'card was', 'cards were')} drawn"
+                + (f", in {ops} operations, each dealt from its own shuffle" if ops > 1 else "") + "."]
+    unit = "positions" if distinct < n else "cards"
     if significator and not str(significator).startswith("None"):
         said.append(f"The Significator, {significator}, stands for the querent.")
     counts = {e: c for e, c in (element_counts or {}).items() if e != "Spirit"}
@@ -326,7 +339,7 @@ def at_a_glance_markdown(significator, spread_results, element_counts, book_t, k
         most, least = max(counts.values()), min(counts.values())
         top = [e for e, c in counts.items() if c == most]
         low = [e for e, c in counts.items() if c == least]
-        said.append(f"{_join(top)} {'leads' if len(top) == 1 else 'lead'} with {most} of {n} cards; "
+        said.append(f"{_join(top)} {'leads' if len(top) == 1 else 'lead'} with {most} of {n} {unit}; "
                     f"{_join(low)} {'is' if len(low) == 1 else 'are'} least, with {least}.")
     if book_t and "numerology" not in off:
         kinds = []
@@ -871,7 +884,15 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
         key.append(f"* `Modifier` (section {SPATIAL}) is the weight of the aspect itself ({named}). It "
                    f"describes the two positions, not the cards, and is not added to the dignity score.")
     if "elements" not in off:
-        key.append(f"* Section {ELEMENTS} counts each card once, under its primary element."
+        titles = [i["card_data"]["title"] for i in spread_results]
+        repeats = len(set(titles)) < len(titles)
+        # The multi-operation spreads put the Significator first; say so when it fell again.
+        sig_again = bool(titles) and titles.count(titles[0]) > 1
+        key.append((f"* Section {ELEMENTS} counts each position once, under its card's primary element, "
+                    "so a card that falls in more than one operation"
+                    + (" (the Significator among them)" if sig_again else "")
+                    + " counts each time it falls." if repeats else
+                    f"* Section {ELEMENTS} counts each card once, under its primary element.")
                    + (" Its Book T Counts are per operation, never across one." if book_t and
                       len(book_t) > 1 else ""))
     elif book_t and len(book_t) > 1:
