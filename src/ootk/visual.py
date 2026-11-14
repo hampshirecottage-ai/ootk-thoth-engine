@@ -9,10 +9,11 @@ import re
 from collections import Counter
 
 from ootk.analysis import (
-    CHANCE_UNUSUAL_Z, card_is_dignified, derive_primary_element, dignity_chance, own_place_sentence, spirit_bearing_cards,
+    card_is_dignified, derive_primary_element, dignity_chance, own_place_sentence, spirit_bearing_cards,
 )
 from ootk.assets import static_url
 from ootk.atlas import card_atlas
+from ootk.chance import chance_view
 from ootk.gods import court_hexagram, trump_gods
 from ootk.report import withheld_sentence
 from ootk.rules import GEOMANTIC_FIGURES, ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
@@ -470,11 +471,10 @@ def _dignity_counts(entries):
 
 def _chance_view(pairs, net):
     """dignity_chance() with its average and its usual range as text: "+17", "+3" and "+32".
-    The range is the one the headline calls usual (CHANCE_UNUSUAL_Z either side)."""
+    The range is the one the headline calls usual."""
     chance = dignity_chance(pairs, net)
-    reach = CHANCE_UNUSUAL_Z * chance["sd"]
-    return dict(chance, mean_text=f"{chance['mean']:+.0f}", low_text=_signed(round(chance["mean"] - reach)),
-                high_text=_signed(round(chance["mean"] + reach)))
+    return dict(chance, mean_text=f"{chance['mean']:+.0f}", low_text=_signed(chance["low"]),
+                high_text=_signed(chance["high"]))
 
 
 def _aspect_counts(aspects):
@@ -751,6 +751,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         key_cards.append(cards[len(segments[0]["cards"]) - 1])
     return {
         "headline": _headline(element_rows, dignity, aspects),
+        "chance": chance_view(spread_key, spread_results, dignity_matrix, framework_basis or "", own_place),
         "framework": macro_framework,
         "framework_basis": framework_basis,
         "own_place": [dict(c, sentence=own_place_sentence(c)) for c in own_place or ()],
