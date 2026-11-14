@@ -10,6 +10,7 @@
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Framework Basis:** the default lens: the cards run neither down nor up the Tree clearly enough to pick another, so the cards did not choose it.
+**Against Chance:** Compared with random shuffles of this spread, these stand out: trumps, 27, unusually high (about 1 in 26 random shuffles go this far). The other 6 numbers checked (elemental dignity total, most cards of one element, fewest cards of one element, ill-dignified cards, ranks falling three or four times, tree lens chosen by the cards) are in the usual range. Random shuffles show at least one unusual number 31% of the time, so weigh a single one lightly.
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 

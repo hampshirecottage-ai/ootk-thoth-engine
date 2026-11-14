@@ -10,6 +10,7 @@ from ootk.analysis import (
     book_t_counts, derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
     framework_basis_short, major_element_note, spirit_bearing_cards,
 )
+from ootk.chance import chance_sentence, chance_view
 from ootk.decans import angels_markdown, dates_markdown, day_ruler
 from ootk.titles import titles_markdown
 from ootk.gods import gods_markdown, hexagrams_markdown
@@ -189,6 +190,9 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
     macro_framework, framework_basis = evaluate_macro_framework(spread_results, forced_framework=framework)
     own_place = own_place_check(spread_results, spread_key)
     off, fitted = frozenset(without), []
+    # Only the extra layers are ever left out to fit, and none of them is in the comparison.
+    against_chance = chance_sentence(chance_view(spread_key, spread_results, dignity_matrix,
+                                                 framework_basis, own_place, off))
     while True:
         analytical_prompt = build_analytical_prompt(
             spread_name, query_prompt, significator, seed_val, spread_results, element_counts,
@@ -197,7 +201,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
             significator_places=significator_places, drawn_at=drawn_at, local_zone=local_zone,
             book_t=book_t_counts(spread_results, spread_key),
             book_t_notes=book_t_notes(spread_results, book_t_ops) if book_t_ops else None,
-            without=off, fitted=tuple(fitted),
+            without=off, fitted=tuple(fitted), against_chance=against_chance,
         )
         left = [k for k in FIT_ORDER if k not in off
                 and any(m in analytical_prompt for m in _FIT_MARKS[k])]
@@ -232,8 +236,8 @@ def _renumber(text, new):
         return f"{word} {a}-{b}"
     return _SECTION_REF.sub(sub, text)
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=DEFAULT_OFF, fitted=()):
-    """`fitted` are the components in `without` that analyze_reading left out only to keep the
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=DEFAULT_OFF, fitted=(), against_chance=""):
+    """`against_chance` is chance.chance_sentence() for the reading. `fitted` are the components in `without` that analyze_reading left out only to keep the
     prompt short enough; the header names them apart from the ones switched off."""
     off = frozenset(without)
     unknown = off - set(COMPONENTS)
@@ -259,6 +263,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         mapping_note += _THOTH_CUBE_NOTE
     mapping_note_line = f"**Mapping Note:** {mapping_note}\n" if mapping_note else ""
     framework_basis_line = f"**Framework Basis:** {framework_basis}\n" if framework_basis else ""
+    framework_basis_line += f"**Against Chance:** {against_chance}\n" if against_chance else ""
 
     end_marker = end_of_prompt_marker(len(spread_results))
     header_md = f"""# HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT

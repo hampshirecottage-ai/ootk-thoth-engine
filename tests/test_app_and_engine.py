@@ -2508,7 +2508,16 @@ def test_dignity_headline_compares_with_chance():
 def test_dignity_tile_gives_the_random_range():
     from ootk.visual import _dignity_counts
     chance = _dignity_counts([{"score": 1}] * 36)["chance"]
-    assert (chance["mean_text"], chance["low_text"], chance["high_text"]) == ("+17", "+3", "+32")
+    assert (chance["mean_text"], chance["low_text"], chance["high_text"]) == ("+17", "+2", "+32")
+
+
+def test_one_contrary_pair_is_not_unusual_on_a_short_spread():
+    # One contrary pair falls in about a quarter of random two-card draws: the exact sum of the
+    # pair scores says so, where a normal curve over one pair would call it unusual.
+    c = analysis.dignity_chance(1, -2)
+    assert c["lean"] == "usual" and c["p_low"] == pytest.approx(0.253, abs=0.001)
+    assert analysis.dignity_chance(9, -6)["lean"] == "below"
+    assert sum(analysis.PAIR_SCORE_PROBS.values()) == pytest.approx(1)
 
 # ---------- logic consistency (2026-10-05 audit) ----------
 

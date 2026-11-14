@@ -116,6 +116,25 @@
         .headline { font-size: 1.05em; margin: 4px 0 14px; padding-left: 0; list-style: none; }
         .headline li { margin-bottom: 4px; }
         .headline li::before { content: "◆ "; color: var(--accent); }
+        /* How unusual is this? Each headline number beside what random shuffles give. */
+        .chance-box { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--panel-2); }
+        .chance-box summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+        .chance-box p { font-size: 0.85em; margin: 8px 0; }
+        .chance-table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        .chance-table th, .chance-table td { text-align: left; padding: 5px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+        .chance-table th { font-weight: 600; color: var(--muted); border-top: 0; }
+        .chance-table .num { white-space: nowrap; }
+        .chance-table tr.is-unusual td { font-weight: 600; }
+        .chance-table tr.is-unusual td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+        @media (max-width: 560px) {
+            .chance-table, .chance-table tbody { display: block; }
+            .chance-table thead { display: none; }
+            .chance-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; border-top: 1px solid var(--line); padding: 6px 0; }
+            .chance-table td { display: block; border: 0; padding: 1px 6px; min-width: 0; }
+            .chance-table td:nth-child(2) { text-align: right; }
+            .chance-table td:nth-child(3), .chance-table td:nth-child(4) { grid-column: 1 / -1; font-size: 0.95em; }
+            .chance-table td:nth-child(3)::before { content: "Random shuffles: "; color: var(--muted); }
+        }
         /* Chart on the left, stretched to the height of the tiles and key cards on the right. */
         .balance-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 3fr); gap: 12px 20px; align-items: stretch; }
         .balance-chart { display: flex; flex-direction: column; min-width: 0; }
@@ -400,6 +419,22 @@
             {% for e in S.elements if e.count %}<span style="flex-grow:{{ e.count }}; background:{{ e.color }}" title="{{ e.element }} {{ e.count }}"></span>{% endfor %}
         </div>
         <p class="legend" style="margin-top:6px">{% for e in S.elements %}<span><i class="dot" style="background:{{ e.color }}"></i>{{ e.element }} {{ e.count }}</span>{% endfor %}</p>
+        {% if S.chance %}{% set C = S.chance %}
+        <details class="chance-box" id="howUnusual">
+            <summary><strong>How unusual is this?</strong>
+                <span class="muted">{% if C.unusual %}{{ C.unusual | length }} of {{ C.rows | length }} numbers stand{{ 's' if C.unusual | length == 1 }} out from chance{% else %}Nothing here stands out from chance{% endif %}</span></summary>
+            <p class="muted">Each number beside what random shuffles of this spread give. A number is called unusual only when random shuffles reach it, or go further, 1 time in 20 or less.</p>
+            <table class="chance-table">
+                <thead><tr><th>Number</th><th>This reading</th><th>Random shuffles</th><th></th></tr></thead>
+                <tbody>
+                {% for r in C.rows %}
+                <tr class="{{ 'is-unusual' if r.unusual }}"><td>{{ r.label }}</td><td class="num">{{ r.value }}</td><td class="num">{{ r.usual }}</td><td>{{ r.verdict }}{% if r.odds %}<span class="muted">: {{ r.odds }}</span>{% endif %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p class="muted">With {{ C.rows | length }} numbers checked, {{ (100 * C.any_rate) | round | int }}% of random shuffles show at least one unusual one, so a single flag is weak evidence on its own.</p>
+        </details>
+        {% endif %}
     </section>
 
     <!-- ===== EVERYTHING ELSE, FOLDED ===== -->

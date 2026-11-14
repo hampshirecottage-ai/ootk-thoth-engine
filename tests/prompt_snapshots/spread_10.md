@@ -10,6 +10,7 @@
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
 **Framework Basis:** the default lens: the cards run neither down nor up the Tree clearly enough to pick another, so the cards did not choose it.
+**Against Chance:** Compared with random shuffles of this spread, none of the 8 numbers checked (elemental dignity total, most cards of one element, fewest cards of one element, ill-dignified cards, trumps, ranks falling three or four times, tree lens chosen by the cards, cards on their own sign) is unusual, so read them as ordinary for this spread.
 **Own-Place Check:** a card on its own decan (its pip), its own sign (a sign Trump, a pip, or a Knight, Queen or Prince by the sign that gives it its letter) or its natural house (the house of that sign, Aries = 1st).
   * Signs: 1 of 12 cards on their own sign: Pos 5 (XI - Lust)
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
