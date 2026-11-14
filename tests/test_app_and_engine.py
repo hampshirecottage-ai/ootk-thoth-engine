@@ -583,9 +583,12 @@ def test_guide_pages_render_and_link_each_other(client, monkeypatch):
                           ("/library", "Every spread"), ("/maps", "Pick a card"), ("/method", "Worth knowing")]:
         page = client.get(path)
         assert page.status_code == 200 and heading in page.text
-        assert f'<a href="{path}" aria-current="page">' in page.text      # nav marks this page
+        if path != "/library":                                            # Library is off the menu
+            assert f'<a href="{path}" aria-current="page">' in page.text  # nav marks this page
         assert 'class="site-footer"' in page.text and 'rel="canonical"' in page.text
+        assert 'href="/library">' not in page.text                        # no menu, footer or text link
     assert 'href="/start"' in client.get("/").text                       # start page links in
+    assert 'href="/library">' not in client.get("/").text
 
 
 def test_landing_pages_match_their_keywords_and_are_listed(client, monkeypatch):
