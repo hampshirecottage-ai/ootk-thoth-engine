@@ -565,12 +565,16 @@ def liber_777_markdown(spread_results):
     if split:
         md += (" A position marked (colours) takes only the colours from that row, one marked (title) "
                "only the title: the colours follow the sign and the title follows the card's path.")
+        if any(not row["colours"] or not row["title"] for row in rows.values()):
+            md += " A dash means no position in this reading takes that part of the row."
     md += ("\n\n| 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |\n"
            "|---|---|---|---|---|---|---|\n")
     for key in sorted(rows):
         row = rows[key]
-        scales = " | ".join(c or "" for c in (row["colours"] or ("",) * 4))
-        md += (f"| {row['label']} | {row['title'] or ''} | {scales} | "
+        # Under the Thoth swap a row can be used for its title only, or its colours only: a dash
+        # says no drawn card takes the other part, so a blank cell never reads as missing data.
+        scales = " | ".join(c or "" for c in row["colours"]) if row["colours"] else " | ".join(["—"] * 4)
+        md += (f"| {row['label']} | {row['title'] or ('—' if row['colours'] else '')} | {scales} | "
                f"{', '.join(row['pos'])} |\n")
     return md + "\n"
 
