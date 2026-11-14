@@ -10,7 +10,7 @@ from ootk.analysis import (
     book_t_counts, derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
     framework_basis_short, major_element_note, spirit_bearing_cards,
 )
-from ootk.decans import angels_markdown, dates_markdown, day_ruler, solar_year
+from ootk.decans import angels_markdown, dates_markdown, day_ruler
 from ootk.titles import titles_markdown
 from ootk.gods import gods_markdown, hexagrams_markdown
 from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
@@ -490,7 +490,7 @@ def _cards_md(spread_results, legend, off=frozenset(), drawn_at=None):
     if "angels" not in off:
         md += angels_markdown(spread_results)
     if "timing" not in off and drawn_at is not None:
-        md += dates_markdown(spread_results, solar_year(drawn_at))
+        md += dates_markdown(spread_results, drawn_at)
     if "gods" not in off:
         md += gods_markdown(spread_results)
     if "hexagrams" not in off:
