@@ -737,7 +737,17 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
     dignity = _dignity_counts(dignity_matrix)
     aspects = _aspect_counts(all_aspects)
     key_cards = [cards[0]] if cards else []
-    if segments and len(segments[0]["cards"]) > 1:
+    # Book T: the story is the Count, the cards it lands on from the Significator in each
+    # operation. The last card of Operation 1's pile has no part in it, so it is not a key card.
+    count_rows = []
+    if book_t:
+        for seg, seg_book_t in zip(segments, book_t):
+            bt = seg_book_t or {}
+            chain = [seg["cards"][k] for k in bt.get("chain", []) if k]
+            left = bt.get("leftover")
+            count_rows.append({"name": seg["name"], "cards": chain, "missed": bool(bt.get("missed")),
+                               "leftover": seg["cards"][left] if left is not None else None})
+    elif segments and len(segments[0]["cards"]) > 1:
         key_cards.append(cards[len(segments[0]["cards"]) - 1])
     return {
         "headline": _headline(element_rows, dignity, aspects),
@@ -754,6 +764,7 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         # Different cards: fewer than card_count when operations reshuffle and a card falls again.
         "distinct_count": len({item["card_data"]["title"] for item in spread_results}),
         "key_cards": key_cards,
+        "count_rows": count_rows,
         "segments": segments,
         "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix, sign_carriers),
         "aspect_types": [{"type": t, "color": ASPECT_COLORS[t], "strong": is_strong(
