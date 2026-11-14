@@ -184,6 +184,17 @@ def test_liber_777_rows_list_every_card_once_per_part():
     assert "King Scale Color" not in prompt         # the King Scale is in the table now
 
 
+def test_an_aquarius_card_alone_dashes_the_parts_no_card_takes():
+    """With no Aries card drawn, Path 15 is used only for the Star's title and Path 28 only for
+    its colours: the parts no position takes show a dash, not a blank that reads as missing."""
+    item = {"position_number": 1, "position_name": "Card",
+            "card_data": copy.deepcopy(REFERENCE["rows"]["XVII - The Star"])}
+    md = liber_777_markdown([item])
+    assert "| Path 15 Window | Constituting Intelligence | — | — | — | — | 1 (title) |" in md
+    assert "| Path 28 Fish-hook | — | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |" in md
+    assert "A dash means no position in this reading takes that part of the row." in md
+
+
 def test_a_card_on_one_row_has_no_split_note():
     """A pip takes its colours and title from its Sephira's row, so it needs no (colours)/(title) mark."""
     item = {"position_number": 1, "position_name": "Card",
