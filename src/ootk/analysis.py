@@ -568,6 +568,27 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
                        f"(Sephirothic rank), so the default Life Path lens is used; the "
                        f"cards did not choose it - {stats}")
 
+def framework_basis_short(basis):
+    """The framework basis in one plain clause, without the trend numbers: whether the cards
+    chose the lens, it is the default, or the querent chose it. The prompt gives this when the
+    statistics are left out, so the AI never reads a default lens as something the cards said.
+    Follows the wording evaluate_macro_framework() writes; None for no basis."""
+    if not basis:
+        return None
+    if basis.startswith("forced by"):
+        return "chosen by the querent, not by the cards."
+    if basis.startswith("auto: rank rises"):
+        return ("chosen by the cards: their places on the Tree run down towards Malkuth across "
+                "the draw, more steadily than most random shuffles.")
+    if basis.startswith("auto: rank falls"):
+        return ("chosen by the cards: their places on the Tree run up towards Kether across the "
+                "draw, more steadily than most random shuffles.")
+    if basis.startswith("auto: only") or basis.startswith("auto: no cards"):
+        return (f"the default lens: fewer than {FRAMEWORK_MIN_CARDS} cards have a place on the "
+                "Tree, too few to test, so the cards did not choose it.")
+    return ("the default lens: the cards run neither down nor up the Tree clearly enough to pick "
+            "another, so the cards did not choose it.")
+
 # Own-place check. On the house, sign and decan wheels a card can land on its own place: a pip
 # on its own decan, a sign Trump on its own sign, a card in the house of its sign (Aries the
 # 1st house ... Pisces the 12th). Each wheel draws from the whole 78-card deck, so the chance of

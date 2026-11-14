@@ -14,6 +14,7 @@
   * Operation 4: Decan 10: Mars in Scorpio (5 of Cups), the Significator is the card printed at position 49
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
+**Framework Basis:** the default lens: the cards run neither down nor up the Tree clearly enough to pick another, so the cards did not choose it.
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 
