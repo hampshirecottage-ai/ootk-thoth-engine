@@ -1963,6 +1963,35 @@ def test_framework_basis_explains_n():
     assert "courts have none" not in basis
 
 
+
+def test_short_framework_basis_says_who_chose_the_lens():
+    def basis(ranks, forced="auto"):
+        cards = [{"position_number": i, "position_name": "", "card_data": dict(fake_card(f"C{i}"), key_scale=k, path_or_sephira="")}
+                 for i, k in enumerate(ranks)]
+        return analysis.framework_basis_short(analysis.evaluate_macro_framework(cards, forced)[1])
+    assert basis(range(1, 11)).startswith("chosen by the cards: their places on the Tree run down")
+    assert basis(range(10, 0, -1)).startswith("chosen by the cards: their places on the Tree run up")
+    assert basis([5, 5, 5, 5, 5, 5, 5]).startswith("the default lens: the cards run neither")
+    assert basis([1, 2]).startswith("the default lens: fewer than 6 cards")
+    assert basis(range(1, 11), "soul_formation") == "chosen by the querent, not by the cards."
+    assert analysis.framework_basis_short(None) is None
+
+
+def test_default_prompt_says_the_lens_was_not_chosen_by_the_cards():
+    results = [{"position_number": i + 1, "position_name": "x", "card_data": fake_card(f"C{i}")} for i in range(3)]
+    counts = analysis.analyze_elemental_balance(results)
+    sdist, _ = analysis.analyze_hebrew_spatial_distribution(results)
+    solids, _ = analysis.analyze_platonic_topology(results)
+    name, basis = analysis.evaluate_macro_framework(results)
+    def prompt(without):
+        return report.build_analytical_prompt("Triad", "", "", "1", results, counts, [], [], sdist, solids,
+                                              name, framework_basis=basis, without=without)
+    default = prompt(report.DEFAULT_OFF)
+    assert "**Framework Basis:** the default lens: fewer than 6 cards" in default
+    assert "z=" not in default
+    assert f"**Framework Basis:** {basis}" in prompt(report.DEFAULT_OFF - {"statistics"})
+    assert "Framework Basis" not in prompt(report.DEFAULT_OFF | {"tree"})
+
 def test_court_letter_is_labelled_as_coming_through_its_sign():
     knight = fake_card("Knight of Swords", suit="Swords", arcana="Court",
                        attribution="Fire of Air - 20° Taurus to 20° Gemini")

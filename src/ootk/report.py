@@ -8,7 +8,7 @@ from ootk.analysis import (
     SUIT_ELEMENTS, analyze_elemental_balance, analyze_hebrew_spatial_distribution,
     analyze_platonic_topology, analyze_spatial_vectors, calculate_elemental_dignities, card_home,
     book_t_counts, derive_primary_element, evaluate_macro_framework, own_place_check, own_place_sentence,
-    major_element_note, spirit_bearing_cards,
+    framework_basis_short, major_element_note, spirit_bearing_cards,
 )
 from ootk.decans import angels_markdown, dates_markdown, day_ruler, solar_year
 from ootk.titles import titles_markdown
@@ -241,8 +241,10 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
         book_t = None
     if "astrology" in off:
         own_place = None
-    if "tree" in off or "statistics" in off:
+    if "tree" in off:
         framework_basis = None
+    elif "statistics" in off:
+        framework_basis = framework_basis_short(framework_basis)
     if own_place and "statistics" in off:
         own_place = [c for c in own_place if c["count"]] or None
     if "all_aspects" in off:
