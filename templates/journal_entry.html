@@ -23,6 +23,15 @@
 {% block content %}
         <p class="note"><a href="/journal">&larr; My journal</a>{% if thread %} · <a href="/journal/thread/{{ thread.thread_id }}">{{ thread.name }}</a>{% endif %} · <a href="/journal/timeline">Timeline</a></p>
         {% if new %}<p class="panel j-ok" role="status">Added to your journal. Paste your AI&rsquo;s answer below when you have it.</p>{% endif %}
+        {% if new and journal_link %}
+        {# A journal started from a report lands here, so the link to save is shown here too. #}
+        <section class="panel j-key" aria-labelledby="keyTitle">
+            <h2 id="keyTitle">Save your journal link</h2>
+            <p>This link is the only way back into your journal on another device, or if this browser forgets it. Bookmark it or email it to yourself. Anyone who has it can open the journal.</p>
+            <div class="j-copy"><code id="journalLink">{{ journal_link }}</code><button type="button" class="btn-small" onclick="ootkCopyButton(this, document.getElementById('journalLink').textContent, document.getElementById('journalLink'))">Copy link</button></div>
+        </section>
+        <script src="{{ static_url('js/copy.js') }}" defer></script>
+        {% endif %}
         {% if saved %}<p class="panel j-ok" role="status">Saved.</p>{% endif %}
         <section class="panel" aria-labelledby="cardsTitle">
             <div class="j-head"><h2 id="cardsTitle">The cards</h2>{% if entry.link %}<a class="btn secondary" href="/report/{{ entry.link }}">Open the report</a>{% endif %}</div>
