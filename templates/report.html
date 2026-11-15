@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% with noindex=true %}{% include "_head_meta.html" %}{% endwith %}
     <title>{{ spread_name }} reading · OOTK Thoth Engine</title>
-    <script>
-        // Saved choice first, otherwise the light (beige) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
     <style>
         :root {
             --bg: #121212; --panel: #1e1e1e; --panel-2: #252525; --line: #333; --text: #e0e0e0;
