@@ -1487,6 +1487,14 @@ def test_card_of_the_day_is_the_top_card_of_the_date_seeded_deck(seeded_client, 
     assert "The sky today" in r.text and "10° Libra, decan 2" in r.text   # the Sun at noon UTC
     assert seeded_client.get("/day/2026-09-30").status_code == 200
     assert "Next day" in seeded_client.get("/day/2026-09-30").text
+    # The same menu under the banner as the guide pages, so there is a way on from here.
+    assert '<nav class="guide-nav"' in r.text and 'href="/method"' in r.text
+
+
+def test_pick_by_hand_has_the_guide_menu(client):
+    pick = client.get("/pick").text
+    assert '<nav class="guide-nav"' in pick and 'href="/start"' in pick and 'class="guide-draw"' in pick
+    assert '" aria-current="page">' not in pick                 # no menu item is this page
 
 
 @pytest.mark.parametrize("day", ["2026-10-05", "2026-1-3", "yesterday", "2026-02-30"])
