@@ -66,20 +66,21 @@ PRINCESS_QUADRANTS = {
 
 # (first day as (month, day), card), in calendar order. Each span runs until the day before
 # the next one starts. Sun ingress dates shift by a day between years, so a birthday on the
-# boundary can belong to either card.
+# boundary can belong to either card. Each first day is the date on which most births have the
+# Sun past 20 degrees of the sign (sky.sun_longitude, births 1940-2015, UTC; checked 2026-11-15).
 BIRTH_SPANS = [
     ((1, 10), "Prince of Swords"),   # 21° Capricorn - 20° Aquarius
     ((2, 9), "Knight of Cups"),      # 21° Aquarius - 20° Pisces
     ((3, 11), "Queen of Wands"),     # 21° Pisces - 20° Aries
-    ((4, 11), "Prince of Disks"),    # 21° Aries - 20° Taurus
+    ((4, 10), "Prince of Disks"),    # 21° Aries - 20° Taurus
     ((5, 11), "Knight of Swords"),   # 21° Taurus - 20° Gemini
     ((6, 11), "Queen of Cups"),      # 21° Gemini - 20° Cancer
     ((7, 12), "Prince of Wands"),    # 21° Cancer - 20° Leo
-    ((8, 12), "Knight of Disks"),    # 21° Leo - 20° Virgo
-    ((9, 12), "Queen of Swords"),    # 21° Virgo - 20° Libra
+    ((8, 13), "Knight of Disks"),    # 21° Leo - 20° Virgo
+    ((9, 13), "Queen of Swords"),    # 21° Virgo - 20° Libra
     ((10, 13), "Prince of Cups"),    # 21° Libra - 20° Scorpio
     ((11, 13), "Knight of Wands"),   # 21° Scorpio - 20° Sagittarius
-    ((12, 13), "Queen of Disks"),    # 21° Sagittarius - 20° Capricorn
+    ((12, 12), "Queen of Disks"),    # 21° Sagittarius - 20° Capricorn
 ]
 
 

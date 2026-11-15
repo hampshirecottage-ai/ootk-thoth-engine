@@ -2166,7 +2166,10 @@ def test_book_t_card():
     (1, 1, "Queen of Disks"), (1, 9, "Queen of Disks"), (1, 10, "Prince of Swords"),
     (3, 10, "Knight of Cups"), (3, 11, "Queen of Wands"), (5, 20, "Knight of Swords"),
     (7, 12, "Prince of Wands"), (8, 11, "Prince of Wands"), (11, 13, "Knight of Wands"),
-    (12, 12, "Knight of Wands"), (12, 13, "Queen of Disks"), (12, 31, "Queen of Disks"),
+    (12, 11, "Knight of Wands"), (12, 12, "Queen of Disks"), (12, 31, "Queen of Disks"),
+    # the Sun passes 20 degrees of the sign on these days in most years
+    (4, 9, "Queen of Wands"), (4, 10, "Prince of Disks"), (8, 12, "Prince of Wands"),
+    (8, 13, "Knight of Disks"), (9, 12, "Knight of Disks"), (9, 13, "Queen of Swords"),
 ])
 def test_card_for_birthday(month, day, card):
     from ootk import significator
@@ -2192,8 +2195,8 @@ def test_court_previews():
     assert len(previews) == 16
     assert previews["Queen of Wands"] == {
         "element": "Water of Fire",
-        "place": "21° Pisces to 20° Aries, birthdays about 11 March to 10 April"}
-    assert previews["Queen of Disks"]["place"].endswith("13 December to 9 January")   # wraps the year
+        "place": "21° Pisces to 20° Aries, birthdays about 11 March to 9 April"}
+    assert previews["Queen of Disks"]["place"].endswith("12 December to 9 January")   # wraps the year
     assert previews["Princess of Cups"]["place"].startswith("Rules the Libra, Scorpio and Sagittarius")
     # Each dated preview's first day gives that card by birthday.
     for (month, day), card in significator.BIRTH_SPANS:
