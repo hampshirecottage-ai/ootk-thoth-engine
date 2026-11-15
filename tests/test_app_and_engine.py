@@ -530,6 +530,23 @@ def test_card_pages_list_every_card_and_are_in_the_sitemap(client, monkeypatch):
     assert client.get("/card/the-moon", headers={"accept": "text/html"}).status_code == 404
 
 
+def test_card_pages_call_a_small_cards_sephira_a_sephira(client, monkeypatch):
+    """The letter column holds a Sephira for the small cards (Tiphareth for a 6), so their
+    pages say Sephira; the Trumps and courts keep Hebrew letter."""
+    reference = json.loads((Path(__file__).parent / "fixtures" / "reference_cards.json").read_text())
+    monkeypatch.setattr(app_module, "reference_deck", lambda: reference["deck"])
+    monkeypatch.setattr(app_module, "reference_rows", lambda system: reference["rows"])
+    six = client.get("/card/6-of-wands").text
+    assert "<dt>Sephira</dt>" in six and "<dt>Hebrew letter</dt>" not in six
+    assert "(Tiphareth)</dd>" in six
+    assert "Hebrew letter" not in re.search(r'<meta name="description" content="([^"]*)"', six).group(1)
+    ace = client.get("/card/ace-of-cups").text
+    assert "<dt>Sephira</dt>" in ace and "(Kether)" in ace
+    for slug in ("the-star", "knight-of-wands"):
+        page = client.get(f"/card/{slug}").text
+        assert "<dt>Hebrew letter</dt>" in page and "<dt>Sephira</dt>" not in page
+
+
 def test_sitemap_survives_the_database_being_down(client, monkeypatch):
     def down():
         raise app_module.psycopg.OperationalError("asleep")
