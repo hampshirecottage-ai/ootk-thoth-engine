@@ -83,7 +83,7 @@ def test_prompt_says_what_stands_out_and_how_often_chance_does(tables):
     r = _book_t_reading()
     line = next(l for l in r["analytical_prompt"].splitlines() if l.startswith("**Against Chance:**"))
     assert "trumps, 27, unusually high (about 1 in 26 random shuffles go this far)" in line
-    assert "at least one unusual number 31% of the time" in line
+    assert "at least one unusual number 32% of the time" in line
 
 
 def test_nothing_unusual_says_read_as_ordinary():
@@ -98,7 +98,7 @@ def test_report_shows_the_box(tables):
                                    "&expect=1,10/6,10,6&drawn=20261111T1800Z")
     assert page.status_code == 200
     assert 'id="howUnusual"' in page.text and "1 of 7 numbers stands out from chance" in page.text
-    assert "31% of random shuffles show at least one unusual one" in page.text
+    assert "32% of random shuffles show at least one unusual one" in page.text
 
 
 def test_one_card_has_no_box(tables):

@@ -24,7 +24,7 @@ from ootk.analysis import (
 )
 
 CHANCE_FILE = Path(__file__).with_name("chance.json")
-CHANCE_DRAWS = 4000
+CHANCE_DRAWS = 16000      # 4,000 left a few values on the 36-decan wheel within sampling error of the 5% line
 FOUR = ("Fire", "Water", "Air", "Earth")
 MIN_POSITIONS = 3            # one or two cards give too few numbers to compare
 
