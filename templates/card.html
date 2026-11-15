@@ -35,7 +35,7 @@
                         {% if card.attribution and card.attribution != card.element %}<dt>Attribution</dt><dd>{{ card.attribution }}</dd>{% endif %}
                         {% if card.element %}<dt>Element</dt><dd>{{ card.element }}</dd>{% endif %}
                         {% if card.letter %}<dt>{{ letter_label }}</dt><dd>{{ card.letter }}</dd>{% endif %}
-                        {% if card.colour_name %}<dt>King Scale colour</dt><dd>{% if card.colour %}<span class="swatch" style="background:{{ card.colour }}"></span>{% endif %}{{ card.colour_name }}</dd>{% endif %}
+                        {% if card.colour_name %}<dt>King Scale</dt><dd>{% if card.colour %}<span class="swatch" style="background:{{ card.colour }}"></span>{% endif %}{{ card.colour_name }}</dd>{% endif %}
                         {% if card.solid %}<dt>Platonic solid</dt><dd>{{ card.solid.name }}</dd>{% endif %}
                     </dl>
                 </div>

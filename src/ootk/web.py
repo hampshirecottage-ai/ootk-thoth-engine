@@ -380,8 +380,9 @@ SPREAD_GUIDE = {
     "14": ("Celtic Cross", "The best-known ten-card spread: the matter, what crosses it, its roots "
                            "and aim, past and next, then you, your surroundings, hopes and fears "
                            "and the outcome."),
-    "8": ("First Operation", "Start the Opening of the Key: what the question is really about. "
-                             "Needs a significator."),
+    "8": ("First Operation (15-card heap)", "A shorter first step of the Opening of the Key: what the "
+                                            "question is really about, from 15 cards rather than Book T's "
+                                            "four packs. Needs a significator."),
     "9": ("Second Operation", "Which areas of life are involved: self, money, home, love, work and more."),
     "10": ("Third Operation", "How the matter develops, sign by sign."),
     "11": ("Fourth Operation", "The fine detail, through all 36 decans."),
@@ -1008,7 +1009,7 @@ def seeded_draw(deck, seed, spread_key, significator, expect=""):
     if sig_card is None and has_significator_position(positions):
         raise HTTPException(status_code=400,
                             detail=f"{SPREADS[spread_key]['name']} needs a significator. "
-                                   f"Choose one under Significator on the start page.")
+                                   f"Choose one under Significator on the reading form.")
     try:
         card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
     except ValueError as e:                 # a card table that is empty or only partly loaded
@@ -1027,7 +1028,7 @@ def book_t_draw(deck, seed, significator, expect):
         raise HTTPException(status_code=400, detail=(
             f"Significator {quoted(significator)} was not found in the deck. " + (hint or "")
             if significator else f"{BOOK_T_SPREAD['name']} needs a significator. "
-                                 f"Choose one under Significator on the start page.").strip())
+                                 f"Choose one under Significator on the reading form.").strip())
     try:
         expected = book_t.parse_expect(expect)
     except ValueError as e:
