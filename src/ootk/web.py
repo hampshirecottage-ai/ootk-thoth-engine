@@ -2019,6 +2019,8 @@ def journal_entry(request: Request, entry_id: int):
                         windows_shown=shown, found=found,
                         thread=next((t for t in threads if t["thread_id"] == entry["thread_id"]), None),
                         new="new" in request.query_params, saved="saved" in request.query_params,
+                        journal_link=(f"{site_url(request)}/journal/k/{journal_cookie_key(request)}"
+                                      if "new" in request.query_params else None),
                         limits={"answer": journal.ANSWER_MAX, "note": journal.NOTE_MAX, "name": journal.NAME_MAX})
 
 

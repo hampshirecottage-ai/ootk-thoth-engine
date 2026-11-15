@@ -88,7 +88,8 @@
         .journal-box .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
         .journal-add { display: grid; gap: 6px; max-width: 420px; margin-top: 8px; }
         .journal-add label { font-size: 0.9em; font-weight: 600; }
-        .journal-add select, .journal-add input { margin: 0; }
+        .journal-add select, .journal-add input { width: 100%; margin: 0; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 4px; font-size: 0.95em; }
+        @media (max-width: 640px) { .journal-add select, .journal-add input { font-size: 16px; } }
         .journal-add button { justify-self: start; }
         .journal-box form.actions { margin: 0; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }

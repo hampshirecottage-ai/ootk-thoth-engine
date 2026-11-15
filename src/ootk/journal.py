@@ -244,7 +244,7 @@ def delete_entry(conn, journal_id, entry_id):
 
 def export_markdown(threads, entries, spread_label=str):
     """The whole journal as one Markdown file: each thread, then its entries oldest first."""
-    groups = [(t["thread_id"], t["name"]) for t in threads] + [(None, "Not in a thread")]
+    groups = [(t["thread_id"], t["name"]) for t in threads] + [(None, "Not in a question")]
     out = ["# My reading journal", ""]
     for thread_id, name in groups:
         mine = sorted((e for e in entries if e["thread_id"] == thread_id), key=lambda e: e["added_at"])
@@ -523,7 +523,7 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
         return SIGN_ELEMENT[i]
 
     groups = []
-    order = [(t["thread_id"], t["name"]) for t in threads] + [(None, "Not in a thread")]
+    order = [(t["thread_id"], t["name"]) for t in threads] + [(None, "Not in a question")]
     for thread_id, name in order:
         rows = []
         for e in sorted((e for e in entries if e["thread_id"] == thread_id), key=lambda e: e["drawn_at"]):

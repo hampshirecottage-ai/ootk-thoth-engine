@@ -73,7 +73,7 @@ def test_timeline_rows_follow_the_threads_with_positions_in_the_span():
     assert t["start"] == date(2026, 11, 1) and t["months_count"] == 12
     assert [m["label"] for m in t["months"]][:3] == ["Nov", "Dec", "Jan"]
     assert {s["name"] for s in t["signs"]} == {name for name, _ in journal.SIGNS}
-    assert [g["name"] for g in t["groups"]] == ["Relationships", "Not in a thread"]
+    assert [g["name"] for g in t["groups"]] == ["Relationships", "Not in a question"]
     peace, one_day = t["groups"][0]["rows"]
     assert peace["kind"] == "bar" and 0 < peace["left"] < 5 and peace["width"] > 0
     assert peace["element"] == "water"            # 12 Nov: the Sun in Scorpio
@@ -87,7 +87,7 @@ def test_export_lists_each_thread_and_its_answers():
               outcome_at=datetime(2026, 12, 1), added_at=datetime(2026, 11, 13))
     text = journal.export_markdown([{"thread_id": 1, "name": "Relationships"}], [e])
     assert "## Relationships" in text and "It looks calm." in text and "It was." in text
-    assert "Not in a thread" not in text
+    assert "Not in a question" not in text
 
 
 def test_without_a_key_there_is_no_journal(client, monkeypatch):  # noqa: F811
@@ -134,6 +134,10 @@ def test_journal_flow_from_report_to_timeline_and_delete(key):
     entry_url = r.headers["location"].split("?")[0]
     jkey = c.cookies.get("ootk_journal")
     assert jkey and "httponly" in r.headers["set-cookie"].lower()
+    # Started from a report, the entry page shows the link to save; later visits don't.
+    first = c.get(r.headers["location"]).text
+    assert "Save your journal link" in first and f"/journal/k/{jkey}" in first
+    assert "Save your journal link" not in c.get(entry_url).text
 
     # The first answer pasted puts its dates on the timeline.
     page = c.post(entry_url, data={"answer": ANSWER, "answer_ai": "Claude", "thread": "new",
