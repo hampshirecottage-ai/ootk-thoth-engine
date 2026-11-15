@@ -459,7 +459,7 @@ def test_form_errors_render_a_page_with_a_way_back(client):
     r = client.post("/generate_report", headers={"Accept": "text/html"},
                     data={"spread_key": "<b>", "selected_cards": "A,B,C"})
     assert r.status_code == 400 and "text/html" in r.headers["content-type"]   # browsers: a page
-    assert "Back to settings" in r.text
+    assert "Go back" in r.text
     assert "&lt;b&gt;" in r.text and "<b>" not in r.text                        # escaped
     assert "issues/new?template=bug_report.yml" in r.text                      # and a way to report it
 
@@ -2118,7 +2118,7 @@ def test_report_has_its_own_link_and_reloading_saves_nothing(client):
         assert page.status_code == 200 and 'id="nextStep"' in page.text
     assert client.saved["count"] == 1
     missing = client.get("/report/5", headers={"Accept": "text/html"})
-    assert missing.status_code == 404 and "Back to settings" in missing.text
+    assert missing.status_code == 404 and "Go back" in missing.text
 
 
 def test_failed_save_says_so_on_the_report(client, monkeypatch):
@@ -2417,12 +2417,31 @@ def test_unexpected_errors_get_an_apology_page(client, monkeypatch):
     assert "secret internals" not in r.text and "Report a bug" in r.text
 
 
+def test_error_pages_wear_the_sites_bar_theme_and_footer(client, monkeypatch):
+    r = client.get("/no-such-page", headers=HTML)
+    assert r.status_code == 404
+    assert "<title>Page not found · OOTK Thoth Engine</title>" in r.text
+    assert 'class="site-bar"' in r.text and 'id="themeToggle"' in r.text       # bar and theme switch
+    assert 'localStorage.getItem("ootk.theme")' in r.text                         # the chosen theme
+    assert 'class="site-footer"' in r.text and 'class="guide-nav"' in r.text     # footer and menu
+    assert '<meta name="robots" content="noindex">' in r.text and 'rel="canonical"' not in r.text
+    assert "&larr; Go back" in r.text and "Back to settings" not in r.text
+    assert "prefers-color-scheme" not in r.text      # follows the site's theme, not the device's
+
+    def broken(*a, **k):
+        raise RuntimeError("template trouble")
+    monkeypatch.setattr(app_module.templates, "TemplateResponse", broken)
+    bare = client.get("/no-such-page", headers=HTML)
+    assert bare.status_code == 404 and "<title>Page not found · OOTK Thoth Engine</title>" in bare.text
+    assert "Go back" in bare.text and 'class="site-bar"' not in bare.text
+
+
 def test_router_errors_and_incomplete_forms_render_pages(client):
     r = client.get("/no-such-page", headers=HTML)
     assert r.status_code == 404 and "Page not found" in r.text
     assert client.get("/no-such-page").json() == {"detail": "Not Found"}     # API clients unchanged
     r = client.post("/generate_report", headers=HTML, data={"topic": "x"})
-    assert r.status_code == 400 and "spread_key" in r.text and "Back to settings" in r.text
+    assert r.status_code == 400 and "spread_key" in r.text and "Go back" in r.text
     assert client.post("/generate_report", data={"topic": "x"}).status_code == 422
 
 
