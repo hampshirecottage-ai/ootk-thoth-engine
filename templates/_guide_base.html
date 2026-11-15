@@ -7,14 +7,7 @@
    page_title, page_description and active, and fills the content block. -#}
 {% include "_head_meta.html" %}
     <title>{{ page_title }} · OOTK Thoth Engine</title>
-    <script>
-        // Saved choice first, otherwise the light (green) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
@@ -48,13 +41,6 @@
 {% block content %}{% endblock %}
     </main>
 
-    <script>
-        document.getElementById("themeToggle").addEventListener("click", () => {
-            const root = document.documentElement;
-            root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
-            try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
-        });
-    </script>
 {% include "_site_footer.html" %}
 </body>
 </html>

@@ -13,14 +13,7 @@
         "operatingSystem": "Any", "isAccessibleForFree": true,
         "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}} | tojson }}
     </script>
-    <script>
-        // Saved choice first, otherwise the light (green) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
