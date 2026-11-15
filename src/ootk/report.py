@@ -270,7 +270,7 @@ def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, s
 > **Before you start:** this prompt lists {_positions(len(spread_results))} and its very last line is `{end_marker}`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
 {_GLANCE_SLOT}{reading_time_markdown(drawn_at, local_zone, sky="astrology" not in off)}**Operation/Spread:** {spread_name}
-**Query/Intent Topic:** {query_prompt or 'General Operation'}
+**Query/Intent Topic:** {query_prompt or 'No question: a general reading'}
 **Significator:** {significator}
 {significator_places_markdown(significator_places)}**PRNG Seed:** {seed_val or 'Manual Entry'}
 **Macro Cabbalistic Framework:** {macro_framework}

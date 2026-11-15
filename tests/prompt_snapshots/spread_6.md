@@ -4,7 +4,7 @@
 **In Plain Words:** 7 cards were drawn. Fire, Water and Air lead with 2 of 7 cards; Earth is least, with 1.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
 
-**Operation/Spread:** Hexagram Spread (Planetary Operations & Macrocosm)
+**Operation/Spread:** Hexagram (the seven planets)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850

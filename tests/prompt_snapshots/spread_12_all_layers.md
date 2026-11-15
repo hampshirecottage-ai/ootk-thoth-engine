@@ -4,7 +4,7 @@
 **In Plain Words:** 75 positions were dealt in 4 operations, each from its own shuffle of the whole deck, so some cards fall more than once: 49 different cards in all. The Significator, Queen of Cups, stands for the querent. Air leads with 27 of 75 positions; Earth is least, with 12. Book T would note Three Queens and Four Princes in Operation 4 (section 2).
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 Hebrew letters on the Cube of Space; 4 Platonic solids; 5 how neighbouring cards get on; 6 the angles between positions; 7 how to write the reading.
 
-**Operation/Spread:** Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline
+**Operation/Spread:** Full Opening of the Key (all four operations)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **Where the Significator Falls:** Book T's key to each operation, worked out from the shuffle each operation was dealt from by laying out the whole deck, not only the cards printed in section 1. For Operation 1 the deck is cut into four packs for I H V H and the pack holding the Significator is named; the printed Operation 1 cards are still the 15-card heap. Later operations deal the whole deck round into one pile per house, sign or decan, and section 1 prints only the top card of each pile, so the Significator usually lies inside its pile, under the card printed there, and is not one of the printed cards. That is expected, not a mismatch.
@@ -731,7 +731,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 ## 5. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
 
-**Operation 1: 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)**
+**Operation 1: First Operation variant (15-card heap, not the IHVH four packs)**
 
 * **Pos 2 (Prince of Swords) <-> Pos 3 (4 of Swords - Truce)**: `Score: +2` | Strong / Same Element (Air + Air)
 * **Pos 4 (7 of Cups - Debauch) <-> Pos 5 (V - The Hierophant)**: `Score: +1` | Friendly (Water + Earth)
@@ -742,7 +742,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 * **Pos 1 (Queen of Cups) <-> Pos 14 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
 * **Pos 1 (Queen of Cups) <-> Pos 15 (I - The Magus)**: `Score: +1` | Friendly (Water + Air)
 
-**Operation 2: OOTK - Second Operation (12 Astrological Houses)**
+**Operation 2: Second Operation (the 12 houses)**
 
 * **Pos 16 (8 of Swords - Interference) <-> Pos 17 (5 of Swords - Defeat)**: `Score: +2` | Strong / Same Element (Air + Air)
 * **Pos 17 (5 of Swords - Defeat) <-> Pos 18 (Knight of Cups)**: `Score: +1` | Friendly (Air + Water)
@@ -757,7 +757,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 * **Pos 26 (9 of Swords - Cruelty) <-> Pos 27 (Queen of Disks)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
 * **Pos 27 (Queen of Disks) <-> Pos 16 (8 of Swords - Interference)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
 
-**Operation 3: OOTK - Third Operation (12 Zodiacal Signs)**
+**Operation 3: Third Operation (the 12 signs)**
 
 * **Pos 28 (5 of Disks - Worry) <-> Pos 29 (XVII - The Star)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
 * **Pos 29 (XVII - The Star) <-> Pos 30 (Prince of Swords)**: `Score: +2` | Strong / Same Element (Air + Air)
@@ -772,7 +772,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 * **Pos 38 (I - The Magus) <-> Pos 39 (6 of Disks - Success)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
 * **Pos 39 (6 of Disks - Success) <-> Pos 28 (5 of Disks - Worry)**: `Score: +2` | Strong / Same Element (Earth + Earth)
 
-**Operation 4: OOTK - Fourth Operation (36 Zodiacal Decans)**
+**Operation 4: Fourth Operation (the 36 decans)**
 
 * **Pos 40 (Prince of Wands) <-> Pos 41 (5 of Disks - Worry)**: `Score: +1` | Friendly (Fire + Earth)
 * **Pos 41 (5 of Disks - Worry) <-> Pos 42 (VI - The Lovers)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
@@ -817,11 +817,11 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 On the house, sign and decan wheels the aspect between two positions is fixed by the layout and is the same in every reading; the `cards:` part (the elemental dignity of the two cards drawn there) is this reading's.
 
-**Operation 1: 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)**
+**Operation 1: First Operation variant (15-card heap, not the IHVH four packs)**
 
 * A heap is not a wheel: its cards make no angles. Its named pairs are scored in section 5.
 
-**Operation 2: OOTK - Second Operation (12 Astrological Houses)**
+**Operation 2: Second Operation (the 12 houses)**
 
 _Opposition (180°) - Polar Complement / Axis Tension [Modifier: `-1`]_
 
@@ -877,7 +877,7 @@ _Sextile (60°) - Harmonic Alignment / Opportunity [Modifier: `+1`]_
 * Pos 24 (VII - The Chariot) <-> Pos 26 (9 of Swords - Cruelty) | cards: +1 Friendly (Water + Air)
 * Pos 25 (7 of Disks - Failure) <-> Pos 27 (Queen of Disks) | cards: +2 Strong / Same Element (Earth + Earth)
 
-**Operation 3: OOTK - Third Operation (12 Zodiacal Signs)**
+**Operation 3: Third Operation (the 12 signs)**
 
 _Opposition (180°) - Polar Complement / Axis Tension [Modifier: `-1`]_
 
@@ -933,7 +933,7 @@ _Sextile (60°) - Harmonic Alignment / Opportunity [Modifier: `+1`]_
 * Pos 36 (4 of Swords - Truce) <-> Pos 38 (I - The Magus) | cards: +2 Strong / Same Element (Air + Air)
 * Pos 37 (10 of Swords - Ruin) <-> Pos 39 (6 of Disks - Success) | cards: -2 Contrary / Ill-Dignified (Air + Earth)
 
-**Operation 4: OOTK - Fourth Operation (36 Zodiacal Decans)**
+**Operation 4: Fourth Operation (the 36 decans)**
 
 _Opposition (180°) - Polar Complement / Axis Tension [Modifier: `-1`]_
 

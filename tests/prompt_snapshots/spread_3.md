@@ -4,7 +4,7 @@
 **In Plain Words:** 3 cards were drawn. Air leads with 2 of 3 cards; Fire and Earth are least, with 0.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
 
-**Operation/Spread:** Triad (Timeline & Motion)
+**Operation/Spread:** Triad (past, present, future)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850

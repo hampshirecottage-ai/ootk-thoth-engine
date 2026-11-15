@@ -757,7 +757,7 @@
     <section class="panel" id="readingDetails">
         <h2>Reading details</h2>
         <div class="meta">
-            <div><span>Topic</span>{{ topic or 'General Operation' }}</div>
+            <div><span>Topic</span>{{ topic or 'No question: a general reading' }}</div>
             {% if not significator.startswith('None') %}<div><span>Significator</span>{{ significator }}</div>{% endif %}
             <div><span>Mapping</span>{{ mapping_label }}</div>
             <div><span>Framework</span>{{ S.framework }}<div class="muted" style="font-size:0.85em">{{ S.framework_basis }}</div></div>

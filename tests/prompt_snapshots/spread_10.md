@@ -4,7 +4,7 @@
 **In Plain Words:** 12 cards were drawn. Air leads with 4 of 12 cards; Earth is least, with 2.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
 
-**Operation/Spread:** OOTK - Third Operation (12 Zodiacal Signs)
+**Operation/Spread:** Third Operation (the 12 signs)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850

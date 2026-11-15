@@ -32,11 +32,11 @@ def _decan_labels():
     return labels
 
 SPREADS = {
-    "1": {"name": "Single Card / Daily Operations", "positions": ["Core Theme / Focus"]},
-    "2": {"name": "Dyad (Polarity & Dynamics)", "positions": ["Active Force (Thesis)", "Receptive / Resistance Force (Antithesis)"]},
-    "3": {"name": "Triad (Timeline & Motion)", "positions": ["Past / Root Cause", "Present / Active Dynamics", "Future / Manifest Result"]},
+    "1": {"name": "Single card", "positions": ["Core Theme / Focus"]},
+    "2": {"name": "Dyad (two forces)", "positions": ["Active Force (Thesis)", "Receptive / Resistance Force (Antithesis)"]},
+    "3": {"name": "Triad (past, present, future)", "positions": ["Past / Root Cause", "Present / Active Dynamics", "Future / Manifest Result"]},
     "4": {
-        "name": "Sub-Elemental Quadrant Cross (Elemental Sub-Division)",
+        "name": "Sub-Elemental Cross (four shades of one element)",
         "positions": [
             "1. Yod of Yod (Fire of Fire - Pure Flash)",
             "2. Heh of Yod (Water of Fire - Emotional Will)",
@@ -45,7 +45,7 @@ SPREADS = {
         ]
     },
     "5": {
-        "name": "Tetragrammaton Spread (4 Elemental Vectors)",
+        "name": "Tetragrammaton (Yod, Heh, Vav, Heh final)",
         "positions": [
             "Atziluth / Yod (Fire - Creative Spark)", 
             "Briah / Heh (Water - Mental/Emotional Container)", 
@@ -54,7 +54,7 @@ SPREADS = {
         ]
     },
     "6": {
-        "name": "Hexagram Spread (Planetary Operations & Macrocosm)",
+        "name": "Hexagram (the seven planets)",
         "positions": [
             "1. Saturn (Top Apex / Form, Constraints & Karma)",
             "2. Jupiter (Right Top / Expansion, Luck & Growth)",
@@ -66,7 +66,7 @@ SPREADS = {
         ]
     },
     "7": {
-        "name": "Tree of Life Layout (10 Sephiroth Mapping)",
+        "name": "Tree of Life (the ten Sephiroth)",
         "positions": [
             "1. Kether (Crown / Primary Impulse)",
             "2. Chokmah (Wisdom / Dynamic Force)",
@@ -83,7 +83,7 @@ SPREADS = {
     "8": {
         # Not the classic OOTK First Operation, which splits the whole deck into four IHVH
         # piles and reads the pile holding the significator.
-        "name": "15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)",
+        "name": "First Operation variant (15-card heap, not the IHVH four packs)",
         "positions": [
             "1. Significator / Core Nature of Question",
             "2. Development of Question (Left Pair A)", "3. Development of Question (Left Pair B)",
@@ -96,7 +96,7 @@ SPREADS = {
         ]
     },
     "9": {
-        "name": "OOTK - Second Operation (12 Astrological Houses)",
+        "name": "Second Operation (the 12 houses)",
         "positions": [
             "1. First House (Ascendant / Physical Self)", "2. Second House (Finances & Values)",
             "3. Third House (Local Mind & Travel)", "4. Fourth House (Home & Roots)",
@@ -107,25 +107,25 @@ SPREADS = {
         ]
     },
     "10": {
-        "name": "OOTK - Third Operation (12 Zodiacal Signs)",
+        "name": "Third Operation (the 12 signs)",
         "positions": [
             "1. Aries", "2. Taurus", "3. Gemini", "4. Cancer", "5. Leo", "6. Virgo",
             "7. Libra", "8. Scorpio", "9. Sagittarius", "10. Capricorn", "11. Aquarius", "12. Pisces"
         ]
     },
     "11": {
-        "name": "OOTK - Fourth Operation (36 Zodiacal Decans)",
+        "name": "Fourth Operation (the 36 decans)",
         "positions": _decan_labels()
     },
     "12": {
-        "name": "Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline",
+        "name": "Full Opening of the Key (all four operations)",
         "operations": ["8", "9", "10", "11"]
     },
     # Key 13 is Book T (BOOK_T_KEY below), kept out of SPREADS.
     # A.E. Waite's "Ancient Celtic Method" (The Pictorial Key to the Tarot, 1911): the cross of
     # six round the matter, then the staff of four laid upwards on its right.
     "14": {
-        "name": "Celtic Cross (Waite, 10 cards)",
+        "name": "Celtic Cross (Waite's ten cards)",
         "positions": [
             "1. What Covers (the matter now and its atmosphere)",
             "2. What Crosses (the obstacle or opposing force)",
@@ -142,7 +142,7 @@ SPREADS = {
     # A six-card relationship spread: the two people side by side, what joins and what divides
     # them between, then the advice and where the relationship is heading.
     "15": {
-        "name": "Relationship (6 cards)",
+        "name": "Relationship",
         "positions": [
             "1. You (your side: what you bring and how you feel)",
             "2. Them (their side: what they bring and how they feel)",
@@ -155,7 +155,7 @@ SPREADS = {
     # The common modern six-card spread in two rows of three: the situation along the top
     # (past, present, near future), what acts on it along the bottom, ending on the outcome.
     "16": {
-        "name": "Two Rows of Three (6 cards)",
+        "name": "Two rows of three",
         "positions": [
             "1. Past (what led here)",
             "2. Present (where the matter stands now)",
@@ -321,7 +321,7 @@ OP_TAG = re.compile(r"^\[Op (\d+)\]")
 # Significator and go rightwards round the pile, so Book T's pairs (the cards either side
 # of the Significator, then those outside them) depend only on the pile's size.
 BOOK_T_KEY = "13"
-BOOK_T_SPREAD = {"name": "Book T Opening of the Key (counting and pairing, 5 operations)"}
+BOOK_T_SPREAD = {"name": "Book T Opening of the Key (five operations, counting and pairing)"}
 BOOK_T_LAYOUT = "book_t"
 BOOK_T_OP_NAMES = {
     1: "Operation 1: The Four Packs (I H V H)",
