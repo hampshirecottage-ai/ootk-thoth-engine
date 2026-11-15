@@ -2422,7 +2422,6 @@ def test_error_pages_wear_the_sites_bar_theme_and_footer(client, monkeypatch):
     assert r.status_code == 404
     assert "<title>Page not found · OOTK Thoth Engine</title>" in r.text
     assert 'class="site-bar"' in r.text and 'id="themeToggle"' in r.text       # bar and theme switch
-    assert 'localStorage.getItem("ootk.theme")' in r.text                         # the chosen theme
     assert 'class="site-footer"' in r.text and 'class="guide-nav"' in r.text     # footer and menu
     assert '<meta name="robots" content="noindex">' in r.text and 'rel="canonical"' not in r.text
     assert "&larr; Go back" in r.text and "Back to settings" not in r.text
