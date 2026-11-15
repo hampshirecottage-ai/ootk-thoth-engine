@@ -526,27 +526,33 @@ def wants_html(request: Request) -> bool:
 def error_page(request: Request, status: int, heading: str, message: str, retry: bool = False,
                headers: dict | None = None):
     """A readable error page for browsers, with a way back (and a retry when the fault is
-    passing); API clients get the same message as JSON."""
+    passing); API clients get the same message as JSON. The page wears the site's own bar,
+    theme and footer (templates/error.html); if that can't be drawn, a bare page says the same."""
     if not wants_html(request):
         return JSONResponse({"detail": message}, status_code=status, headers=headers)
+    try:
+        return templates.TemplateResponse(request=request, name="error.html", status_code=status,
+                                          headers=headers, context={"heading": heading,
+                                                                    "message": message, "retry": retry})
+    except Exception:   # noqa: BLE001 - an error page must never fail in turn
+        log.exception("error page template failed; sending the bare page")
     retry_link = ('<a href="" onclick="location.reload(); return false;">Try again</a> '
                   if retry else '')
     return HTMLResponse(status_code=status, headers=headers, content=(
         '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<meta name="robots" content="noindex">'
-        f'<title>{html.escape(heading)}</title><style>'
+        f'<title>{html.escape(heading)} · OOTK Thoth Engine</title><style>'
         'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
         'background:#2e8a56;color:#ffe0a0;margin:0;padding:24px}'
         'main{max-width:560px;margin:10vh auto}h1{font-size:1.3em}'
         'a{display:inline-block;background:#0d2617;color:#fff;padding:10px 16px;margin:0 6px 6px 0;'
         'border-radius:6px;text-decoration:none;font-weight:600}'
-        '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}a{background:#2e8a56}}'
         '.more{font-size:.9em}.more a.plain{background:none;color:inherit;padding:0;'
         'text-decoration:underline;font-weight:normal}</style></head><body><main>'
         f'<h1>{html.escape(heading)}</h1><p>{html.escape(message)}</p><p>{retry_link}'
         '<a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
-        '&larr; Back to settings</a></p>'
+        '&larr; Go back</a></p>'
         f'<p class="more">Think this is a mistake? <a class="plain" href="{BUG_REPORT_URL}" '
         'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
 
