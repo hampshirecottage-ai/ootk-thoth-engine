@@ -1,7 +1,7 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Start here" %}
-{% set page_description = "New to OOTK? Four short steps from your question to your AI: shape it, draw the cards, save the prompt as Markdown and attach it, plus what each spread teaches." %}
-{% set tagline = "New here? Four steps from your question to your AI." %}
+{% set page_description = "New to OOTK? Three short steps from your question to your AI: ask your question and draw, save the prompt, and attach it in your AI, plus what each spread teaches." %}
+{% set tagline = "New here? Three steps from your question to your AI." %}
 {% set active = "/start" %}
 {% block head %}
     <style>
@@ -45,21 +45,17 @@
 {% block content %}
         <figure class="panel hero-anim">
             <img src="{{ static_url('site/question-to-ai.svg') }}" width="160" height="294" alt="An example question about a job, from start to finish. In Help me shape my question: Work and career is picked; Should I take the new job? is typed and flagged as a yes/no question; Help me weigh a decision suggests the Dyad; the question is mine, over the next three months; under Anything your AI should know? the situation and what I am unsure about are added. The finished question reads: What is drawing me toward the job offer, and what in me or the situation is resisting it, over the next three months? Two cards are drawn, Save the prompt for your AI saves the prompt as a file, and in your AI the + button attaches it and your AI replies.">
-            <figcaption>Your first reading in four steps: shape your question, draw the cards, save the prompt as Markdown, and attach it in your AI.</figcaption>
+            <figcaption>Your first reading in three steps: ask your question and draw, save the prompt, and attach it in your AI.</figcaption>
         </figure>
 
         <details class="panel fold" open>
             <summary class="fold-toggle"><h2 id="pathTitle">Your first reading, step by step</h2></summary>
             <ol class="path">
                 <li>
-                    <h3>Shape your question</h3>
+                    <h3>Ask your question and draw</h3>
                     <p>On the reading form, open <strong>Help me shape my question</strong> under the Question box. It asks which part of life the question touches, how you&rsquo;d put it in your own words, what the reading should do (this picks the spread), whose question it is and over what span, and <strong>anything your AI should know</strong>. Then press <strong>Use this question</strong>. A question is optional: you can leave it blank.</p>
-                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Shape a question</a></div>
-                </li>
-                <li>
-                    <h3>Draw the cards</h3>
-                    <p>Your question rides along with the cards but doesn&rsquo;t change which cards come up. For a first try, three cards (past, present and future) or today&rsquo;s card, which is the same for everyone, are easy places to start.</p>
-                    <div class="actions"><a class="btn secondary" href="/?spread=3#readingForm">Draw three cards</a> <a class="btn secondary" href="/today">Today&rsquo;s card</a>{% if sample %} <a class="btn secondary" href="#sample">See the sample</a>{% endif %}</div>
+                    <p>Your question rides along with the cards but doesn&rsquo;t change which cards come up. For a first try, three cards (past, present and future) or the card of the day, which is the same for everyone, are easy places to start.</p>
+                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Shape a question</a> <a class="btn secondary" href="/?spread=3#readingForm">Draw three cards</a> <a class="btn secondary" href="/today">Card of the day</a>{% if sample %} <a class="btn secondary" href="#sample">See the sample</a>{% endif %}</div>
                 </li>
                 <li>
                     <h3>Save the prompt for your AI</h3>
@@ -155,7 +151,7 @@
                     {# Drawing the Full Opening of the Key with every part of the prompt on, step by step
                        through the start page's form (scripts/make_full_spread_animation.py). #}
                     <figure class="stage-anim" id="full-spread">
-                        <img src="{{ static_url('site/full-spread.svg') }}" width="160" height="294" loading="lazy" alt="Drawing a full Opening of the Key on the start page, step by step. Under Question, I know what I want to ask, and the question is typed. Under Spread, How deep do you want to go? is set to The Opening of the Key, and the Full Opening of the Key, 75 cards, is picked. Under Significator, Describe: the reading is about me, the card stands for me, the person asking, I feel first (Cups) and am young and driving things forward (Prince), which gives the Prince of Cups. Under Options the defaults stay: new cards, Thoth, let the cards decide. In Parts of the AI prompt the ten main parts are already on, and all seven extra layers are ticked one by one. The review lists the choices and Draw my cards is pressed. The report shows four operations of 15, 12, 12 and 36 cards. Save the prompt for your AI saves one file; with every layer on, a full Opening of the Key comes close to the most some AIs will read, and if one runs over, the prompt drops the gods first, then the angels and decan dates, and names them under Left Out to Fit. Then attach it in your AI with +.">
+                        <img src="{{ static_url('site/full-spread.svg') }}" width="160" height="294" loading="lazy" alt="Drawing a full Opening of the Key on the front page, step by step. Under Question, I know what I want to ask, and the question is typed. Under Spread, How deep do you want to go? is set to The Opening of the Key, and the Full Opening of the Key, 75 cards, is picked. Under Significator, Describe: the reading is about me, the card stands for me, the person asking, I feel first (Cups) and am young and driving things forward (Prince), which gives the Prince of Cups. Under Options the defaults stay: new cards, Thoth, let the cards decide. In Parts of the AI prompt the ten main parts are already on, and all seven extra layers are ticked one by one. The review lists the choices and Draw my cards is pressed. The report shows four operations of 15, 12, 12 and 36 cards. Save the prompt for your AI saves one file; with every layer on, a full Opening of the Key comes close to the most some AIs will read, and if one runs over, the prompt drops the gods first, then the angels and decan dates, and names them under Left Out to Fit. Then attach it in your AI with +.">
                         <figcaption>A full Opening of the Key with every correspondence switched on.</figcaption>
                     </figure>
                     {% endif %}
