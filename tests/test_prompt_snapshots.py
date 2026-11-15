@@ -31,8 +31,9 @@ with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-
     REFERENCE = json.load(f)
 
 
-def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
-    """The same steps as cli.run_spread_session, from the saved card rows."""
+def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF, **settings):
+    """The same steps as cli.run_spread_session, from the saved card rows. `settings` go to
+    analyze_reading as they are (drawn_at, layout...)."""
     deck = REFERENCE["deck"]
     positions = spread_positions(spread_key)
     sig_card = resolve_significator(deck, SIGNIFICATOR)
@@ -46,7 +47,7 @@ def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, TOPIC, significator, SEED,
                               spread_results, withheld=withheld, mapping_system=mapping_system,
                               significator_places=significator_places(deck, SEED, positions, sig_card),
-                              without=without)
+                              without=without, **settings)
     return reading["analytical_prompt"]
 
 
@@ -56,11 +57,11 @@ def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
 BOOK_T_EXPECT = "1,10/6,10,6"
 
 
-def build_book_t_prompt(without=DEFAULT_OFF):
+def build_book_t_prompt(without=DEFAULT_OFF, seed=SEED, **settings):
     """The same steps as cli.run_book_t_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     sig_card = resolve_significator(deck, SIGNIFICATOR)
-    ops = book_t.opening_of_the_key(deck, SEED, sig_card, book_t.parse_expect(BOOK_T_EXPECT))
+    ops = book_t.opening_of_the_key(deck, seed, sig_card, book_t.parse_expect(BOOK_T_EXPECT))
     placed = book_t.positions(ops)
     titles = [c["title"] for _, c in placed]
     spread_results = [
@@ -68,8 +69,9 @@ def build_book_t_prompt(without=DEFAULT_OFF):
         for i, (name, c) in enumerate(placed, start=1)
     ]
     withheld = withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles)
-    reading = analyze_reading(BOOK_T_SPREAD["name"], BOOK_T_KEY, TOPIC, sig_card["title"], SEED,
-                              spread_results, withheld=withheld, book_t_ops=ops, without=without)
+    reading = analyze_reading(BOOK_T_SPREAD["name"], BOOK_T_KEY, TOPIC, sig_card["title"], seed,
+                              spread_results, withheld=withheld, book_t_ops=ops, without=without,
+                              **settings)
     return reading["analytical_prompt"]
 
 
