@@ -9,7 +9,7 @@ import pytest
 from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 
-from ootk import journal
+from ootk import PROJECT_ROOT, journal
 from ootk import web as app_module
 from test_app_and_engine import client, post  # noqa: F401  (fixture)
 
@@ -235,3 +235,14 @@ def test_a_timeline_copied_as_plain_text_from_a_chat_app_is_found():
 def test_iso_dates_are_found_even_without_a_timeline_list():
     assert journal.find_windows("Expect news 2026-12-01 to 2026-12-21.", date(2026, 11, 13)) == [
         ("Expect news", date(2026, 12, 1), date(2026, 12, 21))]
+
+
+def test_start_here_journal_section_shows_the_animation_with_a_still_for_reduced_motion(key, client):  # noqa: F811
+    page = client.get("/start").text
+    section = page[page.index('id="journalHelp"'):]
+    section = section[:section.index("</details>")]
+    assert 'id="journal-how-to"' in section and "site/journal-how-to.gif" in section
+    assert 'media="(prefers-reduced-motion: reduce)"' in section and "site/journal-how-to-still.webp" in section
+    site = PROJECT_ROOT / "static" / "site"
+    assert (site / "journal-how-to.gif").read_bytes()[:6] == b"GIF89a"
+    assert (site / "journal-how-to-still.webp").read_bytes()[8:12] == b"WEBP"

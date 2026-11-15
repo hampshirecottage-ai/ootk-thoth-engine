@@ -34,6 +34,10 @@
         .stage-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
         .stage-anim figcaption { margin: 6px auto 0; max-width: 200px; font-size: 0.85em; color: var(--muted); }
         .stage::after { content: ""; display: block; clear: both; }
+        /* The journal animation (a GIF of the real pages) fills the fold's width. */
+        .journal-anim { margin: 8px 0 16px; text-align: center; }
+        .journal-anim img { display: block; width: 100%; max-width: 900px; height: auto; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
+        .journal-anim figcaption { margin: 6px auto 0; font-size: 0.85em; color: var(--muted); }
         @media (max-width: 640px) { .stage-anim { float: none; margin: 8px 0 12px; } .stage-anim img { width: min(100%, 320px); height: auto; } }
     </style>
     <script src="{{ static_url('js/fold.js') }}" defer></script>
@@ -73,6 +77,16 @@
         <details class="panel fold" id="journalHelp">
             <summary class="fold-toggle"><h2 id="journalHelpTitle">Keep a journal of your readings</h2></summary>
             <p>The journal keeps your readings, what your AI said about them, and what actually happened, so you can look back over weeks and months. It is optional and needs no account.</p>
+            {# Recorded on a local copy of the site with made-up readings and a masked journal link
+               (capture script: reviews/journal-howto-2026-11-15/ in the project files). Visitors who
+               ask for reduced motion see one still frame instead. #}
+            <figure class="journal-anim" id="journal-how-to">
+                <picture>
+                    <source media="(prefers-reduced-motion: reduce)" srcset="{{ static_url('site/journal-how-to-still.webp') }}">
+                    <img src="{{ static_url('site/journal-how-to.gif') }}" width="900" height="640" loading="lazy" alt="The journal, step by step, with a made-up question about moving house. At the bottom of a report, Start a journal with this reading is pressed and the reading is added to the journal. On My journal, Show my journal link shows the secret link with a Copy link button. In the journal entry, an AI's answer is pasted in, ending with a Timeline list of three dates. Find dates finds those three, ticked, and two decan dates from the cards, unticked. The reading is filed under a new question, The house move, and saved. A later reading is added to the same question from its report. The Timeline shows the question's dates under the zodiac signs and the months, and hovering a marker shows the reading's details. Later, what actually happened is written in the entry.">
+                </picture>
+                <figcaption>How the journal works, with a made-up reading about moving house.</figcaption>
+            </figure>
             <ol class="path">
                 <li>
                     <h3>Start it from a report</h3>
