@@ -296,7 +296,7 @@ def build():
                 f'<text class="o" x="{cx}" y="{PY + 145}" style="text-anchor:middle">{nm}</text>'
                 f'<text class="sub" x="{cx}" y="{PY + 154}" style="text-anchor:middle">{p}</text>', 1.3 + 0.5 * j)
 
-    # 8. Save the prompt as Markdown
+    # 8. Save the prompt for your AI
     s = a.scene(4.2, "Save as Markdown", "one .md file holds the cards,", "the sums and your question")
     s.add(f'<rect class="pn" x="{PX}" y="{PY}" width="{PW}" height="{PH}" rx="6"/>'
           f'<text class="ld" x="{PX + 8}" y="{PY + 15}">{PANEL}</text>'
