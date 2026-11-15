@@ -4,7 +4,7 @@
 **In Plain Words:** 1 card was drawn.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 how to write the reading.
 
-**Operation/Spread:** Single Card / Daily Operations
+**Operation/Spread:** Single card
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850

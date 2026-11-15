@@ -4,7 +4,7 @@
 **In Plain Words:** 15 cards were drawn. The Significator, Queen of Cups, stands for the querent. Air leads with 6 of 15 cards; Earth is least, with 2.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
 
-**Operation/Spread:** 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)
+**Operation/Spread:** First Operation variant (15-card heap, not the IHVH four packs)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **Where the Significator Falls:** Book T's key to each operation, worked out from the shuffle each operation was dealt from by laying out the whole deck, not only the cards printed in section 1. For Operation 1 the deck is cut into four packs for I H V H and the pack holding the Significator is named; the printed Operation 1 cards are still the 15-card heap.

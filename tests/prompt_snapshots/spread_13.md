@@ -4,7 +4,7 @@
 **In Plain Words:** 79 positions were dealt in 5 operations, each from its own shuffle of the whole deck, so some cards fall more than once: 50 different cards in all, with the Significator in all 5. The Significator, Queen of Cups, stands for the querent. Fire leads with 23 of 79 positions; Earth is least, with 13. Book T would note Three Twos, Three Fours, Three Nines, Three Tens and Three Queens in Operation 4 (section 2).
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 Book T's count and pairs, the heart of the method; 4 how to write the reading.
 
-**Operation/Spread:** Book T Opening of the Key (counting and pairing, 5 operations)
+**Operation/Spread:** Book T Opening of the Key (five operations, counting and pairing)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **PRNG Seed:** 408850
