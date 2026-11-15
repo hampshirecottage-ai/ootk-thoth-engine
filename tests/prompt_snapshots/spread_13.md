@@ -66,7 +66,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 7: [Op 1] The Heh final pack (money, goods, purely material matters): 6 to the right of the Significator
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 
@@ -108,7 +108,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 13: [Op 1] The Heh final pack (money, goods, purely material matters): 12 to the right of the Significator
 - **Card Drawn**: Princess of Disks
 - **Arcana/Suit**: Court | Disks
-- **Letter via Element (Earth)**: Cross (ת (Tau))
+- **Letter via Element (Earth)**: Cross (ת (Tav))
 - **Attribution**: Earth of Earth - Aries, Taurus, Gemini quadrant
 
 ### Position 14: [Op 1] The Heh final pack (money, goods, purely material matters): 13 to the right of the Significator
@@ -121,9 +121,9 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 15: [Op 1] The Heh final pack (money, goods, purely material matters): 14 to the right of the Significator
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 16: [Op 1] The Heh final pack (money, goods, purely material matters): 15 to the right of the Significator
 - **Card Drawn**: 4 of Swords - Truce
@@ -141,7 +141,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 18: [Op 1] The Heh final pack (money, goods, purely material matters): 17 to the right of the Significator
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Element (used in scores)**: Earth (via Taurus)
 
@@ -229,12 +229,12 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
 - **Element (used in scores)**: Fire (via Aries)
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 
 ### Position 32: [Op 3] Leo: 4 to the right of the Significator
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 
@@ -294,7 +294,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 41: [Op 4] The ring of 36: 6 to the right of the Significator
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 
@@ -325,7 +325,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
 - **Element (used in scores)**: Fire (via Aries)
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 
 ### Position 46: [Op 4] The ring of 36: 11 to the right of the Significator
 - **Card Drawn**: 4 of Wands - Completion
@@ -337,9 +337,9 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 47: [Op 4] The ring of 36: 12 to the right of the Significator
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 48: [Op 4] The ring of 36: 13 to the right of the Significator
 - **Card Drawn**: 10 of Wands - Oppression
@@ -350,7 +350,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 49: [Op 4] The ring of 36: 14 to the right of the Significator
 - **Card Drawn**: Prince of Disks
 - **Arcana/Suit**: Court | Disks
-- **Letter via Sign (Taurus)**: Nail (ו (Vau))
+- **Letter via Sign (Taurus)**: Nail (ו (Vav))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
 
 ### Position 50: [Op 4] The ring of 36: 15 to the right of the Significator
@@ -425,7 +425,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 
 ### Position 61: [Op 4] The ring of 36: 26 to the right of the Significator
 - **Card Drawn**: 5 of Swords - Defeat
@@ -473,7 +473,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 68: [Op 4] The ring of 36: 33 to the right of the Significator
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Element (used in scores)**: Earth (via Taurus)
 

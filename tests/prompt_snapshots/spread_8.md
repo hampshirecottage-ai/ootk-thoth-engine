@@ -35,9 +35,9 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 2: 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 3: 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -55,7 +55,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 5: 5. Further Outcome (Right Pair B)
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Element (used in scores)**: Earth (via Taurus)
 
@@ -107,7 +107,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 13: 13. Final Synthesis / Karma (Top Apex B)
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 

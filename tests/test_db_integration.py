@@ -106,7 +106,7 @@ def test_pip_decans(conn, title, attr):
 @pytest.mark.parametrize("title,letter", [
     ("Knight of Wands", "Samekh"), ("Queen of Wands", "Tzaddi"), ("Prince of Wands", "Teth"),
     ("Knight of Cups", "Qoph"), ("Queen of Cups", "Cheth"), ("Prince of Cups", "Nun"),
-    ("Princess of Cups", "Mem"), ("Prince of Swords", "Hé"), ("Princess of Swords", "Aleph"),
+    ("Princess of Cups", "Mem"), ("Prince of Swords", "Heh"), ("Princess of Swords", "Aleph"),
 ])
 def test_court_signs(conn, title, letter):
     assert letter in fetch(conn, title, "thoth")["hebrew_letter"]
@@ -178,10 +178,10 @@ def test_thoth_and_golden_dawn_put_every_card_on_the_same_cube_place(conn):
 
 
 @pytest.mark.parametrize("title,thoth_letter,gd_letter,gd_edge,gd_key_scale", [
-    ("IV - The Emperor", "Tzaddi", "Hé", "North-East Edge", 15),
-    ("XVII - The Star", "Hé", "Tzaddi", "Upper-South Edge", 28),
-    ("Queen of Wands", "Tzaddi", "Hé", "North-East Edge", 15),     # follows the Emperor
-    ("Prince of Swords", "Hé", "Tzaddi", "Upper-South Edge", 28),  # follows the Star
+    ("IV - The Emperor", "Tzaddi", "Heh", "North-East Edge", 15),
+    ("XVII - The Star", "Heh", "Tzaddi", "Upper-South Edge", 28),
+    ("Queen of Wands", "Tzaddi", "Heh", "North-East Edge", 15),     # follows the Emperor
+    ("Prince of Swords", "Heh", "Tzaddi", "Upper-South Edge", 28),  # follows the Star
 ])
 def test_golden_dawn_undoes_the_thoth_swap(conn, title, thoth_letter, gd_letter, gd_edge, gd_key_scale):
     thoth, gd = fetch(conn, title, "thoth"), fetch(conn, title, "golden_dawn")

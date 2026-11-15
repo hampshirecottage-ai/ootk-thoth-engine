@@ -30,7 +30,7 @@ from ootk.analysis import ELEMENT_MAJOR_NOTES, PLANETARY_MAJORS, major_name
 IHVH_PACKS = (
     {"letter": "Yod", "suit": "Wands", "subject": "work, business"},
     {"letter": "Heh", "suit": "Cups", "subject": "love, marriage, pleasure"},
-    {"letter": "Vau", "suit": "Swords", "subject": "trouble, loss, scandal, quarrelling"},
+    {"letter": "Vav", "suit": "Swords", "subject": "trouble, loss, scandal, quarrelling"},
     {"letter": "Heh final", "suit": "Disks", "subject": "money, goods, purely material matters"},
 )
 
@@ -155,7 +155,7 @@ def _holds(pile, sig_card):
 
 
 def operation_one(deck, sig_card, expected_pack, facing=None, strict=True):
-    """Operation 1. `expected_pack` is 0-3 (Yod, Heh, Vau, Heh final): the subject the
+    """Operation 1. `expected_pack` is 0-3 (Yod, Heh, Vav, Heh final): the subject the
     querent came about. Wrong pack -> status 'abandoned', as Book T says; with strict=False
     the significator's pack is read anyway, with status 'missed'."""
     packs = four_packs(deck)
@@ -309,7 +309,7 @@ def status_line(o):
             f"this site reads on with {found}, where it is, so treat this operation with caution.")
 
 
-EXPECT_HELP = ("pack,house,sign,sephira, counted from 1: pack 1-4 (Yod fire/work, Heh love, Vau "
+EXPECT_HELP = ("pack,house,sign,sephira, counted from 1: pack 1-4 (Yod fire/work, Heh love, Vav "
                "trouble/loss, Heh final money), house 1-12, sign 1-12 (1 = Aries), Sephira 1-10 "
                "(1 = Kether); a house or sign may add a related one to try next after a slash, "
                "e.g. '1,10/6,10,6'")

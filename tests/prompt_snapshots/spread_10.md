@@ -31,9 +31,9 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 ### Position 1: 1. Aries
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 2: 2. Taurus
 - **Card Drawn**: 4 of Swords - Truce
@@ -51,7 +51,7 @@ A house, sign or decan position's name is the place on the wheel, not the card: 
 ### Position 4: 4. Cancer
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Element (used in scores)**: Earth (via Taurus)
 

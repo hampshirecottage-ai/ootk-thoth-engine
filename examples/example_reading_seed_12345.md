@@ -56,9 +56,9 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 ### Position 2: Present / Active Dynamics
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
-- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
+- **Comparative Hebrew Mapping**: Thoth: `ו (Vav)` | Golden Dawn: `ו (Vav)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Red orange

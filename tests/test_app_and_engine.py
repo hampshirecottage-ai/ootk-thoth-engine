@@ -1113,12 +1113,12 @@ def test_prompt_states_repeated_facts_once():
     assert "Spatial Dimension**: `Simple_Edge`" in prompt
     # Thoth and Golden Dawn agree on this card, so no comparison line; never a French column.
     assert "Comparative Hebrew Mapping" not in prompt and "French/Egyptian" not in prompt
-    swapped = dict(major, title="XVII - The Star", attribution="Aquarius", hebrew_letter="ה (Hé)",
-                   thoth_hebrew_letter="ה (Hé)", gd_hebrew_letter="צ (Tzaddi)", french_hebrew_letter="Peh")
+    swapped = dict(major, title="XVII - The Star", attribution="Aquarius", hebrew_letter="ה (Heh)",
+                   thoth_hebrew_letter="ה (Heh)", gd_hebrew_letter="צ (Tzaddi)", french_hebrew_letter="Peh")
     results[1]["card_data"] = swapped
     prompt = report.build_analytical_prompt("Test", "", "", "1", results, counts, [], heap,
                                             sdist, solids, without=frozenset())
-    assert "- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`\n" in prompt
+    assert "- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`\n" in prompt
 
 
 def test_prompt_names_its_last_line_so_a_cut_copy_is_noticed(tmp_path, monkeypatch):
