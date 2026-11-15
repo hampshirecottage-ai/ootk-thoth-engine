@@ -1,6 +1,8 @@
 {% extends "_guide_base.html" %}
 {% set page_title = card.short ~ " in the Thoth Tarot" %}
-{% set facts = [card.attribution, card.element ~ " element" if card.element, "Hebrew letter " ~ card.letter if card.letter] | select | join(", ") %}
+{# A small card's letter column holds its Sephira (Tiphareth for a 6), not a Hebrew letter. #}
+{% set letter_label = "Sephira" if card.kind == "Minor" else "Hebrew letter" %}
+{% set facts = [card.attribution, card.element ~ " element" if card.element, letter_label ~ " " ~ card.letter if card.letter] | select | join(", ") %}
 {% set page_description = card.title ~ ": " ~ facts ~ ". Its Golden Dawn and Liber 777 correspondences and where it sits on the Tree of Life, the zodiac and the Cube of Space." %}
 {% set tagline = card.title %}
 {% set active = "" %}
@@ -32,7 +34,7 @@
                         <dt>Arcana</dt><dd>{{ card.kind }}</dd>
                         {% if card.attribution and card.attribution != card.element %}<dt>Attribution</dt><dd>{{ card.attribution }}</dd>{% endif %}
                         {% if card.element %}<dt>Element</dt><dd>{{ card.element }}</dd>{% endif %}
-                        {% if card.letter %}<dt>Hebrew letter</dt><dd>{{ card.letter }}</dd>{% endif %}
+                        {% if card.letter %}<dt>{{ letter_label }}</dt><dd>{{ card.letter }}</dd>{% endif %}
                         {% if card.colour_name %}<dt>King Scale colour</dt><dd>{% if card.colour %}<span class="swatch" style="background:{{ card.colour }}"></span>{% endif %}{{ card.colour_name }}</dd>{% endif %}
                         {% if card.solid %}<dt>Platonic solid</dt><dd>{{ card.solid.name }}</dd>{% endif %}
                     </dl>
