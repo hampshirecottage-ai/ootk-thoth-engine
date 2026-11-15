@@ -206,7 +206,7 @@ ootk \
 | `--spread` | Spread key, 1-12, 13 for the full Book T Opening of the Key (five operations from the whole deck, with counting and pairing), 14 for the Celtic Cross, 15 for the Relationship spread, or 16 for two rows of three | asks interactively |
 | `--seed` | Seed for deterministic draws (any number or text). Omit it to enter cards by hand | manual entry |
 | `--significator` | Significator card title, pinned to position 1 of OOTK Op 1 (spreads 8 and 12) | asks with the Book T questions when the spread needs one |
-| `--expect` | Spread 13 only: where the significator is expected, `pack,house,sign,sephira` counted from 1 (pack 1-4 = Yod, Heh, Vau, Heh final; sign 1 = Aries; Sephira 1 = Kether). A house or sign can add a related one to try next after a slash, e.g. `1,10/6,10,6` | asks interactively |
+| `--expect` | Spread 13 only: where the significator is expected, `pack,house,sign,sephira` counted from 1 (pack 1-4 = Yod, Heh, Vav, Heh final; sign 1 = Aries; Sephira 1 = Kether). A house or sign can add a related one to try next after a slash, e.g. `1,10/6,10,6` | asks interactively |
 | `--topic` | Question or intent text | asks interactively |
 | `--mapping` | `thoth`, `golden_dawn` or `french_egyptian` | `thoth` |
 | `--framework` | `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem` | `auto` |
@@ -310,6 +310,7 @@ psql -d my_tarot_db -f database/migrations/<file>.sql
 | `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
 | `add_contact_messages.sql` | `contact_messages` is missing (the contact form shows a "needs an update" page) |
 | `add_reading_journal.sql` | Before turning on the journal with `JOURNAL_KEY`: adds `reading_journals`, `reading_journal_threads`, `reading_journal_entries` and `reading_journal_windows` |
+| `fix_letter_spellings.sql` | Four Hebrew letters spelled Hé, Vau, Pé and Tau instead of Heh, Vav, Peh and Tav (paths 15, 16, 27 and 32) |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 

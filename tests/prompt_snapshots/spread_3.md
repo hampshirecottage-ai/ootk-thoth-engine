@@ -27,9 +27,9 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 1: Past / Root Cause
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 2: Present / Active Dynamics
 - **Card Drawn**: 4 of Swords - Truce

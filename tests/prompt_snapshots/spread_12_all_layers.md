@@ -48,9 +48,9 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 2: [Op 1] 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -72,7 +72,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 5: [Op 1] 5. Further Outcome (Right Pair B)
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Geomantic Figure**: Amissio (Golden Dawn, by Taurus)
 - **Element (used in scores)**: Earth (via Taurus)
@@ -137,7 +137,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 13: [Op 1] 13. Final Synthesis / Karma (Top Apex B)
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Spatial Dimension**: `Double_Direction` (North)
@@ -266,20 +266,20 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 29: [Op 3] 2. Taurus
 - **Card Drawn**: XVII - The Star
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Window (ה (Hé))
+- **Path/Sephira**: Window (ה (Heh))
 - **Attribution**: Aquarius
 - **Geomantic Figure**: Tristitia (Golden Dawn, by Aquarius)
 - **Element (used in scores)**: Air (via Aquarius)
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
 ### Position 30: [Op 3] 3. Gemini
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -296,7 +296,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 32: [Op 3] 5. Leo
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Spatial Dimension**: `Double_Direction` (North)
@@ -481,7 +481,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 55: [Op 4] Decan 16: Jupiter in Capricorn (2 of Disks)
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 - **Spatial Dimension**: `Double_Direction` (North)
@@ -520,7 +520,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Attribution**: Aries
 - **Geomantic Figure**: Puer (Golden Dawn, by Aries)
 - **Element (used in scores)**: Fire (via Aries)
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 
@@ -535,9 +535,9 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 61: [Op 4] Decan 22: Saturn in Pisces (8 of Cups)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 - **Spatial Dimension**: `Simple_Edge` (Upper-South Edge)
 - **Platonic Solid**: `Octahedron`
 
@@ -551,7 +551,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 ### Position 63: [Op 4] Decan 24: Mars in Pisces (10 of Cups)
 - **Card Drawn**: Prince of Disks
 - **Arcana/Suit**: Court | Disks
-- **Letter via Sign (Taurus)**: Nail (ו (Vau))
+- **Letter via Sign (Taurus)**: Nail (ו (Vav))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
@@ -648,7 +648,7 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 - **Spatial Dimension**: `Simple_Edge` (North-East Edge)
 - **Platonic Solid**: `Tetrahedron`
 
