@@ -101,7 +101,7 @@ def decan_window(card_title, drawn_at):
         start, end = _window(i, year + 1)
     return start, end
 
-def _span_text(start, end):
+def span_text(start, end):
     day = lambda d: f"{d.day} {_MONTHS[d.month - 1]}"
     first = day(start) if start.year == end.year else f"{day(start)} {start.year}"
     return f"{first} - {day(end)} {end.year}"
@@ -112,12 +112,12 @@ def decan_dates(card_title, year):
     i = pip_decan(card_title)
     if i is None:
         return None
-    return _span_text(*_window(i, year))
+    return span_text(*_window(i, year))
 
 def decan_dates_after(card_title, drawn_at):
     """decan_dates() for the card's window on or after `drawn_at` (decan_window), or None."""
     window = decan_window(card_title, drawn_at)
-    return _span_text(*window) if window else None
+    return span_text(*window) if window else None
 
 def solar_year(when):
     """The year whose March equinox last came before `when` (an aware datetime)."""
@@ -144,13 +144,16 @@ def angels_markdown(spread_results):
     return ("**Angels of the Decans** (the 72 angels of the Shem ha-Mephorash, two for each small "
             "card's decan, numbered 1-72 from 0° Leo as Book T counts them): " + "; ".join(parts) + ".\n\n")
 
-def dates_markdown(spread_results, drawn_at):
+def dates_markdown(spread_results, drawn_at, which=""):
     """The Decan Dates paragraph for section 1, or "" when no decan pip is drawn. Each card's
-    window is the one on or after the draw (decan_window), so no date given is already past."""
+    window is the one on or after the draw (decan_window), so no date given is already past.
+    `which` says which small cards were given, when not all of them ("on the Counts")."""
     parts = [f"{t.partition(' - ')[0]}: {decan_dates_after(t, drawn_at)}"
              for t in _once(spread_results) if pip_decan(t) is not None]
     if not parts:
         return ""
-    return ("**Decan Dates** (Book T's timing: the days the Sun is in each small card's decan, "
+    days = (f"the days the Sun is in the decan of each small card {which}" if which
+            else "the days the Sun is in each small card's decan")
+    return (f"**Decan Dates** (Book T's timing: {days}, "
             "the one it is in at the draw or else its next one, so every window is on or after the "
             "draw date; in UTC, from the Sun's computed position): " + "; ".join(parts) + ".\n\n")

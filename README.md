@@ -75,6 +75,7 @@ ootk-thoth-engine/
 │   ├── ai_check.py         # AI answer check, step 1: build the test prompts and truth files
 │   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
 │   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
+│   ├── ai_lean.py          # Side-by-side round: lean prompt layout and timing rule vs the old prompt
 │   ├── export_hf_space.sh  # Copy the files a Hugging Face Space needs into a folder
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
