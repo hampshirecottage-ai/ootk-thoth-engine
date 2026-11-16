@@ -44,3 +44,11 @@ def test_score_answer_counts_invented_cards_and_timing():
     assert s["on_rule"] and s["count_coverage"] == 1.0
     assert s["invented"] == ["3 of Swords - Sorrow"]
     assert not s["cut_claim"]
+
+
+def test_a_thoth_knight_is_not_read_as_the_waite_name_of_a_prince():
+    import ai_parts
+    from ai_check import load_reference
+    patterns = ai_parts.card_patterns(load_reference())
+    t = {"drawn": ["Knight of Cups"], "counted": ["Knight of Cups"], "timing": None}
+    assert ai_lean.score_answer("The Knight of Cups rides in.", t, patterns)["invented"] == []

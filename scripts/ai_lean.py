@@ -44,7 +44,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import ai_parts  # noqa: E402
-from ai_check import QUESTION, SEEDS, SIGNIFICATOR, load_reference  # noqa: E402
+from ai_check import QUESTION, SEEDS, SIGNIFICATOR, card_names, load_reference  # noqa: E402
 from ootk import book_t  # noqa: E402
 from ootk.analysis import withheld_summary  # noqa: E402
 from ootk.decans import decan_window  # noqa: E402
@@ -205,6 +205,11 @@ def score_answer(text, t, patterns, lean_file=None):
     first = spans[0] if spans else None
     window = (t["timing"]["start"], t["timing"]["end"]) if t["timing"] else None
     named = ai_parts.cards_named(text, patterns)
+    # A Waite name that is also a drawn card's Thoth name (the Thoth Knight is the Waite King,
+    # the Thoth Prince the Waite Knight) names the drawn card, not another one.
+    drawn_names = {t_.lower() for t_ in t["drawn"]}
+    named = {c for c in named if c in t["drawn"] or not any(
+        n.lower() in drawn_names for n, kind in card_names(c) if kind == "waite")}
     if lean_file and os.path.exists(lean_file):
         with open(lean_file, encoding="utf-8") as f:
             lean = ai_parts.LEANS[json.load(f)["lean"]]
