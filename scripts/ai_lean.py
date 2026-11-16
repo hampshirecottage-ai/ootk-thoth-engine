@@ -2,11 +2,11 @@
 """Does the lean prompt layout read as well as the full one? A side-by-side round.
 
 The same Book T readings go to an AI in three forms, several times each:
-- current: the prompt as the site builds it today;
+- current: the prompt as the site built it before 2026-11-16 (full layout, no timing rule);
 - timing:  the same prompt, with the Timeline rule naming Book T's timing card (the last small
            card on the closing operation's Count) and its decan window;
 - lean:    the lean layout (report.LAYOUTS: positions one line each, the count and pairs next,
-           each card's correspondences once) with that timing rule.
+           each card's correspondences once) with that timing rule: the site's prompt now.
 The cards, counts, pairs and scores are the same in all three (tests/test_lean_layout.py).
 Plain code compares the answers. No AI judges them, and nothing here says whether a reading
 comes true.
@@ -58,7 +58,10 @@ DRAWN_AT = datetime(2026, 11, 15, 20, 0, tzinfo=timezone.utc)   # fixed, so the 
 # What "Should I change jobs this year?" expects in Book T: the Yod pack (work), the 10th house
 # or else the 6th, Capricorn, Tiphareth (as tests/test_prompt_snapshots.py).
 EXPECT = "1,10/6,10,6"
-VARIANTS = {"current": {}, "timing": {"timing_rule": True}, "lean": {"layout": "lean"}}
+# "current" is the prompt as it was before the lean layout became the default (2026-11-16).
+VARIANTS = {"current": {"layout": "full", "timing_rule": False},
+            "timing": {"layout": "full", "timing_rule": True},
+            "lean": {"layout": "lean", "timing_rule": True}}
 ANSWER_TOKENS = 14_000            # rough answer + thinking, for the estimate
 DATE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 CUT_CLAIM = re.compile(r"\b(cut off|truncated|is missing|incomplete prompt|rest of the prompt)\b", re.I)

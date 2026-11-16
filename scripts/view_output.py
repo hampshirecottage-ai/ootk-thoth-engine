@@ -57,6 +57,7 @@ def section_kind(section):
         ("PAIRWISE ELEMENTAL DIGNITY", "dignity"),
         ("SPATIAL & GEOMETRIC", "spatial"),
         ("CARD-BY-CARD", "cards"),
+        ("CARD CORRESPONDENCES", "cards"),      # the lean layout's card section
     ):
         if key in title:
             return kind
@@ -174,9 +175,10 @@ def render_spatial(section):
 
 def render_cards(section):
     tree = Tree("[bold cyan]Card Spread Matrix & Liber 777 Correspondences[/bold cyan]")
-    for c_raw in section.split("### Position ")[1:]:
+    # "### Position n: ..." blocks (full layout) or "### <card> (Pos ...)" blocks (lean layout).
+    for c_raw in re.split(r"^### ", section, flags=re.M)[1:]:
         lines = [l.strip() for l in c_raw.split("\n") if l.strip()]
-        pos_node = tree.add(f"[bold yellow]Position {escape(lines[0]) if lines else ''}[/bold yellow]")
+        pos_node = tree.add(f"[bold yellow]{escape(lines[0]) if lines else ''}[/bold yellow]")
         for line in lines[1:]:
             if line.startswith("- **"):
                 key_val = line.replace("- **", "", 1).split("**:", 1)

@@ -135,7 +135,7 @@ def test_every_major_states_its_element():
         assert major_element_note({"arcana_type": "Major", "title": f"X - {name}"}).startswith(MAJOR_ELEMENTS[name] + " (")
     assert major_element_note({"arcana_type": "Major", "title": "IV - The Emperor"}) == "Fire (via Aries)"
     assert major_element_note({"arcana_type": "Major", "title": "0 - The Fool"}) == "Air (the element Air itself)"
-    prompt = build_prompt("12")
+    prompt = build_prompt("12", layout="full")
     assert prompt.count("- **Element (used in scores)**:") == sum(
         1 for line in prompt.splitlines()
         if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in MAJOR_ELEMENTS)

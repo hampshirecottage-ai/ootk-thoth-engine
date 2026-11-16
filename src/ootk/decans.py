@@ -101,7 +101,7 @@ def decan_window(card_title, drawn_at):
         start, end = _window(i, year + 1)
     return start, end
 
-def _span_text(start, end):
+def span_text(start, end):
     day = lambda d: f"{d.day} {_MONTHS[d.month - 1]}"
     first = day(start) if start.year == end.year else f"{day(start)} {start.year}"
     return f"{first} - {day(end)} {end.year}"
@@ -112,12 +112,12 @@ def decan_dates(card_title, year):
     i = pip_decan(card_title)
     if i is None:
         return None
-    return _span_text(*_window(i, year))
+    return span_text(*_window(i, year))
 
 def decan_dates_after(card_title, drawn_at):
     """decan_dates() for the card's window on or after `drawn_at` (decan_window), or None."""
     window = decan_window(card_title, drawn_at)
-    return _span_text(*window) if window else None
+    return span_text(*window) if window else None
 
 def solar_year(when):
     """The year whose March equinox last came before `when` (an aware datetime)."""

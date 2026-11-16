@@ -12,7 +12,7 @@ from ootk.analysis import (
     framework_basis_short, major_element_note, spirit_bearing_cards,
 )
 from ootk.chance import chance_sentence, chance_view
-from ootk.decans import angels_markdown, dates_markdown, day_ruler, decan_dates_after, pip_decan
+from ootk.decans import angels_markdown, dates_markdown, day_ruler, decan_window, pip_decan, span_text
 from ootk.titles import titles_markdown
 from ootk.gods import gods_markdown, hexagrams_markdown
 from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
@@ -179,13 +179,13 @@ def _solid_legend(spread_results):
 def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_val, spread_results,
                     framework="auto", mapping_system="thoth", withheld=None, significator_places=None,
                     drawn_at=None, local_zone=None, book_t_ops=None, without=DEFAULT_OFF,
-                    layout="full", timing_rule=False):
+                    layout="lean", timing_rule=True):
     """Every analysis of a drawn spread, then its prompt. The command line and the web site both
     call this, so the same draw always gives the same prompt from either. `without` is a set of
     COMPONENTS keys the prompt leaves out (DEFAULT_OFF unless given); the analyses themselves
-    always run. `layout` is "full" (each position written out) or "lean" (see LAYOUTS);
-    `timing_rule` states Book T's timing card in the Timeline rule (a Book T reading with a
-    draw time only)."""
+    always run. `layout` is "lean" (the default) or "full" (each position written out; see
+    LAYOUTS); `timing_rule` names Book T's timing card in the Timeline rule (a Book T reading
+    with a draw time only)."""
     element_counts = analyze_elemental_balance(spread_results)
     dignity_matrix = calculate_elemental_dignities(spread_results, spread_key)
     spatial_matrix = analyze_spatial_vectors(spread_results, spread_key)
@@ -195,7 +195,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
     own_place = own_place_check(spread_results, spread_key)
     off, fitted = frozenset(without), []
     timing = (book_t_timing(spread_results, book_t_ops, drawn_at)
-              if (timing_rule or layout == "lean") and book_t_ops and drawn_at is not None else None)
+              if timing_rule and book_t_ops and drawn_at is not None else None)
     # Only the extra layers are ever left out to fit, and none of them is in the comparison.
     against_chance = chance_sentence(chance_view(spread_key, spread_results, dignity_matrix,
                                                  framework_basis, own_place, off))
@@ -253,7 +253,7 @@ def _renumber(text, new):
         return f"{word} {a}-{b}"
     return _SECTION_REF.sub(sub, text)
 
-def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=DEFAULT_OFF, fitted=(), against_chance="", layout="full", timing=None):
+def build_analytical_prompt(spread_name, query_prompt, significator, seed_val, spread_results, element_counts, dignity_matrix, spatial_matrix, spatial_dist, solid_counts, macro_framework="3. Incarnational Life Path", mapping_system="thoth", framework_basis=None, withheld=None, own_place=None, significator_places=None, drawn_at=None, local_zone=None, book_t=None, book_t_notes=None, without=DEFAULT_OFF, fitted=(), against_chance="", layout="lean", timing=None):
     """`against_chance` is chance.chance_sentence() for the reading. `fitted` are the components in `without` that analyze_reading left out only to keep the
     prompt short enough; the header names them apart from the ones switched off."""
     off = frozenset(without)
@@ -550,8 +550,10 @@ def _details_md(spread_results, legend, off=frozenset(), drawn_at=None, dates_fo
 def book_t_timing(spread_results, ops, drawn_at):
     """Book T's timing card, as this site reads it: the last small card (2-10, the ones with a
     decan) on the Count of the last operation read, or, with none on that Count, the last
-    small card listed in that operation. Returns {"pos", "title", "window", "how", "counted"}
-    ("counted": every card on any Count) or None when that operation has no small card."""
+    small card listed in that operation. Returns {"pos", "title", "how", "window" (text),
+    "start", "end" (ISO dates), "running", "counted"} or None when that operation has no small
+    card. A window the Sun is already in at the draw starts on the draw date, as no reading
+    looks back; "counted" is every card on any Count, whose decan dates the lean layout gives."""
     read = [o for o in ops if o["status"] != "abandoned"]
     segments = spread_segments(spread_results, BOOK_T_KEY)
     counted, last = set(), None
@@ -568,8 +570,12 @@ def book_t_timing(spread_results, ops, drawn_at):
     if pick is None:
         return None
     title = pick["card_data"]["title"]
-    return {"pos": pick["position_number"], "title": title, "how": how,
-            "window": decan_dates_after(title, drawn_at), "counted": counted | {title}}
+    start, end = decan_window(title, drawn_at)
+    running = start < drawn_at            # the Sun is in that decan at the draw: from the draw on
+    start = max(start, drawn_at)
+    return {"pos": pick["position_number"], "title": title, "how": how, "running": running,
+            "window": span_text(start, end), "start": start.date().isoformat(),
+            "end": end.date().isoformat(), "counted": counted | {title}}
 
 def _card_lines(data, legend, off=frozenset()):
     """A card's correspondence lines (all but its name): the same wherever it falls."""
@@ -1003,13 +1009,17 @@ def _instructions_md(query_prompt, mapping_label, macro_framework, spread_result
     if timing:
         where = ("the last small card on its Count" if timing["how"] == "count" else
                  "its Count has no small card, so the last small card listed in it")
+        when = (f"the Sun is already in its decan at the draw, so the window runs from the draw "
+                f"date: {timing['window']} (UTC)" if timing["running"] else
+                f"the Sun is in its decan {timing['window']} (UTC)")
         rules[-1] = ("Timeline", "After the recap, add a heading `## Timeline`. Book T times the matter "
                      "by the decan of the last small card (2 to 10) on the Count of the last operation "
                      "read, or, if that Count has none, the last small card listed in that operation. "
-                     f"Here that is Pos {timing['pos']} ({timing['title']}), {where}: the Sun is in its "
-                     f"decan {timing['window']} (UTC). Make that the first line, as `- what it is: "
-                     "YYYY-MM-DD to YYYY-MM-DD`. Add a line for another time only where the reading "
-                     "itself points to one, and say which card gives it.")
+                     f"Here that is Pos {timing['pos']} ({timing['title']}), {where}: {when}. Make "
+                     "that the first line, in your own words for what it marks, for example "
+                     f"`- the matter turns: {timing['start']} to {timing['end']}`. Add a line for another "
+                     "time only where the reading itself points to one, in the same form, and say which "
+                     "card gives it.")
     md = ("SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM\n\n"
           "Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the "
           "calculations above, following these rules:\n\n")

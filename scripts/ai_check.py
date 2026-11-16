@@ -90,7 +90,9 @@ def build_reading(ref, seed, spread_key, question=QUESTION):
                               significator_places=significator_places(deck, seed, positions, sig_card),
                               # Every layer on, as in the rounds this checker was built for: its
                               # facts and section numbers (1-7) assume the full prompt.
-                              without=frozenset())
+                              without=frozenset(),
+                              # The full layout: this checker reads one block per position.
+                              layout="full", timing_rule=False)
     return reading, positions, titles, (sig_card["title"] if pinned else None), withheld
 
 
