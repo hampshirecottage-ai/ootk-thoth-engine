@@ -37,6 +37,7 @@ def client(monkeypatch):
     """App client with the database fully mocked out."""
     saved = {}
     monkeypatch.setattr(app_module, "_sample_cache", {})
+    monkeypatch.setattr(app_module, "admin_signed_out_at", 0)          # a sign-out in one test stays there
     monkeypatch.setattr(app_module, "_sign_carriers_cache", {s: {} for s in app_module.MAPPING_SYSTEMS})
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [])
@@ -1622,6 +1623,53 @@ def test_admin_cookie_stops_working_when_the_password_changes(client, monkeypatc
     client.post("/admin/login", data={"password": "secret"})
     monkeypatch.setenv("ADMIN_PASSWORD", "new-secret")
     assert 'name="password"' in client.get("/admin").text
+
+
+def test_admin_sign_in_expires_on_the_server(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    r = client.post("/admin/login", data={"password": "secret"}, follow_redirects=False)
+    assert f"max-age={app_module.ADMIN_MAX_AGE}" in r.headers["set-cookie"].lower()
+    assert client.get("/admin", follow_redirects=False).status_code == 303          # signed in
+    now = time.time()
+    monkeypatch.setattr(app_module.time, "time", lambda: now + app_module.ADMIN_MAX_AGE - 5)
+    assert client.get("/admin", follow_redirects=False).status_code == 303          # still inside the window
+    monkeypatch.setattr(app_module.time, "time", lambda: now + app_module.ADMIN_MAX_AGE + 5)
+    assert 'name="password"' in client.get("/admin").text                          # the cookie alone no longer works
+
+
+def test_admin_cookie_is_refused_when_forged_old_style_or_from_the_future(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    import hashlib, hmac
+    old_style = hmac.new(b"secret", b"ootk-admin-session", hashlib.sha256).hexdigest()
+    now = int(time.time())
+    for cookie in [old_style, f"{now}.{'0' * 64}", f"{now}.", "abc.def", "",
+                   app_module.admin_token("secret", now + 3600),             # issued in the future
+                   app_module.admin_token("other", now)]:                     # signed with another password
+        client.cookies.set(app_module.ADMIN_COOKIE, cookie, path="/admin")
+        assert 'name="password"' in client.get("/admin").text, cookie
+    client.cookies.set(app_module.ADMIN_COOKIE, app_module.admin_token("secret", now), path="/admin")
+    assert client.get("/admin", follow_redirects=False).status_code == 303
+
+
+def test_admin_sign_out_also_refuses_a_copied_cookie(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/admin/login", data={"password": "secret"})
+    copied = client.cookies.get(app_module.ADMIN_COOKIE)
+    client.post("/admin/logout")
+    other = TestClient(app_module.app)                                           # e.g. someone who copied it
+    other.cookies.set(app_module.ADMIN_COOKIE, copied, path="/admin")
+    assert 'name="password"' in other.get("/admin").text
+    client.post("/admin/login", data={"password": "secret"})                     # signing in again works at once
+    assert client.get("/admin", follow_redirects=False).status_code == 303
+
+
+def test_signing_out_without_a_valid_cookie_signs_nobody_out(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/admin/login", data={"password": "secret"})
+    before = app_module.admin_signed_out_at
+    TestClient(app_module.app).post("/admin/logout")
+    assert app_module.admin_signed_out_at == before
+    assert client.get("/admin", follow_redirects=False).status_code == 303
 
 
 def test_admin_sessions_lists_readings_only_when_signed_in(client, monkeypatch):

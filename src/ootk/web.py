@@ -2126,12 +2126,16 @@ def report_journal_box(request: Request, session_id, link):
 # ---------- admin: saved readings ----------
 
 # /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
-# doesn't exist (404). Signing in sets a cookie derived from the password, so changing the
-# password signs every browser out. The cookie is SameSite=Strict, so another site can't make a
-# signed-in browser press the buttons.
+# doesn't exist (404). Signing in sets a cookie holding the sign-in time and a signature made
+# from the password, so the server itself refuses a cookie older than ADMIN_MAX_AGE (a copied
+# cookie stops working too, not just the browser's copy), and changing the password signs every
+# browser out. Signing out also refuses every cookie issued before it, until the app restarts.
+# The cookie is SameSite=Strict, so another site can't make a signed-in browser press the buttons.
 ADMIN_COOKIE = "ootk_admin"
-ADMIN_MAX_AGE = 7 * 24 * 3600
+ADMIN_SESSION_HOURS = 12                 # how long one admin sign-in lasts; change it here
+ADMIN_MAX_AGE = ADMIN_SESSION_HOURS * 3600
 admin_logins = FailedLogins()
+admin_signed_out_at = 0                  # cookies issued at or before this time no longer work
 
 
 def admin_password() -> str:
@@ -2141,13 +2145,25 @@ def admin_password() -> str:
     return password
 
 
-def admin_token(password: str) -> str:
-    return hmac.new(password.encode(), b"ootk-admin-session", hashlib.sha256).hexdigest()
+def admin_signature(password: str, issued: int) -> str:
+    return hmac.new(password.encode(), f"ootk-admin-session|{issued}".encode(), hashlib.sha256).hexdigest()
+
+
+def admin_token(password: str, issued: int | None = None) -> str:
+    issued = int(time.time()) if issued is None else issued
+    return f"{issued}.{admin_signature(password, issued)}"
 
 
 def is_admin(request: Request) -> bool:
-    given = request.cookies.get(ADMIN_COOKIE, "")
-    return secrets.compare_digest(given.encode(), admin_token(admin_password()).encode())
+    password = admin_password()          # no ADMIN_PASSWORD: every /admin page is a 404
+    issued, _, signature = request.cookies.get(ADMIN_COOKIE, "").partition(".")
+    if not issued.isdigit() or len(issued) > 12:
+        return False                     # missing, malformed, or the old never-expiring kind
+    issued = int(issued)
+    if not secrets.compare_digest(signature.encode(), admin_signature(password, issued).encode()):
+        return False
+    now = time.time()
+    return admin_signed_out_at < issued <= now + 60 and now - issued < ADMIN_MAX_AGE
 
 
 def admin_page(request: Request, status: int = 200, **context):
@@ -2232,14 +2248,18 @@ def admin_login(request: Request, password: str = Form("")):
         return admin_page(request, status=401, signed_in=False, error="That password isn't right.")
     admin_logins.succeeded(visitor)
     response = RedirectResponse("/admin", status_code=303)
-    response.set_cookie(ADMIN_COOKIE, admin_token(expected), max_age=ADMIN_MAX_AGE, httponly=True,
+    issued = max(int(time.time()), admin_signed_out_at + 1)   # never land on a signed-out second
+    response.set_cookie(ADMIN_COOKIE, admin_token(expected, issued), max_age=ADMIN_MAX_AGE, httponly=True,
                         samesite="strict", secure=request.url.scheme == "https", path="/admin")
     return response
 
 
 @app.post("/admin/logout")
 def admin_logout(request: Request):
+    global admin_signed_out_at
     admin_password()
+    if is_admin(request):                # only a signed-in browser can sign everyone out
+        admin_signed_out_at = int(time.time())
     response = RedirectResponse("/admin", status_code=303)
     response.delete_cookie(ADMIN_COOKIE, path="/admin")
     return response
