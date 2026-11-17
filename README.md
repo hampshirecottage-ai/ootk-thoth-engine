@@ -76,7 +76,6 @@ ootk-thoth-engine/
 │   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
 │   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
 │   ├── ai_lean.py          # Side-by-side round: lean prompt layout and timing rule vs the old prompt
-│   ├── export_hf_space.sh  # Copy the files a Hugging Face Space needs into a folder
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
 │   ├── schema.sql          # Full dump: schema, all migrations, and reference data
@@ -87,8 +86,8 @@ ootk-thoth-engine/
 ├── static/js/              # Page scripts, loaded with defer
 ├── static/fonts/           # Self-hosted Cinzel, Inter and JetBrains Mono (SIL Open Font License)
 ├── static/site/            # Favicon, app icon, link-preview image and the Tree of Life animation
-├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker, Render and Hugging Face Spaces)
-├── deploy/huggingface/     # Space README and start script, also used by the Docker image
+├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker and Render)
+├── deploy/start.sh         # Container entry point used by the Docker image
 ├── output/                 # Generated HTML reports (not in git)
 ├── examples/               # A sample reading made with a dummy seed
 ├── docs/images/            # README screenshot
@@ -269,9 +268,9 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, its four Liber 777 colour scales (King, Queen, Prince, Princess) and Yetziratic title, a sign Trump's geomantic figure, a Trump's Liber 777 gods, a court card's I Ching hexagram, small maps of where it sits (as on `/maps`), and every aspect and dignity it takes part in. Escape closes it.
 - **Save.** The **Save** menu prints or saves a PDF with every section expanded, downloads the prompt as Markdown, or the whole reading as JSON. Each drawing also downloads as an SVG (card images link back to the running server).
 
-### Docker, Render and Hugging Face Spaces
+### Docker and Render
 
-The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000, which Hugging Face requires). On start it loads `database/schema.sql` into an empty database. It includes the public-domain card art in `static/cards/`, but not the full-size scans.
+The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000). On start it loads `database/schema.sql` into an empty database. It includes the public-domain card art in `static/cards/`, but not the full-size scans.
 
 ```bash
 docker build -t ootk .
@@ -285,8 +284,6 @@ Set `APP_PASSWORD` to make every page ask for that password (any user name works
 On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [tarotthoth.com](https://tarotthoth.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked.
 
 Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start, pick and guide pages and the card of the day; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap, and `/reading` share links are disallowed in `robots.txt`. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
-
-For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private, or set `APP_PASSWORD`, if you don't want strangers adding readings to your database.
 
 ### Update an existing database
 

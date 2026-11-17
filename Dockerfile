@@ -26,7 +26,7 @@ COPY --chown=user static/cards ./static/cards
 COPY --chown=user static/site ./static/site
 COPY --chown=user static/fonts ./static/fonts
 COPY --chown=user database/schema.sql ./database/schema.sql
-COPY --chown=user deploy/huggingface/start.sh ./start.sh
+COPY --chown=user deploy/start.sh ./start.sh
 
 USER user
 EXPOSE 7860
