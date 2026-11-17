@@ -4,7 +4,7 @@
 set -e
 
 if [ -z "$DB_HOST" ]; then
-    # Local database. Space storage is ephemeral, so it starts empty on every restart.
+    # Local database. Container storage is ephemeral, so it starts empty on every restart.
     export DB_HOST=/tmp DB_USER=user DB_NAME=my_tarot_db DB_PORT=5432
     if [ ! -s "$PGDATA/PG_VERSION" ]; then
         initdb -D "$PGDATA" -U user --auth=trust >/dev/null
