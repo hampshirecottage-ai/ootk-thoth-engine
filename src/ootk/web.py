@@ -2321,6 +2321,11 @@ def seeded_significator_places(settings, card_titles, deck):
     return significator_places(deck, settings["seed"], positions, sig_card)
 
 
+# The years a draw time may fall in. Every reading the site makes is drawn now; a hand-edited
+# link outside these years got a 500 (year 9999 runs the decan dates past year 10000).
+DRAWN_YEARS = (1900, 2199)
+
+
 def parse_drawn_at(text):
     """settings['drawn_at'] or a link's drawn= ('20261029T2200Z') as an aware UTC datetime;
     None if blank. Any ISO 8601 form is accepted; one without a zone is read as UTC."""
@@ -2328,10 +2333,14 @@ def parse_drawn_at(text):
         return None
     try:
         when = datetime.fromisoformat(str(text))
-    except ValueError:
+        when = (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    except (ValueError, OverflowError):
         raise HTTPException(status_code=400, detail=f"{quoted(text)} is not a date and time. "
                                                     f"Use the form 20261029T2200Z.")
-    return (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    if not DRAWN_YEARS[0] <= when.year <= DRAWN_YEARS[1]:
+        raise HTTPException(status_code=400, detail=f"A draw time must fall between {DRAWN_YEARS[0]} "
+                                                    f"and {DRAWN_YEARS[1]}.")
+    return when
 
 
 def time_zone(name):

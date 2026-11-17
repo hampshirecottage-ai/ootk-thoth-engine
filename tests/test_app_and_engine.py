@@ -3214,3 +3214,12 @@ def test_count_rows_follow_each_operations_chain():
     assert [c["title"] for c in row["cards"]] == ["C3", "C1"]          # the Significator is shown once, above
     assert row["leftover"]["title"] == "C5" and row["missed"]
     assert [c["title"] for c in view["key_cards"]] == ["C0"]
+
+
+@pytest.mark.parametrize("drawn", ["9999-12-31T23:59:59", "0001-01-01T00:00+05:00",
+                                   "9999-12-31T23:59:59-05:00", "1066-10-14"])
+def test_share_link_with_a_draw_time_out_of_range_is_refused(seeded_client, drawn):
+    r = seeded_client.get("/reading", params={"seed": "7", "spread": "3", "drawn": drawn})
+    assert r.status_code == 400
+    assert seeded_client.get("/reading", params={"seed": "7", "spread": "3",
+                                                 "drawn": "20261029T2200Z"}).status_code == 200
