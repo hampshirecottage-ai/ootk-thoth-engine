@@ -2997,6 +2997,22 @@ def test_share_link_leaves_out_its_parts_and_redraws_the_same_cards(seeded_clien
     assert seeded_client.get("/reading/json?seed=7&spread=3&without=hebrew").status_code == 200
 
 
+def test_share_link_with_most_parts_switched_off_still_opens(seeded_client):
+    """A reading with only one part left on writes a without= longer than FIELD_MAX: its own
+    share link and JSON download must still open (they gave 400 before 2026-11-17)."""
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", selected_cards="",
+             parts_shown="1", include=["hebrew"])
+    without = seeded_client.saved["report_settings"]["without"]
+    assert len(without) > app_module.FIELD_MAX
+    link = re.search(r'data-path="(/reading\?[^"]+)"', r.text).group(1).replace("&amp;", "&")
+    shared = seeded_client.get(link)
+    assert shared.status_code == 200 and "**Components Left Out:**" in shared.text
+    assert seeded_client.get(link.replace("/reading?", "/reading/json?")).status_code == 200
+    every = ",".join(app_module.COMPONENTS)
+    assert seeded_client.get(f"/reading?seed=7&spread=3&with={every}&without={every}").status_code == 200
+    assert seeded_client.get(f"/reading?seed=7&spread=3&without={every},x").status_code == 400
+
+
 @pytest.mark.parametrize("bad", [{"include": ["astrology", "runes"]}, {"include": ["x" * 500]}])
 def test_unknown_prompt_part_is_refused(seeded_client, bad):
     r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", selected_cards="",

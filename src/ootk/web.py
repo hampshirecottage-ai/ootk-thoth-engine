@@ -1459,9 +1459,18 @@ def chosen_parts(include, parts_shown):
     return cli_switches(set(COMPONENTS) - set(include))
 
 
+# A share link's with= or without= names prompt parts, so it can be longer than FIELD_MAX: a
+# reading with most of the main parts switched off writes about 80 characters there. This is
+# every part named once, the longest list share_path() can write.
+PARTS_MAX = len(",".join(COMPONENTS))
+
+
 def parts_params(with_, without):
     """A share link's with= and without= values, tidied to what cli_switches() writes, or 400."""
-    check_lengths(**{"with": with_, "without": without})
+    for name, value in (("with", with_), ("without", without)):
+        if len(value) > PARTS_MAX:
+            raise HTTPException(status_code=400, detail=f"The {name} field is too long "
+                                                        f"(at most {PARTS_MAX} characters).")
     try:
         return cli_switches(choose_components(with_, without))
     except ValueError as e:
