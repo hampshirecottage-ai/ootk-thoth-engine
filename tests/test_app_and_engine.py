@@ -37,6 +37,7 @@ def client(monkeypatch):
     """App client with the database fully mocked out."""
     saved = {}
     monkeypatch.setattr(app_module, "_sample_cache", {})
+    monkeypatch.setattr(app_module, "admin_signed_out_at", 0)          # a sign-out in one test stays there
     monkeypatch.setattr(app_module, "_sign_carriers_cache", {s: {} for s in app_module.MAPPING_SYSTEMS})
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: [])
@@ -1634,6 +1635,53 @@ def test_admin_cookie_stops_working_when_the_password_changes(client, monkeypatc
     assert 'name="password"' in client.get("/admin").text
 
 
+def test_admin_sign_in_expires_on_the_server(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    r = client.post("/admin/login", data={"password": "secret"}, follow_redirects=False)
+    assert f"max-age={app_module.ADMIN_MAX_AGE}" in r.headers["set-cookie"].lower()
+    assert client.get("/admin", follow_redirects=False).status_code == 303          # signed in
+    now = time.time()
+    monkeypatch.setattr(app_module.time, "time", lambda: now + app_module.ADMIN_MAX_AGE - 5)
+    assert client.get("/admin", follow_redirects=False).status_code == 303          # still inside the window
+    monkeypatch.setattr(app_module.time, "time", lambda: now + app_module.ADMIN_MAX_AGE + 5)
+    assert 'name="password"' in client.get("/admin").text                          # the cookie alone no longer works
+
+
+def test_admin_cookie_is_refused_when_forged_old_style_or_from_the_future(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    import hashlib, hmac
+    old_style = hmac.new(b"secret", b"ootk-admin-session", hashlib.sha256).hexdigest()
+    now = int(time.time())
+    for cookie in [old_style, f"{now}.{'0' * 64}", f"{now}.", "abc.def", "",
+                   app_module.admin_token("secret", now + 3600),             # issued in the future
+                   app_module.admin_token("other", now)]:                     # signed with another password
+        client.cookies.set(app_module.ADMIN_COOKIE, cookie, path="/admin")
+        assert 'name="password"' in client.get("/admin").text, cookie
+    client.cookies.set(app_module.ADMIN_COOKIE, app_module.admin_token("secret", now), path="/admin")
+    assert client.get("/admin", follow_redirects=False).status_code == 303
+
+
+def test_admin_sign_out_also_refuses_a_copied_cookie(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/admin/login", data={"password": "secret"})
+    copied = client.cookies.get(app_module.ADMIN_COOKIE)
+    client.post("/admin/logout")
+    other = TestClient(app_module.app)                                           # e.g. someone who copied it
+    other.cookies.set(app_module.ADMIN_COOKIE, copied, path="/admin")
+    assert 'name="password"' in other.get("/admin").text
+    client.post("/admin/login", data={"password": "secret"})                     # signing in again works at once
+    assert client.get("/admin", follow_redirects=False).status_code == 303
+
+
+def test_signing_out_without_a_valid_cookie_signs_nobody_out(client, monkeypatch):
+    monkeypatch.setenv("ADMIN_PASSWORD", "secret")
+    client.post("/admin/login", data={"password": "secret"})
+    before = app_module.admin_signed_out_at
+    TestClient(app_module.app).post("/admin/logout")
+    assert app_module.admin_signed_out_at == before
+    assert client.get("/admin", follow_redirects=False).status_code == 303
+
+
 def test_admin_sessions_lists_readings_only_when_signed_in(client, monkeypatch):
     from datetime import datetime
     monkeypatch.setenv("ADMIN_PASSWORD", "secret")
@@ -2906,6 +2954,35 @@ def book_t_post(client, follow=True, **over):
     return post(client, follow=follow, **data)
 
 
+def test_book_t_reading_saved_before_the_cut_changed_still_opens(book_t_client):
+    """Saved before PR #221 changed Operation 1's cut (2026-11-10): its seed now draws other
+    cards, so the report rebuilds it with the older cut instead of failing, and offers no
+    share link, which would show a different reading."""
+    from ootk import book_t
+    book_t_post(book_t_client)
+    stored = book_t_client.saved["report_settings"]
+    sig = next(c for c in REFERENCE_DECK if c["title"] == "Knight of Wands")
+    ops = book_t.opening_of_the_key(REFERENCE_DECK, "1568", sig, book_t.parse_expect(stored["expect"]),
+                                    cut="quarters")
+    older = [c["title"] for _, c in book_t.positions(ops)]
+    assert older != stored["card_titles"]                  # the two cuts draw different cards
+    stored["card_titles"] = older
+    r = book_t_client.get(f"/report/{stored['link']}", headers={"Accept": "text/html"})
+    assert r.status_code == 200 and book_t_client.lookups[-1] == older
+    assert "shareLink" not in r.text and "cliCommand" not in r.text and 'id="oldDraw"' in r.text
+    assert book_t_client.get(f"/report/{stored['link']}/json").status_code == 200
+
+
+def test_book_t_reading_that_redraws_under_neither_cut_says_so(book_t_client, caplog):
+    book_t_post(book_t_client)
+    stored = book_t_client.saved["report_settings"]
+    stored["card_titles"] = list(reversed(stored["card_titles"]))
+    with caplog.at_level("WARNING", logger="ootk.web"):
+        r = book_t_client.get(f"/report/{stored['link']}", headers={"Accept": "text/html"})
+    assert r.status_code == 500 and "no longer redraws its cards" in r.text
+    assert "no longer redraws its cards" in caplog.text           # and the server log says so
+
+
 def test_book_t_draws_like_the_cli_and_shares_its_expected_places(book_t_client):
     from ootk import book_t
     sig = next(c for c in REFERENCE_DECK if c["title"] == "Knight of Wands")
@@ -3005,6 +3082,22 @@ def test_share_link_leaves_out_its_parts_and_redraws_the_same_cards(seeded_clien
     assert "**Components Left Out:** Hebrew letters, Tree of Life" in r.text
     assert "Components Left Out" not in full.text
     assert seeded_client.get("/reading/json?seed=7&spread=3&without=hebrew").status_code == 200
+
+
+def test_share_link_with_most_parts_switched_off_still_opens(seeded_client):
+    """A reading with only one part left on writes a without= longer than FIELD_MAX: its own
+    share link and JSON download must still open (they gave 400 before 2026-11-17)."""
+    r = post(seeded_client, spread_key="3", draw_mode="seed", seed="7", selected_cards="",
+             parts_shown="1", include=["hebrew"])
+    without = seeded_client.saved["report_settings"]["without"]
+    assert len(without) > app_module.FIELD_MAX
+    link = re.search(r'data-path="(/reading\?[^"]+)"', r.text).group(1).replace("&amp;", "&")
+    shared = seeded_client.get(link)
+    assert shared.status_code == 200 and "**Components Left Out:**" in shared.text
+    assert seeded_client.get(link.replace("/reading?", "/reading/json?")).status_code == 200
+    every = ",".join(app_module.COMPONENTS)
+    assert seeded_client.get(f"/reading?seed=7&spread=3&with={every}&without={every}").status_code == 200
+    assert seeded_client.get(f"/reading?seed=7&spread=3&without={every},x").status_code == 400
 
 
 @pytest.mark.parametrize("bad", [{"include": ["astrology", "runes"]}, {"include": ["x" * 500]}])
@@ -3208,3 +3301,12 @@ def test_count_rows_follow_each_operations_chain():
     assert [c["title"] for c in row["cards"]] == ["C3", "C1"]          # the Significator is shown once, above
     assert row["leftover"]["title"] == "C5" and row["missed"]
     assert [c["title"] for c in view["key_cards"]] == ["C0"]
+
+
+@pytest.mark.parametrize("drawn", ["9999-12-31T23:59:59", "0001-01-01T00:00+05:00",
+                                   "9999-12-31T23:59:59-05:00", "1066-10-14"])
+def test_share_link_with_a_draw_time_out_of_range_is_refused(seeded_client, drawn):
+    r = seeded_client.get("/reading", params={"seed": "7", "spread": "3", "drawn": drawn})
+    assert r.status_code == 400
+    assert seeded_client.get("/reading", params={"seed": "7", "spread": "3",
+                                                 "drawn": "20261029T2200Z"}).status_code == 200
