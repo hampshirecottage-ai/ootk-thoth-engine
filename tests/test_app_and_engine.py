@@ -622,6 +622,16 @@ def test_landing_pages_match_their_keywords_and_are_listed(client, monkeypatch):
     assert client.get("/tarot/free-tarot", headers={"accept": "text/html"}).status_code == 404
 
 
+def test_retired_keyword_pages_forward_and_leave_the_sitemap(client):
+    sitemap = client.get("/sitemap.xml").text
+    for slug, target in app_module.RETIRED_LANDING_PAGES.items():
+        assert slug not in app_module.LANDING_PAGES
+        r = client.get(f"/tarot/{slug}?x=1", follow_redirects=False)
+        assert r.status_code == 301 and r.headers["location"] == target
+        assert client.get(target).status_code == 200                       # lands on a real page
+        assert f"/tarot/{slug}<" not in sitemap
+
+
 def test_history_page_is_retired_and_forwards_to_further_reading(client):
     r = client.get("/history", follow_redirects=False)
     assert r.status_code == 301 and r.headers["location"] == "/library#readingTitle"
