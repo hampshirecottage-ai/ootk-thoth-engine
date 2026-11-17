@@ -653,7 +653,7 @@ def get_db_connection():
 
 
 # thoth_cards and correspondences are reference data that change only with a migration, so the
-# pages read them once per process, like the sample and the sign carriers. Drawing and analysing
+# pages read them once per process, like the sign carriers. Drawing and analysing
 # a reading then needs no database round trip; only saving and opening a saved report connect.
 # After running a migration, restart the app to pick it up.
 _reference_cache = {}
@@ -780,186 +780,10 @@ def reading_export(spread_name, settings, significator, framework, framework_bas
     return json.loads(json.dumps(reading, default=str))
 
 
-# The start page shows this reading before asking for any settings: the full Opening of the
-# Key, so a visitor sees every operation at once. The seed is a throwaway number and the
-# significator a fixed card, so the sample holds no personal data, and the same seed always
-# draws the same cards.
-SAMPLE_SETTINGS = {
-    "spread_key": "12", "seed": "12345", "topic": "", "significator": "Queen of Cups",
-    "framework": "auto", "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed",
-}
-_sample_cache = {}
-
-NUMBER_WORDS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
-OP_SHORT_NAMES = {"8": "The heap", "9": "Twelve houses", "10": "Twelve signs", "11": "Thirty-six decans"}
-OP_UNITS = {"8": "in the heap", "9": "houses", "10": "signs", "11": "decans"}
-DIGNITY_KINDS = ((2, "same", ("shares an element", "share an element")),
-                 (1, "friendly", ("is friendly", "are friendly")),
-                 (-2, "contrary", ("is contrary", "are contrary")),
-                 (0, "neutral", ("is neutral", "are neutral")))
-
-
-def _and_list(items):
-    items = list(items)
-    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
-
-
-def _count(n):
-    return NUMBER_WORDS[n] if n < len(NUMBER_WORDS) else str(n)
-
-
-def _the(data):
-    """'the Queen of Cups', 'The Hierophant', 'Art': how a card reads mid-sentence."""
-    name = short_card_name(data["title"])
-    return name if name.startswith("The ") or data.get("arcana_type") == "Major" else f"the {name}"
-
-
-def _position_name(item):
-    """'[Op 1] 2. Development of Question (Left Pair A)' -> 'Development of Question (Left Pair A)'."""
-    return re.sub(r"^(\[Op \d+\]\s*)?\d+\.\s*", "", item["position_name"])
-
-
-def _dignity_totals(pairs):
-    totals = {key: sum(1 for d in pairs if d["score"] == score) for score, key, _ in DIGNITY_KINDS}
-    totals["net"] = sum(d["score"] for d in pairs)
-    totals["pairs"] = len(pairs)
-    return totals
-
-
-def _aspect_totals(pairs):
-    counts = Counter(p.get("aspect_name") or "Unaspected" for p in pairs)
-    return {"strong": sum(1 for p in pairs if abs(p.get("score_modifier") or 0) >= 2),
-            "by_type": [(a, counts[a]) for a in ASPECT_TYPES if counts[a]]}
-
-
-def _sample_card(item, start):
-    d = item["card_data"]
-    idx = item["position_number"] - 1
-    return {
-        "n": idx - start + 1, "position": _position_name(item), "title": d["title"],
-        "short": short_card_name(d["title"]), "element": derive_primary_element(d),
-        "attribution": d.get("attribution") or "", "letter": d.get("hebrew_letter") or "",
-        "place": d.get("spatial_dimension") or "", "place_type": d.get("spatial_type") or "",
-        "img": card_image_url(d["title"], "small"), "art": art_note(d["title"]),
-        "dignities": [],   # filled in by sample_view, which has the whole operation
-    }
-
-
-def sample_summary(r, settings):
-    """Two plain-language paragraphs on what the sample drew and what was calculated.
-    Facts only: the site gives the AI the instructions and never interprets the cards."""
-    items = r["spread_results"]
-    segments = spread_segments(items, settings["spread_key"])
-    heap = items[segments[0][1]:segments[0][2]]
-    sizes = _and_list(f"{e - s} {OP_UNITS.get(k, 'cards')}"
-                      for k, s, e, _ in segments) if len(segments) > 1 else None
-    first = f"Seed {settings['seed']}"
-    if settings["significator"]:
-        first += f", with {_the(heap[0]['card_data'])} as significator,"
-    first += f" dealt {len(items)} cards"
-    first += f" over {_count(len(segments))} operations: {sizes}." if sizes else "."
-    if len(heap) > 2:
-        last = heap[-1]
-        first += (f" The heap opens on {_the(heap[0]['card_data'])} ({_position_name(heap[0]).lower()})"
-                  f" and closes on {_the(last['card_data'])} ({_position_name(last).lower()}).")
-
-    counts = [(e, c) for e, c in r["element_counts"].items() if c]
-    second = [f"Across all {len(items)} cards the elements are "
-              f"{_and_list(f'{c} {e}' for e, c in counts)}."]
-    dig = _dignity_totals(r["dignity_matrix"])
-    if dig["pairs"]:
-        parts = [f"{dig[key]} {phrases[dig[key] != 1]}" for _, key, phrases in DIGNITY_KINDS if dig[key]]
-        second.append(f"Of the {dig['pairs']} scored pairs, {_and_list(parts)}, a net score of {dig['net']:+d}.")
-    on_cube = [i for i in heap if i["card_data"].get("spatial_dimension")]
-    if on_cube:
-        verb = "sits" if len(on_cube) == 1 else "sit"
-        second.append(f"{_count(len(on_cube)).capitalize()} of the heap's cards {verb} on the Cube of Space.")
-    return [first, " ".join(second)]
-
-
-def sample_walkthrough(r, settings):
-    """The figures behind the three "read it yourself" steps on /start, taken from the sample:
-    which elements lead and which are missing, which heap cards are weakened and by whom,
-    and where the significator falls in each operation."""
-    items = r["spread_results"]
-    counts = {e: n for e, n in r["element_counts"].items() if e != "Spirit"}
-    top = max(counts.values(), default=0)
-    _, start, end, _ = spread_segments(items, settings["spread_key"])[0]
-    weak = []
-    for idx in range(start, end):
-        pairs = [d for d in r["dignity_matrix"] if idx in (d["from_index"], d["to_index"])]
-        if sum(d["score"] for d in pairs) >= 0:
-            continue
-        weak.append({"card": short_card_name(items[idx]["card_data"]["title"]),
-                     "by": [short_card_name(items[d["to_index"] if d["from_index"] == idx
-                                                else d["from_index"]]["card_data"]["title"])
-                            for d in pairs if d["score"] < 0]})
-    return {
-        "lead": [e for e, n in counts.items() if n == top and n], "lead_count": top,
-        "total": len(items), "absent": [e for e, n in counts.items() if not n],
-        "heap_size": end - start, "weak": weak,
-        "places": r.get("significator_places") or [],
-    }
-
-
-def sample_view(r, settings):
-    """Everything /start shows of the sample: the summary, the heap and wheel for the
-    diagram, the element breakdown, the cube positions and one summary per operation."""
-    items = r["spread_results"]
-    segments = spread_segments(items, settings["spread_key"])
-    ops = []
-    for key, start, end, name in segments:
-        dignities = [d for d in r["dignity_matrix"] if start <= d["from_index"] < end]
-        cards = []
-        for item in items[start:end]:
-            idx = item["position_number"] - 1
-            card = _sample_card(item, start)
-            card["dignities"] = [
-                {"with": short_card_name(items[d["to_index"] if d["from_index"] == idx else d["from_index"]]
-                                         ["card_data"]["title"]), "score": d["score"]}
-                for d in dignities if idx in (d["from_index"], d["to_index"])]
-            cards.append(card)
-        ops.append({
-            "key": key, "name": OP_SHORT_NAMES.get(key, SPREADS[key]["name"]),
-            "full_name": name or SPREADS[key]["name"], "cards": cards,
-            "dignity": _dignity_totals(dignities),
-            "aspects": _aspect_totals([p for p in r["spatial_matrix"] if start <= p["from_index"] < end]),
-        })
-    total = len(items)
-    top = max(r["element_counts"].values()) or 1      # bars are scaled to the largest count
-    elements = [{"name": e, "count": n, "pct": round(100 * n / top)}
-                for e, n in r["element_counts"].items() if e != "Spirit" or n]
-    by_key = {op["key"]: op for op in ops}
-    heap = by_key.get("8", ops[0])["cards"]
-    wheel = by_key["10"]["cards"] if "10" in by_key else []
-    return {
-        "seed": settings["seed"], "significator": settings["significator"],
-        "spread_name": r["spread_name"], "card_count": total,
-        "summary": sample_summary(r, settings), "walkthrough": sample_walkthrough(r, settings),
-        "elements": elements, "ops": ops,
-        "heap": heap, "wheel": wheel,
-        "cube": [c for c in heap if c["place"]],
-        "prompt": r["analytical_prompt"], "url": share_path(settings),
-    }
-
-
-def sample_reading(deck):
-    """The /start sample: drawn and analysed once per process, then reused. None when
-    the deck can't produce it (an empty or partial database), so the page still renders."""
-    if "sample" in _sample_cache:
-        return _sample_cache["sample"]
-    if len(deck) != 78:            # another deck size would draw other cards for this seed
-        return None
-    try:
-        card_titles, significator_label = seeded_draw(deck, SAMPLE_SETTINGS["seed"],
-                                                      SAMPLE_SETTINGS["spread_key"],
-                                                      SAMPLE_SETTINGS["significator"])
-        r = run_reading(SAMPLE_SETTINGS, card_titles, significator_label, deck)
-    except (HTTPException, LookupError, ValueError):
-        return None
-    sample = sample_view(r, SAMPLE_SETTINGS)
-    _sample_cache["sample"] = sample
-    return sample
+# The example reading the site links to as "See a sample reading": three cards from a fixed,
+# throwaway seed, rebuilt from its share link each time (nothing personal, nothing saved).
+SAMPLE_READING_LINK = "/reading?seed=12345&spread=3"
+templates.env.globals["sample_link"] = SAMPLE_READING_LINK
 
 
 def seeded_draw(deck, seed, spread_key, significator, expect=""):
@@ -1087,7 +911,6 @@ def robots_txt(request: Request):
             "Disallow: /report/\n"
             "Disallow: /generate_report\n"
             "Disallow: /reading\n"
-            "Disallow: /sample/\n"
             "Disallow: /journal\n"
             f"\nSitemap: {site_url(request)}/sitemap.xml\n")
 
@@ -1141,16 +964,6 @@ def main_gui(request: Request):
     return settings_page(request, "index.html", "seed")
 
 
-@app.get("/sample/prompt", response_class=PlainTextResponse)
-def sample_prompt():
-    """The /start sample's whole AI prompt (about 72 KB), fetched when the folded sample is
-    opened rather than sent with every visit to /start."""
-    sample = sample_reading(reference_deck())
-    if sample is None:
-        raise HTTPException(status_code=404, detail="The sample reading isn't available.")
-    return PlainTextResponse(sample["prompt"], headers={"Cache-Control": "public, max-age=3600"})
-
-
 @app.get("/pick", response_class=HTMLResponse)
 def pick_gui(request: Request):
     """Pick by hand: the same settings plus the spread board and card catalog."""
@@ -1178,14 +991,9 @@ def guide_page(request: Request, name: str, **context):
 
 @app.get("/start", response_class=HTMLResponse)
 def start_here(request: Request):
-    """Start here: a path for newcomers, the sample Opening of the Key, then the spreads grouped
-    into learning stages. Without the database the page still shows, just without the sample."""
-    try:
-        sample = sample_reading(reference_deck())
-    except psycopg.OperationalError as e:
-        log.warning("Start here without the sample: %s", e)
-        sample = None
-    return guide_page(request, "start.html", sample=sample,
+    """Start here: a path for newcomers, then the spreads grouped into learning stages. The
+    75-card sample Opening of the Key that sat here was removed in November 2026."""
+    return guide_page(request, "start.html",
                       sizes={key: spread_size_text(key) for key in list(SPREADS) + [BOOK_T_KEY]})
 
 
@@ -1198,9 +1006,9 @@ def history_page():
 
 @app.get("/examples")
 def examples_page():
-    """The Examples page was retired in November 2026; the sample reading on Start here
-    stands in for it. Old links and search results land there."""
-    return RedirectResponse("/start#sample", status_code=301)
+    """The Examples page was retired in November 2026. Old links and search results land on
+    the three-card sample reading."""
+    return RedirectResponse(SAMPLE_READING_LINK, status_code=301)
 
 
 @app.get("/library", response_class=HTMLResponse)
