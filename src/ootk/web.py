@@ -2231,9 +2231,7 @@ def admin_logout(request: Request):
     return response
 
 
-NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "
-                  "saved before links were random get theirs from "
-                  "database/migrations/add_report_links.sql.")
+NO_SUCH_REPORT = "No reading has this link. Check that the whole address was copied."
 
 
 @app.get("/report/{link}", response_class=HTMLResponse)
