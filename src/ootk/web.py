@@ -424,55 +424,10 @@ def spread_label(key: str) -> str:
     return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else spread_name(key)
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
-# Landing pages for search ads and searches: one per keyword theme, its headline worded like the
-# searches it answers so the ad, the query and the page match. Fixed text only; nothing from the
-# query string is echoed onto the page. "spread" is the spread the Draw button opens.
+# Landing pages for searches: one per spread that has its own page, its headline worded like the
+# searches it answers. Fixed text only; nothing from the query string is echoed onto the page.
+# "spread" is the spread the Draw button opens.
 LANDING_PAGES = {
-    "thoth-tarot-reading": {
-        "title": "Thoth Tarot Reading",
-        "tagline": "Draw a Crowley Thoth spread and get every correspondence worked out.",
-        "description": "Free online Thoth tarot reading: draw a Crowley spread and get its dignities, "
-                       "decans and Liber 777 correspondences as a prompt for your AI.",
-        "intro": "Draw a Thoth tarot spread from one card up to the full Opening of the Key. Each "
-                 "card comes with Crowley’s attribution, its Hebrew letter, element and "
-                 "decan, and how it dignifies its neighbours.",
-        "spread": "3"},
-    "ai-tarot-reading": {
-        "title": "AI Tarot Reading",
-        "tagline": "Your AI interprets the cards. OOTK gives it the facts to work from.",
-        "description": "An AI tarot reading with the correspondences done properly: draw your "
-                       "cards, then attach the prompt in ChatGPT, Claude or Gemini.",
-        "intro": "Chatbots are good with meaning but shaky on correspondences. OOTK looks every card up in the Golden "
-                 "Dawn and Liber 777 tables, scores the dignities between them, and writes it all "
-                 "into one prompt you attach in ChatGPT, Claude, Gemini or any other AI.",
-        "spread": "3"},
-    "opening-of-the-key": {
-        "title": "Opening of the Key Tarot Spread",
-        "tagline": "The Golden Dawn’s long method, dealt and tabulated for you.",
-        "description": "Lay out the Golden Dawn Opening of the Key online: significator, houses, "
-                       "signs and the 36 decans, with every card’s correspondences.",
-        "intro": "The Opening of the Key is the Golden Dawn’s longest tarot method: a "
-                 "significator, then the twelve houses, the twelve signs and the 36 decans. OOTK "
-                 "deals each operation from a seed you can repeat and tabulates the result.",
-        "spread": "9"},
-    "elemental-dignities": {
-        "title": "Tarot Elemental Dignities",
-        "tagline": "Which cards strengthen each other, scored by Book T.",
-        "description": "Work out tarot elemental dignities automatically: every neighbouring pair "
-                       "scored as same element, friendly, neutral or contrary by the Golden Dawn’s Book T.",
-        "intro": "Elemental dignities say whether neighbouring cards strengthen or weaken each "
-                 "other. OOTK scores every pair in your spread by the Book T rules, the same way "
-                 "every time, so you can read the pattern instead of working it out by hand.",
-        "spread": "3"},
-    "tree-of-life-spread": {
-        "title": "Tree of Life Tarot Spread",
-        "tagline": "Ten cards on the ten Sephiroth, drawn on the Tree.",
-        "description": "A Tree of Life tarot spread online: ten cards on the Sephiroth, drawn on "
-                       "the Tree with their paths, letters and correspondences.",
-        "intro": "Lay one card on each Sephira from Kether to Malkuth. The report draws them on "
-                 "the Tree of Life with each card’s Hebrew letter, path and King Scale "
-                 "colour, and how each position relates to the others.",
-        "spread": "7"},
     "celtic-cross-spread": {
         "title": "Celtic Cross Tarot Spread",
         "tagline": "Waite’s ten-card Celtic Cross with the Thoth deck.",
@@ -504,6 +459,15 @@ LANDING_PAGES = {
                  "and the one below it, and gives each card’s attribution, element and King "
                  "Scale colour.",
         "spread": "16"},
+}
+# The five keyword pages retired in the December 2026 pruning, and where old links and search
+# results now land (a permanent redirect, so search engines drop the old address).
+RETIRED_LANDING_PAGES = {
+    "thoth-tarot-reading": "/",
+    "ai-tarot-reading": "/",
+    "opening-of-the-key": "/",
+    "elemental-dignities": "/method",
+    "tree-of-life-spread": "/maps",
 }
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = (["/", "/pick", "/start", "/library", "/maps", "/method"]
@@ -1272,7 +1236,9 @@ def method_page(request: Request):
 
 @app.get("/tarot/{slug}", response_class=HTMLResponse)
 def landing_page(request: Request, slug: str):
-    """A landing page for one keyword theme (LANDING_PAGES), ending in the Draw button."""
+    """A landing page for one spread (LANDING_PAGES), ending in the Draw button."""
+    if slug in RETIRED_LANDING_PAGES:
+        return RedirectResponse(RETIRED_LANDING_PAGES[slug], status_code=301)
     page = LANDING_PAGES.get(slug)
     if page is None:
         raise HTTPException(status_code=404, detail="There is no page at this address.")
