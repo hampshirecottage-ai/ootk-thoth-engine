@@ -249,7 +249,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/journal/entry/<n>` | One reading in the journal: its cards, the AI's answer pasted in, the dates for the timeline (editable; **Find dates** reads the answer's Timeline list, or any dates in it, and offers the drawn small cards' decan dates), notes and what actually happened |
 | `/journal/thread/<n>` | One question's readings, newest first; rename or delete it |
 | `/journal/timeline` | Every question's dates and readings under the zodiac and the months; hover or tap a marker for its details, the report and the journal entry |
-| `/admin` | Admin sign-in, then on to `/admin/messages` when any are unread, else `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
+| `/admin` | Admin sign-in (lasts 12 hours, checked by the server; `ADMIN_SESSION_HOURS` in `web.py` changes it), then on to `/admin/messages` when any are unread, else `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
 | `/admin/messages` | Contact messages, newest first, with Mark read, Mark unread and Delete; behind the same `ADMIN_PASSWORD` sign-in |
 | `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
 
