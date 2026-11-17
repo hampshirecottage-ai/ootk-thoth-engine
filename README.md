@@ -79,8 +79,8 @@ ootk-thoth-engine/
 │   ├── export_hf_space.sh  # Copy the files a Hugging Face Space needs into a folder
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
-│   ├── schema.sql          # Full dump: schema, all migrations, and reference data
-│   └── migrations/         # Only needed for DBs created before the current schema
+│   ├── schema.sql          # Full dump: schema, every past migration, and reference data
+│   └── migrations/         # New schema or data changes waiting to be run on the live database
 ├── templates/              # Jinja2 templates for the web GUI and reports
 ├── static/images/          # Full-size card scans (not in git; see below)
 ├── static/cards/           # WebP card images served by the web GUI
@@ -170,7 +170,7 @@ psql -d my_tarot_db -f database/schema.sql
 python scripts/db_inspect.py audit
 ```
 
-`schema.sql` is a full dump: it creates the tables and loads the 78 cards, correspondences and spread geometry, so there is no separate seed step. It already includes everything in `database/migrations/`, which you only need for older databases. It only loads into a new, empty database: if the ootk tables already exist it stops without changing anything, so it can't wipe saved readings.
+`schema.sql` is a full dump: it creates the tables and loads the 78 cards, correspondences and spread geometry, so there is no separate seed step. It already includes every past schema and data change, so a new database needs nothing else. It only loads into a new, empty database: if the ootk tables already exist it stops without changing anything, so it can't wipe saved readings.
 
 These commands use your own Postgres role. If your install has a `postgres` superuser, add `-U postgres -h localhost` and set `DB_USER=postgres` in `.env`. On Homebrew installs the role is your macOS username instead, so set `DB_USER` to that.
 
@@ -259,7 +259,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Question helper.** "Help me find my question" walks through a rough question, its area (each with three example questions), intent, whose question it is, timeframe and context, then shapes an open question in the terms of the chosen spread's positions, flags yes/no and timing wording, and suggests a spread, framework and significator. **Use this question** fills in the question, spread and framework; the helper's own answers are never sent.
 - **Significator.** Spreads 8 and 12 start with a significator, and the box only appears for those. Choose it one of three ways: **Describe** (a few questions: who the reading is about, whether the card stands for the person (Book T) or the matter asked about (a later custom), then temperament or topic for the suit and stage of life for the rank, with Book T's age, gender and colouring shown beside each answer; it gives one of the 16 court cards and shows its picture, element and zodiac span), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
 - **Seeds.** Leave the seed blank to get a new one. A seeded report shows the seed, a share link and the matching `ootk` command (under "Run it in the terminal"), and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
-- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
+- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
 - **Time of reading.** The prompt header gives the date and time the cards were drawn, on your own clock (your browser's time zone) and in UTC, and where the Sun and Moon stood then (tropical zodiac, context only, not used in any score). A saved report keeps its original time; a share link carries the time (`drawn=20261029T2200Z`) but not your time zone. Older share links and the samples have no time line.
 - **Parts of the AI prompt.** Under More options, a folded list has two groups. The main parts carry the meaning and are on: elemental dignities, astrology, Hebrew letters (with the Golden Dawn letter beside the Thoth one where the two differ), Tree of Life with the Liber 777 colour scales and Yetziratic titles, court card detail, Book T counts, the wheel oppositions, Golden Dawn titles, and the angels and dates of the decans with the day ruler (Book T's own timing). Switch one off to see what your AI makes of the reading without it. The extra layers are off unless you add them, because each repeats another part, is the same in every reading, or belongs in the report's pictures rather than the reading: geomantic figures, Platonic solids, the Cube of Space (each card's place and the counts), every wheel aspect (squares, trines and sextiles with their weights, not only oppositions), the statistics behind the lens and the Own-Place Check, Liber 777 gods and court card hexagrams. Geomantic figures, gods and hexagrams are always in the report's card panel, and the Cube of Space and solids in its maps. Gematria sums, the French/Egyptian comparison column, birth and year cards and the note on neighbouring "dual" solids were removed (older share links naming `gematria` or `hebrew_compare` still work and ignore them; `cube_counts` now means `cube`). With the defaults the full Opening of the Key prompt is about 46k characters (75k with every layer). The cards drawn stay the same, the prompt header names any main part left out, and the report, its share link (`with=solids&without=astrology`) and its terminal command (`--with`, `--without`) keep the choice. Golden Dawn titles, angels, decan dates and day ruler, gods and hexagrams are also left out automatically, gods first, then angels, dates, hexagrams and titles, when a reading's prompt would pass 77,500 characters, so the longest Opening of the Key stays readable by AIs that stop near 78,600 (Gemini); the prompt header then says "Left Out to Fit". `/method#correspondences` explains which parts the engine calculates with and which it only hands to the AI, and `/method#ranking` ranks them by what they add to a reading (astrology first, angels and decan dates last), with how sure each rank is.
 - **What now.** The report opens with **Get your interpretation**: **Save the prompt for your AI** downloads `attach_this_to_your_ai_seed<seed>.md` (or today's date in place of the seed for cards picked by hand), which you attach in the AI chat with its **+** button. A file gets round the limits AI chats put on pasted text. **Save as PDF** and **Save as JSON** sit at the foot of the report. The card of the day (`/today`) saves its prompt the same way. The prompt asks the AI to restate your question as an open one framed by the spread's positions and the framework, show that first so you can correct it, and answer it in the closing summary. The question never changes the draw. It names its own last line (`END OF OOTK PROMPT (N positions)`) at the top and asks the AI to say so, rather than interpret, if that line never arrives.
@@ -290,28 +290,15 @@ For a Hugging Face Docker Space (Docker Spaces need a PRO account since Septembe
 
 ### Update an existing database
 
-`schema.sql` already contains every migration, so a new database needs none of this. A database made from an older `schema.sql` needs the migrations it is missing, in this order. Each one is safe to re-run.
+`schema.sql` already contains every migration, so a new database needs none of this.
+
+The old migration files (the 16 changes made between October and 13 November 2026) were removed in the December 2026 pruning, after checking that the live database had every one of them. They are still in the git history: `git show eb2b07e:database/migrations/<file>.sql` prints any of them, for example to update an old local copy of the database. Rebuilding an old local database from `schema.sql` is usually simpler.
+
+A new change to the schema or the card data goes in `database/migrations/` as a file that is safe to re-run, and into `schema.sql` at the same time:
 
 ```bash
 psql -d my_tarot_db -f database/migrations/<file>.sql
 ```
-
-| Migration | Needed when |
-|---|---|
-| `add_french_number.sql` | `thoth_cards.french_number` is missing |
-| `add_report_settings.sql` | `tarot_sessions.report_settings` is missing (the site shows a "needs an update" page) |
-| `add_report_links.sql` | Readings saved before links were random; also lists every reading's address |
-| `fix_correspondences.sql` | `thoth_cards.attribution` is missing (the engine stops and says so) |
-| `fix_trump_attributions.sql` | Each Major's own sign, planet or element as its attribution, path 32 named 'Cross' |
-| `fix_court_paths.sql` | Queen of Wands and Prince of Swords on the same paths as the Emperor and the Star; four court descriptions |
-| `fix_correspondence_audit.sql` | Six Cube of Space edges as Paul Case gives them, axis directions, French Magus and Priestess planets |
-| `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
-| `add_testimonials.sql` | Testimonials table (the feature was retired in November 2026; the table is kept so old entries are not lost) |
-| `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
-| `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
-| `add_contact_messages.sql` | `contact_messages` is missing (the contact form shows a "needs an update" page) |
-| `add_reading_journal.sql` | Before turning on the journal with `JOURNAL_KEY`: adds `reading_journals`, `reading_journal_threads`, `reading_journal_entries` and `reading_journal_windows` |
-| `fix_letter_spellings.sql` | Four Hebrew letters spelled Hé, Vau, Pé and Tau instead of Heh, Vav, Peh and Tav (paths 15, 16, 27 and 32) |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 
