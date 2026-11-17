@@ -1025,9 +1025,10 @@ def seeded_draw(deck, seed, spread_key, significator, expect=""):
     return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
 
 
-def book_t_draw(deck, seed, significator, expect):
+def book_t_draw(deck, seed, significator, expect, cut="near_equal"):
     """Spread 13, exactly as `ootk --spread 13 --seed ... --expect ...` draws it:
-    (card titles, position names, the operations from book_t.opening_of_the_key)."""
+    (card titles, position names, the operations from book_t.opening_of_the_key).
+    `cut` is Operation 1's cut (book_t.CUTS); only saved readings ask for the older one."""
     sig_card = resolve_significator(deck, significator)
     if sig_card is None:
         hint = art_name_hint(significator, [c["title"] for c in deck]) if significator else ""
@@ -1040,7 +1041,7 @@ def book_t_draw(deck, seed, significator, expect):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     try:
-        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected)
+        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected, cut=cut)
     except ValueError as e:                 # a card table that is empty or only partly loaded
         log.warning("cannot draw: %s", e)
         raise HTTPException(status_code=503, detail="The card database is incomplete, so no cards "
@@ -2270,7 +2271,10 @@ def saved_reading_parts(link):
                         or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
-    return session_id, stored, run_reading(stored, card_titles, significator_label), seed_redraws
+    reading = run_reading(stored, card_titles, significator_label)
+    # Drawn with Operation 1's older cut: the seed now draws other cards, so no share link.
+    seed_redraws = seed_redraws and not reading.pop("older_cut")
+    return session_id, stored, reading, seed_redraws
 
 
 # Which Major carries each sign, per mapping system, for the card panel's small maps. Reference
@@ -2335,11 +2339,19 @@ def run_reading(settings, card_titles, significator_label, deck=None):
     selected_spread = {"name": spread_name(spread_key)}
     deck = deck or reference_deck()
     ops = None
+    older_cut = False
     if spread_key == BOOK_T_KEY:
         # Position names and counts depend on the draw; the seed always gives the same ones.
-        titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
-                                             settings.get("expect", ""))
-        if titles != list(card_titles):
+        # A reading saved before Operation 1's cut changed (book_t.CUTS) redraws its cards only
+        # with the older cut, so that is tried before giving up.
+        for cut in book_t.CUTS:
+            titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
+                                                 settings.get("expect", ""), cut=cut)
+            if titles == list(card_titles):
+                older_cut = cut != book_t.CUTS[0]
+                break
+        else:
+            log.warning("a saved Book T reading no longer redraws its cards")
             raise HTTPException(status_code=500, detail="This Book T reading no longer redraws its cards.")
     else:
         positions = spread_positions(spread_key)
@@ -2373,6 +2385,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         "spread_name": selected_spread["name"], "significator_label": significator_label,
         "spread_results": spread_results, "withheld": withheld,
         "sign_carriers": load_sign_carriers(deck, mapping_system), **reading,
+        "older_cut": older_cut,
     }
 
 
