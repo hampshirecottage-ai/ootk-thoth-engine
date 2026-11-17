@@ -2896,6 +2896,35 @@ def book_t_post(client, follow=True, **over):
     return post(client, follow=follow, **data)
 
 
+def test_book_t_reading_saved_before_the_cut_changed_still_opens(book_t_client):
+    """Saved before PR #221 changed Operation 1's cut (2026-11-10): its seed now draws other
+    cards, so the report rebuilds it with the older cut instead of failing, and offers no
+    share link, which would show a different reading."""
+    from ootk import book_t
+    book_t_post(book_t_client)
+    stored = book_t_client.saved["report_settings"]
+    sig = next(c for c in REFERENCE_DECK if c["title"] == "Knight of Wands")
+    ops = book_t.opening_of_the_key(REFERENCE_DECK, "1568", sig, book_t.parse_expect(stored["expect"]),
+                                    cut="quarters")
+    older = [c["title"] for _, c in book_t.positions(ops)]
+    assert older != stored["card_titles"]                  # the two cuts draw different cards
+    stored["card_titles"] = older
+    r = book_t_client.get(f"/report/{stored['link']}", headers={"Accept": "text/html"})
+    assert r.status_code == 200 and book_t_client.lookups[-1] == older
+    assert "shareLink" not in r.text and "cliCommand" not in r.text and 'id="oldDraw"' in r.text
+    assert book_t_client.get(f"/report/{stored['link']}/json").status_code == 200
+
+
+def test_book_t_reading_that_redraws_under_neither_cut_says_so(book_t_client, caplog):
+    book_t_post(book_t_client)
+    stored = book_t_client.saved["report_settings"]
+    stored["card_titles"] = list(reversed(stored["card_titles"]))
+    with caplog.at_level("WARNING", logger="ootk.web"):
+        r = book_t_client.get(f"/report/{stored['link']}", headers={"Accept": "text/html"})
+    assert r.status_code == 500 and "no longer redraws its cards" in r.text
+    assert "no longer redraws its cards" in caplog.text           # and the server log says so
+
+
 def test_book_t_draws_like_the_cli_and_shares_its_expected_places(book_t_client):
     from ootk import book_t
     sig = next(c for c in REFERENCE_DECK if c["title"] == "Knight of Wands")
