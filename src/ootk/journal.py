@@ -269,6 +269,16 @@ def export_markdown(threads, entries, spread_label=str):
 
 WINDOWS_MAX = 30                      # per entry
 WINDOW_LABEL_MAX = 120
+# A timing window more than this many years from its reading's draw is a typo (a year typed as
+# 202, say) or a date from history in an AI's answer. Kept off the timeline: one such date would
+# stretch it to that year and squash every other reading into its edge, or crash the page for a
+# year the zodiac bands can't be worked out for (year 1 or 9999).
+WINDOW_YEARS = 10
+
+
+def window_near(starts, ends, drawn):
+    """Whether a window from `starts` to `ends` lies within WINDOW_YEARS of `drawn` (a date)."""
+    return all(abs(d.year - drawn.year) <= WINDOW_YEARS for d in (starts, ends))
 
 
 def list_windows(conn, journal_id, entry_id=None):
@@ -405,7 +415,7 @@ def find_windows(text, after):
     prompt asks for is used when there is one; otherwise ranges anywhere in the answer are
     found, with the year filled in: each taken as the next one on or after `after` (the day
     the cards were drawn). Lines without words before the date get "Window" as their name."""
-    listed = timeline_windows(text)
+    listed = [w for w in timeline_windows(text) if window_near(w[1], w[2], after)]
     if listed:
         return listed
     found, seen = [], set()
@@ -435,7 +445,7 @@ def find_windows(text, after):
                 seen.add((starts, ends))
                 found.append((_label(line, m.start()) or "Window", starts, ends))
         w = _iso_window(line) if len(line) <= 1000 else None    # 2026-12-01 to 2026-12-21
-        if w and w[1:] not in seen:
+        if w and w[1:] not in seen and window_near(w[1], w[2], after):
             seen.add(w[1:])
             found.append(w)
         if len(found) >= WINDOWS_MAX:
@@ -479,6 +489,9 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
     on the day it was drawn."""
     from ootk.decans import _sun_reaches   # the Sun's sign changes, worked out as on /day
 
+    drawn = {e["entry_id"]: e["drawn_at"].date() for e in entries}
+    windows = [w for w in windows
+               if w["entry_id"] in drawn and window_near(w["starts"], w["ends"], drawn[w["entry_id"]])]
     dates = [today] + [w["starts"] for w in windows] + [w["ends"] for w in windows] \
         + [e["drawn_at"].date() for e in entries]
     start = date(min(dates).year, min(dates).month, 1)
