@@ -476,25 +476,6 @@ ALTER TABLE ONLY public.spread_pulls
 
 
 --
--- Name: testimonials; Type: TABLE; Schema: public; Owner: -
--- (database/migrations/add_testimonials.sql)
---
-
-CREATE TABLE public.testimonials (
-    testimonial_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    created_at timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    session_id character varying(64) NOT NULL UNIQUE,
-    name character varying(60),
-    body text NOT NULL CHECK (char_length(body) BETWEEN 1 AND 600),
-    approved boolean NOT NULL DEFAULT false,
-    user_agent character varying(200),
-    ip_hash character(64)
-);
-
-CREATE INDEX idx_testimonials_approved ON public.testimonials USING btree (testimonial_id) WHERE approved;
-
-
---
 -- Name: contact_messages; Type: TABLE; Schema: public; Owner: -
 --
 
