@@ -357,7 +357,6 @@ The repository holds only the engine and reference data. Your own readings stay 
 | `tarot_sessions` | One row per reading (operation, significator, notes, and `report_settings` with the report link) |
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |
-| `testimonials` | Left from the retired testimonials feature (removed November 2026). Nothing reads it now; export it before dropping it. |
 | `reading_journals` | Private journals: only a SHA-256 hash of each secret journal link, and when it was made and last opened. A journal nobody opens for 24 months is deleted the next time someone starts one |
 | `reading_journal_threads` | A journal's questions (name encrypted) |
 | `reading_journal_entries` | A saved reading filed in a journal: the AI's answer, which AI, notes and what happened (texts encrypted with `JOURNAL_KEY`) |
