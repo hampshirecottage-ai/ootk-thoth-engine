@@ -362,7 +362,6 @@ The repository holds only the engine and reference data. Your own readings stay 
 | `reading_journal_threads` | A journal's questions (name encrypted) |
 | `reading_journal_entries` | A saved reading filed in a journal: the AI's answer, which AI, notes and what happened (texts encrypted with `JOURNAL_KEY`) |
 | `reading_journal_windows` | Dates on the journal timeline: a name (encrypted) and the days it covers |
-| `journal_entries` | Left from the retired prediction journal (removed November 2026). Nothing reads it now; it is kept so any saved entries are not lost. Export it before dropping it. |
 
 Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`. Platonic solids, duals and layout coordinates are not stored: the engine works them out from each card's element and from `spreads.py`.
 
