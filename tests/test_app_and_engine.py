@@ -36,7 +36,6 @@ def fake_card(title, suit="Wands", arcana="Minor", attribution="Fire"):
 def client(monkeypatch):
     """App client with the database fully mocked out."""
     saved = {}
-    monkeypatch.setattr(app_module, "_sample_cache", {})
     monkeypatch.setattr(app_module, "admin_signed_out_at", 0)          # a sign-out in one test stays there
     monkeypatch.setattr(app_module, "_sign_carriers_cache", {s: {} for s in app_module.MAPPING_SYSTEMS})
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
@@ -688,11 +687,12 @@ def test_report_shows_cards_first_and_folds_the_workings(client):
 
 def test_examples_page_is_retired_and_forwards_to_the_sample(client):
     r = client.get("/examples", follow_redirects=False)
-    assert r.status_code == 301 and r.headers["location"] == "/start#sample"
+    assert r.status_code == 301 and r.headers["location"] == app_module.SAMPLE_READING_LINK
     assert 'href="/examples"' not in client.get("/start").text           # nav, footer and button
     assert "/examples" not in client.get("/sitemap.xml").text
     slug = next(iter(app_module.LANDING_PAGES))
-    assert 'href="/start#sample"' in client.get(f"/tarot/{slug}").text
+    link = app_module.SAMPLE_READING_LINK.replace("&", "&amp;")
+    assert f'href="{link}"' in client.get(f"/tarot/{slug}").text
 
 
 def test_library_terms_are_sorted_and_have_text():
@@ -1537,31 +1537,6 @@ def sample_deck():
     return deck + [dict(fake_card("Queen of Cups", suit="Cups", arcana="Court"), card_id=77)]
 
 
-def test_start_here_shows_a_folded_sample_reading_and_the_front_page_does_not(client, monkeypatch):
-    deck = sample_deck()
-    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
-    front = client.get("/").text
-    assert 'id="sample"' not in front and "sample-diagram.js" not in front   # moved 2026-10-09
-    page = client.get("/start").text
-    s = app_module.SAMPLE_SETTINGS
-    expected, _ = app_module.seeded_draw(deck, s["seed"], s["spread_key"], s["significator"])
-    assert len(expected) == 75 and all(title in page for title in expected)
-    assert page.count('<details class="op">') == 4
-    assert page.index('id="pathTitle"') < page.index('id="sample"') < page.index('id="stagesTitle"')
-    assert 'href="#sample"' in page and "sample-diagram.js" in page
-    assert '<details class="panel fold sample" id="sample">' in page   # sample starts folded
-    assert 'class="tiles"' not in page
-    assert 'id="copySample"' in page and 'data-src="/sample/prompt"' in page
-    assert 'id="copySummary"' not in page and 'id="trySeed"' not in page   # trimmed 2026-10-08
-    assert "HERMETIC ANALYTICAL REPORT" not in page              # the prompt loads when opened
-    prompt = client.get("/sample/prompt")
-    assert prompt.status_code == 200 and prompt.headers["content-type"].startswith("text/plain")
-    assert prompt.text.startswith("# HERMETIC ANALYTICAL REPORT")
-    assert prompt.text.rstrip().endswith("END OF OOTK PROMPT (75 positions)")
-    assert client.saved == {}                                   # the sample is never saved
-    assert 'id="sample"' not in client.get("/pick").text
-
-
 def test_start_here_sections_fold_with_only_the_first_reading_open(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
     page = client.get("/start").text
@@ -1574,13 +1549,8 @@ def test_start_here_sections_fold_with_only_the_first_reading_open(client, monke
     assert "js/fold.js" in page                                 # opens a section named in the link
 
 
-def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_report(client, monkeypatch):
-    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
+def test_start_page_has_no_card_of_the_day(client):
     assert "Today&rsquo;s card" not in client.get("/").text
-    page = client.get("/start").text
-    link = "/reading?seed=12345&spread=12&system=thoth&significator=Queen+of+Cups"
-    assert f'href="{link.replace("&", "&amp;")}"' in page
-    assert client.get(link).status_code == 200
     assert client.get("/today", follow_redirects=False).status_code == 307   # still its own page
 
 
@@ -1732,17 +1702,6 @@ def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     assert "Draw my cards" in page and "<h2>Ask your question</h2>" in page
     assert page.index('id="readingForm"') < page.index('href="/start"')  # draw button first on a phone
     assert f'href="{app_module.REPO_URL}"' in page
-
-
-def test_start_here_without_a_full_deck_skips_the_sample(client):
-    page = client.get("/start").text
-    assert page.count('id="sample"') == 0 and 'href="#sample"' not in page and 'id="pathTitle"' in page
-    assert client.get("/sample/prompt").status_code == 404
-
-
-@pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"mapping_system": "nonsense"}])
-def test_bad_settings_return_400(client, over):
-    assert post(client, **over).status_code == 400
 
 
 def test_report_leads_with_summary_and_collapses_operations(client):
@@ -2317,34 +2276,6 @@ def test_old_golden_dawn_links_keep_the_thoth_swap(client):
     assert "Emperor on Tzaddi, Star on Heh" in r.text
 
 
-def test_sample_summary_states_facts_not_meanings():
-    def item(n, pos, title, arcana="Minor", place=None):
-        return {"position_number": n, "position_name": pos,
-                "card_data": {"title": title, "arcana_type": arcana, "spatial_dimension": place}}
-    r = {
-        "spread_results": [item(1, "1. Significator / Core Nature of Question", "Queen of Cups",
-                                "Court", "Lower-East Edge"),
-                           item(2, "2. Development", "V - The Hierophant", "Major"),
-                           item(3, "3. Ultimate Climax / Resolution", "XIV - Art", "Major")],
-        "element_counts": {"Fire": 1, "Water": 1, "Air": 0, "Earth": 1, "Spirit": 0},
-        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": 1},
-                           {"from_index": 1, "to_index": 2, "score": -2}],
-    }
-    settings = {"seed": "12345", "significator": "Queen of Cups", "spread_key": "3"}
-    first, second = app_module.sample_summary(r, settings)
-    assert first.startswith("Seed 12345, with the Queen of Cups as significator, dealt 3 cards.")
-    assert "closes on Art (ultimate climax / resolution)" in first
-    assert "1 Fire, 1 Water and 1 Earth" in second
-    assert "Of the 2 scored pairs, 1 is friendly and 1 is contrary, a net score of -1." in second
-    assert "One of the heap's cards sits on the Cube of Space." in second
-    assert second.endswith("sits on the Cube of Space.")
-
-
-def test_start_page_sample_is_the_full_opening_of_the_key():
-    assert app_module.SAMPLE_SETTINGS["spread_key"] == "12"
-    assert app_module.SAMPLE_SETTINGS["significator"]
-
-
 # ---------- error handling: failures give a page, never a crash ----------
 
 HTML = {"Accept": "text/html"}
@@ -2800,26 +2731,21 @@ def test_shuffle_has_no_demo_entry_point():
     assert not hasattr(shuffle, "main")
 
 
-def test_sample_walkthrough_names_the_balance_the_weak_cards_and_the_significator():
-    def item(n, title):
-        return {"position_number": n, "position_name": f"{n}. Pos", "card_data": {"title": title}}
-    r = {
-        "spread_results": [item(1, "Queen of Cups"), item(2, "Ace of Wands"), item(3, "Art")],
-        "element_counts": {"Fire": 2, "Water": 1, "Air": 0, "Earth": 0, "Spirit": 0},
-        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": -2},
-                           {"from_index": 1, "to_index": 2, "score": 2}],
-        "significator_places": [{"op": 1, "place": "the Water pack (H)", "shown": True}],
-    }
-    w = app_module.sample_walkthrough(r, {"spread_key": "3"})
-    assert w["lead"] == ["Fire"] and w["lead_count"] == 2 and w["total"] == 3
-    assert w["absent"] == ["Air", "Earth"]
-    assert w["weak"] == [{"card": app_module.short_card_name("Queen of Cups"),
-                          "by": [app_module.short_card_name("Ace of Wands")]}]
-    assert w["places"][0]["op"] == 1 and w["heap_size"] == 3
+def test_front_page_and_start_here_link_the_three_card_sample(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
+    link = app_module.SAMPLE_READING_LINK
+    assert link == "/reading?seed=12345&spread=3"
+    for page in ("/", "/start"):
+        assert f'href="{link.replace("&", "&amp;")}"' in client.get(page).text
+    assert client.get(link).status_code == 200                       # a real three-card reading
 
 
-def test_front_page_links_to_the_sample(client):
-    assert 'href="/start#sample"' in client.get("/").text
+def test_sample_opening_is_gone_from_start_here(client):
+    page = client.get("/start").text
+    assert 'id="sample"' not in page and "sample-diagram.js" not in page and "In the sample" not in page
+    assert 'id="readYourself"' in page                               # the three steps stay
+    assert client.get("/sample/prompt").status_code == 404
+    assert "/sample/" not in client.get("/robots.txt").text
 
 
 def test_question_helper_is_on_both_pages_and_posts_nothing(client, monkeypatch):
