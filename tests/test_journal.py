@@ -250,3 +250,35 @@ def test_start_here_journal_section_shows_the_animation_with_a_still_for_reduced
     site = PROJECT_ROOT / "static" / "site"
     assert (site / "journal-how-to.gif").read_bytes()[:6] == b"GIF89a"
     assert (site / "journal-how-to-still.webp").read_bytes()[8:12] == b"WEBP"
+
+
+def test_dates_far_from_the_reading_stay_off_the_timeline():
+    # A date from history in an answer, or a year typed as 202, is not a timing window.
+    answer = "## Timeline\n- Hastings: 1066-10-14 to 1066-10-15\n- Move: 2026-12-01 to 2026-12-21\n"
+    assert journal.find_windows(answer, date(2026, 11, 13)) == [
+        ("Move", date(2026, 12, 1), date(2026, 12, 21))]
+    assert journal.find_windows("Hastings 1066-10-14 to 1066-10-15.", date(2026, 11, 13)) == []
+    assert journal.window_near(date(2036, 1, 1), date(2036, 2, 1), date(2026, 11, 13))
+    assert not journal.window_near(date(2026, 1, 1), date(2037, 1, 1), date(2026, 11, 13))
+    # Windows already saved with such years: the page still draws, spanning this year only.
+    entries = [entry(10, None, (2026, 11, 13))]
+    for odd in (date(1, 1, 1), date(202, 11, 20), date(9999, 12, 31)):
+        windows = [{"entry_id": 10, "label": "Typo", "starts": odd, "ends": odd},
+                   {"entry_id": 10, "label": "Peace", "starts": date(2026, 11, 12), "ends": date(2026, 11, 22)}]
+        t = journal.build_timeline([], entries, windows, date(2026, 11, 13))
+        assert t["start"] == date(2026, 11, 1)
+        assert [r["label"] for r in t["groups"][0]["rows"]] == ["Peace"]
+
+
+@needs_db
+def test_a_date_far_from_the_reading_is_refused_on_the_entry_form(key):
+    c = TestClient(app_module.app)
+    link = draw(c, seed="100020")
+    entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
+    form = {"answer": "Text.", "w_label": "Typo", "w_starts": "0202-11-20", "w_ends": "", "w_keep": "0"}
+    r = c.post(entry_url, data=form, follow_redirects=False)
+    assert r.status_code == 400 and "more than 10 years" in r.text
+    r = c.post(entry_url, data=dict(form, w_starts="2027-03-01"), follow_redirects=False)
+    assert r.status_code == 303
+    assert "Typo" in c.get("/journal/timeline").text
+    c.post("/journal/delete")

@@ -1965,9 +1965,10 @@ def journal_thread_change(request: Request, thread_id: int, name: str = Form("")
     return RedirectResponse(f"/journal/thread/{thread_id}", status_code=303)
 
 
-def form_windows(labels, starts, ends, keep):
+def form_windows(labels, starts, ends, keep, drawn):
     """The entry form's timing windows that are ticked and have a start date, as (label, starts,
-    ends); a missing end is the start day, and dates given the wrong way round are swapped."""
+    ends); a missing end is the start day, and dates given the wrong way round are swapped.
+    400 for a date more than journal.WINDOW_YEARS from `drawn`, the day the cards were drawn."""
     windows = []
     kept = {k for k in keep if k.isdigit()}
     for i, (label, s, e) in enumerate(zip(labels, starts, ends)):
@@ -1978,6 +1979,10 @@ def form_windows(labels, starts, ends, keep):
             last = date.fromisoformat(e) if e else first
         except ValueError:
             raise HTTPException(status_code=400, detail="A date on the timeline isn't a real date.") from None
+        if not journal.window_near(first, last, drawn):
+            raise HTTPException(status_code=400, detail=f"A date on the timeline is more than "
+                                                        f"{journal.WINDOW_YEARS} years from the reading. "
+                                                        f"Check the year.")
         label = journal_text(label, journal.WINDOW_LABEL_MAX, "date's name") or "Window"
         windows.append((label, min(first, last), max(first, last)))
     return windows[:journal.WINDOWS_MAX]
@@ -2063,7 +2068,10 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
         notes = journal_text(notes, journal.NOTE_MAX, "notes")
         outcome = journal_text(outcome, journal.NOTE_MAX, "outcome")
         answer_ai = answer_ai if answer_ai in journal.AI_NAMES else ""
-        windows = form_windows(w_label, w_starts, w_ends, w_keep)
+        entry = journal.get_entry(conn, journal_id, entry_id)
+        if not entry:
+            raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
+        windows = form_windows(w_label, w_starts, w_ends, w_keep, entry["drawn_at"].date())
         thread_id = entry_thread(conn, journal_id, thread, new_thread)
         if not journal.update_entry(conn, journal_id, entry_id, answer, answer_ai, notes, outcome, thread_id):
             raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
@@ -2074,7 +2082,6 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
             return RedirectResponse("?find=1#windowsTitle", status_code=303)
         if windows_shown == "0" and not windows and answer:
             # First answer pasted: the dates it names go on the timeline, shown for checking next.
-            entry = journal.get_entry(conn, journal_id, entry_id)
             windows = journal.find_windows(answer, entry["drawn_at"].date())
         journal.replace_windows(conn, journal_id, entry_id, windows)
     return RedirectResponse(f"/journal/entry/{entry_id}?saved=1", status_code=303)
