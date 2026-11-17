@@ -424,55 +424,10 @@ def spread_label(key: str) -> str:
     return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else spread_name(key)
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
-# Landing pages for search ads and searches: one per keyword theme, its headline worded like the
-# searches it answers so the ad, the query and the page match. Fixed text only; nothing from the
-# query string is echoed onto the page. "spread" is the spread the Draw button opens.
+# Landing pages for searches: one per spread that has its own page, its headline worded like the
+# searches it answers. Fixed text only; nothing from the query string is echoed onto the page.
+# "spread" is the spread the Draw button opens.
 LANDING_PAGES = {
-    "thoth-tarot-reading": {
-        "title": "Thoth Tarot Reading",
-        "tagline": "Draw a Crowley Thoth spread and get every correspondence worked out.",
-        "description": "Free online Thoth tarot reading: draw a Crowley spread and get its dignities, "
-                       "decans and Liber 777 correspondences as a prompt for your AI.",
-        "intro": "Draw a Thoth tarot spread from one card up to the full Opening of the Key. Each "
-                 "card comes with Crowley’s attribution, its Hebrew letter, element and "
-                 "decan, and how it dignifies its neighbours.",
-        "spread": "3"},
-    "ai-tarot-reading": {
-        "title": "AI Tarot Reading",
-        "tagline": "Your AI interprets the cards. OOTK gives it the facts to work from.",
-        "description": "An AI tarot reading with the correspondences done properly: draw your "
-                       "cards, then attach the prompt in ChatGPT, Claude or Gemini.",
-        "intro": "Chatbots are good with meaning but shaky on correspondences. OOTK looks every card up in the Golden "
-                 "Dawn and Liber 777 tables, scores the dignities between them, and writes it all "
-                 "into one prompt you attach in ChatGPT, Claude, Gemini or any other AI.",
-        "spread": "3"},
-    "opening-of-the-key": {
-        "title": "Opening of the Key Tarot Spread",
-        "tagline": "The Golden Dawn’s long method, dealt and tabulated for you.",
-        "description": "Lay out the Golden Dawn Opening of the Key online: significator, houses, "
-                       "signs and the 36 decans, with every card’s correspondences.",
-        "intro": "The Opening of the Key is the Golden Dawn’s longest tarot method: a "
-                 "significator, then the twelve houses, the twelve signs and the 36 decans. OOTK "
-                 "deals each operation from a seed you can repeat and tabulates the result.",
-        "spread": "9"},
-    "elemental-dignities": {
-        "title": "Tarot Elemental Dignities",
-        "tagline": "Which cards strengthen each other, scored by Book T.",
-        "description": "Work out tarot elemental dignities automatically: every neighbouring pair "
-                       "scored as same element, friendly, neutral or contrary by the Golden Dawn’s Book T.",
-        "intro": "Elemental dignities say whether neighbouring cards strengthen or weaken each "
-                 "other. OOTK scores every pair in your spread by the Book T rules, the same way "
-                 "every time, so you can read the pattern instead of working it out by hand.",
-        "spread": "3"},
-    "tree-of-life-spread": {
-        "title": "Tree of Life Tarot Spread",
-        "tagline": "Ten cards on the ten Sephiroth, drawn on the Tree.",
-        "description": "A Tree of Life tarot spread online: ten cards on the Sephiroth, drawn on "
-                       "the Tree with their paths, letters and correspondences.",
-        "intro": "Lay one card on each Sephira from Kether to Malkuth. The report draws them on "
-                 "the Tree of Life with each card’s Hebrew letter, path and King Scale "
-                 "colour, and how each position relates to the others.",
-        "spread": "7"},
     "celtic-cross-spread": {
         "title": "Celtic Cross Tarot Spread",
         "tagline": "Waite’s ten-card Celtic Cross with the Thoth deck.",
@@ -504,6 +459,15 @@ LANDING_PAGES = {
                  "and the one below it, and gives each card’s attribution, element and King "
                  "Scale colour.",
         "spread": "16"},
+}
+# The five keyword pages retired in the December 2026 pruning, and where old links and search
+# results now land (a permanent redirect, so search engines drop the old address).
+RETIRED_LANDING_PAGES = {
+    "thoth-tarot-reading": "/",
+    "ai-tarot-reading": "/",
+    "opening-of-the-key": "/",
+    "elemental-dignities": "/method",
+    "tree-of-life-spread": "/maps",
 }
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = (["/", "/pick", "/start", "/library", "/maps", "/method"]
@@ -1025,9 +989,10 @@ def seeded_draw(deck, seed, spread_key, significator, expect=""):
     return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
 
 
-def book_t_draw(deck, seed, significator, expect):
+def book_t_draw(deck, seed, significator, expect, cut="near_equal"):
     """Spread 13, exactly as `ootk --spread 13 --seed ... --expect ...` draws it:
-    (card titles, position names, the operations from book_t.opening_of_the_key)."""
+    (card titles, position names, the operations from book_t.opening_of_the_key).
+    `cut` is Operation 1's cut (book_t.CUTS); only saved readings ask for the older one."""
     sig_card = resolve_significator(deck, significator)
     if sig_card is None:
         hint = art_name_hint(significator, [c["title"] for c in deck]) if significator else ""
@@ -1040,7 +1005,7 @@ def book_t_draw(deck, seed, significator, expect):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     try:
-        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected)
+        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected, cut=cut)
     except ValueError as e:                 # a card table that is empty or only partly loaded
         log.warning("cannot draw: %s", e)
         raise HTTPException(status_code=503, detail="The card database is incomplete, so no cards "
@@ -1271,7 +1236,9 @@ def method_page(request: Request):
 
 @app.get("/tarot/{slug}", response_class=HTMLResponse)
 def landing_page(request: Request, slug: str):
-    """A landing page for one keyword theme (LANDING_PAGES), ending in the Draw button."""
+    """A landing page for one spread (LANDING_PAGES), ending in the Draw button."""
+    if slug in RETIRED_LANDING_PAGES:
+        return RedirectResponse(RETIRED_LANDING_PAGES[slug], status_code=301)
     page = LANDING_PAGES.get(slug)
     if page is None:
         raise HTTPException(status_code=404, detail="There is no page at this address.")
@@ -1459,9 +1426,18 @@ def chosen_parts(include, parts_shown):
     return cli_switches(set(COMPONENTS) - set(include))
 
 
+# A share link's with= or without= names prompt parts, so it can be longer than FIELD_MAX: a
+# reading with most of the main parts switched off writes about 80 characters there. This is
+# every part named once, the longest list share_path() can write.
+PARTS_MAX = len(",".join(COMPONENTS))
+
+
 def parts_params(with_, without):
     """A share link's with= and without= values, tidied to what cli_switches() writes, or 400."""
-    check_lengths(**{"with": with_, "without": without})
+    for name, value in (("with", with_), ("without", without)):
+        if len(value) > PARTS_MAX:
+            raise HTTPException(status_code=400, detail=f"The {name} field is too long "
+                                                        f"(at most {PARTS_MAX} characters).")
     try:
         return cli_switches(choose_components(with_, without))
     except ValueError as e:
@@ -1956,9 +1932,10 @@ def journal_thread_change(request: Request, thread_id: int, name: str = Form("")
     return RedirectResponse(f"/journal/thread/{thread_id}", status_code=303)
 
 
-def form_windows(labels, starts, ends, keep):
+def form_windows(labels, starts, ends, keep, drawn):
     """The entry form's timing windows that are ticked and have a start date, as (label, starts,
-    ends); a missing end is the start day, and dates given the wrong way round are swapped."""
+    ends); a missing end is the start day, and dates given the wrong way round are swapped.
+    400 for a date more than journal.WINDOW_YEARS from `drawn`, the day the cards were drawn."""
     windows = []
     kept = {k for k in keep if k.isdigit()}
     for i, (label, s, e) in enumerate(zip(labels, starts, ends)):
@@ -1969,6 +1946,10 @@ def form_windows(labels, starts, ends, keep):
             last = date.fromisoformat(e) if e else first
         except ValueError:
             raise HTTPException(status_code=400, detail="A date on the timeline isn't a real date.") from None
+        if not journal.window_near(first, last, drawn):
+            raise HTTPException(status_code=400, detail=f"A date on the timeline is more than "
+                                                        f"{journal.WINDOW_YEARS} years from the reading. "
+                                                        f"Check the year.")
         label = journal_text(label, journal.WINDOW_LABEL_MAX, "date's name") or "Window"
         windows.append((label, min(first, last), max(first, last)))
     return windows[:journal.WINDOWS_MAX]
@@ -2054,7 +2035,10 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
         notes = journal_text(notes, journal.NOTE_MAX, "notes")
         outcome = journal_text(outcome, journal.NOTE_MAX, "outcome")
         answer_ai = answer_ai if answer_ai in journal.AI_NAMES else ""
-        windows = form_windows(w_label, w_starts, w_ends, w_keep)
+        entry = journal.get_entry(conn, journal_id, entry_id)
+        if not entry:
+            raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
+        windows = form_windows(w_label, w_starts, w_ends, w_keep, entry["drawn_at"].date())
         thread_id = entry_thread(conn, journal_id, thread, new_thread)
         if not journal.update_entry(conn, journal_id, entry_id, answer, answer_ai, notes, outcome, thread_id):
             raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
@@ -2065,7 +2049,6 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
             return RedirectResponse("?find=1#windowsTitle", status_code=303)
         if windows_shown == "0" and not windows and answer:
             # First answer pasted: the dates it names go on the timeline, shown for checking next.
-            entry = journal.get_entry(conn, journal_id, entry_id)
             windows = journal.find_windows(answer, entry["drawn_at"].date())
         journal.replace_windows(conn, journal_id, entry_id, windows)
     return RedirectResponse(f"/journal/entry/{entry_id}?saved=1", status_code=303)
@@ -2109,12 +2092,16 @@ def report_journal_box(request: Request, session_id, link):
 # ---------- admin: saved readings ----------
 
 # /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
-# doesn't exist (404). Signing in sets a cookie derived from the password, so changing the
-# password signs every browser out. The cookie is SameSite=Strict, so another site can't make a
-# signed-in browser press the buttons.
+# doesn't exist (404). Signing in sets a cookie holding the sign-in time and a signature made
+# from the password, so the server itself refuses a cookie older than ADMIN_MAX_AGE (a copied
+# cookie stops working too, not just the browser's copy), and changing the password signs every
+# browser out. Signing out also refuses every cookie issued before it, until the app restarts.
+# The cookie is SameSite=Strict, so another site can't make a signed-in browser press the buttons.
 ADMIN_COOKIE = "ootk_admin"
-ADMIN_MAX_AGE = 7 * 24 * 3600
+ADMIN_SESSION_HOURS = 12                 # how long one admin sign-in lasts; change it here
+ADMIN_MAX_AGE = ADMIN_SESSION_HOURS * 3600
 admin_logins = FailedLogins()
+admin_signed_out_at = 0                  # cookies issued at or before this time no longer work
 
 
 def admin_password() -> str:
@@ -2124,13 +2111,25 @@ def admin_password() -> str:
     return password
 
 
-def admin_token(password: str) -> str:
-    return hmac.new(password.encode(), b"ootk-admin-session", hashlib.sha256).hexdigest()
+def admin_signature(password: str, issued: int) -> str:
+    return hmac.new(password.encode(), f"ootk-admin-session|{issued}".encode(), hashlib.sha256).hexdigest()
+
+
+def admin_token(password: str, issued: int | None = None) -> str:
+    issued = int(time.time()) if issued is None else issued
+    return f"{issued}.{admin_signature(password, issued)}"
 
 
 def is_admin(request: Request) -> bool:
-    given = request.cookies.get(ADMIN_COOKIE, "")
-    return secrets.compare_digest(given.encode(), admin_token(admin_password()).encode())
+    password = admin_password()          # no ADMIN_PASSWORD: every /admin page is a 404
+    issued, _, signature = request.cookies.get(ADMIN_COOKIE, "").partition(".")
+    if not issued.isdigit() or len(issued) > 12:
+        return False                     # missing, malformed, or the old never-expiring kind
+    issued = int(issued)
+    if not secrets.compare_digest(signature.encode(), admin_signature(password, issued).encode()):
+        return False
+    now = time.time()
+    return admin_signed_out_at < issued <= now + 60 and now - issued < ADMIN_MAX_AGE
 
 
 def admin_page(request: Request, status: int = 200, **context):
@@ -2215,14 +2214,18 @@ def admin_login(request: Request, password: str = Form("")):
         return admin_page(request, status=401, signed_in=False, error="That password isn't right.")
     admin_logins.succeeded(visitor)
     response = RedirectResponse("/admin", status_code=303)
-    response.set_cookie(ADMIN_COOKIE, admin_token(expected), max_age=ADMIN_MAX_AGE, httponly=True,
+    issued = max(int(time.time()), admin_signed_out_at + 1)   # never land on a signed-out second
+    response.set_cookie(ADMIN_COOKIE, admin_token(expected, issued), max_age=ADMIN_MAX_AGE, httponly=True,
                         samesite="strict", secure=request.url.scheme == "https", path="/admin")
     return response
 
 
 @app.post("/admin/logout")
 def admin_logout(request: Request):
+    global admin_signed_out_at
     admin_password()
+    if is_admin(request):                # only a signed-in browser can sign everyone out
+        admin_signed_out_at = int(time.time())
     response = RedirectResponse("/admin", status_code=303)
     response.delete_cookie(ADMIN_COOKIE, path="/admin")
     return response
@@ -2270,7 +2273,10 @@ def saved_reading_parts(link):
                         or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
         card_titles = stored.pop("card_titles")
         significator_label = stored.pop("significator_label")
-    return session_id, stored, run_reading(stored, card_titles, significator_label), seed_redraws
+    reading = run_reading(stored, card_titles, significator_label)
+    # Drawn with Operation 1's older cut: the seed now draws other cards, so no share link.
+    seed_redraws = seed_redraws and not reading.pop("older_cut")
+    return session_id, stored, reading, seed_redraws
 
 
 # Which Major carries each sign, per mapping system, for the card panel's small maps. Reference
@@ -2305,6 +2311,11 @@ def seeded_significator_places(settings, card_titles, deck):
     return significator_places(deck, settings["seed"], positions, sig_card)
 
 
+# The years a draw time may fall in. Every reading the site makes is drawn now; a hand-edited
+# link outside these years got a 500 (year 9999 runs the decan dates past year 10000).
+DRAWN_YEARS = (1900, 2199)
+
+
 def parse_drawn_at(text):
     """settings['drawn_at'] or a link's drawn= ('20261029T2200Z') as an aware UTC datetime;
     None if blank. Any ISO 8601 form is accepted; one without a zone is read as UTC."""
@@ -2312,10 +2323,14 @@ def parse_drawn_at(text):
         return None
     try:
         when = datetime.fromisoformat(str(text))
-    except ValueError:
+        when = (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    except (ValueError, OverflowError):
         raise HTTPException(status_code=400, detail=f"{quoted(text)} is not a date and time. "
                                                     f"Use the form 20261029T2200Z.")
-    return (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    if not DRAWN_YEARS[0] <= when.year <= DRAWN_YEARS[1]:
+        raise HTTPException(status_code=400, detail=f"A draw time must fall between {DRAWN_YEARS[0]} "
+                                                    f"and {DRAWN_YEARS[1]}.")
+    return when
 
 
 def time_zone(name):
@@ -2335,11 +2350,19 @@ def run_reading(settings, card_titles, significator_label, deck=None):
     selected_spread = {"name": spread_name(spread_key)}
     deck = deck or reference_deck()
     ops = None
+    older_cut = False
     if spread_key == BOOK_T_KEY:
         # Position names and counts depend on the draw; the seed always gives the same ones.
-        titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
-                                             settings.get("expect", ""))
-        if titles != list(card_titles):
+        # A reading saved before Operation 1's cut changed (book_t.CUTS) redraws its cards only
+        # with the older cut, so that is tried before giving up.
+        for cut in book_t.CUTS:
+            titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
+                                                 settings.get("expect", ""), cut=cut)
+            if titles == list(card_titles):
+                older_cut = cut != book_t.CUTS[0]
+                break
+        else:
+            log.warning("a saved Book T reading no longer redraws its cards")
             raise HTTPException(status_code=500, detail="This Book T reading no longer redraws its cards.")
     else:
         positions = spread_positions(spread_key)
@@ -2373,6 +2396,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         "spread_name": selected_spread["name"], "significator_label": significator_label,
         "spread_results": spread_results, "withheld": withheld,
         "sign_carriers": load_sign_carriers(deck, mapping_system), **reading,
+        "older_cut": older_cut,
     }
 
 

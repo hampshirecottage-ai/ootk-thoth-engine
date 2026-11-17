@@ -9,6 +9,13 @@ updates:
         patterns: ["pydantic", "pydantic-core", "pydantic_core"]
       psycopg:                         # psycopg[binary] pins psycopg-binary exactly, so bump them together
         patterns: ["psycopg", "psycopg-binary"]
+  - package-ecosystem: "docker"         # the python base image in the Dockerfile (tag + digest)
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "python"      # stay on Python 3.12: only patch releases and new digests
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
