@@ -1,4 +1,4 @@
-# Web GUI image for Hugging Face Spaces (Docker SDK) or any Docker host.
+# Web GUI image for Render (the live site) or any Docker host.
 # Runs PostgreSQL and the FastAPI app in one container on port 7860.
 # Card images are the public-domain 1909 Rider-Waite-Smith art (static/cards). The Thoth
 # paintings are copyrighted and never go in the image.
@@ -10,7 +10,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends postgresql postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Hugging Face runs Space containers as uid 1000.
+# Runs as a non-root user (uid 1000).
 RUN useradd -m -u 1000 user
 ENV HOME=/home/user \
     PATH=/usr/lib/postgresql/17/bin:/home/user/.local/bin:$PATH \
