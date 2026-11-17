@@ -10,7 +10,7 @@ on:
       - .dockerignore
       - requirements-lock.txt
       - pyproject.toml
-      - deploy/huggingface/start.sh
+      - deploy/start.sh
 
 permissions:
   contents: read
