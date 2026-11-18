@@ -17,11 +17,6 @@
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
-        /* The link preview's three cards, faded right down, half off the right edge of the screen
-           in place of the emblem other pages show. Set --backdrop-opacity to 0 to hide them. */
-        :root { --backdrop-opacity: 0.1; }
-        :root[data-theme="light"] { --backdrop-opacity: 0.16; }
-        body::before { background: url("{{ static_url('site/front-backdrop.webp') }}") right calc(-1 * min(26vw, 230px)) bottom -6vh / min(78vmin, 680px) no-repeat; opacity: var(--backdrop-opacity); mix-blend-mode: normal; }
         /* The title is the sample question; hovering it (or tapping it on a phone) shows the reframed one. */
         .title-wrap { position: relative; }
         .band h1#pageTitle { cursor: help; outline-offset: 4px; }
