@@ -113,7 +113,6 @@ def build():
     aspects, timed, a_end = scene(A0, "w")
     CYCLE = a_end + FADE              # Tree, zodiac, aspects, fade, and round again
     css = (
-        f".bg{{fill:#2E8A56}}"
         f".p{{stroke:#A7E2C0;stroke-width:1.4;opacity:.35}}"
         f".l{{stroke:#FFE0A0;stroke-width:3.2;stroke-linecap:round;fill:none;stroke-dasharray:1 1;stroke-dashoffset:1;"
         f"opacity:0;animation:draw {CYCLE:.1f}s linear infinite}}"
@@ -152,7 +151,7 @@ def build():
         f".sc2,.sc3{{animation:none;display:none}}}}"
     )
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">'
-           f'<style>{css}</style><rect class="bg" width="{W}" height="{H}" rx="10"/><g class="sc1">']
+           f'<style>{css}</style><g class="sc1">']   # no panel: the banner behind shows through
     lines = []
     for p, (a, b) in PATHS.items():
         (x1, y1), (x2, y2) = point(a), point(b)
