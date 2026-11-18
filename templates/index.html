@@ -35,8 +35,8 @@
         /* The Tree of Life and zodiac animation sits between the text and the form, as tall as the form. */
         .tree-anim { margin: 0; }
         .tree-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
-        /* Softened so its bright Sephirah colours sit quietly beside the text: a little less colour and a
-           little see-through, more so on the dark theme where the green panel stands out most. */
+        /* No panel of its own, so it sits on the banner's own colour in both themes. Softened so its
+           bright Sephirah colours sit quietly beside the text: a little less colour and a little see-through. */
         :root { --anim-fade: 0.78; --anim-saturate: 0.6; }
         :root[data-theme="light"] { --anim-fade: 0.85; --anim-saturate: 0.65; }
         .tree-anim img { opacity: var(--anim-fade); filter: saturate(var(--anim-saturate)); }
