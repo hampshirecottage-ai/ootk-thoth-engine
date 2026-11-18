@@ -19,7 +19,8 @@ Aspects: the wheel of twelve with each kind of aspect drawn in turn, then all 42
 scene is the one on How it works, built by scripts/make_aspects_animation.py (scene(), with its
 classes prefixed "w" so they cannot clash with these).
 
-Pure SVG + CSS: no script, no images. Every element runs on one shared cycle, so the scenes never
+Two files, one per site theme (THEMES): the captions are in the page's text colour and only the
+diagrams are softened. Pure SVG + CSS: no script, no images. Every element runs on one shared cycle, so the scenes never
 drift apart. Visitors who ask for reduced motion see the still Tree. Layouts match the
 maps in static/js/atlas.js. Run `python scripts/make_front_animation.py` after changing anything
 here.
@@ -30,6 +31,14 @@ from ootk import PROJECT_ROOT
 from ootk.atlas import DECAN_RULERS, SIGNS, decan_pip
 
 OUT = PROJECT_ROOT / "static" / "site" / "front-animation.svg"
+# One file per site theme, as an <img> cannot see the page's colours. The captions under each
+# scene are in the band's own text colour (--band-text: cream on green, light grey on dark) and
+# stay at full strength; everything else is softened (a little see-through, a little less
+# colour) so the bright Sephirah and zodiac colours sit quietly beside the text.
+THEMES = {
+    "green": dict(out=OUT, caption="#FFE0A0", fade=0.85, saturate=0.65),
+    "dark": dict(out=OUT.with_name("front-animation-dark.svg"), caption="#E0E0E0", fade=0.78, saturate=0.6),
+}
 
 SEPH = [(0, 0), (1, 1), (-1, 1), (1, 2.5), (-1, 2.5), (0, 3.3), (1, 4.6), (-1, 4.6), (0, 5.5), (0, 6.6)]
 NAMES = "Kether Chokmah Binah Chesed Geburah Tiphareth Netzach Hod Yesod Malkuth".split()
@@ -107,8 +116,15 @@ def sephira(i):
             f'<text dy="3.2" fill="{INK[i]}"{halo}>{i + 1}</text></g>')
 
 
-def build():
+def soft(theme):
+    """Opens the group that softens a scene's diagram (not its caption)."""
+    fade = THEMES[theme]["fade"]
+    return f'<g opacity="{fade:g}" filter="url(#soft)">'
+
+
+def build(theme="green"):
     global CYCLE
+    cap, saturate = THEMES[theme]["caption"], THEMES[theme]["saturate"]
     from make_aspects_animation import keyframes, scene, styles   # it imports this module's colours
     aspects, timed, a_end = scene(A0, "w")
     CYCLE = a_end + FADE              # Tree, zodiac, aspects, fade, and round again
@@ -118,7 +134,7 @@ def build():
         f"opacity:0;animation:draw {CYCLE:.1f}s linear infinite}}"
         f".s circle{{stroke:#0f2a1b;stroke-width:1}}"
         f".s text{{font:700 9px Inter,system-ui,sans-serif;text-anchor:middle}}"
-        f".t{{opacity:0;animation:label {CYCLE:.1f}s linear infinite;text-anchor:middle;fill:#FFE0A0}}"
+        f".t{{opacity:0;animation:label {CYCLE:.1f}s linear infinite;text-anchor:middle;fill:{cap}}}"
         f".t .g{{font:700 13px serif}}.t .n{{font:600 9px Inter,system-ui,sans-serif}}"
         f"@keyframes draw{{0%{{stroke-dashoffset:1;opacity:1}}{pct(.55)}{{stroke-dashoffset:0;opacity:1}}"
         f"{pct(STEP)}{{stroke-dashoffset:0;opacity:1}}{pct(STEP + .5)}{{stroke-dashoffset:0;opacity:0}}100%{{opacity:0}}}}"
@@ -132,7 +148,7 @@ def build():
         f"{pct(Z_END)}{{opacity:1}}{pct(Z_END + FADE)}{{opacity:0}}100%{{opacity:0}}}}"
         f"@keyframes sc3{{0%{{opacity:0}}{pct(Z_END)}{{opacity:0}}{pct(Z_END + FADE)}{{opacity:1}}"
         f"{pct(CYCLE - FADE)}{{opacity:1}}100%{{opacity:0}}}}"
-        + styles("w") + keyframes(timed, CYCLE) +
+        + styles("w") + f".wh,.wn{{fill:{cap}}}" + keyframes(timed, CYCLE) +
         # the wheel: rings in the Tree's path colour, a lit decan in the Tree's lit-path cream
         f".zs path,.zd path{{stroke:#0f2a1b;stroke-opacity:.6;stroke-width:.6}}"
         f".zs text{{font:12px serif;text-anchor:middle}}"
@@ -142,7 +158,7 @@ def build():
         f".zl text{{font:700 7px serif;fill:#0f2a1b;text-anchor:middle}}"
         f".zsl{{animation:sign {CYCLE:.1f}s linear infinite}}.zsl path{{fill:none;stroke:#FFE0A0;stroke-width:2.2;stroke-linejoin:round}}"
         f".zc{{animation:sign {CYCLE:.1f}s linear infinite;font:30px serif;fill:#FFE0A0;text-anchor:middle}}"
-        f".zt{{animation:zlabel {CYCLE:.1f}s linear infinite;text-anchor:middle;fill:#FFE0A0}}"
+        f".zt{{animation:zlabel {CYCLE:.1f}s linear infinite;text-anchor:middle;fill:{cap}}}"
         f".zt .g{{font:700 14px serif}}.zt .n{{font:600 9px Inter,system-ui,sans-serif}}"
         f"@keyframes dec{{0%{{opacity:0}}{pct(.2)}{{opacity:1}}{pct(Z_STEP)}{{opacity:1}}{pct(Z_STEP + .5)}{{opacity:0}}100%{{opacity:0}}}}"
         f"@keyframes sign{{0%{{opacity:0}}{pct(.2)}{{opacity:1}}{pct(3 * Z_STEP - .1)}{{opacity:1}}{pct(3 * Z_STEP + .2)}{{opacity:0}}100%{{opacity:0}}}}"
@@ -151,7 +167,9 @@ def build():
         f".sc2,.sc3{{animation:none;display:none}}}}"
     )
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}">'
-           f'<style>{css}</style><g class="sc1">']   # no panel: the banner behind shows through
+           f'<style>{css}</style><defs><filter id="soft" filterUnits="userSpaceOnUse" x="0" y="0" width="{W}" height="{H}">'
+           f'<feColorMatrix type="saturate" values="{saturate:g}"/></filter></defs>'
+           f'<g class="sc1">{soft(theme)}']   # no panel: the banner behind shows through
     lines = []
     for p, (a, b) in PATHS.items():
         (x1, y1), (x2, y2) = point(a), point(b)
@@ -161,13 +179,15 @@ def build():
         out.append(f'<path class="l" pathLength="1" style="animation-delay:{i * STEP:.1f}s" '
                    f'd="M{x1:.1f} {y1:.1f}L{x2:.1f} {y2:.1f}"/>')
     out += [sephira(i) for i in range(10)]
+    out.append("</g>")   # the captions below stay at full strength
     y = OY + 6.6 * K + 22
     for i, p in enumerate(PATHS):
         out.append(f'<g class="t" style="animation-delay:{i * STEP:.1f}s"><text class="g" x="{W / 2:g}" y="{y:.0f}">{GLYPHS[i]}</text>'
                    f'<text class="n" x="{W / 2:g}" y="{y + 15:.0f}">{p} · {LETTERS[i]} · {TRUMPS[p]}</text></g>')
     out.append("</g>")
-    out += zodiac()
-    out.append(f'<g class="sc3">{aspects}</g>')
+    out += zodiac(theme)
+    wheel, caps, rest = aspects.partition('<g class="wcap ')
+    out.append(f'<g class="sc3">{soft(theme)}{wheel}</g>{caps}{rest}</g>')
     return "".join(out) + "</svg>\n"
 
 
@@ -188,9 +208,9 @@ def glyph(r, deg, text, css=""):
     return f'<text{css} x="{x:.1f}" y="{y:.1f}" dy="0.35em">{text}</text>'
 
 
-def zodiac():
+def zodiac(theme):
     """The second scene: the twelve signs, the 36 decans lighting in turn, and each one's card."""
-    out = ['<g class="sc2"><g class="zs">']
+    out, caps = [f'<g class="sc2">{soft(theme)}<g class="zs">'], []
     mid_s, mid_d = sum(SIGN_R) / 2, sum(DEC_R) / 2
     for i, sign in enumerate(SIGNS):
         out.append(f'<path fill="{SIGN_KING[i]}" d="{sector(*SIGN_R, i * 30, i * 30 + 30)}"><title>{sign}</title></path>')
@@ -212,14 +232,15 @@ def zodiac():
         suit, n = decan_pip(i)
         out.append(f'<g class="zl"{delay}><path d="{sector(*DEC_R, i * 10, i * 10 + 10)}"/>'
                    f'{glyph(sum(DEC_R) / 2, i * 10 + 5, PLANET_GLYPHS[ruler])}</g>')
-        out.append(f'<g class="zt"{delay}><text class="g" x="{W / 2:g}" y="{y:.0f}">'
+        caps.append(f'<g class="zt"{delay}><text class="g" x="{W / 2:g}" y="{y:.0f}">'
                    f'{PLANET_GLYPHS[ruler]}\ufe0e in {SIGN_GLYPHS[i // 3]}</text>'
                    f'<text class="n" x="{W / 2:g}" y="{y + 15:.0f}">{ruler} in {sign} · {i % 3 * 10}–{i % 3 * 10 + 10}°</text>'
                    f'<text class="n" x="{W / 2:g}" y="{y + 28:.0f}">{n} of {suit}</text></g>')
-    out.append("</g>")
-    return out
+    out.append("</g>")   # end of the softened wheel
+    return out + caps + ["</g>"]
 
 
 if __name__ == "__main__":
-    OUT.write_text(build(), encoding="utf-8")
-    print(f"wrote {OUT} ({OUT.stat().st_size} bytes)")
+    for name, theme in THEMES.items():
+        theme["out"].write_text(build(name), encoding="utf-8")
+        print(f"wrote {theme['out']} ({theme['out'].stat().st_size} bytes)")

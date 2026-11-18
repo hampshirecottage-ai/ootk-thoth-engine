@@ -35,11 +35,10 @@
         /* The Tree of Life and zodiac animation sits between the text and the form, as tall as the form. */
         .tree-anim { margin: 0; }
         .tree-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
-        /* No panel of its own, so it sits on the banner's own colour in both themes. Softened so its
-           bright Sephirah colours sit quietly beside the text: a little less colour and a little see-through. */
-        :root { --anim-fade: 0.78; --anim-saturate: 0.6; }
-        :root[data-theme="light"] { --anim-fade: 0.85; --anim-saturate: 0.65; }
-        .tree-anim img { opacity: var(--anim-fade); filter: saturate(var(--anim-saturate)); }
+        /* No panel of its own, so it sits on the banner's own colour. One file per theme (made by
+           scripts/make_front_animation.py): its captions are in the band's text colour, and only the
+           diagrams are softened. The other theme's file is lazy, so a hidden one is not downloaded. */
+        :root[data-theme="light"] .tree-anim .anim-dark, :root:not([data-theme="light"]) .tree-anim .anim-green { display: none; }
         @media (min-width: 1000px) {
             .band { grid-template-columns: minmax(0, 1fr) 230px minmax(400px, 0.9fr); }
             .band #readingForm { grid-column: 3; }
@@ -155,7 +154,8 @@
             </p>
         </div>
         <figure class="tree-anim">
-            <img src="{{ static_url('site/front-animation.svg') }}" width="160" height="294" alt="Three diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups. Then the aspects on that wheel: its oppositions, squares, trines and sextiles drawn in turn, then all 42 together.">
+            <img class="anim-green" loading="lazy" src="{{ static_url('site/front-animation.svg') }}" width="160" height="294" alt="Three diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups. Then the aspects on that wheel: its oppositions, squares, trines and sextiles drawn in turn, then all 42 together.">
+            <img class="anim-dark" loading="lazy" src="{{ static_url('site/front-animation-dark.svg') }}" width="160" height="294" alt="Three diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups. Then the aspects on that wheel: its oppositions, squares, trines and sextiles drawn in turn, then all 42 together.">
         </figure>
     </section>
 
