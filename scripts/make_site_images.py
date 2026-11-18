@@ -5,7 +5,8 @@
     static/site/apple-touch-icon.png  180 px, for phone home screens
     static/site/og-image.jpg          1200 x 630 preview card shown when a link is shared
 
-The preview is the site's headline on the page green beside three fanned cards. The cards are the
+The preview is a sample question on the page green beside the three cards drawn for it
+(past, present, future), fanned. It shows only the question and the cards, never a reading. The cards are the
 public-domain 1909 Rider-Waite-Smith art in static/cards/full
 (see static/cards/CREDITS.md), never the copyrighted Thoth paintings.
 
@@ -26,10 +27,12 @@ BEIGE = (244, 236, 220)     # #f4ecdc, the favicon's card
 GREEN = (46, 138, 86)       # #2e8a56, the page background
 DEEP_GREEN = (24, 82, 50)   # the darker end of the preview's gradient
 CREAM = (255, 224, 160)     # #ffe0a0, text directly on green
-TITLE = ["Welcome to the", "Opening of the Key"]
-TAGLINE = "Draw a spread. Get every card, dignity and decan worked out. Your AI interprets it."
+PANEL = (167, 226, 192)     # #a7e2c0, the site's panel green, for the small label
+LABEL = "A THREE-CARD READING"
+QUESTION = "What is it that I would really like to know which I already know?"
+TAGLINE = ["Past · Present · Future", "Ask your own question."]
 FOOTER = "tarotthoth.com · free and open source"
-PREVIEW_CARDS = ["0---the-fool.webp", "xvii---the-star.webp", "xix---the-sun.webp"]
+PREVIEW_CARDS = ["3-of-cups---abundance.webp", "xix---the-sun.webp", "3-of-wands---virtue.webp"]
 
 # The site's self-hosted fonts are variable WOFF2 files; Pillow reads them once fontTools has
 # turned them back into plain TrueType. Without fontTools the preview falls back to system fonts.
@@ -125,17 +128,16 @@ def preview():
         with_shadow(im, rotated, x, y)
 
     d = ImageDraw.Draw(im)
-    size = 76                                       # shrink a long title so it clears the cards
-    while size > 40 and max(d.textlength(line, font=font("serif", size, 700)) for line in TITLE) > 530:
+    d.text((72, 92), LABEL, font=font("sans", 20, 600), fill=PANEL)
+    size = 44                                       # shrink a long question so it clears the tagline
+    while size > 30 and len(wrap(d, QUESTION, font("serif", size, 700), 530)) > 4:
         size -= 2
     title_font = font("serif", size, 700)
-    for k, line in enumerate(TITLE):
-        d.text((70, 125 + round(size * 1.15) * k), line, font=title_font, fill=CREAM)
-    sub_font = font("sans", 30)
-    y = 345
-    for line in wrap(d, TAGLINE, sub_font, 500):
-        d.text((72, y), line, font=sub_font, fill=(255, 255, 255))
-        y += 39
+    for k, line in enumerate(wrap(d, QUESTION, title_font, 530)):
+        d.text((70, 135 + round(size * 1.27) * k), line, font=title_font, fill=CREAM)
+    sub_font = font("sans", 28)
+    for k, line in enumerate(TAGLINE):
+        d.text((72, 400 + 40 * k), line, font=sub_font, fill=(255, 255, 255))
     d.text((72, 540), FOOTER, font=font("sans", 24, 500), fill=CREAM)
     return im.convert("RGB")
 
