@@ -17,18 +17,17 @@
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
-        /* The link preview's three cards, faded right down, behind the banner. Set --backdrop-opacity to 0 to hide them. */
-        :root { --backdrop-opacity: 0.07; }
-        :root[data-theme="light"] { --backdrop-opacity: 0.1; }
-        .band { position: relative; isolation: isolate; }
-        /* The emblem behind other pages is left off here. */
-        body::before { content: none; }
-        /* The title is a long question, so it is set smaller than other banners'. */
-        .band .kicker { margin: 4px 0 0; font-size: 0.78em; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
-        .band h1#pageTitle { font-size: 1.45em; line-height: 1.25; margin-top: 4px; }
-        @media (max-width: 860px) { .band h1#pageTitle { font-size: 1.18em; } }
-        .band::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; background: url("{{ static_url('site/front-backdrop.webp') }}") 30% 50% / auto 120% no-repeat; opacity: var(--backdrop-opacity); }
-        @media (max-width: 860px) { .band::before { background-position: 50% 0; background-size: 100% auto; opacity: calc(var(--backdrop-opacity) * 0.7); } }
+        /* The link preview's three cards, faded right down, half off the right edge of the screen
+           in place of the emblem other pages show. Set --backdrop-opacity to 0 to hide them. */
+        :root { --backdrop-opacity: 0.1; }
+        :root[data-theme="light"] { --backdrop-opacity: 0.16; }
+        body::before { background: url("{{ static_url('site/front-backdrop.webp') }}") right calc(-1 * min(26vw, 230px)) bottom -6vh / min(78vmin, 680px) no-repeat; opacity: var(--backdrop-opacity); mix-blend-mode: normal; }
+        /* The title is the sample question; hovering it (or tapping it on a phone) shows the reframed one. */
+        .title-wrap { position: relative; }
+        .band h1#pageTitle { cursor: help; outline-offset: 4px; }
+        .reframe-tip { position: absolute; left: 0; top: calc(100% + 8px); z-index: 5; max-width: 34em; margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--panel); color: var(--text); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); line-height: 1.45; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; }
+        .band .reframe-tip { color: var(--text); }
+        .title-wrap:hover .reframe-tip, #pageTitle:focus + .reframe-tip { opacity: 1; visibility: visible; transform: none; }
         /* Start page: what OOTK is beside the settings. */
         .band { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; }
         .band .steps, .band .hero-actions { justify-content: flex-start; }
@@ -116,8 +115,10 @@
     <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
-            <p class="kicker">Reframed question</p>
-            <h1 id="pageTitle">Looking at where my life has come from, where it stands now and where it is heading, what do I already know deep down that I would like to see clearly and trust?</h1>
+            <div class="title-wrap">
+                <h1 id="pageTitle" tabindex="0" aria-describedby="reframedQuestion">What is it that I would really like to know which I already know?</h1>
+                <p class="reframe-tip" id="reframedQuestion" role="tooltip"><strong>Reframed question:</strong> Looking at where my life has come from, where it stands now and where it is heading, what do I already know deep down that I would like to see clearly and trust?</p>
+            </div>
             <p class="tagline">Draw a Thoth spread. OOTK looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, works out how the cards relate, and hands your AI a ready-made prompt, so the interpreting is left to your AI.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Ask your question and draw</li>
