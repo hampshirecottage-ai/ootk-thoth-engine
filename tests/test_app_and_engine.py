@@ -155,6 +155,12 @@ def test_front_page_shows_the_tree_and_zodiac_animation(client):
     assert 'fill="#FF2400"' in svg and 'fill="#4B0082"' in svg   # King Scale: Aries/Mars scarlet, Saturn indigo
     # the third scene: the aspects on the wheel, its classes prefixed so they cannot clash
     assert '<g class="sc3">' in svg and svg.count('class="wd ') == 42 and ">Every wheel aspect<" in svg
+    # one file per theme: the captions in the band's text colour, only the diagrams softened
+    assert "site/front-animation-dark.svg" in page
+    dark = (PROJECT_ROOT / "static" / "site" / "front-animation-dark.svg").read_text(encoding="utf-8")
+    for file, caption in ((svg, "#FFE0A0"), (dark, "#E0E0E0")):
+        assert f"text-anchor:middle;fill:{caption}}}" in file and f".wh,.wn{{fill:{caption}}}" in file
+        assert file.count('filter="url(#soft)"') == 3
 
 
 def test_method_page_shows_the_book_t_operations_animation(client):
