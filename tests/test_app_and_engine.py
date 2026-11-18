@@ -1696,7 +1696,8 @@ def test_wrong_admin_passwords_lock_the_visitor_out(client, monkeypatch):
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
     assert "so the interpreting is left to your AI." in page
-    assert "What is it that I would really like to know which I already know?</h1>" in page
+    assert "Looking at where my life has come from, where it stands now and where it is heading, what do I already know deep down that I would like to see clearly and trust?</h1>" in page
+    assert "body::before { content: none; }" in page             # no emblem behind the front page
     assert "site/front-backdrop.webp" in page                   # the preview's cards, faded behind the banner
     assert client.get("/static/site/front-backdrop.webp").status_code == 200
     assert "ChatGPT" not in page and "For tarot readers" not in page

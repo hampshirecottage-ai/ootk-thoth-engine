@@ -21,6 +21,12 @@
         :root { --backdrop-opacity: 0.07; }
         :root[data-theme="light"] { --backdrop-opacity: 0.1; }
         .band { position: relative; isolation: isolate; }
+        /* The emblem behind other pages is left off here. */
+        body::before { content: none; }
+        /* The title is a long question, so it is set smaller than other banners'. */
+        .band .kicker { margin: 4px 0 0; font-size: 0.78em; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+        .band h1#pageTitle { font-size: 1.45em; line-height: 1.25; margin-top: 4px; }
+        @media (max-width: 860px) { .band h1#pageTitle { font-size: 1.18em; } }
         .band::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; background: url("{{ static_url('site/front-backdrop.webp') }}") 30% 50% / auto 120% no-repeat; opacity: var(--backdrop-opacity); }
         @media (max-width: 860px) { .band::before { background-position: 50% 0; background-size: 100% auto; opacity: calc(var(--backdrop-opacity) * 0.7); } }
         /* Start page: what OOTK is beside the settings. */
@@ -110,7 +116,8 @@
     <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
-            <h1 id="pageTitle">What is it that I would really like to know which I already know?</h1>
+            <p class="kicker">Reframed question</p>
+            <h1 id="pageTitle">Looking at where my life has come from, where it stands now and where it is heading, what do I already know deep down that I would like to see clearly and trust?</h1>
             <p class="tagline">Draw a Thoth spread. OOTK looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, works out how the cards relate, and hands your AI a ready-made prompt, so the interpreting is left to your AI.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Ask your question and draw</li>
