@@ -4,6 +4,8 @@
     static/site/favicon.ico           16, 32 and 48 px, for browsers and crawlers that ask /favicon.ico
     static/site/apple-touch-icon.png  180 px, for phone home screens
     static/site/og-image.jpg          1200 x 630 preview card shown when a link is shared
+    static/site/front-backdrop.webp   the preview's three-card fan alone, on clear ground, which the
+                                      front page shows faint behind everything (index.html)
 
 The preview is a sample question on the page green beside the three cards drawn for it
 (past, present, future), fanned. It shows only the question and the cards, never a reading. The cards are the
@@ -108,6 +110,31 @@ def with_shadow(im, layer, x, y, blur=12, offset=(8, 12), alpha=100):
     im.alpha_composite(layer, (x, y))
 
 
+def fan(im, cx, cy, height=380, shadow=True):
+    """The three preview cards in cream frames, fanned about (cx, cy), each `height` px tall."""
+    k = height / 380
+    for i, name in enumerate(PREVIEW_CARDS):
+        card = Image.open(STATIC / "cards" / "full" / name).convert("RGBA")
+        card = card.resize((round(card.width * height / card.height), height), Image.LANCZOS)
+        b = round(6 * k)
+        framed = Image.new("RGBA", (card.width + 2 * b, card.height + 2 * b), (250, 246, 236, 255))
+        framed.paste(card, (b, b))
+        rotated = framed.rotate((1 - i) * 14, expand=True, resample=Image.BICUBIC)
+        x = cx + round((i - 1) * 150 * k) - rotated.width // 2
+        y = cy - rotated.height // 2 + (0 if i == 1 else round(25 * k))
+        if shadow:
+            with_shadow(im, rotated, x, y)
+        else:
+            im.alpha_composite(rotated, (x, y))
+
+
+def backdrop():
+    """The preview's fan alone on a clear ground; the front page fades it right down."""
+    im = Image.new("RGBA", (760, 600), (0, 0, 0, 0))
+    fan(im, 380, 285, height=440, shadow=False)
+    return im
+
+
 def preview():
     W, H = 1200, 630
     im = Image.new("RGBA", (W, H))
@@ -116,16 +143,7 @@ def preview():
         t = x / (W - 1)
         d.line([(x, 0), (x, H)], fill=tuple(round(a + (b - a) * t) for a, b in zip(GREEN, DEEP_GREEN)))
 
-    # Three cards fanned on the right, in cream frames.
-    for i, name in enumerate(PREVIEW_CARDS):
-        card = Image.open(STATIC / "cards" / "full" / name).convert("RGBA")
-        card = card.resize((round(card.width * 380 / card.height), 380), Image.LANCZOS)
-        framed = Image.new("RGBA", (card.width + 12, card.height + 12), (250, 246, 236, 255))
-        framed.paste(card, (6, 6))
-        rotated = framed.rotate((1 - i) * 14, expand=True, resample=Image.BICUBIC)
-        x = 935 + (i - 1) * 150 - rotated.width // 2
-        y = 320 - rotated.height // 2 + (0 if i == 1 else 25)
-        with_shadow(im, rotated, x, y)
+    fan(im, 935, 320)                               # the three cards fanned on the right
 
     d = ImageDraw.Draw(im)
     d.text((72, 92), LABEL, font=font("sans", 20, 600), fill=PANEL)
@@ -146,7 +164,8 @@ def main():
     icon(48).save(SITE / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
     icon(180, rounded=False).convert("RGB").save(SITE / "apple-touch-icon.png", optimize=True)
     preview().save(SITE / "og-image.jpg", quality=85, optimize=True, progressive=True)
-    for name in ("favicon.ico", "apple-touch-icon.png", "og-image.jpg"):
+    backdrop().save(SITE / "front-backdrop.webp", quality=50, method=6)
+    for name in ("favicon.ico", "apple-touch-icon.png", "og-image.jpg", "front-backdrop.webp"):
         print(f"{name}: {(SITE / name).stat().st_size // 1024} KB")
 
 
