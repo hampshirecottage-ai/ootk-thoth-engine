@@ -17,6 +17,12 @@
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
+        /* The link preview's three cards, faded right down, behind the banner. Set --backdrop-opacity to 0 to hide them. */
+        :root { --backdrop-opacity: 0.07; }
+        :root[data-theme="light"] { --backdrop-opacity: 0.1; }
+        .band { position: relative; isolation: isolate; }
+        .band::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit; background: url("{{ static_url('site/front-backdrop.webp') }}") 30% 50% / auto 120% no-repeat; opacity: var(--backdrop-opacity); }
+        @media (max-width: 860px) { .band::before { background-position: 50% 0; background-size: 100% auto; opacity: calc(var(--backdrop-opacity) * 0.7); } }
         /* Start page: what OOTK is beside the settings. */
         .band { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; }
         .band .steps, .band .hero-actions { justify-content: flex-start; }
@@ -104,7 +110,7 @@
     <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
-            <h1 id="pageTitle">Welcome to the Opening of the Key</h1>
+            <h1 id="pageTitle">What is it that I would really like to know which I already know?</h1>
             <p class="tagline">Draw a Thoth spread. OOTK looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, works out how the cards relate, and hands your AI a ready-made prompt, so the interpreting is left to your AI.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Ask your question and draw</li>
