@@ -4,7 +4,7 @@
 # Dependabot proposes updates to this file weekly; CI tests each one.
 # To update: install -e ".[dev]" in a fresh Python 3.12 venv, run the tests, then
 #   pip freeze --exclude-editable > requirements-lock.txt (and put this header back).
-annotated-doc==0.0.5
+annotated-doc==0.0.6
 annotated-types==0.8.0
 anyio==4.16.0
 brotli==1.2.1
