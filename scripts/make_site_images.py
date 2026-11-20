@@ -31,7 +31,7 @@ DEEP_GREEN = (24, 82, 50)   # the darker end of the preview's gradient
 CREAM = (255, 224, 160)     # #ffe0a0, text directly on green
 PANEL = (167, 226, 192)     # #a7e2c0, the site's panel green, for the small label
 LABEL = "A THREE-CARD READING"
-QUESTION = "What is it that I would really like to know which I already know?"
+QUESTION = "What is it that I would really like to know?"
 TAGLINE = ["Past · Present · Future", "Ask your own question."]
 FOOTER = "tarotthoth.com · free and open source"
 PREVIEW_CARDS = ["3-of-cups---abundance.webp", "xix---the-sun.webp", "3-of-wands---virtue.webp"]
@@ -89,6 +89,15 @@ def icon(size, rounded=True):
 
 
 def wrap(draw, text, fnt, width):
+    """Wrap to `width`, then narrow it while the line count holds, so the lines come out
+    even and the last one is never a lone word."""
+    lines = _wrap(draw, text, fnt, width)
+    while width > 100 and len(_wrap(draw, text, fnt, width - 10)) == len(lines):
+        width -= 10
+    return _wrap(draw, text, fnt, width)
+
+
+def _wrap(draw, text, fnt, width):
     lines, line = [], ""
     for word in text.split():
         trial = f"{line} {word}".strip()
