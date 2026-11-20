@@ -6,7 +6,7 @@
 
 **Try it online: [tarotthoth.com](https://tarotthoth.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![The start page: the headline "What is it that I would really like to know which I already know?" (hovering it shows the reframed question), the faded three cards from the link preview at the bottom right edge, the three steps (ask your question and draw, save the prompt, attach it in your AI), the Tree of Life animation lighting Path 15 (Heh, The Star) and the "Ask your question" wizard on its first step, "How would you like to ask?"](docs/images/front.png)
+![The start page: the headline "What is it that I would really like to know?" (hovering it shows the reframed question), the faded three cards from the link preview at the bottom right edge, the three steps (ask your question and draw, save the prompt, attach it in your AI), the Tree of Life animation lighting Path 15 (Heh, The Star) and the "Ask your question" wizard on its first step, "How would you like to ask?"](docs/images/front.png)
 
 The report and [/maps](https://tarotthoth.com/maps) also place the Hebrew letters and the Platonic solids in three-dimensional space: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and each card's solid with its dual. These are pictures to explore, not part of the AI prompt; the [Method page](https://tarotthoth.com/method#space) explains them.
 
