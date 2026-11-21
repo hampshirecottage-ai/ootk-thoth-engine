@@ -475,6 +475,9 @@ SIGNS = (("Aries", "♈"), ("Taurus", "♉"), ("Gemini", "♊"), ("Cancer", "♋
 SIGN_ELEMENT = ("fire", "earth", "air", "water") * 3
 
 
+TIMELINE_MONTHS = 60                  # five years at most on one timeline page
+
+
 def _add_months(day, n):
     y, m = divmod(day.month - 1 + n, 12)
     return date(day.year + y, m + 1, 1)
@@ -492,11 +495,18 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
     drawn = {e["entry_id"]: e["drawn_at"].date() for e in entries}
     windows = [w for w in windows
                if w["entry_id"] in drawn and window_near(w["starts"], w["ends"], drawn[w["entry_id"]])]
-    dates = [today] + [w["starts"] for w in windows] + [w["ends"] for w in windows] \
-        + [e["drawn_at"].date() for e in entries]
-    start = date(min(dates).year, min(dates).month, 1)
-    end = max(_add_months(start, 12), _add_months(max(dates), 1))
-    end = min(end, _add_months(start, 60))           # five years at most on one page
+    # Today and the readings always go on the page; the windows widen it while it stays five
+    # years at most. Saved windows may lie up to WINDOW_YEARS from their reading, so a window
+    # that doesn't fit on this page is left off it (it still shows on its entry's page).
+    core = [today] + [e["drawn_at"].date() for e in entries]
+    earliest = min(date(min(core).year, min(core).month, 1),
+                   _add_months(max(core), -(TIMELINE_MONTHS - 1)))   # still five years to today
+    windows = [w for w in windows if w["ends"] >= earliest]
+    dates = core + [w["starts"] for w in windows] + [w["ends"] for w in windows]
+    start = max(date(min(dates).year, min(dates).month, 1), earliest)
+    windows = [w for w in windows if w["starts"] < _add_months(start, TIMELINE_MONTHS)]
+    last = max(core + [w["ends"] for w in windows])
+    end = min(max(_add_months(start, 12), _add_months(last, 1)), _add_months(start, TIMELINE_MONTHS))
     span = (end - start).days
 
     def pos(day):
@@ -549,7 +559,7 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
             for w in mine:
                 one_day = w["starts"] == w["ends"]
                 rows.append(dict(info, label=w["label"], kind="dot" if one_day else "bar", left=pos(w["starts"]),
-                                 element=element(w["starts"]),
+                                 element=element(max(w["starts"], start)),
                                  width=0 if one_day else pos(w["ends"] + timedelta(days=1)) - pos(w["starts"]),
                                  when=(f"{w['starts']:%-d %b}" if one_day else
                                        f"{w['starts']:%-d %b} to {w['ends']:%-d %b}") + f" {w['ends']:%Y}",
