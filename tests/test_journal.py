@@ -10,6 +10,7 @@ from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 
 from ootk import PROJECT_ROOT, journal
+from ootk.lockout import FailedLogins
 from ootk import web as app_module
 from test_app_and_engine import client, post  # noqa: F401  (fixture)
 
@@ -17,6 +18,9 @@ from test_app_and_engine import client, post  # noqa: F401  (fixture)
 @pytest.fixture
 def key(monkeypatch):
     monkeypatch.setenv("JOURNAL_KEY", Fernet.generate_key().decode())
+    # Each test starts its own journal from the one test address; a fresh count keeps the
+    # five-an-hour limit on new journals from turning away the sixth test in a run.
+    monkeypatch.setattr(app_module, "journal_starters", FailedLogins(attempts=5, window=3600))
 
 
 def test_texts_are_encrypted_and_a_changed_key_reads_as_a_note(key, monkeypatch):
