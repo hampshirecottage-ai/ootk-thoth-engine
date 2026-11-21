@@ -3,7 +3,7 @@ OOTK_TEST_DB=1) the whole flow against a real database: start from a report, pas
 see its dates on the timeline, export, delete."""
 import os
 import re
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from cryptography.fernet import Fernet
@@ -268,6 +268,29 @@ def test_dates_far_from_the_reading_stay_off_the_timeline():
         t = journal.build_timeline([], entries, windows, date(2026, 11, 13))
         assert t["start"] == date(2026, 11, 1)
         assert [r["label"] for r in t["groups"][0]["rows"]] == ["Peace"]
+
+
+def test_windows_too_far_for_one_timeline_page_are_left_off_it():
+    """A window may be saved up to 10 years from its reading, but a timeline page spans five
+    years at most. One that doesn't fit is left off; today and the readings stay on the page,
+    and the page isn't stretched toward it."""
+    entries = [entry(10, None, (2026, 11, 13))]
+    today = date(2026, 11, 21)
+    peace = {"entry_id": 10, "label": "Peace", "starts": date(2026, 11, 12), "ends": date(2026, 11, 22)}
+    later = {"entry_id": 10, "label": "Later", "starts": date(2030, 6, 1), "ends": date(2030, 6, 10)}
+    for far in (date(2034, 6, 1), date(2018, 6, 1)):          # 8 years after, and before, the draw
+        windows = [peace, later, {"entry_id": 10, "label": "Far", "starts": far, "ends": far + timedelta(days=9)}]
+        t = journal.build_timeline([], entries, windows, today)
+        assert t["start"] == date(2026, 11, 1) and t["end"] == date(2030, 7, 1)
+        rows = t["groups"][0]["rows"]
+        assert [r["label"] for r in rows] == ["Peace", "Later"]
+        assert 0 < t["today"] < 5 and rows[1]["left"] < 100 and rows[1]["width"] > 0
+        assert rows[1]["element"] == "air"                     # 1 June 2030: the Sun in Gemini
+    # One that fits, years before the draw, still widens the page; today stays on it.
+    early = {"entry_id": 10, "label": "Early", "starts": date(2023, 3, 1), "ends": date(2023, 3, 9)}
+    t = journal.build_timeline([], entries, [early, peace], today)
+    assert t["start"] == date(2023, 3, 1) and t["today"] < 100
+    assert [r["label"] for r in t["groups"][0]["rows"]] == ["Early", "Peace"]
 
 
 @needs_db
