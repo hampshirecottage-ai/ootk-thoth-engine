@@ -336,3 +336,33 @@ def test_adding_a_reading_with_no_question_to_a_journal_with_no_questions(key):
     assert r.status_code == 303
     assert "Will it really" in c.get("/journal").text
     c.post("/journal/delete")
+
+
+def test_the_journal_cookie_asks_for_no_more_than_browsers_keep():
+    # Chrome cuts a longer Max-Age to 400 days, so asking for more only hides when it runs out.
+    assert app_module.JOURNAL_COOKIE_AGE == 400 * 24 * 3600
+
+
+@needs_db
+def test_journal_visits_renew_the_cookie_unchanged(key):
+    """Each journal page shown renews the cookie with the same key and flags, so an active
+    visitor never loses it; pages that turn the visitor away don't, and other pages don't."""
+    c = TestClient(app_module.app, base_url="https://testserver")
+    link = draw(c, seed="100020")
+    r = c.post("/journal/start", data={"link": link}, follow_redirects=False)
+    jkey = c.cookies.get("ootk_journal")
+    for page in ("/journal", "/journal/timeline", r.headers["location"].split("?")[0], "/journal/export.md"):
+        got = c.get(page, follow_redirects=False)
+        assert got.status_code == 200, page
+        cookie = got.headers.get("set-cookie", "")
+        assert cookie.startswith(f"ootk_journal={jkey};"), page
+        flags = cookie.lower()
+        assert "max-age=34560000" in flags and "httponly" in flags and "samesite=lax" in flags and "secure" in flags
+    assert "set-cookie" not in c.get(f"/report/{link}").headers
+    # Without a journal: nothing set, and a cookie for a deleted journal is removed, not renewed.
+    assert "set-cookie" not in TestClient(app_module.app).get("/journal").headers
+    c.post("/journal/delete")
+    stale = TestClient(app_module.app, cookies={"ootk_journal": jkey})
+    got = stale.get("/journal")
+    assert got.status_code == 200 and 'ootk_journal=""' in got.headers.get("set-cookie", "")
+    assert stale.get("/journal/timeline", follow_redirects=False).headers.get("set-cookie") is None
