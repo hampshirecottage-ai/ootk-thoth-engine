@@ -52,6 +52,7 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "failed_logins", FailedLogins())
     monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
     monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=60, window=600))
+    monkeypatch.setattr(app_module, "just_drawn", {})
     monkeypatch.setattr(app_module, "list_sessions", lambda conn, limit, offset=0: ([], 0))
     messages = []
 
@@ -335,6 +336,29 @@ def test_one_visitor_opens_a_limited_number_of_readings(client, monkeypatch):
     assert client.saved["count"] == 3                                   # the refused one wasn't saved
     assert client.get("/reading?seed=1&spread=3").status_code == 429     # share links count too
     assert client.get("/").status_code == 200                            # other pages don't
+
+
+def test_a_drawn_reading_counts_once_against_the_limit(client, monkeypatch):
+    """Drawing a reading is the POST and then the report page it redirects to: one reading, so
+    one count. The limit of N readings lets N draws through, each with its report shown."""
+    monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=3, window=600))
+    links = []
+    for _ in range(3):
+        r = post(client, follow=False)
+        assert r.status_code == 303
+        links.append(r.headers["location"])
+        assert client.get(links[-1]).status_code == 200                 # its own report, not counted
+    assert post(client, follow=False).status_code == 429                # the fourth draw
+    assert client.get(links[0]).status_code == 429                      # a reload does count
+
+
+def test_only_the_first_view_of_a_draw_is_free(client, monkeypatch):
+    monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=3, window=600))
+    link = post(client, follow=False).headers["location"]               # 1
+    assert client.get(link).status_code == 200                          # free
+    assert client.get(link).status_code == 200                          # 2
+    assert client.get("/report/someone-elses").status_code != 429       # 3 (locks after)
+    assert client.get(link).status_code == 429
 
 
 def test_security_headers(client, monkeypatch):
