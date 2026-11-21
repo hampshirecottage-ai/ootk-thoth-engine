@@ -138,6 +138,20 @@ app.add_middleware(ReadingSlots)
 READINGS_PER_VISITOR = env_int("READINGS_PER_VISITOR", 60)
 READINGS_WINDOW = 10 * 60
 reading_visitors = FailedLogins(attempts=READINGS_PER_VISITOR, window=READINGS_WINDOW)
+# A drawn reading is two requests: POST /generate_report, then the report page it redirects to.
+# The POST is counted; the first visit to the report it just made is that same reading, so it
+# isn't (a reload, or anyone else opening the link, is). Bounded like the lockout tables.
+just_drawn = {}                       # (visitor, "/report/<link>") -> None, oldest first
+JUST_DRAWN_MAX = 10_000
+
+
+def first_view_of_own_draw(visitor: str, path: str) -> bool:
+    """True once for the report page a visitor's own draw just redirected to."""
+    try:
+        del just_drawn[(visitor, path)]
+        return True
+    except KeyError:
+        return False
 
 
 @app.middleware("http")
@@ -145,6 +159,8 @@ async def limit_readings(request: Request, call_next):
     if not builds_a_reading(request.url.path):
         return await call_next(request)
     visitor = visitor_address(request)
+    if request.method == "GET" and first_view_of_own_draw(visitor, request.url.path):
+        return await call_next(request)
     wait = reading_visitors.retry_after(visitor)
     if wait:
         minutes = max(1, (wait + 59) // 60)
@@ -155,7 +171,13 @@ async def limit_readings(request: Request, call_next):
     if reading_visitors.failed(visitor):
         log.warning("reading limit reached for one visitor (%d in %d minutes)",
                     READINGS_PER_VISITOR, READINGS_WINDOW // 60)
-    return await call_next(request)
+    response = await call_next(request)
+    location = response.headers.get("location", "")
+    if request.url.path == "/generate_report" and response.status_code == 303 and location.startswith("/report/"):
+        just_drawn[(visitor, location)] = None
+        while len(just_drawn) > JUST_DRAWN_MAX:
+            del just_drawn[next(iter(just_drawn))]
+    return response
 
 
 # Form posts are a few kilobytes at most (the question is capped at TOPIC_MAX characters), so
