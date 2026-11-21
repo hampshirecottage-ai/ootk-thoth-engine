@@ -10,6 +10,7 @@ from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 
 from ootk import PROJECT_ROOT, journal
+from ootk.lockout import FailedLogins
 from ootk import web as app_module
 from test_app_and_engine import client, post  # noqa: F401  (fixture)
 
@@ -17,6 +18,9 @@ from test_app_and_engine import client, post  # noqa: F401  (fixture)
 @pytest.fixture
 def key(monkeypatch):
     monkeypatch.setenv("JOURNAL_KEY", Fernet.generate_key().decode())
+    # Each test starts its own journal from the one test address; a fresh count keeps the
+    # five-an-hour limit on new journals from turning away the sixth test in a run.
+    monkeypatch.setattr(app_module, "journal_starters", FailedLogins(attempts=5, window=3600))
 
 
 def test_texts_are_encrypted_and_a_changed_key_reads_as_a_note(key, monkeypatch):
@@ -336,6 +340,34 @@ def test_adding_a_reading_with_no_question_to_a_journal_with_no_questions(key):
     assert r.status_code == 303
     assert "Will it really" in c.get("/journal").text
     c.post("/journal/delete")
+
+
+@needs_db
+def test_dates_unticked_and_saved_stay_off_the_timeline(key):
+    """Untick every date and Save: reopening the entry doesn't offer them again ticked, and a
+    later Save that only adds an outcome doesn't put them back."""
+    c = TestClient(app_module.app)
+    link = draw(c, seed="100020")
+    entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
+    answer = "Text.\n\n## Timeline\n- Move goes ahead: 2026-12-01 to 2026-12-21\n"
+    page = c.post(entry_url, data={"answer": answer, "windows_shown": "0"}).text
+    assert 'value="Move goes ahead"' in page and "Move goes ahead" in c.get("/journal/timeline").text
+
+    # The visitor unticks the one date (no w_keep) and saves.
+    form = {"answer": answer, "w_label": ["Move goes ahead", "", ""], "w_starts": ["2026-12-01", "", ""],
+            "w_ends": ["2026-12-21", "", ""], "windows_shown": "1"}
+    c.post(entry_url, data=form)
+    reopened = c.get(entry_url).text
+    assert 'value="Move goes ahead"' not in reopened
+    assert '<input type="hidden" name="windows_shown" value="1">' in reopened
+    # A later Save from that page, adding only an outcome, keeps the timeline empty.
+    c.post(entry_url, data={"answer": answer, "outcome": "We moved.", "w_label": ["", ""],
+                            "w_starts": ["", ""], "w_ends": ["", ""], "w_keep": ["0", "1"],
+                            "windows_shown": "1"})
+    assert "Move goes ahead" not in c.get("/journal/timeline").text
+    assert "We moved." in c.get(entry_url).text
+    # Find dates still offers them again on request.
+    assert 'value="Move goes ahead"' in c.get(entry_url + "?find=1").text
 
 
 def test_a_journal_entry_may_send_a_long_answer_but_other_forms_keep_the_small_limit(client):  # noqa: F811
