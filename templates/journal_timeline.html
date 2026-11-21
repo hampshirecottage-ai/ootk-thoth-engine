@@ -55,7 +55,7 @@
                 <div class="tl-label tl-head muted">Zodiac</div>
                 <div class="tl-track tl-head">{% for z in T.signs %}<span class="tl-sign el-{{ z.element }}" style="left:{{ '%.3f' % z.left }}%;width:{{ '%.3f' % z.width }}%" title="{{ z.name }}, {{ z.dates }}">{{ z.glyph }}&#xFE0E;<span class="nm">&nbsp;{{ z.short }}</span></span>{% endfor %}</div>
                 <div class="tl-label tl-head muted">{{ T.start.year }}{% if T.end.year - 1 > T.start.year or (T.end.year > T.start.year and T.end.month > 1) %}&ndash;{{ T.end.year if T.end.month > 1 else T.end.year - 1 }}{% endif %}</div>
-                <div class="tl-track tl-head">{% for m in T.months %}<span class="tl-month" style="left:{{ '%.3f' % m.left }}%;width:{{ '%.3f' % m.width }}%">{{ m.label }}{% if m.year and not loop.first %}&nbsp;{{ m.year }}{% endif %}</span>{% endfor %}<span class="tl-today" style="left:{{ '%.3f' % T.today }}%" title="Today"></span></div>
+                <div class="tl-track tl-head">{% for m in T.months %}<span class="tl-month" style="left:{{ '%.3f' % m.left }}%;width:{{ '%.3f' % m.width }}%">{{ m.label }}{% if m.year and not loop.first %}&nbsp;{{ m.year }}{% endif %}</span>{% endfor %}<span class="tl-today" id="tlToday" style="left:{{ '%.3f' % T.today }}%" title="Today"></span></div>
                 {% for g in T.groups %}
                 <div class="tl-label tl-group">{% if g.thread_id %}<a href="/journal/thread/{{ g.thread_id }}">{{ g.name }}</a>{% else %}{{ g.name }}{% endif %}&nbsp;<span class="muted">· {{ g.rows | length }}</span></div>
                 <div class="tl-track"><span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span></div>
@@ -82,6 +82,18 @@
             </div>
         </div>
         <div id="tlTip" role="dialog" aria-label="Reading details" hidden><button type="button" class="x" aria-label="Close">&times;</button><div class="body"></div></div>
+        <script>
+            // Open the timeline at today rather than at its oldest month: when it is wider than
+            // the screen, today sits a third of the way across the dates, so the weeks ahead show.
+            (() => {
+                const tl = document.querySelector(".tl"), today = document.getElementById("tlToday");
+                const label = tl && tl.querySelector(".tl-label");
+                if (!tl || !today || !label || tl.scrollWidth <= tl.clientWidth) return;
+                const x = today.getBoundingClientRect().left - tl.getBoundingClientRect().left + tl.scrollLeft;
+                const dates = tl.clientWidth - label.offsetWidth;
+                tl.scrollLeft = Math.max(0, x - label.offsetWidth - dates / 3);
+            })();
+        </script>
         <script>
             // One shared balloon outside the scrolling timeline, so it is never clipped.
             // Hover shows it and it stays while the pointer moves into it; a click or tap pins it.

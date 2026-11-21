@@ -336,3 +336,18 @@ def test_adding_a_reading_with_no_question_to_a_journal_with_no_questions(key):
     assert r.status_code == 303
     assert "Will it really" in c.get("/journal").text
     c.post("/journal/delete")
+
+
+@needs_db
+def test_the_timeline_opens_scrolled_to_today(key):
+    """The timeline marks today in its month row and, before anything else runs, scrolls a
+    timeline wider than the screen so today shows (a third of the way across the dates)."""
+    c = TestClient(app_module.app)
+    link = draw(c, seed="100020")
+    c.post("/journal/start", data={"link": link})
+    page = c.get("/journal/timeline").text
+    assert page.count('id="tlToday"') == 1
+    script = page.split('id="tlToday"', 1)[1]
+    assert script.index('getElementById("tlToday")') < script.index("One shared balloon")
+    assert "tl.scrollLeft = Math.max(0, x - label.offsetWidth - dates / 3)" in script
+    c.post("/journal/delete")
