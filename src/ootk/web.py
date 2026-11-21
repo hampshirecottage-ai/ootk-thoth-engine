@@ -1549,8 +1549,11 @@ def send_contact(request: Request, background: BackgroundTasks, body: str = Form
 # A journal is opened by a secret link; the browser keeps its key in this cookie. SameSite=Lax
 # means another site can't post a form to the journal with the visitor's cookie attached, and
 # same_site_form() also turns away a post whose Origin names another site.
+# Browsers cap a cookie's life at 400 days (Chrome cuts a longer Max-Age to that), so the
+# cookie asks for 400 days and refresh_journal_cookie() renews it on every journal page shown:
+# a visitor who opens the journal at least once in 400 days never loses it in that browser.
 JOURNAL_COOKIE = "ootk_journal"
-JOURNAL_COOKIE_AGE = 2 * 365 * 24 * 3600
+JOURNAL_COOKIE_AGE = 400 * 24 * 3600
 JOURNAL_KEY_RE = re.compile(journal.KEY_PATTERN)
 # New journals: at most 5 an hour from one address, and 100 an hour across the site.
 journal_starters = FailedLogins(attempts=5, window=3600)
@@ -1576,6 +1579,23 @@ def journal_cookie_key(request: Request):
 def set_journal_cookie(response, request: Request, key):
     response.set_cookie(JOURNAL_COOKIE, key, max_age=JOURNAL_COOKIE_AGE, httponly=True, samesite="lax",
                         secure=request.url.scheme == "https", path="/")
+    return response
+
+
+@app.middleware("http")
+async def refresh_journal_cookie(request: Request, call_next):
+    """Renews the journal cookie, unchanged, on each journal page shown with it. A journal page
+    answers 200 only once the cookie's journal has opened (without one it redirects, or the
+    home page deletes the cookie, and a response that sets or deletes it is left alone)."""
+    response = await call_next(request)
+    path = request.url.path
+    if (request.method == "GET" and response.status_code == 200
+            and (path == "/journal" or path.startswith("/journal/"))
+            and not any(name == b"set-cookie" and value.startswith(JOURNAL_COOKIE.encode() + b"=")
+                        for name, value in response.raw_headers)):
+        key = journal_cookie_key(request)
+        if key:
+            set_journal_cookie(response, request, key)
     return response
 
 
