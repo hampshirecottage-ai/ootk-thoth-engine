@@ -1469,6 +1469,37 @@ def test_ootk_reading_saved_after_the_reshuffle_went_live_keeps_its_share_link(s
     assert "shareLink" in r.text and 'id="oldDraw"' not in r.text
 
 
+def test_a_report_view_opens_one_database_connection(seeded_client, monkeypatch):
+    """The saved reading and the journal panel share one connection: each new one costs a TLS
+    and sign-in round trip to the database."""
+    post(seeded_client, spread_key="3", draw_mode="seed", seed="7")
+    link = seeded_client.saved["report_settings"]["link"]
+    monkeypatch.setenv("JOURNAL_KEY", "k")
+    seeded_client.cookies.set(app_module.JOURNAL_COOKIE, "a" * 32)
+    conns, used = [], []
+
+    class Conn:
+        def transaction(self):
+            return nullcontext()
+
+    def connect():
+        conns.append(Conn())
+        return nullcontext(conns[-1])
+
+    monkeypatch.setattr(app_module, "get_db_connection", connect)
+    monkeypatch.setattr(app_module, "current_journal", lambda conn, request: used.append(conn) or 5)
+    monkeypatch.setattr(app_module.journal, "entry_for_session", lambda conn, j, s: used.append(conn) and None)
+    monkeypatch.setattr(app_module.journal, "list_threads",
+                        lambda conn, j: used.append(conn) or [{"thread_id": 3, "name": "Work"}])
+    r = seeded_client.get(f"/report/{link}")
+    assert r.status_code == 200 and '<option value="3">Work</option>' in r.text   # the panel shows
+    assert len(conns) == 1 and used == [conns[0]] * 3
+    # Without a journal cookie the panel needs no queries, and it is still one connection.
+    seeded_client.cookies.clear()
+    seeded_client.get(f"/report/{link}")
+    assert len(conns) == 2 and len(used) == 3
+
+
 def test_older_single_operation_readings_keep_their_share_link(seeded_client):
     post(seeded_client, spread_key="3", draw_mode="seed", seed="7")
     del seeded_client.saved["report_settings"]["draw_version"]

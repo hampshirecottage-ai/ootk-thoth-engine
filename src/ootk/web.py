@@ -1903,17 +1903,18 @@ def journal_export(request: Request):
                     headers={"Content-Disposition": 'attachment; filename="my_reading_journal.md"'})
 
 
-def report_journal_box(request: Request, session_id, link):
+def report_journal_box(request: Request, session_id, link, conn):
     """What the report's journal panel shows: nothing when journals are off or the reading has no
     link; a "start a journal" offer; or this browser's journal threads and whether the reading
-    is already in it."""
+    is already in it. `conn` is the connection the report itself was loaded on, so a report
+    view opens one connection, not two (each costs a TLS and sign-in round trip)."""
     if not (journal.enabled() and session_id and link):
         return None
     box = {"link": link, "has_journal": False, "threads": [], "entry_id": None}
     if not journal_cookie_key(request):
         return box
     try:
-        with get_db_connection() as conn:
+        with conn.transaction():        # a savepoint: a failure here undoes only the journal part
             journal_id = current_journal(conn, request)
             if journal_id:
                 entry = journal.entry_for_session(conn, journal_id, session_id)
@@ -2072,9 +2073,14 @@ NO_SUCH_REPORT = "No reading has this link. Check that the whole address was cop
 @app.get("/report/{link}", response_class=HTMLResponse)
 def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
-    session_id, stored, reading, seed_redraws = saved_reading_parts(link)
-    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json", link=link,
-                         seed_redraws=seed_redraws)
+    if not REPORT_LINK.fullmatch(link):
+        raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
+    with get_db_connection() as conn:   # one connection for the reading and the journal panel
+        found = load_saved_reading(conn, link)
+        journal_box = report_journal_box(request, found[0], link, conn)
+    session_id, stored, reading, seed_redraws = finish_saved_reading(*found)
+    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json",
+                         seed_redraws=seed_redraws, journal_box=journal_box)
 
 
 @app.get("/report/{link}/json")
@@ -2090,22 +2096,35 @@ def saved_reading_parts(link):
     if not REPORT_LINK.fullmatch(link):
         raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
     with get_db_connection() as conn:
-        found = load_report_by_link(conn, link)
-        if not found:
-            raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
-        session_id, stored = found
-        stored.pop("link", None)
-        if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
-            stored["mapping_system"] = "thoth"
-        saved_at = stored.pop("saved_at", None)
-        if not stored.get("drawn_at") and saved_at is not None:
-            # Saved before the draw time was kept: the save is the same moment, to the second.
-            stored["drawn_at"] = time_stamp(saved_at)
-        seed_redraws = (stored.pop("draw_version", 1) >= DRAW_VERSION
-                        or not reshuffles(stored["spread_key"])
-                        or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
-        card_titles = stored.pop("card_titles")
-        significator_label = stored.pop("significator_label")
+        found = load_saved_reading(conn, link)
+    return finish_saved_reading(*found)
+
+
+def load_saved_reading(conn, link):
+    """The database half of saved_reading_parts: (session_id, settings, card titles,
+    significator label, whether the seed still draws the cards); 404 if unknown. The callers
+    check the link's form first, so a malformed one never reaches the database."""
+    found = load_report_by_link(conn, link)
+    if not found:
+        raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
+    session_id, stored = found
+    stored.pop("link", None)
+    if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
+        stored["mapping_system"] = "thoth"
+    saved_at = stored.pop("saved_at", None)
+    if not stored.get("drawn_at") and saved_at is not None:
+        # Saved before the draw time was kept: the save is the same moment, to the second.
+        stored["drawn_at"] = time_stamp(saved_at)
+    seed_redraws = (stored.pop("draw_version", 1) >= DRAW_VERSION
+                    or not reshuffles(stored["spread_key"])
+                    or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
+    card_titles = stored.pop("card_titles")
+    significator_label = stored.pop("significator_label")
+    return session_id, stored, card_titles, significator_label, seed_redraws
+
+
+def finish_saved_reading(session_id, stored, card_titles, significator_label, seed_redraws):
+    """The rest of saved_reading_parts, which needs no database: the reading itself."""
     reading = run_reading(stored, card_titles, significator_label)
     # Drawn with Operation 1's older cut: the seed now draws other cards, so no share link.
     seed_redraws = seed_redraws and not reading.pop("older_cut")
@@ -2281,7 +2300,7 @@ def reading_json_response(settings, r):
 
 
 def render_report(request, session_id, settings, r, shared=False, json_url=None, unsaved=False,
-                  seed_redraws=True, link=None):
+                  seed_redraws=True, journal_box=None):
     """The visual report for a reading from run_reading().
 
     A full Opening of the Key export is about 300 KB, so a report that has an address of its
@@ -2326,7 +2345,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "withheld": withheld_view(r["withheld"]),
             "view": view,
             "json_url": json_url,
-            "journal_box": report_journal_box(request, session_id, link),
+            "journal_box": journal_box,
             "reading": None if json_url else export_reading(settings, r, view),
         }
     )
