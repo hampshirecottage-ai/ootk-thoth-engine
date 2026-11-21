@@ -181,15 +181,28 @@ async def limit_readings(request: Request, call_next):
 
 
 # Form posts are a few kilobytes at most (the question is capped at TOPIC_MAX characters), so
-# anything far larger is refused before it is read, rather than parsed into memory.
+# anything far larger is refused before it is read, rather than parsed into memory. The one
+# exception is saving a journal entry, whose pasted AI answer may be up to journal.ANSWER_MAX
+# (200,000) characters: URL-encoded, that is a few hundred kilobytes of plain English, so
+# that form alone may send up to JOURNAL_ENTRY_BODY_BYTES.
 MAX_BODY_BYTES = 64 * 1024
+JOURNAL_ENTRY_BODY_BYTES = 1024 * 1024
+
+
+def body_limit(path: str) -> int:
+    return JOURNAL_ENTRY_BODY_BYTES if path.startswith("/journal/entry/") else MAX_BODY_BYTES
 
 
 @app.middleware("http")
 async def limit_body_size(request: Request, call_next):
     if request.method in ("POST", "PUT", "PATCH"):
         length = request.headers.get("content-length")
-        if length is None or not length.isdigit() or int(length) > MAX_BODY_BYTES:
+        limit = body_limit(request.url.path)
+        if length is None or not length.isdigit() or int(length) > limit:
+            if limit == JOURNAL_ENTRY_BODY_BYTES:
+                return error_page(request, 413, "This entry is too large",
+                                  "The answer and notes sent were larger than a journal entry can hold. "
+                                  "Go back, shorten the answer and try again.")
             return error_page(request, 413, "This form is too large",
                               "The settings sent were far larger than any reading needs. "
                               "Go back, shorten the question and try again.")
