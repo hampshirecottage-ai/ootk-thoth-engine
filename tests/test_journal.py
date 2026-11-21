@@ -373,6 +373,19 @@ def test_journal_visits_renew_the_cookie_unchanged(key):
 
 
 @needs_db
+def test_the_timeline_opens_scrolled_to_today(key):
+    """The timeline marks today in its month row and, before anything else runs, scrolls a
+    timeline wider than the screen so today shows (a third of the way across the dates)."""
+    c = TestClient(app_module.app)
+    link = draw(c, seed="100020")
+    c.post("/journal/start", data={"link": link})
+    page = c.get("/journal/timeline").text
+    assert page.count('id="tlToday"') == 1
+    script = page.split('id="tlToday"', 1)[1]
+    assert script.index('getElementById("tlToday")') < script.index("One shared balloon")
+    assert "tl.scrollLeft = Math.max(0, x - label.offsetWidth - dates / 3)" in script
+
+
 def test_dates_unticked_and_saved_stay_off_the_timeline(key):
     """Untick every date and Save: reopening the entry doesn't offer them again ticked, and a
     later Save that only adds an outcome doesn't put them back."""
