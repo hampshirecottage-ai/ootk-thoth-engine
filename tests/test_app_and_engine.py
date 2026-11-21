@@ -3246,3 +3246,16 @@ def test_share_link_with_a_draw_time_out_of_range_is_refused(seeded_client, draw
     assert r.status_code == 400
     assert seeded_client.get("/reading", params={"seed": "7", "spread": "3",
                                                  "drawn": "20261029T2200Z"}).status_code == 200
+
+
+def test_decan_wheel_sign_band_names_the_sign_of_its_three_decans():
+    """The Fourth Operation's wheel opens at Saturn in Leo (DECAN_START), so the outer band's
+    first sign is Leo and each band covers the three decans of the sign it names."""
+    from ootk import visual
+    positions = spreads.SPREADS["11"]["positions"]
+    cards = [{"color": "#fff", "position_name": p, "label": ""} for p in positions]
+    d = visual.segment_drawing("11", cards, [])
+    assert len(d["labels"]) == 12 and d["labels"][0]["text"].endswith(" Leo")
+    for s, label in enumerate(d["labels"]):
+        sign = label["text"].split(" ", 1)[1]
+        assert all(f" in {sign} (" in positions[3 * s + k] for k in range(3)), (sign, positions[3 * s])

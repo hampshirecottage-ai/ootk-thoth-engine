@@ -18,7 +18,7 @@ from ootk.gods import court_hexagram, trump_gods
 from ootk.report import withheld_sentence
 from ootk.rules import GEOMANTIC_FIGURES, ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import (
-    BOOK_T_LAYOUT, HEAP_LAYOUTS, NAMED_PAIR_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
+    BOOK_T_LAYOUT, DECAN_START, HEAP_LAYOUTS, NAMED_PAIR_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
     spread_segments,
 )
 
@@ -367,9 +367,11 @@ def _wheel_drawing(layout_key, cards, aspects, pairs=()):
 
     band = []
     if n == 36:
-        # Outer band names the sign each run of three decans belongs to.
+        # Outer band names the sign each run of three decans belongs to. The wheel opens at
+        # DECAN_START (Saturn in Leo), so positions 1-3 are Leo's decans, not Aries'.
         labels = []
-        for s, sign in enumerate(SIGNS):
+        for s in range(12):
+            sign = SIGNS[(s + DECAN_START // 3) % 12]
             a0, a1 = angles[3 * s] - half, angles[3 * s + 2] + half
             mid = (a0 + a1) / 2
             band.append({"d": _sector_path(geo["r_band"], geo["r_out"], a0, a1)})
