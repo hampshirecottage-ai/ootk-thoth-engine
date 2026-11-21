@@ -244,7 +244,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/report/<link>` | A saved reading |
 | `/contact` | Contact form: a private message to the site owner (message, optional name and reply address), saved to `contact_messages`; footer **Contact** links here |
 | `/journal` | The private reading journal (only when `JOURNAL_KEY` is set): start one, its questions, readings not in a question, the journal link, Markdown download, forget on this device, delete |
-| `/journal/k/<key>` | The secret journal link: opens that journal in this browser (a cookie remembers it) |
+| `/journal/k/<key>` | The secret journal link: opens that journal in this browser (a cookie remembers it for 400 days, the most browsers keep one, renewed on every journal visit) |
 | `/journal/entry/<n>` | One reading in the journal: its cards, the AI's answer pasted in, the dates for the timeline (editable; the first Save of an answer adds its dates, **Find dates** reads the answer's Timeline list, or any dates in it, and offers the drawn small cards' decan dates; dates unticked and saved stay off), notes and what actually happened |
 | `/journal/thread/<n>` | One question's readings, newest first; rename or delete it |
 | `/journal/timeline` | Every question's dates and readings under the zodiac and the months; hover or tap a marker for its details, the report and the journal entry |
