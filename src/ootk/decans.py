@@ -18,6 +18,7 @@ planetary days. The planetary hour is not given: it needs the querent's sunrise 
 place, which the site never asks for.
 """
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 
 from ootk.atlas import decan_pip
 from ootk.sky import sun_longitude
@@ -59,6 +60,11 @@ def decan_angels(card_title):
     a = ((i - LEO) % 36) * 2
     return ANGELS[a], ANGELS[a + 1]
 
+# The Sun's moments depend only on the year (and degree), so each is worked out once per process
+# and kept. A reading asks for the same few dozen many times over: Book T alone needs ~180
+# equinoxes and ~5,500 Sun positions without the cache. The sizes are bounded; a site process
+# only ever touches a handful of years (37 decan edges and 13 sign edges per year).
+@lru_cache(maxsize=256)
 def _equinox(year):
     """The March equinox of `year` (UTC, to within a minute): the Sun at 0° Aries."""
     lo = datetime(year, 3, 15, tzinfo=timezone.utc)
@@ -68,6 +74,7 @@ def _equinox(year):
         lo, hi = (mid, hi) if sun_longitude(mid) > 180 else (lo, mid)
     return hi
 
+@lru_cache(maxsize=2048)
 def _sun_reaches(degree, year):
     """The moment the Sun reaches `degree` (0-360) in the solar year from `year`'s equinox."""
     lo = _equinox(year)
@@ -76,11 +83,11 @@ def _sun_reaches(degree, year):
     hi = _equinox(year + 1)
     if degree >= 360:
         return hi
-    start = lo
+    origin = sun_longitude(lo)      # the Sun's longitude at the equinox, worked out once
     while hi - lo > timedelta(minutes=1):
         mid = lo + (hi - lo) / 2
         # degrees the Sun has moved since the equinox, rising from 0 to 360 over the year
-        moved = (sun_longitude(mid) - sun_longitude(start)) % 360
+        moved = (sun_longitude(mid) - origin) % 360
         lo, hi = (mid, hi) if moved < degree else (lo, mid)
     return hi
 
