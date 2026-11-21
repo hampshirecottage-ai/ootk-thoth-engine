@@ -336,3 +336,29 @@ def test_adding_a_reading_with_no_question_to_a_journal_with_no_questions(key):
     assert r.status_code == 303
     assert "Will it really" in c.get("/journal").text
     c.post("/journal/delete")
+
+
+def test_a_journal_entry_may_send_a_long_answer_but_other_forms_keep_the_small_limit(client):  # noqa: F811
+    """Saving an entry may send up to 1 MB (a 200,000-character answer); every other form keeps
+    the 64 KB limit, and a post without a Content-Length is still refused unread."""
+    long_answer = {"answer": "The cards say wait. " * 3_000}       # 60,000 characters
+    # Past the size check (no journal key here, so the journal itself answers 404).
+    assert client.post("/journal/entry/1", data=long_answer).status_code == 404
+    assert client.post("/generate_report", data={"spread_key": "3", "topic": "q" * 70_000}).status_code == 413
+    too_big = {"answer": "x" * (app_module.JOURNAL_ENTRY_BODY_BYTES + 1)}
+    r = client.post("/journal/entry/1", data=too_big, headers={"accept": "text/html"})
+    assert r.status_code == 413 and "This entry is too large" in r.text
+    r = client.post("/journal/entry/1", content=b"answer=x", headers={"content-length": ""})
+    assert r.status_code == 413
+
+
+@needs_db
+def test_a_60000_character_answer_is_saved(key):
+    c = TestClient(app_module.app)
+    link = draw(c, seed="100020")
+    entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
+    answer = ("The cards say wait – then act. " * 2_000)[:60_000]
+    r = c.post(entry_url, data={"answer": answer, "windows_shown": "1"}, follow_redirects=False)
+    assert r.status_code == 303
+    assert answer.strip()[-40:] in c.get(entry_url).text
+    c.post("/journal/delete")
