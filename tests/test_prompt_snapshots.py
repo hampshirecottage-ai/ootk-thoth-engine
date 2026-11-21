@@ -228,3 +228,29 @@ def test_ootk_prompt_with_every_layer_matches_saved_copy():
             f.write(prompt)
     with open(path, encoding="utf-8") as f:
         assert prompt == f.read()
+
+
+
+@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+def test_every_sign_trump_has_its_geomantic_figure(system):
+    """French/Egyptian gives VIII and XI as "Justice / Libra" and "Strength / Leo"; the figure
+    goes by the sign after the slash, so those two keep their line like the other sign Trumps."""
+    from ootk.rules import geomantic_sign
+    assert geomantic_sign("Justice / Libra") == "Libra" and geomantic_sign("Libra") == "Libra"
+    assert geomantic_sign("Mars") is None and geomantic_sign(None) is None
+
+    def figures(prompt):
+        blocks = {b.split(" (Pos")[0]: b for b in prompt.split("\n### ")[1:]}
+        return {t: b.split("- **Geomantic Figure**: ")[1].split("\n")[0]
+                for t, b in blocks.items() if "- **Geomantic Figure**: " in b}
+
+    thoth = figures(build_prompt("12", "thoth", without=()))
+    other = figures(build_prompt("12", system, without=()))
+    assert "VIII - Adjustment" in thoth and "XI - Lust" in thoth
+    assert other == thoth
+    assert other["VIII - Adjustment"] == "Puella (Golden Dawn, by Libra)"
+    assert other["XI - Lust"] == "Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)"
+    # The report's card panel goes by the same sign.
+    from ootk.visual import picture_fields
+    row = {"arcana_type": "Major", "attribution": "Justice / Libra", "title": "VIII - Adjustment"}
+    assert ["Geomantic figure", "Puella"] in picture_fields(row)

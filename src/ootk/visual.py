@@ -16,7 +16,7 @@ from ootk.atlas import card_atlas
 from ootk.chance import chance_view
 from ootk.gods import court_hexagram, trump_gods
 from ootk.report import withheld_sentence
-from ootk.rules import GEOMANTIC_FIGURES, ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
+from ootk.rules import GEOMANTIC_FIGURES, geomantic_sign, ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import (
     BOOK_T_LAYOUT, DECAN_START, HEAP_LAYOUTS, NAMED_PAIR_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
     spread_segments,
@@ -242,7 +242,7 @@ def picture_fields(data):
     Trump's geomantic figure, a Trump's gods (Liber 777) and a court card's I Ching hexagram."""
     rows = []
     if data.get("arcana_type") == "Major":
-        figure = GEOMANTIC_FIGURES.get(data.get("attribution"))
+        figure = GEOMANTIC_FIGURES.get(geomantic_sign(data.get("attribution")))
         if figure:
             rows.append(["Geomantic figure", figure])
         gods = trump_gods(data)
