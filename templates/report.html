@@ -815,9 +815,10 @@
             <select id="jThread" name="thread" onchange="document.getElementById('jNewRow').hidden = this.value !== 'new'">
                 <option value="">Not in a question yet</option>
                 {% for t in journal_box.threads %}<option value="{{ t.thread_id }}">{{ t.name }}</option>{% endfor %}
-                <option value="new"{% if not journal_box.threads %} selected{% endif %}>+ New question…</option>
+                {# A first question is offered only when the reading has one to name it by. #}
+                <option value="new"{% if topic and not journal_box.threads %} selected{% endif %}>+ New question…</option>
             </select>
-            <div id="jNewRow"{% if journal_box.threads %} hidden{% endif %}><label for="jNew">New question</label><input id="jNew" name="new_thread" maxlength="200" value="{{ topic or '' }}"></div>
+            <div id="jNewRow"{% if journal_box.threads or not topic %} hidden{% endif %}><label for="jNew">New question</label><input id="jNew" name="new_thread" maxlength="200" value="{{ (topic or '')[:200] }}"></div>
             <button type="submit" class="btn">Add to my journal</button>
         </form>
         {% else %}

@@ -282,3 +282,34 @@ def test_a_date_far_from_the_reading_is_refused_on_the_entry_form(key):
     assert r.status_code == 303
     assert "Typo" in c.get("/journal/timeline").text
     c.post("/journal/delete")
+
+
+@needs_db
+def test_adding_a_reading_with_no_question_to_a_journal_with_no_questions(key):
+    """A journal with no questions yet and a reading drawn with no question: the report box
+    offers "Not in a question yet" and filing it works, even from an older page that still
+    sends a blank new question. A question longer than a question name is cut to fit."""
+    c = TestClient(app_module.app)
+    first = draw(c)
+    assert c.post("/journal/start", data={"link": first}, follow_redirects=False).status_code == 303
+
+    general = draw(c, "", "100020")
+    page = c.get(f"/report/{general}").text
+    assert '<option value="new" selected>' not in page and '<div id="jNewRow" hidden>' in page
+    r = c.post("/journal/add", data={"link": general, "thread": "new", "new_thread": "  "},
+               follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/journal/entry/")
+    home = c.get("/journal").text
+    assert "Not in a question yet" in home and "<h2" in home.split("Not in a question yet")[0][-60:]
+
+    long_question = "Will it " + "really " * 40 + "work out?"
+    asked = draw(c, long_question, "100126")
+    page = c.get(f"/report/{asked}").text
+    assert '<option value="new" selected>' in page
+    prefilled = re.search(r'id="jNew" name="new_thread" maxlength="200" value="([^"]*)"', page).group(1)
+    assert len(prefilled) == 200
+    r = c.post("/journal/add", data={"link": asked, "thread": "new", "new_thread": long_question},
+               follow_redirects=False)
+    assert r.status_code == 303
+    assert "Will it really" in c.get("/journal").text
+    c.post("/journal/delete")

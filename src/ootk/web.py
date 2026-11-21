@@ -1691,6 +1691,11 @@ def journal_add(request: Request, link: str = Form(""), thread: str = Form(""), 
         journal_id = current_journal(conn, request)
         if not journal_id:
             return journal_or_start(request)
+        if thread == "new":
+            # The name comes prefilled from the reading's question: a long question is cut to
+            # fit, and a reading with no question (or a cleared name) goes in no question yet.
+            new_thread = (new_thread or "").strip()[:journal.NAME_MAX].strip()
+            thread = "new" if new_thread else ""
         entry_id = file_reading(conn, journal_id, link, thread, new_thread)
     return RedirectResponse(f"/journal/entry/{entry_id}", status_code=303)
 
