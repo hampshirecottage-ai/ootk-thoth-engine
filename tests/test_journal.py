@@ -372,6 +372,34 @@ def test_journal_visits_renew_the_cookie_unchanged(key):
     assert stale.get("/journal/timeline", follow_redirects=False).headers.get("set-cookie") is None
 
 
+@needs_db
+def test_dates_unticked_and_saved_stay_off_the_timeline(key):
+    """Untick every date and Save: reopening the entry doesn't offer them again ticked, and a
+    later Save that only adds an outcome doesn't put them back."""
+    c = TestClient(app_module.app)
+    link = draw(c, seed="100020")
+    entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
+    answer = "Text.\n\n## Timeline\n- Move goes ahead: 2026-12-01 to 2026-12-21\n"
+    page = c.post(entry_url, data={"answer": answer, "windows_shown": "0"}).text
+    assert 'value="Move goes ahead"' in page and "Move goes ahead" in c.get("/journal/timeline").text
+
+    # The visitor unticks the one date (no w_keep) and saves.
+    form = {"answer": answer, "w_label": ["Move goes ahead", "", ""], "w_starts": ["2026-12-01", "", ""],
+            "w_ends": ["2026-12-21", "", ""], "windows_shown": "1"}
+    c.post(entry_url, data=form)
+    reopened = c.get(entry_url).text
+    assert 'value="Move goes ahead"' not in reopened
+    assert '<input type="hidden" name="windows_shown" value="1">' in reopened
+    # A later Save from that page, adding only an outcome, keeps the timeline empty.
+    c.post(entry_url, data={"answer": answer, "outcome": "We moved.", "w_label": ["", ""],
+                            "w_starts": ["", ""], "w_ends": ["", ""], "w_keep": ["0", "1"],
+                            "windows_shown": "1"})
+    assert "Move goes ahead" not in c.get("/journal/timeline").text
+    assert "We moved." in c.get(entry_url).text
+    # Find dates still offers them again on request.
+    assert 'value="Move goes ahead"' in c.get(entry_url + "?find=1").text
+
+
 def test_a_journal_entry_may_send_a_long_answer_but_other_forms_keep_the_small_limit(client):  # noqa: F811
     """Saving an entry may send up to 1 MB (a 200,000-character answer); every other form keeps
     the 64 KB limit, and a post without a Content-Length is still refused unread."""

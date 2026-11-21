@@ -1852,9 +1852,12 @@ def journal_entry(request: Request, entry_id: int):
         threads = journal.list_threads(conn, journal_id)
         saved = journal.list_windows(conn, journal_id, entry_id)
     windows = [dict(w, keep=True) for w in saved]
-    if not windows and entry["answer"] and "find" not in request.query_params:
-        windows = [{"label": label, "starts": starts, "ends": ends, "keep": True, "found": True}
-                   for label, starts, ends in journal.find_windows(entry["answer"], entry["drawn_at"].date())]
+    # An entry with a saved answer has had its dates offered already: the Save that first
+    # brought the answer (windows_shown=0) put the answer's dates on the timeline, and Find
+    # dates showed them for ticking. So no saved dates here means the visitor saved it with
+    # none (unticked them all, or there were none), and it stays that way, through later
+    # Saves too; Find dates offers them again on request.
+    dates_offered = bool(windows) or bool(entry["answer"])
     found = None
     if "find" in request.query_params:
         # The "Find dates" button: dates in the answer (ticked) and the drawn small cards'
@@ -1869,7 +1872,7 @@ def journal_entry(request: Request, entry_id: int):
                     have.add((starts, ends))
                     windows.append({"label": label, "starts": starts, "ends": ends, "keep": keep, "found": True})
                     found[source] += 1
-    shown = bool(windows)
+    shown = dates_offered or bool(windows)
     windows += [{"label": "", "starts": None, "ends": None, "keep": True}] * 2
     return journal_page(request, "journal_entry.html", entry=entry, threads=threads, windows=windows,
                         windows_shown=shown, found=found,
