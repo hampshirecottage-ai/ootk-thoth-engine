@@ -514,6 +514,17 @@ def test_pages_have_description_previews_and_icons(client, monkeypatch):
     assert 'rel="canonical"' not in report and 'property="og:image"' in report
 
 
+def test_a_share_link_preview_names_the_share_link_itself(seeded_client, monkeypatch):
+    """Link previews re-read og:url, so a shared reading must name its whole address: the bare
+    /reading without the seed is an error page. Listed pages keep the clean address."""
+    monkeypatch.setenv("SITE_URL", "https://example.org/")
+    page = seeded_client.get("/reading?seed=12345&spread=3&system=thoth").text
+    assert ('<meta property="og:url" content="https://example.org/reading?seed=12345&amp;spread=3&amp;system=thoth">'
+            in page)
+    front = seeded_client.get("/?spread=1").text
+    assert '<meta property="og:url" content="https://example.org/">' in front
+
+
 def test_robots_sitemap_and_favicon(client, monkeypatch):
     monkeypatch.delenv("SITE_URL", raising=False)
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://ootk.example.com")
