@@ -391,6 +391,7 @@ def test_the_timeline_opens_scrolled_to_today(key):
     assert "tl.scrollLeft = Math.max(0, x - label.offsetWidth - dates / 3)" in script
 
 
+@needs_db
 def test_dates_unticked_and_saved_stay_off_the_timeline(key):
     """Untick every date and Save: reopening the entry doesn't offer them again ticked, and a
     later Save that only adds an outcome doesn't put them back."""
