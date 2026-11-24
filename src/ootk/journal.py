@@ -542,7 +542,9 @@ def find_windows(text, after):
 def card_windows(card_titles, drawn_at):
     """The reading's own timing: each small card 2-10 drawn, once, as (label, starts, ends) for
     the days the Sun is in its decan. Each is the window on or after the draw, the one the
-    prompt's Decan Dates give (decans.decan_window), so these match what the AI was given."""
+    prompt's Decan Dates give (decans.decan_window), so these match what the AI was given; a
+    decan the Sun is already in at the draw runs from the draw, as in the prompt's Timeline
+    rule. Dates are UTC days, as the prompt prints them."""
     from ootk.decans import decan_window
     out, seen = [], set()
     for title in card_titles or ():
@@ -550,7 +552,8 @@ def card_windows(card_titles, drawn_at):
         if window is None or title in seen:
             continue
         seen.add(title)
-        starts, ends = window[0].date(), window[1].date()
+        utc = timezone.utc
+        starts, ends = max(window[0], drawn_at).astimezone(utc).date(), window[1].astimezone(utc).date()
         out.append((f"{title.partition(' - ')[0]} decan"[:WINDOW_LABEL_MAX], starts, ends))
     return sorted(out, key=lambda w: w[1])[:WINDOWS_MAX]
 

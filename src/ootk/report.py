@@ -224,6 +224,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         "macro_framework": macro_framework, "framework_basis": framework_basis,
         "own_place": own_place, "significator_places": significator_places or [],
         "analytical_prompt": analytical_prompt, "left_out_to_fit": fitted,
+        "timing": timing,      # Book T's timing card, as the prompt's Timeline rule names it
     }
 
 # Section numbers, so the notes that point from one section to another stay right if the
