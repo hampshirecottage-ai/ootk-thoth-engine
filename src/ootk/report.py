@@ -15,7 +15,7 @@ from ootk.chance import chance_sentence, chance_view
 from ootk.decans import angels_markdown, dates_markdown, day_ruler, decan_window, pip_decan, span_text
 from ootk.titles import titles_markdown
 from ootk.gods import gods_markdown, hexagrams_markdown
-from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
+from ootk.rules import ASPECTS, GEOMANTIC_FIGURES, geomantic_sign, planet_dignity_note, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_NEUTRAL, DIGNITY_SAME
 from ootk.book_t import SITE_RULES, count_value, status_line
 from ootk.shuffle import operation_number
 from ootk.sky import sky_line
@@ -224,6 +224,7 @@ def analyze_reading(spread_name, spread_key, query_prompt, significator, seed_va
         "macro_framework": macro_framework, "framework_basis": framework_basis,
         "own_place": own_place, "significator_places": significator_places or [],
         "analytical_prompt": analytical_prompt, "left_out_to_fit": fitted,
+        "timing": timing,      # Book T's timing card, as the prompt's Timeline rule names it
     }
 
 # Section numbers, so the notes that point from one section to another stay right if the
@@ -595,9 +596,10 @@ def _card_lines(data, legend, off=frozenset()):
     strength = planet_dignity_note(attribution) if minor and "astrology" not in off else None
     if strength:
         md += f"- **Planet Strength**: {strength}\n"
-    figure = GEOMANTIC_FIGURES.get(data['attribution']) if data['arcana_type'] == 'Major' else None
+    sign = geomantic_sign(data['attribution']) if data['arcana_type'] == 'Major' else None
+    figure = GEOMANTIC_FIGURES.get(sign)
     if figure and "geomancy" not in off:
-        by = f" (Golden Dawn, by {data['attribution']})" if "astrology" not in off else " (Golden Dawn)"
+        by = f" (Golden Dawn, by {sign})" if "astrology" not in off else " (Golden Dawn)"
         md += f"- **Geomantic Figure**: {figure}{by}\n"
     element_note = major_element_note(data) if "elements" not in off else None
     if element_note:

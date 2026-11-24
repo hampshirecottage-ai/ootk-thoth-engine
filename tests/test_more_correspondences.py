@@ -210,3 +210,17 @@ def test_owner_corrections_to_gods_and_hexagram_names():
     assert court_hexagram("Knight of Wands") == (51, "Chên, The Arousing (Crowley: Kan)")
     assert court_hexagram("Princess of Disks") == (52, "Kên, Keeping Still (Crowley: Kan)")
     assert court_hexagram("Queen of Cups") == (58, "Tui, The Joyous")
+
+
+def test_cached_sun_moments_match_the_uncached_working_and_stay_bounded():
+    from ootk.decans import _sun_reaches
+    # the caches only save repeat work: a fresh working gives the very same moment
+    for year in (1999, 2026, 2027, 2040):
+        assert _equinox(year) == _equinox.__wrapped__(year)
+        for degree in range(0, 361, 10):
+            assert _sun_reaches(degree, year) == _sun_reaches.__wrapped__(degree, year)
+    assert _equinox.cache_info().maxsize == 256
+    assert _sun_reaches.cache_info().maxsize == 2048
+    before = _sun_reaches.cache_info().hits
+    decan_dates("5 of Wands - Strife", 2026)
+    assert _sun_reaches.cache_info().hits > before        # the second ask is the kept one

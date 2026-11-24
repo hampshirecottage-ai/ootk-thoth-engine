@@ -17,6 +17,12 @@
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
+        /* The title is the sample question; hovering it (or tapping it on a phone) shows the reframed one. */
+        .title-wrap { position: relative; }
+        .band h1#pageTitle { cursor: help; outline-offset: 4px; }
+        .reframe-tip { position: absolute; left: 0; top: calc(100% + 8px); z-index: 5; max-width: 34em; margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--panel); color: var(--text); border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); line-height: 1.45; opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.15s, transform 0.15s, visibility 0.15s; }
+        .band .reframe-tip { color: var(--text); }
+        .title-wrap:hover .reframe-tip, #pageTitle:focus + .reframe-tip { opacity: 1; visibility: visible; transform: none; }
         /* Start page: what OOTK is beside the settings. */
         .band { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; }
         .band .steps, .band .hero-actions { justify-content: flex-start; }
@@ -29,6 +35,10 @@
         /* The Tree of Life and zodiac animation sits between the text and the form, as tall as the form. */
         .tree-anim { margin: 0; }
         .tree-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
+        /* No panel of its own, so it sits on the banner's own colour. One file per theme (made by
+           scripts/make_front_animation.py): its captions are in the band's text colour, and only the
+           diagrams are softened. The other theme's file is lazy, so a hidden one is not downloaded. */
+        :root[data-theme="light"] .tree-anim .anim-dark, :root:not([data-theme="light"]) .tree-anim .anim-green { display: none; }
         @media (min-width: 1000px) {
             .band { grid-template-columns: minmax(0, 1fr) 230px minmax(400px, 0.9fr); }
             .band #readingForm { grid-column: 3; }
@@ -104,7 +114,10 @@
     <!-- Banner: what it is, for whom and how on the left; the settings for your own reading on the right. -->
     <section class="band" aria-labelledby="pageTitle">
         <div class="band-text">
-            <h1 id="pageTitle">Welcome to the Opening of the Key</h1>
+            <div class="title-wrap">
+                <h1 id="pageTitle" tabindex="0" aria-describedby="reframedQuestion">What is it that I would really like to know?</h1>
+                <p class="reframe-tip" id="reframedQuestion" role="tooltip"><strong>Reframed question:</strong> Looking at where my life has come from, where it stands now and where it is heading, what do I already know deep down that I would like to see clearly and trust?</p>
+            </div>
             <p class="tagline">Draw a Thoth spread. OOTK looks up every card in the Book&nbsp;T and Liber&nbsp;777 tables, works out how the cards relate, and hands your AI a ready-made prompt, so the interpreting is left to your AI.</p>
             <ol class="steps" aria-label="How it works">
                 <li><span>1</span> Ask your question and draw</li>
@@ -137,11 +150,12 @@
         <div class="band-more">
             <p class="hero-actions">
                 <a href="/start" class="today-link">New here? Start here &rarr;</a>
-                <a href="/start#sample" class="today-link">See a sample reading &rarr;</a>
+                <a href="{{ sample_link }}" class="today-link">See a sample reading &rarr;</a>
             </p>
         </div>
         <figure class="tree-anim">
-            <img src="{{ static_url('site/front-animation.svg') }}" width="160" height="294" alt="Three diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups. Then the aspects on that wheel: its oppositions, squares, trines and sextiles drawn in turn, then all 42 together.">
+            <img class="anim-green" loading="lazy" src="{{ static_url('site/front-animation.svg') }}" width="160" height="294" alt="Three diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups. Then the aspects on that wheel: its oppositions, squares, trines and sextiles drawn in turn, then all 42 together.">
+            <img class="anim-dark" loading="lazy" src="{{ static_url('site/front-animation-dark.svg') }}" width="160" height="294" alt="Three diagrams in turn. The Tree of Life: its 22 paths light up one at a time, each with its Hebrew letter and Thoth trump, from Aleph (The Fool) to Tav (The Universe). Then the zodiac: its 36 decans light up one at a time from 0° Aries, each with its ruling planet and small card, from the 2 of Wands to the 10 of Cups. Then the aspects on that wheel: its oppositions, squares, trines and sextiles drawn in turn, then all 42 together.">
         </figure>
     </section>
 
@@ -150,6 +164,7 @@
     <script src="{{ static_url('js/index.js') }}" defer></script>
     <script src="{{ static_url('js/ask.js') }}" defer></script>
     <script src="{{ static_url('js/wizard.js') }}" defer></script>
+{% set show_purpose = true %}
 {% include "_site_footer.html" %}
 </body>
 </html>

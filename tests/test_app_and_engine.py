@@ -36,7 +36,6 @@ def fake_card(title, suit="Wands", arcana="Minor", attribution="Fire"):
 def client(monkeypatch):
     """App client with the database fully mocked out."""
     saved = {}
-    monkeypatch.setattr(app_module, "_sample_cache", {})
     monkeypatch.setattr(app_module, "admin_signed_out_at", 0)          # a sign-out in one test stays there
     monkeypatch.setattr(app_module, "_sign_carriers_cache", {s: {} for s in app_module.MAPPING_SYSTEMS})
     monkeypatch.setattr(app_module, "get_db_connection", lambda: nullcontext(object()))
@@ -53,6 +52,7 @@ def client(monkeypatch):
     monkeypatch.setattr(app_module, "failed_logins", FailedLogins())
     monkeypatch.setattr(app_module, "admin_logins", FailedLogins())
     monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=60, window=600))
+    monkeypatch.setattr(app_module, "just_drawn", {})
     monkeypatch.setattr(app_module, "list_sessions", lambda conn, limit, offset=0: ([], 0))
     messages = []
 
@@ -156,6 +156,12 @@ def test_front_page_shows_the_tree_and_zodiac_animation(client):
     assert 'fill="#FF2400"' in svg and 'fill="#4B0082"' in svg   # King Scale: Aries/Mars scarlet, Saturn indigo
     # the third scene: the aspects on the wheel, its classes prefixed so they cannot clash
     assert '<g class="sc3">' in svg and svg.count('class="wd ') == 42 and ">Every wheel aspect<" in svg
+    # one file per theme: the captions in the band's text colour, only the diagrams softened
+    assert "site/front-animation-dark.svg" in page
+    dark = (PROJECT_ROOT / "static" / "site" / "front-animation-dark.svg").read_text(encoding="utf-8")
+    for file, caption in ((svg, "#FFE0A0"), (dark, "#E0E0E0")):
+        assert f"text-anchor:middle;fill:{caption}}}" in file and f".wh,.wn{{fill:{caption}}}" in file
+        assert file.count('filter="url(#soft)"') == 3
 
 
 def test_method_page_shows_the_book_t_operations_animation(client):
@@ -332,6 +338,29 @@ def test_one_visitor_opens_a_limited_number_of_readings(client, monkeypatch):
     assert client.get("/").status_code == 200                            # other pages don't
 
 
+def test_a_drawn_reading_counts_once_against_the_limit(client, monkeypatch):
+    """Drawing a reading is the POST and then the report page it redirects to: one reading, so
+    one count. The limit of N readings lets N draws through, each with its report shown."""
+    monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=3, window=600))
+    links = []
+    for _ in range(3):
+        r = post(client, follow=False)
+        assert r.status_code == 303
+        links.append(r.headers["location"])
+        assert client.get(links[-1]).status_code == 200                 # its own report, not counted
+    assert post(client, follow=False).status_code == 429                # the fourth draw
+    assert client.get(links[0]).status_code == 429                      # a reload does count
+
+
+def test_only_the_first_view_of_a_draw_is_free(client, monkeypatch):
+    monkeypatch.setattr(app_module, "reading_visitors", FailedLogins(attempts=3, window=600))
+    link = post(client, follow=False).headers["location"]               # 1
+    assert client.get(link).status_code == 200                          # free
+    assert client.get(link).status_code == 200                          # 2
+    assert client.get("/report/someone-elses").status_code != 429       # 3 (locks after)
+    assert client.get(link).status_code == 429
+
+
 def test_security_headers(client, monkeypatch):
     monkeypatch.delenv("APP_PASSWORD", raising=False)
     for path in ["/", "/static/js/index.js", "/robots.txt"]:
@@ -485,6 +514,17 @@ def test_pages_have_description_previews_and_icons(client, monkeypatch):
     assert 'rel="canonical"' not in report and 'property="og:image"' in report
 
 
+def test_a_share_link_preview_names_the_share_link_itself(seeded_client, monkeypatch):
+    """Link previews re-read og:url, so a shared reading must name its whole address: the bare
+    /reading without the seed is an error page. Listed pages keep the clean address."""
+    monkeypatch.setenv("SITE_URL", "https://example.org/")
+    page = seeded_client.get("/reading?seed=12345&spread=3&system=thoth").text
+    assert ('<meta property="og:url" content="https://example.org/reading?seed=12345&amp;spread=3&amp;system=thoth">'
+            in page)
+    front = seeded_client.get("/?spread=1").text
+    assert '<meta property="og:url" content="https://example.org/">' in front
+
+
 def test_robots_sitemap_and_favicon(client, monkeypatch):
     monkeypatch.delenv("SITE_URL", raising=False)
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://ootk.example.com")
@@ -623,6 +663,16 @@ def test_landing_pages_match_their_keywords_and_are_listed(client, monkeypatch):
     assert client.get("/tarot/free-tarot", headers={"accept": "text/html"}).status_code == 404
 
 
+def test_retired_keyword_pages_forward_and_leave_the_sitemap(client):
+    sitemap = client.get("/sitemap.xml").text
+    for slug, target in app_module.RETIRED_LANDING_PAGES.items():
+        assert slug not in app_module.LANDING_PAGES
+        r = client.get(f"/tarot/{slug}?x=1", follow_redirects=False)
+        assert r.status_code == 301 and r.headers["location"] == target
+        assert client.get(target).status_code == 200                       # lands on a real page
+        assert f"/tarot/{slug}<" not in sitemap
+
+
 def test_history_page_is_retired_and_forwards_to_further_reading(client):
     r = client.get("/history", follow_redirects=False)
     assert r.status_code == 301 and r.headers["location"] == "/library#readingTitle"
@@ -678,11 +728,12 @@ def test_report_shows_cards_first_and_folds_the_workings(client):
 
 def test_examples_page_is_retired_and_forwards_to_the_sample(client):
     r = client.get("/examples", follow_redirects=False)
-    assert r.status_code == 301 and r.headers["location"] == "/start#sample"
+    assert r.status_code == 301 and r.headers["location"] == app_module.SAMPLE_READING_LINK
     assert 'href="/examples"' not in client.get("/start").text           # nav, footer and button
     assert "/examples" not in client.get("/sitemap.xml").text
     slug = next(iter(app_module.LANDING_PAGES))
-    assert 'href="/start#sample"' in client.get(f"/tarot/{slug}").text
+    link = app_module.SAMPLE_READING_LINK.replace("&", "&amp;")
+    assert f'href="{link}"' in client.get(f"/tarot/{slug}").text
 
 
 def test_library_terms_are_sorted_and_have_text():
@@ -1429,6 +1480,37 @@ def test_ootk_reading_saved_after_the_reshuffle_went_live_keeps_its_share_link(s
     assert "shareLink" in r.text and 'id="oldDraw"' not in r.text
 
 
+def test_a_report_view_opens_one_database_connection(seeded_client, monkeypatch):
+    """The saved reading and the journal panel share one connection: each new one costs a TLS
+    and sign-in round trip to the database."""
+    post(seeded_client, spread_key="3", draw_mode="seed", seed="7")
+    link = seeded_client.saved["report_settings"]["link"]
+    monkeypatch.setenv("JOURNAL_KEY", "k")
+    seeded_client.cookies.set(app_module.JOURNAL_COOKIE, "a" * 32)
+    conns, used = [], []
+
+    class Conn:
+        def transaction(self):
+            return nullcontext()
+
+    def connect():
+        conns.append(Conn())
+        return nullcontext(conns[-1])
+
+    monkeypatch.setattr(app_module, "get_db_connection", connect)
+    monkeypatch.setattr(app_module, "current_journal", lambda conn, request: used.append(conn) or 5)
+    monkeypatch.setattr(app_module.journal, "entry_for_session", lambda conn, j, s: used.append(conn) and None)
+    monkeypatch.setattr(app_module.journal, "list_threads",
+                        lambda conn, j: used.append(conn) or [{"thread_id": 3, "name": "Work"}])
+    r = seeded_client.get(f"/report/{link}")
+    assert r.status_code == 200 and '<option value="3">Work</option>' in r.text   # the panel shows
+    assert len(conns) == 1 and used == [conns[0]] * 3
+    # Without a journal cookie the panel needs no queries, and it is still one connection.
+    seeded_client.cookies.clear()
+    seeded_client.get(f"/report/{link}")
+    assert len(conns) == 2 and len(used) == 3
+
+
 def test_older_single_operation_readings_keep_their_share_link(seeded_client):
     post(seeded_client, spread_key="3", draw_mode="seed", seed="7")
     del seeded_client.saved["report_settings"]["draw_version"]
@@ -1527,31 +1609,6 @@ def sample_deck():
     return deck + [dict(fake_card("Queen of Cups", suit="Cups", arcana="Court"), card_id=77)]
 
 
-def test_start_here_shows_a_folded_sample_reading_and_the_front_page_does_not(client, monkeypatch):
-    deck = sample_deck()
-    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: deck)
-    front = client.get("/").text
-    assert 'id="sample"' not in front and "sample-diagram.js" not in front   # moved 2026-10-09
-    page = client.get("/start").text
-    s = app_module.SAMPLE_SETTINGS
-    expected, _ = app_module.seeded_draw(deck, s["seed"], s["spread_key"], s["significator"])
-    assert len(expected) == 75 and all(title in page for title in expected)
-    assert page.count('<details class="op">') == 4
-    assert page.index('id="pathTitle"') < page.index('id="sample"') < page.index('id="stagesTitle"')
-    assert 'href="#sample"' in page and "sample-diagram.js" in page
-    assert '<details class="panel fold sample" id="sample">' in page   # sample starts folded
-    assert 'class="tiles"' not in page
-    assert 'id="copySample"' in page and 'data-src="/sample/prompt"' in page
-    assert 'id="copySummary"' not in page and 'id="trySeed"' not in page   # trimmed 2026-10-08
-    assert "HERMETIC ANALYTICAL REPORT" not in page              # the prompt loads when opened
-    prompt = client.get("/sample/prompt")
-    assert prompt.status_code == 200 and prompt.headers["content-type"].startswith("text/plain")
-    assert prompt.text.startswith("# HERMETIC ANALYTICAL REPORT")
-    assert prompt.text.rstrip().endswith("END OF OOTK PROMPT (75 positions)")
-    assert client.saved == {}                                   # the sample is never saved
-    assert 'id="sample"' not in client.get("/pick").text
-
-
 def test_start_here_sections_fold_with_only_the_first_reading_open(client, monkeypatch):
     monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
     page = client.get("/start").text
@@ -1564,13 +1621,8 @@ def test_start_here_sections_fold_with_only_the_first_reading_open(client, monke
     assert "js/fold.js" in page                                 # opens a section named in the link
 
 
-def test_start_page_has_no_card_of_the_day_and_start_here_links_the_sample_report(client, monkeypatch):
-    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
+def test_start_page_has_no_card_of_the_day(client):
     assert "Today&rsquo;s card" not in client.get("/").text
-    page = client.get("/start").text
-    link = "/reading?seed=12345&spread=12&system=thoth&significator=Queen+of+Cups"
-    assert f'href="{link.replace("&", "&amp;")}"' in page
-    assert client.get(link).status_code == 200
     assert client.get("/today", follow_redirects=False).status_code == 307   # still its own page
 
 
@@ -1716,23 +1768,16 @@ def test_wrong_admin_passwords_lock_the_visitor_out(client, monkeypatch):
 def test_start_page_first_screen_says_who_it_is_for_and_what_to_do(client):
     page = client.get("/").text
     assert "so the interpreting is left to your AI." in page
-    assert "Welcome to the Opening of the Key</h1>" in page
+    assert "What is it that I would really like to know?</h1>" in page
+    assert ('<strong>Reframed question:</strong> Looking at where my life has come from, where it stands now and '
+            'where it is heading, what do I already know deep down that I would like to see clearly and trust?</p>') in page
+    assert "site/front-backdrop.webp" in page                   # the preview's cards, faded behind the banner
+    assert client.get("/static/site/front-backdrop.webp").status_code == 200
     assert "ChatGPT" not in page and "For tarot readers" not in page
     assert 'id="readingForm"' in page and 'class="btn-cta"' not in page
     assert "Draw my cards" in page and "<h2>Ask your question</h2>" in page
     assert page.index('id="readingForm"') < page.index('href="/start"')  # draw button first on a phone
     assert f'href="{app_module.REPO_URL}"' in page
-
-
-def test_start_here_without_a_full_deck_skips_the_sample(client):
-    page = client.get("/start").text
-    assert page.count('id="sample"') == 0 and 'href="#sample"' not in page and 'id="pathTitle"' in page
-    assert client.get("/sample/prompt").status_code == 404
-
-
-@pytest.mark.parametrize("over", [{"draw_mode": "nonsense"}, {"mapping_system": "nonsense"}])
-def test_bad_settings_return_400(client, over):
-    assert post(client, **over).status_code == 400
 
 
 def test_report_leads_with_summary_and_collapses_operations(client):
@@ -2307,34 +2352,6 @@ def test_old_golden_dawn_links_keep_the_thoth_swap(client):
     assert "Emperor on Tzaddi, Star on Heh" in r.text
 
 
-def test_sample_summary_states_facts_not_meanings():
-    def item(n, pos, title, arcana="Minor", place=None):
-        return {"position_number": n, "position_name": pos,
-                "card_data": {"title": title, "arcana_type": arcana, "spatial_dimension": place}}
-    r = {
-        "spread_results": [item(1, "1. Significator / Core Nature of Question", "Queen of Cups",
-                                "Court", "Lower-East Edge"),
-                           item(2, "2. Development", "V - The Hierophant", "Major"),
-                           item(3, "3. Ultimate Climax / Resolution", "XIV - Art", "Major")],
-        "element_counts": {"Fire": 1, "Water": 1, "Air": 0, "Earth": 1, "Spirit": 0},
-        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": 1},
-                           {"from_index": 1, "to_index": 2, "score": -2}],
-    }
-    settings = {"seed": "12345", "significator": "Queen of Cups", "spread_key": "3"}
-    first, second = app_module.sample_summary(r, settings)
-    assert first.startswith("Seed 12345, with the Queen of Cups as significator, dealt 3 cards.")
-    assert "closes on Art (ultimate climax / resolution)" in first
-    assert "1 Fire, 1 Water and 1 Earth" in second
-    assert "Of the 2 scored pairs, 1 is friendly and 1 is contrary, a net score of -1." in second
-    assert "One of the heap's cards sits on the Cube of Space." in second
-    assert second.endswith("sits on the Cube of Space.")
-
-
-def test_start_page_sample_is_the_full_opening_of_the_key():
-    assert app_module.SAMPLE_SETTINGS["spread_key"] == "12"
-    assert app_module.SAMPLE_SETTINGS["significator"]
-
-
 # ---------- error handling: failures give a page, never a crash ----------
 
 HTML = {"Accept": "text/html"}
@@ -2790,26 +2807,21 @@ def test_shuffle_has_no_demo_entry_point():
     assert not hasattr(shuffle, "main")
 
 
-def test_sample_walkthrough_names_the_balance_the_weak_cards_and_the_significator():
-    def item(n, title):
-        return {"position_number": n, "position_name": f"{n}. Pos", "card_data": {"title": title}}
-    r = {
-        "spread_results": [item(1, "Queen of Cups"), item(2, "Ace of Wands"), item(3, "Art")],
-        "element_counts": {"Fire": 2, "Water": 1, "Air": 0, "Earth": 0, "Spirit": 0},
-        "dignity_matrix": [{"from_index": 0, "to_index": 1, "score": -2},
-                           {"from_index": 1, "to_index": 2, "score": 2}],
-        "significator_places": [{"op": 1, "place": "the Water pack (H)", "shown": True}],
-    }
-    w = app_module.sample_walkthrough(r, {"spread_key": "3"})
-    assert w["lead"] == ["Fire"] and w["lead_count"] == 2 and w["total"] == 3
-    assert w["absent"] == ["Air", "Earth"]
-    assert w["weak"] == [{"card": app_module.short_card_name("Queen of Cups"),
-                          "by": [app_module.short_card_name("Ace of Wands")]}]
-    assert w["places"][0]["op"] == 1 and w["heap_size"] == 3
+def test_front_page_and_start_here_link_the_three_card_sample(client, monkeypatch):
+    monkeypatch.setattr(app_module, "fetch_all_cards", lambda conn: sample_deck())
+    link = app_module.SAMPLE_READING_LINK
+    assert link == "/reading?seed=12345&spread=3"
+    for page in ("/", "/start"):
+        assert f'href="{link.replace("&", "&amp;")}"' in client.get(page).text
+    assert client.get(link).status_code == 200                       # a real three-card reading
 
 
-def test_front_page_links_to_the_sample(client):
-    assert 'href="/start#sample"' in client.get("/").text
+def test_sample_opening_is_gone_from_start_here(client):
+    page = client.get("/start").text
+    assert 'id="sample"' not in page and "sample-diagram.js" not in page and "In the sample" not in page
+    assert 'id="readYourself"' in page                               # the three steps stay
+    assert client.get("/sample/prompt").status_code == 404
+    assert "/sample/" not in client.get("/robots.txt").text
 
 
 def test_question_helper_is_on_both_pages_and_posts_nothing(client, monkeypatch):
@@ -3147,6 +3159,14 @@ def test_method_says_what_the_ai_tests_show(client):
 OPENED = {"opened": str(int(time.time()) - 60)}
 
 
+def test_front_page_footer_carries_the_purpose_line_only_there(client):
+    """The site's one-line purpose sits quietly under the front page's footer links, nowhere else."""
+    front = client.get("/").text
+    assert 'class="site-purpose"' in front and "accurate enough to trust" in front
+    assert "What is it that I would really like to know?" in front           # the h1 is unchanged
+    assert 'class="site-purpose"' not in client.get("/start").text
+
+
 def test_footer_contact_opens_the_sites_own_form(client):
     page = client.get("/").text
     assert '<a href="/contact">Contact</a>' in page and "/discussions" not in page.split("site-footer")[-1]
@@ -3300,3 +3320,16 @@ def test_share_link_with_a_draw_time_out_of_range_is_refused(seeded_client, draw
     assert r.status_code == 400
     assert seeded_client.get("/reading", params={"seed": "7", "spread": "3",
                                                  "drawn": "20261029T2200Z"}).status_code == 200
+
+
+def test_decan_wheel_sign_band_names_the_sign_of_its_three_decans():
+    """The Fourth Operation's wheel opens at Saturn in Leo (DECAN_START), so the outer band's
+    first sign is Leo and each band covers the three decans of the sign it names."""
+    from ootk import visual
+    positions = spreads.SPREADS["11"]["positions"]
+    cards = [{"color": "#fff", "position_name": p, "label": ""} for p in positions]
+    d = visual.segment_drawing("11", cards, [])
+    assert len(d["labels"]) == 12 and d["labels"][0]["text"].endswith(" Leo")
+    for s, label in enumerate(d["labels"]):
+        sign = label["text"].split(" ", 1)[1]
+        assert all(f" in {sign} (" in positions[3 * s + k] for k in range(3)), (sign, positions[3 * s])

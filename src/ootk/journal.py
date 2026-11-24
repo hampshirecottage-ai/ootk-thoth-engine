@@ -15,7 +15,8 @@ import hashlib
 import os
 import re
 import secrets
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -183,15 +184,43 @@ ENTRY_COLUMNS = (
     "e.entry_id, e.thread_id, e.session_id, e.added_at, e.answer, e.answer_ai, e.notes, e.outcome, "
     "e.outcome_at, s.created_at AS drawn_at, s.report_settings->>'link' AS link, "
     "s.report_settings->>'topic' AS question, s.report_settings->>'spread_key' AS spread_key, "
-    "s.report_settings->'card_titles' AS card_titles")
+    "s.report_settings->'card_titles' AS card_titles, s.report_settings->>'tz' AS tz")
+
+
+def _zone(name):
+    """The reading's time zone from the IANA name its browser gave when it was drawn (kept in
+    report_settings 'tz'), or UTC when it gave none or one this machine doesn't know."""
+    if name and len(name) <= 64:
+        try:
+            return ZoneInfo(name)
+        except (KeyError, ValueError, OSError):
+            pass
+    return timezone.utc
 
 
 def _entry(row):
+    """An entry row with its texts decrypted and its times in the reading's own time zone: the
+    database gives them in UTC, so a reading drawn at 5 PM in Vancouver would otherwise be dated
+    the next day, unlike its report."""
     row = dict(row)
     for key in ("answer", "notes", "outcome"):
         row[key] = unseal(row[key])
     row["card_titles"] = list(row["card_titles"] or [])
+    zone = _zone(row.pop("tz", None))
+    for key in ("drawn_at", "added_at", "outcome_at"):
+        if isinstance(row.get(key), datetime) and row[key].tzinfo:
+            row[key] = row[key].astimezone(zone)
     return row
+
+
+def local_today(entries, now=None):
+    """Today's date where the journal's newest reading was drawn (its readings carry their
+    time zone; the journal itself has none), or in UTC for a journal with no readings."""
+    now = now or datetime.now(timezone.utc)
+    if not entries:
+        return now.astimezone(timezone.utc).date()
+    newest = max(entries, key=lambda e: e["drawn_at"])
+    return now.astimezone(newest["drawn_at"].tzinfo).date()
 
 
 def list_entries(conn, journal_id, thread_id=None, unfiled=False):
@@ -309,14 +338,20 @@ def replace_windows(conn, journal_id, entry_id, windows):
 
 
 MONTHS = ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
-_MON = r"(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+# Month names. "may" and "march" are everyday words too ("things may 2-3 weeks"), so those two
+# count as months only with a capital M; the rest in any case.
+_MON = (r"(jan(?:uary)?|feb(?:ruary)?|(?-i:M)ar(?:ch)?|apr(?:il)?|(?-i:M)ay|june?|july?|aug(?:ust)?"
+        r"|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)")
 _DAY = r"(\d{1,2})(?:st|nd|rd|th)?"
-_TO = r"\s*(?:to|through|until|till|-|–|—)\s*"
-# "Nov 12 to Nov 22", "12 November – 22 November", "Nov 12-22", "12-22 Nov"
+_YEAR = r"(?:,?\s+(\d{4})\b)?"            # "Nov 12, 2027" or "12 November 2027"
+_TO = r"\s*(?:to|through|until|till|->|→|⟶|-|–|—)\s*"
+# "Nov 12 to Nov 22", "12 November – 22 November", "Nov 12-22", "12-22 Nov", each with an
+# optional year after either date: "31 December 2026 to 10 January 2027", "December 2, 2026 to
+# December 12, 2026", "2 to 12 November 2027". Groups: month, day, year of the start, then of the end.
 _RANGES = (
-    re.compile(rf"\b{_MON}\.?\s+{_DAY}{_TO}(?:{_MON}\.?\s+)?{_DAY}\b", re.I),       # Mon d to [Mon] d
-    re.compile(rf"\b{_DAY}\s+{_MON}\.?{_TO}{_DAY}\s+{_MON}\b", re.I),             # d Mon to d Mon
-    re.compile(rf"\b{_DAY}{_TO}{_DAY}\s+{_MON}\b", re.I),                          # d-d Mon
+    (re.compile(rf"\b{_MON}\.?\s+{_DAY}{_YEAR}{_TO}(?:{_MON}\.?\s+)?{_DAY}\b{_YEAR}", re.I), (0, 1, 2, 3, 4, 5)),
+    (re.compile(rf"\b{_DAY}\s+{_MON}\b\.?{_YEAR}{_TO}{_DAY}\s+{_MON}\b{_YEAR}", re.I), (1, 0, 2, 4, 3, 5)),
+    (re.compile(rf"\b{_DAY}{_TO}{_DAY}\s+{_MON}\b{_YEAR}", re.I), (2, 0, None, 2, 1, 3)),
 )
 
 
@@ -324,16 +359,19 @@ def _month(name):
     return MONTHS.index(name[:3].lower()) + 1
 
 
-def _label(line, match_start):
-    """The words before a date range on its line, without Markdown marks, as the window's name."""
-    text = line[:match_start]
+def _label(line, match_start, after=0):
+    """The words before a date range on its line (from `after`, the end of the range before it
+    on the same line), without Markdown marks, as the window's name."""
+    text = line[after:match_start]
+    if after:
+        text = re.sub(r"^[\s,;.:)]*(?:(?:and|then|or|while)\b[\s,]*)*", "", text, flags=re.I)
     text = re.sub(r"[*_`#>|]+", " ", text)
     text = re.sub(r"^\s*(?:[-+•]|\d+[.)])\s*", "", text)
     text = re.sub(r"\(\s*$", "", text)
-    text = " ".join(text.split()).strip(" :–—-,(")
+    text = " ".join(text.split()).strip(" :;–—-,(")
     for word in (" from", " between", " around", " during", " on", " is", " runs"):
-        if text.lower().endswith(word):
-            text = text[: -len(word)].rstrip(" :–—-,")
+        if f" {text.lower()}".endswith(word):          # "Power runs" -> "Power"; "From" -> ""
+            text = text[: max(0, len(text) - len(word))].rstrip(" :;–—-,")
     return text[:WINDOW_LABEL_MAX]
 
 
@@ -362,7 +400,7 @@ def _is_timeline_head(line):
 
 
 _ISO = r"(\d{4})-(\d{1,2})-(\d{1,2})"
-_ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|–|—|-)\s*{_ISO})?")
+_ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|->|→|⟶|–|—|-)\s*{_ISO})?")
 
 
 def _iso_window(line):
@@ -381,11 +419,16 @@ def _iso_window(line):
     return (label[:1].upper() + label[1:]) or "Window", min(starts, ends), max(starts, ends)
 
 
+_LIST_MARK = re.compile(r"\s{0,8}(?:[-*+•]|\d{1,3}[.)])\s")
+
+
 def timeline_windows(text):
     """The windows listed under the Timeline heading the prompt asks the AI to end with, as
     (label, starts, ends), or [] when the answer has no such list with dates in it. The list
-    ends at the next heading or, in plain pasted text, at the first line after it without a date."""
-    found, inside = [], False
+    ends at the next heading, at the first line after it without a date or, in a list written
+    with marks (`- `, `* `, `1. `), at the first line without one, so a note below the list that
+    happens to hold a date ("Note: also 2027-09-01") isn't taken for one of its lines."""
+    found, inside, marked = [], False, False
     for line in (text or "").splitlines():
         if len(line) > 1000:                   # no list line is this long
             continue
@@ -397,8 +440,13 @@ def timeline_windows(text):
         if _heading(line) is not None:
             inside = False
             continue
+        item = _LIST_MARK.match(line) is not None
+        if found and marked and not item:
+            inside = False
+            continue
         w = _iso_window(line)
         if w:
+            marked = marked or (item and not found)
             found.append(w)
         elif found:
             inside = False
@@ -410,41 +458,89 @@ def timeline_windows(text):
     return out[:WINDOWS_MAX]
 
 
+def _next_year(after, m1, d1, m2, d2):
+    """(starts, ends) for a range written without a year: the first one that hasn't ended by
+    the day before the draw, as a reading looks ahead (the decan dates in its prompt are the
+    windows on or after the draw). A window open at the draw keeps the draw's year, and around
+    New Year "Dec 31 to Jan 9" drawn on 5 January is the one running then, not next winter's."""
+    for year in (after.year - 1, after.year, after.year + 1):
+        try:
+            starts = date(year, m1, d1)
+            ends = date(year + (1 if (m2, d2) < (m1, d1) else 0), m2, d2)
+        except ValueError:
+            continue
+        if ends >= after - timedelta(days=1):
+            return starts, ends
+    raise ValueError("no such date")
+
+
+def _prose_window(g, order, after):
+    """(starts, ends) for one prose range's regex groups, read in `order` (start month, day and
+    year, end month, day and year); a year written after either date is used, else the next."""
+    m1, d1, y1, m2, d2, y2 = (g[i] if i is not None else None for i in order)
+    m1 = _month(m1)
+    m2 = _month(m2) if m2 else m1
+    d1, d2 = int(d1), int(d2)
+    if not (y1 or y2):
+        return _next_year(after, m1, d1, m2, d2)
+    wraps = (m2, d2) < (m1, d1)
+    y1 = int(y1) if y1 else int(y2) - (1 if wraps else 0)
+    y2 = int(y2) if y2 else y1 + (1 if wraps else 0)
+    starts, ends = date(y1, m1, d1), date(y2, m2, d2)
+    return min(starts, ends), max(starts, ends)
+
+
+def _no_timeline(text):
+    """Whether the answer's Timeline list says `- none`: the AI was asked to write that when the
+    reading points to no particular time, so dates elsewhere in it are not offered."""
+    inside = False
+    for line in (text or "").splitlines():
+        if len(line) > 1000:
+            continue
+        if _is_timeline_head(line):
+            inside = True
+            continue
+        if inside and line.strip():
+            words = line.strip().lstrip("-*•").strip().rstrip(".")   # string work: no regex to slow
+            if words.lower() == "none":
+                return True
+            if _heading(line) is not None:
+                inside = False
+    return False
+
+
 def find_windows(text, after):
     """Date ranges an AI answer names, as (label, starts, ends). The `## Timeline` list the
-    prompt asks for is used when there is one; otherwise ranges anywhere in the answer are
-    found, with the year filled in: each taken as the next one on or after `after` (the day
-    the cards were drawn). Lines without words before the date get "Window" as their name."""
+    prompt asks for is used when there is one; a list that says `- none` means no dates.
+    Otherwise ranges anywhere in the answer are found, with a year written after a date used,
+    or else the next such range that hasn't ended before `after` (the day the cards were
+    drawn). Lines without words before the date get "Window" as their name."""
     listed = [w for w in timeline_windows(text) if window_near(w[1], w[2], after)]
     if listed:
         return listed
+    if _no_timeline(text):
+        return []
     found, seen = [], set()
     for line in (text or "").splitlines():
-        for pattern in _RANGES:
-            for m in pattern.finditer(line):
-                g = m.groups()
-                try:
-                    if pattern is _RANGES[0]:
-                        m1, d1, m2, d2 = _month(g[0]), int(g[1]), _month(g[2] or g[0]), int(g[3])
-                    elif pattern is _RANGES[1]:
-                        d1, m1, d2, m2 = int(g[0]), _month(g[1]), int(g[2]), _month(g[3])
-                    else:
-                        d1, d2, m1 = int(g[0]), int(g[1]), _month(g[2])
-                        m2 = m1
-                    # The next such range from the draw; a start up to a month before the draw
-                    # (a window already open when the cards were drawn) stays in the draw's year.
-                    year = after.year
-                    if date(year, m1, 1) < date(after.year, after.month, 1) and (after.month - m1) % 12 > 1:
-                        year += 1
-                    starts = date(year, m1, d1)
-                    ends = date(year + (1 if (m2, d2) < (m1, d1) else 0), m2, d2)
-                except ValueError:
-                    continue
-                if (starts, ends) in seen:
-                    continue
-                seen.add((starts, ends))
-                found.append((_label(line, m.start()) or "Window", starts, ends))
-        w = _iso_window(line) if len(line) <= 1000 else None    # 2026-12-01 to 2026-12-21
+        if len(line) > 1000:                   # no line naming a date is this long
+            continue
+        matches = sorted(((m, order) for pattern, order in _RANGES for m in pattern.finditer(line)),
+                         key=lambda x: (x[0].start(), -x[0].end()))
+        prev_end = 0
+        for m, order in matches:
+            if m.start() < prev_end:           # the same dates read by another pattern
+                continue
+            try:
+                starts, ends = _prose_window(m.groups(), order, after)
+            except ValueError:
+                continue
+            label = _label(line, m.start(), prev_end) or "Window"
+            prev_end = m.end()
+            if (starts, ends) in seen or not window_near(starts, ends, after):
+                continue
+            seen.add((starts, ends))
+            found.append((label, starts, ends))
+        w = _iso_window(line)                  # 2026-12-01 to 2026-12-21
         if w and w[1:] not in seen and window_near(w[1], w[2], after):
             seen.add(w[1:])
             found.append(w)
@@ -456,7 +552,9 @@ def find_windows(text, after):
 def card_windows(card_titles, drawn_at):
     """The reading's own timing: each small card 2-10 drawn, once, as (label, starts, ends) for
     the days the Sun is in its decan. Each is the window on or after the draw, the one the
-    prompt's Decan Dates give (decans.decan_window), so these match what the AI was given."""
+    prompt's Decan Dates give (decans.decan_window), so these match what the AI was given; a
+    decan the Sun is already in at the draw runs from the draw, as in the prompt's Timeline
+    rule. Dates are UTC days, as the prompt prints them."""
     from ootk.decans import decan_window
     out, seen = [], set()
     for title in card_titles or ():
@@ -464,7 +562,8 @@ def card_windows(card_titles, drawn_at):
         if window is None or title in seen:
             continue
         seen.add(title)
-        starts, ends = window[0].date(), window[1].date()
+        utc = timezone.utc
+        starts, ends = max(window[0], drawn_at).astimezone(utc).date(), window[1].astimezone(utc).date()
         out.append((f"{title.partition(' - ')[0]} decan"[:WINDOW_LABEL_MAX], starts, ends))
     return sorted(out, key=lambda w: w[1])[:WINDOWS_MAX]
 
@@ -473,6 +572,19 @@ SIGNS = (("Aries", "♈"), ("Taurus", "♉"), ("Gemini", "♊"), ("Cancer", "♋
          ("Libra", "♎"), ("Scorpio", "♏"), ("Sagittarius", "♐"), ("Capricorn", "♑"), ("Aquarius", "♒"),
          ("Pisces", "♓"))
 SIGN_ELEMENT = ("fire", "earth", "air", "water") * 3
+
+
+TIMELINE_MONTHS = 60                  # five years at most on one timeline page
+
+
+def window_dates(starts, ends):
+    """"2 Dec 2026", "2 Dec to 12 Dec 2026", or with both years when they differ:
+    "31 Dec 2026 to 10 Jan 2027"."""
+    if starts == ends:
+        return f"{starts:%-d %b %Y}"
+    if starts.year != ends.year:
+        return f"{starts:%-d %b %Y} to {ends:%-d %b %Y}"
+    return f"{starts:%-d %b} to {ends:%-d %b %Y}"
 
 
 def _add_months(day, n):
@@ -492,11 +604,18 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
     drawn = {e["entry_id"]: e["drawn_at"].date() for e in entries}
     windows = [w for w in windows
                if w["entry_id"] in drawn and window_near(w["starts"], w["ends"], drawn[w["entry_id"]])]
-    dates = [today] + [w["starts"] for w in windows] + [w["ends"] for w in windows] \
-        + [e["drawn_at"].date() for e in entries]
-    start = date(min(dates).year, min(dates).month, 1)
-    end = max(_add_months(start, 12), _add_months(max(dates), 1))
-    end = min(end, _add_months(start, 60))           # five years at most on one page
+    # Today and the readings always go on the page; the windows widen it while it stays five
+    # years at most. Saved windows may lie up to WINDOW_YEARS from their reading, so a window
+    # that doesn't fit on this page is left off it (it still shows on its entry's page).
+    core = [today] + [e["drawn_at"].date() for e in entries]
+    earliest = min(date(min(core).year, min(core).month, 1),
+                   _add_months(max(core), -(TIMELINE_MONTHS - 1)))   # still five years to today
+    windows = [w for w in windows if w["ends"] >= earliest]
+    dates = core + [w["starts"] for w in windows] + [w["ends"] for w in windows]
+    start = max(date(min(dates).year, min(dates).month, 1), earliest)
+    windows = [w for w in windows if w["starts"] < _add_months(start, TIMELINE_MONTHS)]
+    last = max(core + [w["ends"] for w in windows])
+    end = min(max(_add_months(start, 12), _add_months(last, 1)), _add_months(start, TIMELINE_MONTHS))
     span = (end - start).days
 
     def pos(day):
@@ -548,12 +667,15 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
                                  when=f"Drawn {d:%-d %b %Y}", sort=d))
             for w in mine:
                 one_day = w["starts"] == w["ends"]
+                # A window that starts before the page or runs past its end is drawn to the edge,
+                # squared off there, and says so, so its bar never reads as the whole window.
+                cut = (["Starts before this timeline."] if w["starts"] < start else []) + \
+                      (["Runs past the end of this timeline."] if w["ends"] >= end else [])
                 rows.append(dict(info, label=w["label"], kind="dot" if one_day else "bar", left=pos(w["starts"]),
-                                 element=element(w["starts"]),
+                                 element=element(max(w["starts"], start)),
                                  width=0 if one_day else pos(w["ends"] + timedelta(days=1)) - pos(w["starts"]),
-                                 when=(f"{w['starts']:%-d %b}" if one_day else
-                                       f"{w['starts']:%-d %b} to {w['ends']:%-d %b}") + f" {w['ends']:%Y}",
-                                 sort=w["starts"]))
+                                 when=window_dates(w["starts"], w["ends"]), sort=w["starts"],
+                                 cut=" ".join(cut), cut_left=w["starts"] < start, cut_right=w["ends"] >= end))
         if rows:
             rows.sort(key=lambda r: r["sort"])
             groups.append({"thread_id": thread_id, "name": name, "rows": rows})

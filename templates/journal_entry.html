@@ -52,9 +52,9 @@
         </section>
         <section class="panel" aria-labelledby="windowsTitle">
             <h2 id="windowsTitle">Dates on the timeline</h2>
-            <p class="note">Each line becomes a dot or bar on your timeline. <b>Find dates</b> reads the answer&rsquo;s <b>Timeline</b> list (the prompt asks the AI for one), or any dates in the answer if it has no list, and adds the decan dates of the small cards you drew, unticked. Tick the ones you want and press Save.</p>
+            <p class="note">Each line becomes a dot or bar on your timeline. <b>Find dates</b> reads the answer&rsquo;s <b>Timeline</b> list (the prompt asks the AI for one), or any dates in the answer if it has no list (a list that says <i>none</i> means none), adds, ticked, the window of the card a Book T reading is timed by, and the decan dates of the other small cards you drew, unticked. Tick the ones you want and press Save.</p>
             <div class="actions"><button type="submit" name="action" value="find" class="btn secondary">Find dates</button></div>
-            {% if found is not none %}<p class="j-ok" role="status">{% if found.answer or found.cards %}Found {{ found.answer }} date{{ '' if found.answer == 1 else 's' }} in the answer and {{ found.cards }} from the cards (shown lighter below). Check them, then press Save.{% else %}No new dates found{% if not entry.answer %}: paste the answer first{% endif %}.{% endif %}</p>{% endif %}
+            {% if found is not none %}<p class="j-ok" role="status">{% if found.answer or found.timing or found.cards %}Found {{ found.answer }} date{{ '' if found.answer == 1 else 's' }} in the answer{% if found.timing %}, the Book T timing card's{% endif %} and {{ found.cards }} from the cards (shown lighter below). Check them, then press Save.{% else %}No new dates found{% if not entry.answer %}: paste the answer first{% endif %}.{% endif %}{% if found.book_t %} Book T times this reading by the {{ found.book_t.label.partition(': ')[2] }}: {{ found.book_t.starts.strftime('%-d %b') }} to {{ found.book_t.ends.strftime('%-d %b %Y') }}.{% endif %}</p>{% endif %}
             <table class="j-windows">
                 <thead><tr><th>Name</th><th>From</th><th>To</th><th>Keep</th></tr></thead>
                 <tbody>

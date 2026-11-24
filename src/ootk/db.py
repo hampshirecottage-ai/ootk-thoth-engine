@@ -188,7 +188,7 @@ def fetch_cards_correspondences(conn, titles, system=DEFAULT_MAPPING):
     except psycopg.errors.UndefinedColumn as e:
         raise DatabaseOutdated(
             f"{e.diag.message_primary}. The database predates the correspondence fixes: "
-            f"run psql -d <db> -f database/migrations/fix_correspondences.sql") from e
+            f"load database/schema.sql into a new database (see Update an existing database in the README)") from e
     return {row["title"]: apply_card_solid(row) for row in rows}
 
 def fetch_card_correspondences(conn, title, system=DEFAULT_MAPPING):
