@@ -7,25 +7,12 @@
    page_title, page_description and active, and fills the content block. -#}
 {% include "_head_meta.html" %}
     <title>{{ page_title }} · OOTK Thoth Engine</title>
-    <script>
-        // Saved choice first, otherwise the light (green) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
         :root { --page-width: 780px; }
         .guide { max-width: var(--page-width); margin: 0 auto; }
-        .guide-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 6px; margin: 12px 0 0; font-size: 0.92em; }
-        .guide-nav a { color: var(--band-text); text-decoration: none; padding: 5px 10px; border-radius: 999px; }
-        .guide-nav a:hover { text-decoration: underline; }
-        .guide-nav a.guide-draw { background: var(--accent); color: var(--on-accent); font-weight: 600; }
-        .guide-nav a.guide-draw:hover { background: var(--accent-2); text-decoration: none; }
-        .guide-nav a[aria-current="page"] { background: var(--tile-bg); color: var(--text); font-weight: 600; }
         .guide .panel { margin-bottom: 16px; line-height: 1.55; }
         .guide .panel > :last-child { margin-bottom: 0; }
         .guide h2 { margin-bottom: 8px; }
@@ -47,25 +34,13 @@
     <header class="band page-head">
         <h1>{{ page_title }}</h1>
         <p class="tagline">{{ tagline }}</p>
-        <nav class="guide-nav" aria-label="Guide">
-            {% for href, label in [("/start", "Start here"), ("/library", "Library"), ("/maps", "Card maps"), ("/method", "How it works")] %}
-            <a href="{{ href }}"{% if href == active %} aria-current="page"{% endif %}>{{ label }}</a>
-            {% endfor %}
-            <a href="/#readingForm" class="guide-draw">Draw a reading</a>
-        </nav>
+{% include "_guide_nav.html" %}
     </header>
 
     <main class="guide">
 {% block content %}{% endblock %}
     </main>
 
-    <script>
-        document.getElementById("themeToggle").addEventListener("click", () => {
-            const root = document.documentElement;
-            root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
-            try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
-        });
-    </script>
 {% include "_site_footer.html" %}
 </body>
 </html>

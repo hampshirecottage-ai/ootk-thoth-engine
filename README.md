@@ -6,7 +6,7 @@
 
 **Try it online: [tarotthoth.com](https://tarotthoth.com)** (free hosting, so the first visit after a quiet spell takes about a minute to wake up). Card images there are Pamela Colman Smith's public-domain 1909 Rider-Waite-Smith art, because the Thoth paintings are copyrighted.
 
-![The start page: the headline "Welcome to the Opening of the Key", the three steps (ask your question and draw, save the prompt, attach it in your AI), the Tree of Life animation lighting Path 15 (Heh, The Star) and the "Ask your question" wizard on its first step, "How would you like to ask?"](docs/images/front.png)
+![The start page: the headline "What is it that I would really like to know?" (hovering it shows the reframed question), the faded three cards from the link preview at the bottom right edge, the three steps (ask your question and draw, save the prompt, attach it in your AI), the Tree of Life animation lighting Path 15 (Heh, The Star) and the "Ask your question" wizard on its first step, "How would you like to ask?"](docs/images/front.png)
 
 The report and [/maps](https://tarotthoth.com/maps) also place the Hebrew letters and the Platonic solids in three-dimensional space: the **Cube of Space** from the Sefer Yetzirah (three mother letters as axes, seven doubles as faces and centre, twelve simples as edges) and each card's solid with its dual. These are pictures to explore, not part of the AI prompt; the [Method page](https://tarotthoth.com/method#space) explains them.
 
@@ -75,19 +75,19 @@ ootk-thoth-engine/
 │   ├── ai_check.py         # AI answer check, step 1: build the test prompts and truth files
 │   ├── ai_score.py         # AI answer check, steps 2-3: collect and score AI answers
 │   ├── ai_parts.py         # Leave-one-out round: which prompt parts an AI actually uses
-│   ├── export_hf_space.sh  # Copy the files a Hugging Face Space needs into a folder
+│   ├── ai_lean.py          # Side-by-side round: lean prompt layout and timing rule vs the old prompt
 │   └── view_output.py      # Render an HTML report in the terminal
 ├── database/
-│   ├── schema.sql          # Full dump: schema, all migrations, and reference data
-│   └── migrations/         # Only needed for DBs created before the current schema
+│   ├── schema.sql          # Full dump: schema, every past migration, and reference data
+│   └── migrations/         # New schema or data changes waiting to be run on the live database
 ├── templates/              # Jinja2 templates for the web GUI and reports
 ├── static/images/          # Full-size card scans (not in git; see below)
 ├── static/cards/           # WebP card images served by the web GUI
 ├── static/js/              # Page scripts, loaded with defer
 ├── static/fonts/           # Self-hosted Cinzel, Inter and JetBrains Mono (SIL Open Font License)
 ├── static/site/            # Favicon, app icon, link-preview image and the Tree of Life animation
-├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker, Render and Hugging Face Spaces)
-├── deploy/huggingface/     # Space README and start script, also used by the Docker image
+├── Dockerfile, render.yaml # Container image and Render Blueprint (see Docker and Render)
+├── deploy/start.sh         # Container entry point used by the Docker image
 ├── output/                 # Generated HTML reports (not in git)
 ├── examples/               # A sample reading made with a dummy seed
 ├── docs/images/            # README screenshot
@@ -148,7 +148,7 @@ Everything else is optional:
 | `DB_QUERY_TIMEOUT` | Seconds one database query may take (including waiting on a migration's lock, or a connection that went silent) before it gives up; a reading that can't be saved in time is still shown, with a notice | `15` |
 | `DB_DOWN_SECONDS` | After the database fails to answer within `DB_CONNECT_TIMEOUT`, how many seconds pages show the "database down" page at once instead of waiting again | `15` |
 | `WEB_THREADS` | Most report pages built at once, which caps memory | `8` |
-| `READINGS_PER_VISITOR` | Most reading pages (drawn, shared, saved, or their JSON) one visitor may open in 10 minutes; past it they wait out the 10 minutes | `60` |
+| `READINGS_PER_VISITOR` | Most reading pages (drawn, shared, saved, or their JSON) one visitor may open in 10 minutes; past it they wait out the 10 minutes. A drawn reading counts once (its first report page is part of the draw) | `60` |
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | Sends the busy-server and new-contact-message alerts as Telegram messages from your own bot. Make the bot with @BotFather (`/newbot` gives the token), press **Start** in a chat with it, and get your chat id from @userinfobot. Works alongside ntfy, or instead of it; Telegram is the reliable choice on a shared free host, where ntfy.sh's free limits can run out | off |
 | `BUSY_ALERT_NTFY_TOPIC` | Turns on the busy-server alert: a push to this [ntfy](https://ntfy.sh) topic when CPU stays high, and another when it calms down. Anyone who knows the name can read the topic, so make it long and random | off |
 | `CONTACT_ALERT_NTFY_TOPIC` | ntfy topic that gets a push for each new contact message (the alert, on ntfy or Telegram, says only that a message came, never what it says, and links to `/admin/messages`) | `BUSY_ALERT_NTFY_TOPIC`; with neither set, no pushes |
@@ -169,7 +169,7 @@ psql -d my_tarot_db -f database/schema.sql
 python scripts/db_inspect.py audit
 ```
 
-`schema.sql` is a full dump: it creates the tables and loads the 78 cards, correspondences and spread geometry, so there is no separate seed step. It already includes everything in `database/migrations/`, which you only need for older databases. It only loads into a new, empty database: if the ootk tables already exist it stops without changing anything, so it can't wipe saved readings.
+`schema.sql` is a full dump: it creates the tables and loads the 78 cards, correspondences and spread geometry, so there is no separate seed step. It already includes every past schema and data change, so a new database needs nothing else. It only loads into a new, empty database: if the ootk tables already exist it stops without changing anything, so it can't wipe saved readings.
 
 These commands use your own Postgres role. If your install has a `postgres` superuser, add `-U postgres -h localhost` and set `DB_USER=postgres` in `.env`. On Homebrew installs the role is your macOS username instead, so set `DB_USER` to that.
 
@@ -206,7 +206,7 @@ ootk \
 | `--spread` | Spread key, 1-12, 13 for the full Book T Opening of the Key (five operations from the whole deck, with counting and pairing), 14 for the Celtic Cross, 15 for the Relationship spread, or 16 for two rows of three | asks interactively |
 | `--seed` | Seed for deterministic draws (any number or text). Omit it to enter cards by hand | manual entry |
 | `--significator` | Significator card title, pinned to position 1 of OOTK Op 1 (spreads 8 and 12) | asks with the Book T questions when the spread needs one |
-| `--expect` | Spread 13 only: where the significator is expected, `pack,house,sign,sephira` counted from 1 (pack 1-4 = Yod, Heh, Vau, Heh final; sign 1 = Aries; Sephira 1 = Kether). A house or sign can add a related one to try next after a slash, e.g. `1,10/6,10,6` | asks interactively |
+| `--expect` | Spread 13 only: where the significator is expected, `pack,house,sign,sephira` counted from 1 (pack 1-4 = Yod, Heh, Vav, Heh final; sign 1 = Aries; Sephira 1 = Kether). A house or sign can add a related one to try next after a slash, e.g. `1,10/6,10,6` | asks interactively |
 | `--topic` | Question or intent text | asks interactively |
 | `--mapping` | `thoth`, `golden_dawn` or `french_egyptian` | `thoth` |
 | `--framework` | `auto`, `light_descent`, `soul_formation`, `life_path`, `post_mortem` | `auto` |
@@ -235,7 +235,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 |---|---|
 | `/` | Start page: the banner and the form |
 | `/pick` | The same form with a spread board and card catalog, to place the cards yourself |
-| `/start` | Start here, in folded sections: what OOTK does best, your first reading step by step, a sample Opening of the Key, learning stages, and where the cards come from |
+| `/start` | Start here, in folded sections: what OOTK does best, your first reading step by step, reading a report yourself, learning stages, and where the cards come from |
 | `/library` | Glossary (edit `src/ootk/library.json`), plus every spread |
 | `/method` | Intended use, how a reading is made, limitations and what is stored, and why the card art carries Waite names |
 | `/maps` | Card maps: where each card sits on the Tree of Life, the Cube of Space, the decans, the Platonic solids and their duals, and the elements |
@@ -244,11 +244,11 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 | `/report/<link>` | A saved reading |
 | `/contact` | Contact form: a private message to the site owner (message, optional name and reply address), saved to `contact_messages`; footer **Contact** links here |
 | `/journal` | The private reading journal (only when `JOURNAL_KEY` is set): start one, its questions, readings not in a question, the journal link, Markdown download, forget on this device, delete |
-| `/journal/k/<key>` | The secret journal link: opens that journal in this browser (a cookie remembers it) |
-| `/journal/entry/<n>` | One reading in the journal: its cards, the AI's answer pasted in, the dates for the timeline (editable; **Find dates** reads the answer's Timeline list, or any dates in it, and offers the drawn small cards' decan dates), notes and what actually happened |
+| `/journal/k/<key>` | The secret journal link: opens that journal in this browser (a cookie remembers it for 400 days, the most browsers keep one, renewed on every journal visit) |
+| `/journal/entry/<n>` | One reading in the journal: its cards, the AI's answer pasted in, the dates for the timeline (editable; the first Save of an answer adds its dates, **Find dates** reads the answer's Timeline list (one that says `- none` means none), or else any dates in it (a year written after a date is kept; otherwise the next such dates from the draw), and offers the Book T timing card's window (ticked; the same dates the prompt gave the AI) and the drawn small cards' decan dates; dates unticked and saved stay off), notes and what actually happened |
 | `/journal/thread/<n>` | One question's readings, newest first; rename or delete it |
-| `/journal/timeline` | Every question's dates and readings under the zodiac and the months; hover or tap a marker for its details, the report and the journal entry |
-| `/admin` | Admin sign-in, then on to `/admin/messages` when any are unread, else `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
+| `/journal/timeline` | Every question's dates and readings under the zodiac and the months, opened scrolled to today when it is wider than the screen (journal dates are the day where each reading was drawn, in its browser's time zone, as on its report); hover or tap a marker for its details, the report and the journal entry (a bar running past the page's five years is squared off at the edge and says so) |
+| `/admin` | Admin sign-in (lasts 12 hours, checked by the server; `ADMIN_SESSION_HOURS` in `web.py` changes it), then on to `/admin/messages` when any are unread, else `/admin/sessions`; only exists when `ADMIN_PASSWORD` is set, and nothing links to it |
 | `/admin/messages` | Contact messages, newest first, with Mark read, Mark unread and Delete; behind the same `ADMIN_PASSWORD` sign-in |
 | `/admin/sessions` | Every saved reading, newest first: date (UTC), question, spread and report link, 100 a page; behind the same `ADMIN_PASSWORD` sign-in |
 
@@ -258,7 +258,7 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Question helper.** "Help me find my question" walks through a rough question, its area (each with three example questions), intent, whose question it is, timeframe and context, then shapes an open question in the terms of the chosen spread's positions, flags yes/no and timing wording, and suggests a spread, framework and significator. **Use this question** fills in the question, spread and framework; the helper's own answers are never sent.
 - **Significator.** Spreads 8 and 12 start with a significator, and the box only appears for those. Choose it one of three ways: **Describe** (a few questions: who the reading is about, whether the card stands for the person (Book T) or the matter asked about (a later custom), then temperament or topic for the suit and stage of life for the rank, with Book T's age, gender and colouring shown beside each answer; it gives one of the 16 court cards and shows its picture, element and zodiac span), **Birth date** (the Knight, Queen or Prince ruling that part of the zodiac; worked out in your browser, and only the card is sent), or **Any card**. There is no default card. On `/pick` the first card you place is the significator.
 - **Seeds.** Leave the seed blank to get a new one. A seeded report shows the seed, a share link and the matching `ootk` command (under "Run it in the terminal"), and a seeded web reading draws the same cards as `ootk --seed` with the same settings. "Repeat this reading" re-runs it.
-- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Readings saved before links were random get one from `database/migrations/add_report_links.sql`, which also lists every reading's address. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
+- **Report links.** Each saved reading opens at its own address, `/report/<link>`, so you can bookmark it, and reloading it does not save the reading again. The link is a random token, not the session number, so only someone with the exact address can open a reading. Share links (`/reading?seed=...`) carry only the seed and settings, never your question.
 - **Time of reading.** The prompt header gives the date and time the cards were drawn, on your own clock (your browser's time zone) and in UTC, and where the Sun and Moon stood then (tropical zodiac, context only, not used in any score). A saved report keeps its original time; a share link carries the time (`drawn=20261029T2200Z`) but not your time zone. Older share links and the samples have no time line.
 - **Parts of the AI prompt.** Under More options, a folded list has two groups. The main parts carry the meaning and are on: elemental dignities, astrology, Hebrew letters (with the Golden Dawn letter beside the Thoth one where the two differ), Tree of Life with the Liber 777 colour scales and Yetziratic titles, court card detail, Book T counts, the wheel oppositions, Golden Dawn titles, and the angels and dates of the decans with the day ruler (Book T's own timing). Switch one off to see what your AI makes of the reading without it. The extra layers are off unless you add them, because each repeats another part, is the same in every reading, or belongs in the report's pictures rather than the reading: geomantic figures, Platonic solids, the Cube of Space (each card's place and the counts), every wheel aspect (squares, trines and sextiles with their weights, not only oppositions), the statistics behind the lens and the Own-Place Check, Liber 777 gods and court card hexagrams. Geomantic figures, gods and hexagrams are always in the report's card panel, and the Cube of Space and solids in its maps. Gematria sums, the French/Egyptian comparison column, birth and year cards and the note on neighbouring "dual" solids were removed (older share links naming `gematria` or `hebrew_compare` still work and ignore them; `cube_counts` now means `cube`). With the defaults the full Opening of the Key prompt is about 46k characters (75k with every layer). The cards drawn stay the same, the prompt header names any main part left out, and the report, its share link (`with=solids&without=astrology`) and its terminal command (`--with`, `--without`) keep the choice. Golden Dawn titles, angels, decan dates and day ruler, gods and hexagrams are also left out automatically, gods first, then angels, dates, hexagrams and titles, when a reading's prompt would pass 77,500 characters, so the longest Opening of the Key stays readable by AIs that stop near 78,600 (Gemini); the prompt header then says "Left Out to Fit". `/method#correspondences` explains which parts the engine calculates with and which it only hands to the AI, and `/method#ranking` ranks them by what they add to a reading (astrology first, angels and decan dates last), with how sure each rank is.
 - **What now.** The report opens with **Get your interpretation**: **Save the prompt for your AI** downloads `attach_this_to_your_ai_seed<seed>.md` (or today's date in place of the seed for cards picked by hand), which you attach in the AI chat with its **+** button. A file gets round the limits AI chats put on pasted text. **Save as PDF** and **Save as JSON** sit at the foot of the report. The card of the day (`/today`) saves its prompt the same way. The prompt asks the AI to restate your question as an open one framed by the spread's positions and the framework, show that first so you can correct it, and answer it in the closing summary. The question never changes the draw. It names its own last line (`END OF OOTK PROMPT (N positions)`) at the top and asks the AI to say so, rather than interpret, if that line never arrives.
@@ -268,9 +268,9 @@ Open http://localhost:8000 for the start page. The automatic API docs (`/docs`, 
 - **Card details.** "All card details" or any card in a table opens a side panel with its image, attribution, path or Sephira, Hebrew letter, Platonic solid, its four Liber 777 colour scales (King, Queen, Prince, Princess) and Yetziratic title, a sign Trump's geomantic figure, a Trump's Liber 777 gods, a court card's I Ching hexagram, small maps of where it sits (as on `/maps`), and every aspect and dignity it takes part in. Escape closes it.
 - **Save.** The **Save** menu prints or saves a PDF with every section expanded, downloads the prompt as Markdown, or the whole reading as JSON. Each drawing also downloads as an SVG (card images link back to the running server).
 
-### Docker, Render and Hugging Face Spaces
+### Docker and Render
 
-The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000, which Hugging Face requires). On start it loads `database/schema.sql` into an empty database. It includes the public-domain card art in `static/cards/`, but not the full-size scans.
+The `Dockerfile` runs PostgreSQL and the web GUI in one container on port 7860 (or `$PORT` when the host sets it), as a non-root user (uid 1000). On start it loads `database/schema.sql` into an empty database. It includes the public-domain card art in `static/cards/`, but not the full-size scans.
 
 ```bash
 docker build -t ootk .
@@ -279,37 +279,23 @@ docker run --rm -p 7860:7860 ootk
 
 The local database lives inside the container and starts empty on every run. To keep readings, pass `DB_HOST`, `DB_NAME`, `DB_USER` and `DB_PASSWORD` for an external PostgreSQL; the local one is then not started, and the card tables are loaded on first start if missing.
 
-Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link. One visitor can open at most `READINGS_PER_VISITOR` reading pages (60 by default) in 10 minutes, so a script can't fill the database or keep every reading slot busy.
+Set `APP_PASSWORD` to make every page ask for that password (any user name works). Ten wrong passwords from one visitor within 15 minutes lock that visitor out for 15 minutes (on Render the visitor is told apart by Cloudflare's `CF-Connecting-IP`, which can't be faked). Saved reports are sent with `Cache-Control: no-store`, and the server's access log shows `/report/<redacted>` instead of report links. Without it, anyone who finds the site can draw readings (which are saved to your database), but can only open a reading if they have its exact link. One visitor can open at most `READINGS_PER_VISITOR` reading pages (60 by default) in 10 minutes (a drawn reading and the report it opens count as one), so a script can't fill the database or keep every reading slot busy.
 
 On Render's free plan, `render.yaml` is a Blueprint for the same image (the public instance at [tarotthoth.com](https://tarotthoth.com) runs this way, with Neon as the database): create a Blueprint from this repository and fill in the `DB_*` settings of an external PostgreSQL (e.g. Neon) and, if you want a password, `APP_PASSWORD` when asked.
 
 Link previews (Open Graph and Twitter tags), `robots.txt` and `sitemap.xml` use the site's public address: `SITE_URL` if you set it, otherwise the address Render gives the service, otherwise the address the page was requested on. Search engines may list the start, pick and guide pages and the card of the day; saved readings (`/report/...`) are marked `noindex` and kept out of the sitemap, and `/reading` share links are disallowed in `robots.txt`. With `APP_PASSWORD` set, crawlers and link previews only see the password prompt. `scripts/make_site_images.py` rebuilds the favicon and the preview image.
 
-For a Hugging Face Docker Space (Docker Spaces need a PRO account since September 2026), `sh scripts/export_hf_space.sh ../ootk-space` copies the files the Space needs, with the Space's README (`deploy/huggingface/README.md`, which sets `sdk: docker` and `app_port: 7860`), into a folder you upload to the Space. Make the Space private, or set `APP_PASSWORD`, if you don't want strangers adding readings to your database.
-
 ### Update an existing database
 
-`schema.sql` already contains every migration, so a new database needs none of this. A database made from an older `schema.sql` needs the migrations it is missing, in this order. Each one is safe to re-run.
+`schema.sql` already contains every migration, so a new database needs none of this.
+
+The old migration files (the 16 changes made between October and 13 November 2026) were removed in the December 2026 pruning, after checking that the live database had every one of them. They are still in the git history: `git show eb2b07e:database/migrations/<file>.sql` prints any of them, for example to update an old local copy of the database. Rebuilding an old local database from `schema.sql` is usually simpler.
+
+A new change to the schema or the card data goes in `database/migrations/` as a file that is safe to re-run, and into `schema.sql` at the same time:
 
 ```bash
 psql -d my_tarot_db -f database/migrations/<file>.sql
 ```
-
-| Migration | Needed when |
-|---|---|
-| `add_french_number.sql` | `thoth_cards.french_number` is missing |
-| `add_report_settings.sql` | `tarot_sessions.report_settings` is missing (the site shows a "needs an update" page) |
-| `add_report_links.sql` | Readings saved before links were random; also lists every reading's address |
-| `fix_correspondences.sql` | `thoth_cards.attribution` is missing (the engine stops and says so) |
-| `fix_trump_attributions.sql` | Each Major's own sign, planet or element as its attribution, path 32 named 'Cross' |
-| `fix_court_paths.sql` | Queen of Wands and Prince of Swords on the same paths as the Emperor and the Star; four court descriptions |
-| `fix_correspondence_audit.sql` | Six Cube of Space edges as Paul Case gives them, axis directions, French Magus and Priestess planets |
-| `add_report_link_index.sql` | Many saved readings: keeps `/report/<link>` fast |
-| `add_testimonials.sql` | Testimonials table (the feature was retired in November 2026; the table is kept so old entries are not lost) |
-| `drop_unused_geometry.sql` | `correspondences` still has `platonic_solid` and the other stored solid columns, or `spread_position_geometry` exists; the app never read them and the solids were out of date |
-| `fix_777_scales.sql` | Liber 777 Prince (Emperor) scale colours two to three rows out of place, Yetziratic titles without "Intelligence", Malkuth's Queen scale, two Princess scale colours, geomancy typos (Peur, Amission) |
-| `add_contact_messages.sql` | `contact_messages` is missing (the contact form shows a "needs an update" page) |
-| `add_reading_journal.sql` | Before turning on the journal with `JOURNAL_KEY`: adds `reading_journals`, `reading_journal_threads`, `reading_journal_entries` and `reading_journal_windows` |
 
 The web app reads the card and correspondence tables once per process, so restart it after running a migration. For the hosted site the same SQL can be pasted into the database provider's SQL editor (for Neon, the console's SQL Editor).
 
@@ -368,12 +354,10 @@ The repository holds only the engine and reference data. Your own readings stay 
 | `tarot_sessions` | One row per reading (operation, significator, notes, and `report_settings` with the report link) |
 | `spread_pulls` | Spreads within a session |
 | `session_card_pulls` | Each drawn card, its position, and dignity flag |
-| `testimonials` | Left from the retired testimonials feature (removed November 2026). Nothing reads it now; export it before dropping it. |
 | `reading_journals` | Private journals: only a SHA-256 hash of each secret journal link, and when it was made and last opened. A journal nobody opens for 24 months is deleted the next time someone starts one |
 | `reading_journal_threads` | A journal's questions (name encrypted) |
 | `reading_journal_entries` | A saved reading filed in a journal: the AI's answer, which AI, notes and what happened (texts encrypted with `JOURNAL_KEY`) |
 | `reading_journal_windows` | Dates on the journal timeline: a name (encrypted) and the days it covers |
-| `journal_entries` | Left from the retired prediction journal (removed November 2026). Nothing reads it now; it is kept so any saved entries are not lost. Export it before dropping it. |
 
 Relationships: `tarot_sessions` 1-* `spread_pulls` 1-* `session_card_pulls` *-1 `thoth_cards`. Platonic solids, duals and layout coordinates are not stored: the engine works them out from each card's element and from `spreads.py`.
 

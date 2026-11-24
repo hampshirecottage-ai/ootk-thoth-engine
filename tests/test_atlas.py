@@ -13,7 +13,7 @@ def row(**kw):
 
 
 EMPEROR = row(title="IV - The Emperor", key_scale=28, hebrew_letter="צ (Tzaddi)", attribution="Aries",
-              thoth_hebrew_letter="צ (Tzaddi)", gd_hebrew_letter="ה (Hé)",
+              thoth_hebrew_letter="צ (Tzaddi)", gd_hebrew_letter="ה (Heh)",
               spatial_dimension="North-East Edge", platonic_solid="Tetrahedron", solid_faces=4,
               solid_vertices=4, dual_solid="Tetrahedron (Self-Dual)")
 
@@ -31,7 +31,7 @@ def test_major_places():
     a = atlas.card_atlas(EMPEROR, {})
     assert a["tree"]["path"] == 28 and "Netzach and Yesod" in a["tree"]["note"]
     assert a["cube"]["place"] == "North-East Edge" and not a["cube"]["derived"]
-    assert "edge of its sign" in a["cube"]["note"] and "ה (Hé)" in a["cube"]["note"]
+    assert "edge of its sign" in a["cube"]["note"] and "ה (Heh)" in a["cube"]["note"]
     assert a["zodiac"]["decans"] == [0, 1, 2] and a["zodiac"]["arcs"] == [[0, 30]]
     assert a["solid"]["edges"] == 6
     assert a["grid"] == {"row": "Fire", "col": None, "note": a["grid"]["note"]}

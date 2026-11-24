@@ -4,11 +4,13 @@
 **In Plain Words:** 3 cards were drawn. Air leads with 2 of 3 cards; Fire and Earth are least, with 0.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
 
-**Operation/Spread:** Triad (Timeline & Motion)
+**Operation/Spread:** Triad (past, present, future)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
+**Framework Basis:** the default lens: fewer than 6 cards have a place on the Tree, too few to test, so the cards did not choose it.
+**Against Chance:** Compared with random shuffles of this spread, none of the 4 numbers checked (elemental dignity total, most cards of one element, ill-dignified cards, trumps) is unusual, so read them as ordinary for this spread.
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 
@@ -25,9 +27,9 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 1: Past / Root Cause
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 2: Present / Active Dynamics
 - **Card Drawn**: 4 of Swords - Truce
@@ -42,14 +44,14 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Attribution**: Venus in Scorpio
 - **Planet Strength**: in detriment (weakened)
 
-**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path. A dash means no position in this reading takes that part of the row.
 
 | 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
 |---|---|---|---|---|---|---|
 | Sephira 4 Mercy | Measuring, Cohesive or Receptacular Intelligence | Deep violet | Blue | Deep purple | Deep azure flecked yellow | 2 |
 | Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 3 |
-| Path 15 Window | Constituting Intelligence |  |  |  |  | 1 (title) |
-| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
+| Path 15 Window | Constituting Intelligence | — | — | — | — | 1 (title) |
+| Path 28 Fish-hook | — | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success.
 
