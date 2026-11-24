@@ -4,6 +4,16 @@ Shared rules for AI coding assistants (Claude, Codex, Copilot and others) workin
 repository. People are welcome to read it too. README.md has the full detail; this file is
 the short version plus the rules that matter most.
 
+## Purpose
+
+The OOTK Thoth Engine's one job is to turn a real question into a correct, clearly explained
+Book T reading, with a prompt and timeline accurate enough to trust.
+
+Who it is for: the owner, as the working tool for their own readings, and people learning the
+Book T method.
+
+Judge every change against this purpose. A change that doesn't serve it needs a good reason.
+
 ## Goal
 
 OOTK Thoth Engine is a Python 3.11+ engine and FastAPI web app that does the table work of a
