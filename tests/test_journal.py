@@ -190,9 +190,14 @@ def test_the_timeline_list_the_prompt_asks_for_is_read_first():
         ("Move goes ahead", date(2026, 12, 1), date(2026, 12, 21)),
         ("Contract signed", date(2027, 1, 15), date(2027, 1, 15)),
         ("Pisces window", date(2027, 2, 19), date(2027, 3, 20))]
-    # No list with dates in it: dates anywhere in the answer are still found.
-    assert journal.find_windows("## Timeline\n- none\n\nThe tide turns Nov 12 to Nov 22.", date(2026, 11, 13)) == [
+    # No Timeline list: dates anywhere in the answer are still found.
+    assert journal.find_windows("## Recap\nGo.\n\nThe tide turns Nov 12 to Nov 22.", date(2026, 11, 13)) == [
         ("The tide turns", date(2026, 11, 12), date(2026, 11, 22))]
+    # A list that says "- none" (the reading points to no particular time) means no dates,
+    # in Markdown or pasted as plain text.
+    for none in ("## Timeline\n- none\n\nThe tide turns Nov 12 to Nov 22.",
+                 "Timeline\n\nNone.\n\nThe tide turns Nov 12 to Nov 22."):
+        assert journal.find_windows(none, date(2026, 11, 13)) == []
 
 
 def test_the_prompt_asks_for_a_timeline_list():
@@ -474,3 +479,37 @@ def test_an_evening_reading_keeps_its_local_date_in_the_journal(key):
     assert "17 Nov 2026" in c.get("/journal").text and "18 Nov 2026" not in c.get("/journal").text
     assert "drawn 17 Nov 2026" in c.get("/journal/timeline").text
     c.post("/journal/delete")
+
+
+def test_dates_in_prose_keep_a_written_year_and_look_ahead_from_the_draw():
+    """The finder for answers without a Timeline list: a year written after a date is used;
+    without one, the range is the next that hasn't ended by the draw, across New Year too."""
+    nov17, f = date(2026, 11, 17), journal.find_windows
+    assert f("The agreement comes 2 to 12 November 2027.", nov17) == [
+        ("The agreement comes", date(2027, 11, 2), date(2027, 11, 12))]
+    assert f("Look for it Nov 2 to Nov 12, 2027.", nov17) == [("Look for it", date(2027, 11, 2), date(2027, 11, 12))]
+    assert f("Works builds December 31, 2026 to January 10, 2027.", nov17) == [
+        ("Works builds", date(2026, 12, 31), date(2027, 1, 10))]
+    assert f("It builds 31 December 2026 to 10 January 2027.", nov17) == [
+        ("It builds", date(2026, 12, 31), date(2027, 1, 10))]
+    assert f("Hastings: Oct 14 to Oct 15, 1066.", nov17) == []                    # history, not timing
+    # New Year: the window running at the draw, or just ending, not next winter's.
+    assert f("Works Dec 31 to Jan 9.", date(2027, 1, 5)) == [("Works", date(2026, 12, 31), date(2027, 1, 9))]
+    assert f("Change runs Dec 21 to Dec 31.", date(2027, 1, 1)) == [("Change", date(2026, 12, 21), date(2026, 12, 31))]
+    assert f("Expect news around 3-9 Jan.", date(2026, 12, 31)) == [("Expect news", date(2027, 1, 3), date(2027, 1, 9))]
+    # A range already over at the draw is next year's, as a reading looks ahead.
+    assert f("Truce Oct 13 to Oct 23.", date(2026, 11, 30)) == [("Truce", date(2027, 10, 13), date(2027, 10, 23))]
+
+
+def test_everyday_words_and_other_ways_of_writing_a_range():
+    nov17, f = date(2026, 11, 17), journal.find_windows
+    # "may" and "march" are words, not months, without a capital M.
+    assert f("Things may 2-3 weeks settle. You march 3 to 4 steps on. Maybe 3-4 mar.", nov17) == []
+    assert f("May 2 to May 12 looks good.", nov17) == [("Window", date(2027, 5, 2), date(2027, 5, 12))]
+    # An arrow between the dates, in prose or in the Timeline list.
+    assert f("Swiftness Nov 22 → Dec 2", nov17) == [("Swiftness", date(2026, 11, 22), date(2026, 12, 2))]
+    assert f("## Timeline\n- Strength: 2026-12-02 → 2026-12-12", nov17) == [
+        ("Strength", date(2026, 12, 2), date(2026, 12, 12))]
+    # Two ranges on one line: each is named by its own words.
+    assert f("Swiftness Nov 22 to Dec 2 and then Strength Dec 2 to Dec 12.", nov17) == [
+        ("Swiftness", date(2026, 11, 22), date(2026, 12, 2)), ("Strength", date(2026, 12, 2), date(2026, 12, 12))]
