@@ -491,7 +491,8 @@ def _no_timeline(text):
             inside = True
             continue
         if inside and line.strip():
-            if re.fullmatch(r"[-*•\s]*none\.?", line.strip(), re.I):
+            words = line.strip().lstrip("-*•").strip().rstrip(".")   # string work: no regex to slow
+            if words.lower() == "none":
                 return True
             if _heading(line) is not None:
                 inside = False
