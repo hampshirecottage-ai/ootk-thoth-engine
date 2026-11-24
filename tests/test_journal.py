@@ -550,3 +550,29 @@ def test_find_dates_offers_the_book_t_timing_card_first_and_ticked(key):
     page = c.get(entry_url + "?find=1").text
     assert f"Book T timing: {card}" not in page and f"Book T times this reading by the {card}:" in page
     c.post("/journal/delete")
+
+
+def test_timeline_dates_show_both_years_and_say_when_a_bar_is_cut():
+    from datetime import datetime, timezone
+    def e(i, day):
+        return {"entry_id": i, "thread_id": None, "drawn_at": datetime(*day, 12, tzinfo=timezone.utc), "link": "x",
+                "question": "q", "spread_key": "3", "card_titles": ["a"], "answer_ai": ""}
+    windows = [{"entry_id": 1, "label": "Works", "starts": date(2026, 12, 31), "ends": date(2027, 1, 10)},
+               {"entry_id": 1, "label": "Near", "starts": date(2026, 12, 2), "ends": date(2026, 12, 12)},
+               {"entry_id": 2, "label": "Far", "starts": date(2031, 10, 1), "ends": date(2031, 12, 10)}]
+    t = journal.build_timeline([], [e(1, (2026, 11, 17)), e(2, (2026, 11, 20))], windows, date(2026, 11, 24))
+    rows = {r["label"]: r for g in t["groups"] for r in g["rows"]}
+    assert rows["Works"]["when"] == "31 Dec 2026 to 10 Jan 2027"          # both years across New Year
+    assert rows["Near"]["when"] == "2 Dec to 12 Dec 2026" and not rows["Near"]["cut"]
+    # Five years from Nov 2026 end on 1 Nov 2031: the bar stops at the edge and says it runs on.
+    assert t["end"] == date(2031, 11, 1) and rows["Far"]["cut_right"] and not rows["Far"]["cut_left"]
+    assert rows["Far"]["cut"] == "Runs past the end of this timeline." and rows["Far"]["when"] == "1 Oct to 10 Dec 2031"
+
+
+def test_a_dated_note_below_a_marked_timeline_list_is_not_one_of_its_lines():
+    nov17 = date(2026, 11, 17)
+    assert journal.find_windows("## Timeline\n- a: 2027-07-02 to 2027-07-12\n\nNote: also 2027-09-01 matters", nov17) == [
+        ("A", date(2027, 7, 2), date(2027, 7, 12))]
+    # Items still count across blank lines, and a plain pasted list has no marks to go by.
+    assert len(journal.find_windows("## Timeline\n- a: 2027-07-02 to 2027-07-12\n\n- b: 2027-09-01", nov17)) == 2
+    assert len(journal.find_windows("Timeline\n\na: 2027-07-02 to 2027-07-12\n\nb: 2027-09-01", nov17)) == 2
