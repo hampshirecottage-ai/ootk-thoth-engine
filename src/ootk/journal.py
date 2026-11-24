@@ -419,11 +419,16 @@ def _iso_window(line):
     return (label[:1].upper() + label[1:]) or "Window", min(starts, ends), max(starts, ends)
 
 
+_LIST_MARK = re.compile(r"\s{0,8}(?:[-*+•]|\d{1,3}[.)])\s")
+
+
 def timeline_windows(text):
     """The windows listed under the Timeline heading the prompt asks the AI to end with, as
     (label, starts, ends), or [] when the answer has no such list with dates in it. The list
-    ends at the next heading or, in plain pasted text, at the first line after it without a date."""
-    found, inside = [], False
+    ends at the next heading, at the first line after it without a date or, in a list written
+    with marks (`- `, `* `, `1. `), at the first line without one, so a note below the list that
+    happens to hold a date ("Note: also 2027-09-01") isn't taken for one of its lines."""
+    found, inside, marked = [], False, False
     for line in (text or "").splitlines():
         if len(line) > 1000:                   # no list line is this long
             continue
@@ -435,8 +440,13 @@ def timeline_windows(text):
         if _heading(line) is not None:
             inside = False
             continue
+        item = _LIST_MARK.match(line) is not None
+        if found and marked and not item:
+            inside = False
+            continue
         w = _iso_window(line)
         if w:
+            marked = marked or (item and not found)
             found.append(w)
         elif found:
             inside = False
@@ -567,6 +577,16 @@ SIGN_ELEMENT = ("fire", "earth", "air", "water") * 3
 TIMELINE_MONTHS = 60                  # five years at most on one timeline page
 
 
+def window_dates(starts, ends):
+    """"2 Dec 2026", "2 Dec to 12 Dec 2026", or with both years when they differ:
+    "31 Dec 2026 to 10 Jan 2027"."""
+    if starts == ends:
+        return f"{starts:%-d %b %Y}"
+    if starts.year != ends.year:
+        return f"{starts:%-d %b %Y} to {ends:%-d %b %Y}"
+    return f"{starts:%-d %b} to {ends:%-d %b %Y}"
+
+
 def _add_months(day, n):
     y, m = divmod(day.month - 1 + n, 12)
     return date(day.year + y, m + 1, 1)
@@ -647,12 +667,15 @@ def build_timeline(threads, entries, windows, today, spread_label=str):
                                  when=f"Drawn {d:%-d %b %Y}", sort=d))
             for w in mine:
                 one_day = w["starts"] == w["ends"]
+                # A window that starts before the page or runs past its end is drawn to the edge,
+                # squared off there, and says so, so its bar never reads as the whole window.
+                cut = (["Starts before this timeline."] if w["starts"] < start else []) + \
+                      (["Runs past the end of this timeline."] if w["ends"] >= end else [])
                 rows.append(dict(info, label=w["label"], kind="dot" if one_day else "bar", left=pos(w["starts"]),
                                  element=element(max(w["starts"], start)),
                                  width=0 if one_day else pos(w["ends"] + timedelta(days=1)) - pos(w["starts"]),
-                                 when=(f"{w['starts']:%-d %b}" if one_day else
-                                       f"{w['starts']:%-d %b} to {w['ends']:%-d %b}") + f" {w['ends']:%Y}",
-                                 sort=w["starts"]))
+                                 when=window_dates(w["starts"], w["ends"]), sort=w["starts"],
+                                 cut=" ".join(cut), cut_left=w["starts"] < start, cut_right=w["ends"] >= end))
         if rows:
             rows.sort(key=lambda r: r["sort"])
             groups.append({"thread_id": thread_id, "name": name, "rows": rows})

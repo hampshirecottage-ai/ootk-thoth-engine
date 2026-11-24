@@ -27,6 +27,8 @@
         .mk button { all: unset; cursor: pointer; display: block; box-sizing: border-box; width: 100%; height: 14px; border-radius: 999px; background: currentColor; box-shadow: 0 0 0 2px var(--panel); }
         .mk.dot, .mk.reading { width: 14px; margin-left: -7px; }
         .mk.bar { min-width: 14px; }
+        .mk.cut-l button { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+        .mk.cut-r button { border-top-right-radius: 0; border-bottom-right-radius: 0; }
         .mk button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
         .mk.reading button { background: var(--panel); border: 3px solid currentColor; }
         .mk .when { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font-size: 0.78em; white-space: nowrap; color: var(--muted); }
@@ -64,12 +66,13 @@
                 <div class="tl-track">
                     <span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span>
                     {% set flip = r.left + r.width > 72 %}
-                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
+                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}{{ ' cut-l' if r.cut_left }}{{ ' cut-r' if r.cut_right }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
                         <button type="button" aria-label="{{ r.label }}, {{ r.when }}" aria-haspopup="dialog" aria-expanded="false"></button>
                         <span class="when">{{ r.when }}</span>
                         <div class="tip">
                             <b>{{ r.label }}</b>
                             <p>{{ r.when }}</p>
+                            {% if r.cut %}<p class="muted">{{ r.cut }}</p>{% endif %}
                             {% if r.question %}<p>{{ r.question }}</p>{% endif %}
                             <p class="muted">{{ r.spread }} · drawn {{ r.drawn }}{% if r.ai %} · {{ r.ai }}{% endif %}</p>
                             <p class="muted">{{ r.cards }}</p>
