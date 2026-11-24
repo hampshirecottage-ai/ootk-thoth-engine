@@ -3159,6 +3159,14 @@ def test_method_says_what_the_ai_tests_show(client):
 OPENED = {"opened": str(int(time.time()) - 60)}
 
 
+def test_front_page_footer_carries_the_purpose_line_only_there(client):
+    """The site's one-line purpose sits quietly under the front page's footer links, nowhere else."""
+    front = client.get("/").text
+    assert 'class="site-purpose"' in front and "accurate enough to trust" in front
+    assert "What is it that I would really like to know?" in front           # the h1 is unchanged
+    assert 'class="site-purpose"' not in client.get("/start").text
+
+
 def test_footer_contact_opens_the_sites_own_form(client):
     page = client.get("/").text
     assert '<a href="/contact">Contact</a>' in page and "/discussions" not in page.split("site-footer")[-1]
