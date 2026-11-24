@@ -167,13 +167,6 @@ document.querySelectorAll("[data-link-mode]").forEach(b => b.addEventListener("c
     restore(svg);
 }));
 
-// ---- Theme ----
-document.getElementById("themeToggle").addEventListener("click", () => {
-    const root = document.documentElement;
-    root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
-    try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
-});
-
 // ---- Card detail panel ----
 const CARDS = JSON.parse(document.getElementById("cardDetails").textContent);
 const panel = document.getElementById("detailPanel");

@@ -172,7 +172,9 @@ def test_plain_summary_on_top_and_no_empty_geometry_section():
     one line each."""
     full = prompt(BOOK_T_KEY)
     top = full.split("**Operation/Spread:**", 1)[0]
-    assert "**In Plain Words:** 79 cards were drawn, in 5 operations" in top
+    assert "**In Plain Words:** 79 positions were dealt in 5 operations" in top
+    assert "different cards in all, with the Significator in all 5." in top
+    assert "79 cards were drawn" not in top                      # not 79 cards from a 78-card deck
     assert "The Significator, Queen of Cups, stands for the querent." in top
     layout = next(line for line in top.splitlines() if line.startswith("**How This Prompt Is Laid Out:**"))
     assert layout.count(";") == len(headings(full)) - 1          # one entry per section kept

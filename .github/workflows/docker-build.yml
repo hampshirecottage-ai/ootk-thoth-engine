@@ -1,0 +1,28 @@
+name: docker-build
+
+# Builds the Dockerfile that Render deploys, so a base-image bump (Dependabot) or a change to
+# the Dockerfile or the pinned packages shows a broken build on the PR instead of on the live
+# site. Nothing is pushed anywhere; the image is thrown away when the job ends.
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - requirements-lock.txt
+      - pyproject.toml
+      - deploy/start.sh
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: docker build -t ootk-check .
+      - name: The app imports and the bundled PostgreSQL is where start.sh expects it
+        run: docker run --rm ootk-check sh -c 'python -c "import ootk.web" && pg_ctl --version'

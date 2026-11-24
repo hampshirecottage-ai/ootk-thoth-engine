@@ -9,15 +9,16 @@ import re
 from collections import Counter
 
 from ootk.analysis import (
-    card_is_dignified, derive_primary_element, own_place_sentence, spirit_bearing_cards,
+    card_is_dignified, derive_primary_element, dignity_chance, own_place_sentence, spirit_bearing_cards,
 )
 from ootk.assets import static_url
 from ootk.atlas import card_atlas
+from ootk.chance import chance_view
 from ootk.gods import court_hexagram, trump_gods
 from ootk.report import withheld_sentence
-from ootk.rules import GEOMANTIC_FIGURES, ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
+from ootk.rules import GEOMANTIC_FIGURES, geomantic_sign, ASPECTS, ASPECTS_BY_NAME, DIGNITY_CONTRARY, DIGNITY_FRIENDLY, DIGNITY_SAME, element_dignity
 from ootk.spreads import (
-    BOOK_T_LAYOUT, HEAP_LAYOUTS, NAMED_PAIR_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
+    BOOK_T_LAYOUT, DECAN_START, HEAP_LAYOUTS, NAMED_PAIR_LAYOUTS, RING_LAYOUT_ASPECTS, SPREAD_DEFAULT_COORDINATES, TREE_LAYOUTS,
     spread_segments,
 )
 
@@ -241,7 +242,7 @@ def picture_fields(data):
     Trump's geomantic figure, a Trump's gods (Liber 777) and a court card's I Ching hexagram."""
     rows = []
     if data.get("arcana_type") == "Major":
-        figure = GEOMANTIC_FIGURES.get(data.get("attribution"))
+        figure = GEOMANTIC_FIGURES.get(geomantic_sign(data.get("attribution")))
         if figure:
             rows.append(["Geomantic figure", figure])
         gods = trump_gods(data)
@@ -366,9 +367,11 @@ def _wheel_drawing(layout_key, cards, aspects, pairs=()):
 
     band = []
     if n == 36:
-        # Outer band names the sign each run of three decans belongs to.
+        # Outer band names the sign each run of three decans belongs to. The wheel opens at
+        # DECAN_START (Saturn in Leo), so positions 1-3 are Leo's decans, not Aries'.
         labels = []
-        for s, sign in enumerate(SIGNS):
+        for s in range(12):
+            sign = SIGNS[(s + DECAN_START // 3) % 12]
             a0, a1 = angles[3 * s] - half, angles[3 * s + 2] + half
             mid = (a0 + a1) / 2
             band.append({"d": _sector_path(geo["r_band"], geo["r_out"], a0, a1)})
@@ -464,7 +467,16 @@ def _dignity_counts(entries):
         "contrary": sum(s == DIGNITY_CONTRARY for s in scores),
         "net": sum(scores),
         "net_text": _signed(sum(scores)),
+        "chance": _chance_view(len(scores), sum(scores)),
     }
+
+
+def _chance_view(pairs, net):
+    """dignity_chance() with its average and its usual range as text: "+17", "+3" and "+32".
+    The range is the one the headline calls usual."""
+    chance = dignity_chance(pairs, net)
+    return dict(chance, mean_text=f"{chance['mean']:+.0f}", low_text=_signed(chance["low"]),
+                high_text=_signed(chance["high"]))
 
 
 def _aspect_counts(aspects):
@@ -515,9 +527,19 @@ def _headline(element_rows, dignity, aspects):
                         else f"{_and(lows)} are weakest ({low['pct']:g}% each)")
             lines.append(f"{lead}; {tail}.")
     if dignity["pairs"]:
-        lean = ("favourable" if dignity["net"] > 0 else "unfavourable" if dignity["net"] < 0 else "even")
-        lines.append(f"Elemental dignities lean {lean}: net {dignity['net_text']} across "
-                     f"{dignity['pairs']} neighbouring pairs ({dignity['contrary']} contrary).")
+        # The scores average about +0.5 a pair at random, so a positive total is the usual result:
+        # the line says how this one compares with a random shuffle, not just its sign.
+        chance = dignity.get("chance") or _chance_view(dignity["pairs"], dignity["net"])
+        n = dignity["pairs"]
+        said = (f"net {dignity['net_text']} across {n} scored pair{'s' if n != 1 else ''} "
+                f"({dignity['contrary']} contrary)")
+        if chance["lean"] == "usual":
+            lines.append(f"Elemental dignities: {said}, about what a random shuffle gives "
+                         f"(average {chance['mean_text']}).")
+        else:
+            word = "favourable" if chance["lean"] == "above" else "unfavourable"
+            lines.append(f"Elemental dignities are unusually {word}: {said}, where a random "
+                         f"shuffle averages {chance['mean_text']}.")
     if aspects["total"]:
         # Aspects come from where two positions sit in the layout, never from the cards, so
         # their balance is the same in every reading of a spread and says nothing about this one.
@@ -717,10 +739,21 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
     dignity = _dignity_counts(dignity_matrix)
     aspects = _aspect_counts(all_aspects)
     key_cards = [cards[0]] if cards else []
-    if segments and len(segments[0]["cards"]) > 1:
+    # Book T: the story is the Count, the cards it lands on from the Significator in each
+    # operation. The last card of Operation 1's pile has no part in it, so it is not a key card.
+    count_rows = []
+    if book_t:
+        for seg, seg_book_t in zip(segments, book_t):
+            bt = seg_book_t or {}
+            chain = [seg["cards"][k] for k in bt.get("chain", []) if k]
+            left = bt.get("leftover")
+            count_rows.append({"name": seg["name"], "cards": chain, "missed": bool(bt.get("missed")),
+                               "leftover": seg["cards"][left] if left is not None else None})
+    elif segments and len(segments[0]["cards"]) > 1:
         key_cards.append(cards[len(segments[0]["cards"]) - 1])
     return {
         "headline": _headline(element_rows, dignity, aspects),
+        "chance": chance_view(spread_key, spread_results, dignity_matrix, framework_basis or "", own_place),
         "framework": macro_framework,
         "framework_basis": framework_basis,
         "own_place": [dict(c, sentence=own_place_sentence(c)) for c in own_place or ()],
@@ -731,7 +764,10 @@ def build_report_view(spread_key, spread_results, element_counts, dignity_matrix
         "aspects": aspects,
         "ill_dignified_count": sum(not c["dignified"] for c in cards),
         "card_count": len(cards),
+        # Different cards: fewer than card_count when operations reshuffle and a card falls again.
+        "distinct_count": len({item["card_data"]["title"] for item in spread_results}),
         "key_cards": key_cards,
+        "count_rows": count_rows,
         "segments": segments,
         "card_details": card_details(spread_results, cards, aspects_by_card, dignity_matrix, sign_carriers),
         "aspect_types": [{"type": t, "color": ASPECT_COLORS[t], "strong": is_strong(

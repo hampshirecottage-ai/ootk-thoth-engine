@@ -112,12 +112,12 @@ def duplicate_in_operation(positions, titles):
 # Book T's First Operation cuts the pack into four for the letters of the divine name; the pack
 # holding the significator shows which of these the matter turns on.
 IHVH_PACKS = (("Yod", "Wands", "work and business"), ("Heh", "Cups", "love and pleasure"),
-              ("Vau", "Swords", "trouble and loss"), ("Heh final", "Disks", "money and goods"))
+              ("Vav", "Swords", "trouble and loss"), ("Heh final", "Disks", "money and goods"))
 _POSITION_PREFIX = re.compile(r"^(\[Op \d+\] )?(\d+\. )?")
 
 
 def ihvh_pack_index(at, deck_size):
-    """Which of the four packs (0 Yod, 1 Heh, 2 Vau, 3 Heh final) holds the card at `at`
+    """Which of the four packs (0 Yod, 1 Heh, 2 Vav, 3 Heh final) holds the card at `at`
     (0 = top) when Operation 1 cuts the deck as Book T does: the top half to the left, each
     half cut again with its top to the left, and the packs read I H V H from right to left.
     So the top quarter is Heh final and the bottom quarter Yod. The cuts are as near equal

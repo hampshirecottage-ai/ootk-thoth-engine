@@ -7,10 +7,11 @@
         @font-face { font-family: "JetBrains Mono"; font-weight: 100 800; font-display: swap; src: url("{{ static_url('fonts/jetbrains-mono-latin.woff2') }}") format("woff2"); }
         body { font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         code, pre, kbd { font-family: "JetBrains Mono", ui-monospace, monospace; }
-        /* The OOTK emblem, faint and fixed behind every page. Set --emblem-opacity to 0 to hide it. */
-        :root { --emblem-opacity: 0.06; }
-        :root[data-theme="light"] { --emblem-opacity: 0.1; }
-        body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("{{ static_url('site/emblem.webp') }}") center 60% / min(92vmin, 760px) no-repeat; opacity: var(--emblem-opacity); mix-blend-mode: luminosity; }
+        /* The link preview's three cards, faded right down and fixed half off the bottom-right edge of
+           the screen behind every page. Set --backdrop-opacity to 0 to hide them. */
+        :root { --backdrop-opacity: 0.1; }
+        :root[data-theme="light"] { --backdrop-opacity: 0.16; }
+        body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url("{{ static_url('site/front-backdrop.webp') }}") right calc(-1 * min(26vw, 230px)) bottom -6vh / min(78vmin, 680px) no-repeat; opacity: var(--backdrop-opacity); }
         @media print { body::before { display: none; } }
         /* Banner colours: a darker green band with cream text on the green theme, the panel colours on the dark one. */
         :root { --band-bg: var(--panel); --band-line: var(--line); --band-text: var(--text); --band-head: #ffe0a0; --tile-bg: var(--panel-2); --page-width: 1160px; }
@@ -29,6 +30,13 @@
         .band.page-head { text-align: center; padding: 20px 22px 16px; }
         .band.page-head h1 { margin: 0; font-size: 1.7em; }
         .band.page-head .tagline { margin: 6px auto 0; }
+        /* The menu under a banner (_guide_nav.html). */
+        .guide-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 6px; margin: 12px 0 0; font-size: 0.92em; }
+        .guide-nav a { color: var(--band-text); text-decoration: none; padding: 5px 10px; border-radius: 999px; }
+        .guide-nav a:hover { text-decoration: underline; }
+        .guide-nav a.guide-draw { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+        .guide-nav a.guide-draw:hover { background: var(--accent-2); text-decoration: none; }
+        .guide-nav a[aria-current="page"] { background: var(--tile-bg); color: var(--text); font-weight: 600; }
         @media (max-width: 860px) {
             .band { padding: 18px 16px; }
             .band h1 { font-size: 1.4em; }

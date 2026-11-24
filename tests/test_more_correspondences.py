@@ -65,9 +65,32 @@ def test_decan_dates():
     assert solar_year(datetime(2026, 11, 4, tzinfo=timezone.utc)) == 2026
 
 
+def test_decan_dates_are_never_before_the_draw():
+    from ootk.decans import decan_dates_after, decan_window
+    drawn = datetime(2026, 11, 11, 18, tzinfo=timezone.utc)
+    assert decan_dates_after("7 of Cups - Debauch", drawn) == "12 Nov - 22 Nov 2026"     # starts the next day
+    assert decan_dates_after("6 of Cups - Pleasure", drawn) == decan_dates("6 of Cups - Pleasure", 2026)  # the Sun is in it now
+    assert decan_dates_after("2 of Wands - Dominion", drawn) == decan_dates("2 of Wands - Dominion", 2027)  # March 2026 is past
+    assert decan_dates_after("3 of Disks - Works", drawn) == "31 Dec 2026 - 10 Jan 2027"
+    assert decan_dates_after("Ace of Cups", drawn) is None
+    for title in ("2 of Wands - Dominion", "5 of Wands - Strife", "10 of Cups - Satiety", "9 of Disks - Gain"):
+        start, end = decan_window(title, drawn)
+        assert end >= drawn and (end - start).days < 12
+
+
 def test_day_ruler():
     assert day_ruler(datetime(2026, 11, 4, 12, tzinfo=timezone.utc)) == ("Wednesday", "Mercury")
     assert day_ruler(datetime(2026, 11, 8, 12, tzinfo=timezone.utc)) == ("Sunday", "Sun")
+
+
+def test_day_ruler_line_says_utc_when_no_time_zone_was_given():
+    from zoneinfo import ZoneInfo
+    from ootk.report import day_ruler_markdown
+    drawn = datetime(2026, 11, 5, 3, tzinfo=timezone.utc)   # Wednesday evening in Vancouver
+    assert "Thursday" in day_ruler_markdown(drawn) and "by UTC" in day_ruler_markdown(drawn)
+    assert "own clock" not in day_ruler_markdown(drawn)
+    local = day_ruler_markdown(drawn, ZoneInfo("America/Vancouver"))
+    assert "Wednesday" in local and "own clock" in local and "UTC" not in local
 
 
 # ---------- the prompt ----------
@@ -187,3 +210,17 @@ def test_owner_corrections_to_gods_and_hexagram_names():
     assert court_hexagram("Knight of Wands") == (51, "Chên, The Arousing (Crowley: Kan)")
     assert court_hexagram("Princess of Disks") == (52, "Kên, Keeping Still (Crowley: Kan)")
     assert court_hexagram("Queen of Cups") == (58, "Tui, The Joyous")
+
+
+def test_cached_sun_moments_match_the_uncached_working_and_stay_bounded():
+    from ootk.decans import _sun_reaches
+    # the caches only save repeat work: a fresh working gives the very same moment
+    for year in (1999, 2026, 2027, 2040):
+        assert _equinox(year) == _equinox.__wrapped__(year)
+        for degree in range(0, 361, 10):
+            assert _sun_reaches(degree, year) == _sun_reaches.__wrapped__(degree, year)
+    assert _equinox.cache_info().maxsize == 256
+    assert _sun_reaches.cache_info().maxsize == 2048
+    before = _sun_reaches.cache_info().hits
+    decan_dates("5 of Wands - Strife", 2026)
+    assert _sun_reaches.cache_info().hits > before        # the second ask is the kept one

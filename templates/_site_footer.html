@@ -1,15 +1,16 @@
-{# Shared footer with contact and bug report links. Styles are scoped to .site-footer so page layouts are untouched. #}
+{# Shared footer with contact and bug report links. The front page sets show_purpose to add
+   the site's one-line purpose under the links (AGENTS.md has the full statement). Styles are scoped to .site-footer so page layouts are untouched. #}
 <style>
     .site-footer { margin: 28px auto 8px; padding-top: 12px; border-top: 1px solid var(--line); text-align: center; font-size: 0.85em; color: var(--muted); }
     .site-footer a { color: var(--accent); text-decoration: none; display: inline-block; padding: 6px 8px; }
     .site-footer a:hover { text-decoration: underline; }
     :root[data-theme="light"] .site-footer, :root[data-theme="light"] .site-footer a { color: #ffe0a0; }
+    .site-footer .site-purpose { max-width: 36em; margin: 6px auto 0; padding: 0 16px; font-size: 0.9em; line-height: 1.5; opacity: 0.8; }
     @media print { .site-footer { display: none; } }
 </style>
 <footer class="site-footer">
     <a href="/">Draw a reading</a> ·
     <a href="/start">Start here</a> ·
-    <a href="/library">Library</a> ·
     <a href="/maps">Card maps</a> ·
     <a href="/method">How it works</a> ·
     <a href="/cards">All 78 cards</a> ·
@@ -17,4 +18,7 @@
     {% if journal_enabled() %}<a href="/journal">My journal</a> ·{% endif %}
     <a href="{{ bug_report_url }}" target="_blank" rel="noopener">Report a bug</a> ·
     <a href="{{ contact_url }}">Contact</a>
+    {% if show_purpose is defined and show_purpose %}
+    <p class="site-purpose">One job: to turn a real question into a correct, clearly explained Book&nbsp;T reading, with a prompt and timeline accurate enough to trust. Built for people learning the method, and for its maker.</p>
+    {% endif %}
 </footer>

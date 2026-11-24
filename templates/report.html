@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% with noindex=true %}{% include "_head_meta.html" %}{% endwith %}
     <title>{{ spread_name }} reading · OOTK Thoth Engine</title>
-    <script>
-        // Saved choice first, otherwise the light (beige) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
     <style>
         :root {
             --bg: #121212; --panel: #1e1e1e; --panel-2: #252525; --line: #333; --text: #e0e0e0;
@@ -66,6 +59,10 @@
         .simple-card figcaption { display: flex; flex-direction: column; font-size: 0.88em; margin-top: 6px; line-height: 1.3; }
         .simple-card figcaption .muted { font-size: 0.85em; }
         .simple-card.selected img { outline: 3px solid var(--accent-2); }
+        .count-sig { grid-template-columns: repeat(auto-fill, minmax(110px, 130px)); }
+        .count-op { margin: 14px 0 4px; font-size: 1em; }
+        .count-strip { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; }
+        .count-strip .simple-card figcaption { font-size: 0.8em; }
         .tap-hint { font-size: 0.82em; margin: 8px 0 0; }
         .element-strip { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--panel-2); }
         .element-strip span { display: block; }
@@ -79,11 +76,13 @@
         .end-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
         .end-actions form { margin: 0; }
         @media (max-width: 600px) { .simple-cards { grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px; } .simple-card figcaption { font-size: 0.8em; } }
+        @media (max-width: 600px) { .count-strip { grid-template-columns: repeat(4, 1fr); gap: 8px; } .count-strip .simple-card figcaption { font-size: 0.72em; } .count-sig { grid-template-columns: 92px; } }
         .journal-box h3 { margin: 0 0 4px; }
         .journal-box .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
         .journal-add { display: grid; gap: 6px; max-width: 420px; margin-top: 8px; }
         .journal-add label { font-size: 0.9em; font-weight: 600; }
-        .journal-add select, .journal-add input { margin: 0; }
+        .journal-add select, .journal-add input { width: 100%; margin: 0; padding: 8px 10px; background: var(--panel-2); border: 1px solid var(--control); color: var(--text); border-radius: 4px; font-size: 0.95em; }
+        @media (max-width: 640px) { .journal-add select, .journal-add input { font-size: 16px; } }
         .journal-add button { justify-self: start; }
         .journal-box form.actions { margin: 0; }
         .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 16px; }
@@ -111,6 +110,25 @@
         .headline { font-size: 1.05em; margin: 4px 0 14px; padding-left: 0; list-style: none; }
         .headline li { margin-bottom: 4px; }
         .headline li::before { content: "◆ "; color: var(--accent); }
+        /* How unusual is this? Each headline number beside what random shuffles give. */
+        .chance-box { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; background: var(--panel-2); }
+        .chance-box summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+        .chance-box p { font-size: 0.85em; margin: 8px 0; }
+        .chance-table { width: 100%; border-collapse: collapse; font-size: 0.88em; }
+        .chance-table th, .chance-table td { text-align: left; padding: 5px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+        .chance-table th { font-weight: 600; color: var(--muted); border-top: 0; }
+        .chance-table .num { white-space: nowrap; }
+        .chance-table tr.is-unusual td { font-weight: 600; }
+        .chance-table tr.is-unusual td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+        @media (max-width: 560px) {
+            .chance-table, .chance-table tbody { display: block; }
+            .chance-table thead { display: none; }
+            .chance-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; border-top: 1px solid var(--line); padding: 6px 0; }
+            .chance-table td { display: block; border: 0; padding: 1px 6px; min-width: 0; }
+            .chance-table td:nth-child(2) { text-align: right; }
+            .chance-table td:nth-child(3), .chance-table td:nth-child(4) { grid-column: 1 / -1; font-size: 0.95em; }
+            .chance-table td:nth-child(3)::before { content: "Random shuffles: "; color: var(--muted); }
+        }
         /* Chart on the left, stretched to the height of the tiles and key cards on the right. */
         .balance-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 3fr); gap: 12px 20px; align-items: stretch; }
         .balance-chart { display: flex; flex-direction: column; min-width: 0; }
@@ -312,7 +330,7 @@
     <!-- ===== BANNER: WHAT THIS IS AND WHAT TO DO NOW ===== -->
     <section class="band report-head" id="nowStep" aria-labelledby="pageTitle">
         <div class="band-text">
-            <p class="chips"><span>{% if shared %}Shared reading{% else %}Your reading{% endif %}</span><span>{{ S.card_count }} card{{ 's' if S.card_count != 1 }}</span><span>{{ mapping_label.split(' (')[0] }}</span>{% if seed %}<span>Seed {{ seed }}</span>{% endif %}</p>
+            <p class="chips"><span>{% if shared %}Shared reading{% else %}Your reading{% endif %}</span>{% if S.distinct_count and S.distinct_count < S.card_count %}<span title="Each operation reshuffles the whole deck, so some cards fall more than once">{{ S.card_count }} positions · {{ S.distinct_count }} different cards</span>{% else %}<span>{{ S.card_count }} card{{ 's' if S.card_count != 1 }}</span>{% endif %}<span>{{ mapping_label.split(' (')[0] }}</span>{% if seed %}<span>Seed {{ seed }}</span>{% endif %}</p>
             <h1 id="pageTitle">{{ spread_name }}</h1>
             {% if topic %}<p class="tagline now-question">Your question: <strong>{{ topic }}</strong></p>{% endif %}
         </div>
@@ -325,7 +343,7 @@
     {% if unsaved %}
     <p class="panel save-failed" id="saveFailed" role="alert"><strong>This reading couldn't be saved.</strong>
         It has no link of its own and won't come back if you leave or reload this page.
-        {% if share_path %}The share link further down redraws the same cards.{% else %}Save the prompt as Markdown now if you want to keep it.{% endif %}</p>
+        {% if share_path %}The share link further down redraws the same cards.{% else %}Press Save the prompt for your AI now if you want to keep it.{% endif %}</p>
     {% endif %}
 
     <!-- ===== THE SIMPLE VIEW: THE CARDS AND THREE LINES ===== -->
@@ -340,6 +358,32 @@
             </figure>
             {% endfor %}
         </div>
+        {% elif S.count_rows %}
+        <h2>The Count</h2>
+        <p class="muted" style="margin:0 0 8px">Book&nbsp;T&rsquo;s story: from the Significator, the cards the Count lands on in each operation, in order.</p>
+        <div class="simple-cards count-sig">
+            {% for c in S.key_cards %}
+            <figure class="simple-card" data-card="{{ c.gindex }}" tabindex="0" role="button">
+                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" decoding="async">{% else %}<div class="noimg">{{ c.short }}</div>{% endif %}
+                <figcaption><span class="muted">The Significator</span><strong>{{ c.title }}</strong><span><i class="dot" style="background:{{ c.color }}"></i>{{ c.element }}</span></figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        {% for row in S.count_rows %}
+        <h3 class="count-op">{{ row.name }}{% if row.missed %} <span class="muted" style="font-weight:normal; font-size:0.85em">· not where the question expected it: read with caution</span>{% endif %}</h3>
+        {% if row.cards %}
+        <div class="simple-cards count-strip">
+            {% for c in row.cards %}
+            <figure class="simple-card" data-card="{{ c.gindex }}" tabindex="0" role="button">
+                {% if c.image %}<img src="{{ c.image }}" srcset="{{ c.srcset }}" alt="{{ c.title }}" width="200" height="333" loading="lazy" decoding="async" style="border-color:{{ c.color }}">{% else %}<div class="noimg" style="border-color:{{ c.color }}">{{ c.short }}</div>{% endif %}
+                <figcaption><span class="muted">Step {{ loop.index + 1 }}</span><strong>{{ c.title }}</strong></figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+        {% else %}<p class="muted" style="margin:0">The count comes straight back to the Significator.</p>{% endif %}
+        {% if row.leftover %}<p class="muted" style="margin:6px 0 0; font-size:0.9em">Read on its own (left over after pairing): <span class="count-left" data-card="{{ row.leftover.gindex }}" tabindex="0" role="button" style="text-decoration:underline; cursor:pointer">{{ row.leftover.title }}</span></p>{% endif %}
+        {% endfor %}
+        <p class="muted" style="margin:8px 0 0; font-size:0.9em">All {{ S.card_count }} {{ 'positions' if S.distinct_count and S.distinct_count < S.card_count else 'cards' }}, with the pairs, are in the workings below.</p>
         {% else %}
         <h2>Key cards</h2>
         <div class="simple-cards">
@@ -356,7 +400,7 @@
             {% for p in S.significator_places %}<li><strong>Operation {{ p.op }}:</strong> {{ p.place }}</li>{% endfor %}
         </ul>
         {% endif %}
-        <p class="muted" style="margin:8px 0 0; font-size:0.9em">All {{ S.card_count }} cards, operation by operation, are in the workings below.</p>
+        <p class="muted" style="margin:8px 0 0; font-size:0.9em">All {{ S.card_count }} {{ 'positions' if S.distinct_count and S.distinct_count < S.card_count else 'cards' }}, operation by operation, are in the workings below.</p>
         {% endif %}
         <p class="tap-hint muted">Tap a card to see its correspondences.</p>
 
@@ -369,6 +413,22 @@
             {% for e in S.elements if e.count %}<span style="flex-grow:{{ e.count }}; background:{{ e.color }}" title="{{ e.element }} {{ e.count }}"></span>{% endfor %}
         </div>
         <p class="legend" style="margin-top:6px">{% for e in S.elements %}<span><i class="dot" style="background:{{ e.color }}"></i>{{ e.element }} {{ e.count }}</span>{% endfor %}</p>
+        {% if S.chance %}{% set C = S.chance %}
+        <details class="chance-box" id="howUnusual">
+            <summary><strong>How unusual is this?</strong>
+                <span class="muted">{% if C.unusual %}{{ C.unusual | length }} of {{ C.rows | length }} numbers stand{{ 's' if C.unusual | length == 1 }} out from chance{% else %}Nothing here stands out from chance{% endif %}</span></summary>
+            <p class="muted">Each number beside what random shuffles of this spread give. A number is called unusual only when random shuffles reach it, or go further, 1 time in 20 or less.</p>
+            <table class="chance-table">
+                <thead><tr><th>Number</th><th>This reading</th><th>Random shuffles</th><th></th></tr></thead>
+                <tbody>
+                {% for r in C.rows %}
+                <tr class="{{ 'is-unusual' if r.unusual }}"><td>{{ r.label }}</td><td class="num">{{ r.value }}</td><td class="num">{{ r.usual }}</td><td>{{ r.verdict }}{% if r.odds %}<span class="muted">: {{ r.odds }}</span>{% endif %}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p class="muted">With {{ C.rows | length }} numbers checked, {{ (100 * C.any_rate) | round | int }}% of random shuffles show at least one unusual one, so a single flag is weak evidence on its own.</p>
+        </details>
+        {% endif %}
     </section>
 
     <!-- ===== EVERYTHING ELSE, FOLDED ===== -->
@@ -404,6 +464,7 @@
                     <div class="label">Elemental dignities</div>
                     <div class="big">{{ signed(S.dignity.net) }}</div>
                     <div class="muted" style="font-size:0.85em">{{ S.dignity.strong }} same element · {{ S.dignity.friendly }} friendly · {{ S.dignity.neutral }} neutral · {{ S.dignity.contrary }} contrary, over {{ S.dignity.pairs }} pairs</div>
+                    <div class="muted" style="font-size:0.85em">A random shuffle averages about {{ S.dignity.chance.mean_text }}; nine in ten land between {{ S.dignity.chance.low_text }} and {{ S.dignity.chance.high_text }}</div>
                 </div>
                 <div class="tile">
                     <div class="label">Ill-dignified cards</div>
@@ -689,7 +750,7 @@
     <section class="panel" id="readingDetails">
         <h2>Reading details</h2>
         <div class="meta">
-            <div><span>Topic</span>{{ topic or 'General Operation' }}</div>
+            <div><span>Topic</span>{{ topic or 'No question: a general reading' }}</div>
             {% if not significator.startswith('None') %}<div><span>Significator</span>{{ significator }}</div>{% endif %}
             <div><span>Mapping</span>{{ mapping_label }}</div>
             <div><span>Framework</span>{{ S.framework }}<div class="muted" style="font-size:0.85em">{{ S.framework_basis }}</div></div>
@@ -708,7 +769,7 @@
             <p class="muted" style="margin:12px 0 0">Share link{% if topic %} (your question is left out){% endif %}:</p>
             <div class="share-row">
                 <code class="cli" id="shareLink" data-path="{{ share_path }}">{{ share_path }}</code>
-                <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this, 'shareLink')">Copy link</button>
+                <button class="chip" type="button" onclick="copyText(document.getElementById('shareLink').textContent, this, 'shareLink')">Copy share link</button>
             </div>
         </div>
         <script>
@@ -754,9 +815,10 @@
             <select id="jThread" name="thread" onchange="document.getElementById('jNewRow').hidden = this.value !== 'new'">
                 <option value="">Not in a question yet</option>
                 {% for t in journal_box.threads %}<option value="{{ t.thread_id }}">{{ t.name }}</option>{% endfor %}
-                <option value="new"{% if not journal_box.threads %} selected{% endif %}>+ New question…</option>
+                {# A first question is offered only when the reading has one to name it by. #}
+                <option value="new"{% if topic and not journal_box.threads %} selected{% endif %}>+ New question…</option>
             </select>
-            <div id="jNewRow"{% if journal_box.threads %} hidden{% endif %}><label for="jNew">New question</label><input id="jNew" name="new_thread" maxlength="200" value="{{ topic or '' }}"></div>
+            <div id="jNewRow"{% if journal_box.threads or not topic %} hidden{% endif %}><label for="jNew">New question</label><input id="jNew" name="new_thread" maxlength="200" value="{{ (topic or '')[:200] }}"></div>
             <button type="submit" class="btn">Add to my journal</button>
         </form>
         {% else %}
