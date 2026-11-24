@@ -338,14 +338,20 @@ def replace_windows(conn, journal_id, entry_id, windows):
 
 
 MONTHS = ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec")
-_MON = r"(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)"
+# Month names. "may" and "march" are everyday words too ("things may 2-3 weeks"), so those two
+# count as months only with a capital M; the rest in any case.
+_MON = (r"(jan(?:uary)?|feb(?:ruary)?|(?-i:M)ar(?:ch)?|apr(?:il)?|(?-i:M)ay|june?|july?|aug(?:ust)?"
+        r"|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)")
 _DAY = r"(\d{1,2})(?:st|nd|rd|th)?"
-_TO = r"\s*(?:to|through|until|till|-|–|—)\s*"
-# "Nov 12 to Nov 22", "12 November – 22 November", "Nov 12-22", "12-22 Nov"
+_YEAR = r"(?:,?\s+(\d{4})\b)?"            # "Nov 12, 2027" or "12 November 2027"
+_TO = r"\s*(?:to|through|until|till|->|→|⟶|-|–|—)\s*"
+# "Nov 12 to Nov 22", "12 November – 22 November", "Nov 12-22", "12-22 Nov", each with an
+# optional year after either date: "31 December 2026 to 10 January 2027", "December 2, 2026 to
+# December 12, 2026", "2 to 12 November 2027". Groups: month, day, year of the start, then of the end.
 _RANGES = (
-    re.compile(rf"\b{_MON}\.?\s+{_DAY}{_TO}(?:{_MON}\.?\s+)?{_DAY}\b", re.I),       # Mon d to [Mon] d
-    re.compile(rf"\b{_DAY}\s+{_MON}\.?{_TO}{_DAY}\s+{_MON}\b", re.I),             # d Mon to d Mon
-    re.compile(rf"\b{_DAY}{_TO}{_DAY}\s+{_MON}\b", re.I),                          # d-d Mon
+    (re.compile(rf"\b{_MON}\.?\s+{_DAY}{_YEAR}{_TO}(?:{_MON}\.?\s+)?{_DAY}\b{_YEAR}", re.I), (0, 1, 2, 3, 4, 5)),
+    (re.compile(rf"\b{_DAY}\s+{_MON}\b\.?{_YEAR}{_TO}{_DAY}\s+{_MON}\b{_YEAR}", re.I), (1, 0, 2, 4, 3, 5)),
+    (re.compile(rf"\b{_DAY}{_TO}{_DAY}\s+{_MON}\b{_YEAR}", re.I), (2, 0, None, 2, 1, 3)),
 )
 
 
@@ -353,16 +359,19 @@ def _month(name):
     return MONTHS.index(name[:3].lower()) + 1
 
 
-def _label(line, match_start):
-    """The words before a date range on its line, without Markdown marks, as the window's name."""
-    text = line[:match_start]
+def _label(line, match_start, after=0):
+    """The words before a date range on its line (from `after`, the end of the range before it
+    on the same line), without Markdown marks, as the window's name."""
+    text = line[after:match_start]
+    if after:
+        text = re.sub(r"^[\s,;.:)]*(?:(?:and|then|or|while)\b[\s,]*)*", "", text, flags=re.I)
     text = re.sub(r"[*_`#>|]+", " ", text)
     text = re.sub(r"^\s*(?:[-+•]|\d+[.)])\s*", "", text)
     text = re.sub(r"\(\s*$", "", text)
-    text = " ".join(text.split()).strip(" :–—-,(")
+    text = " ".join(text.split()).strip(" :;–—-,(")
     for word in (" from", " between", " around", " during", " on", " is", " runs"):
-        if text.lower().endswith(word):
-            text = text[: -len(word)].rstrip(" :–—-,")
+        if f" {text.lower()}".endswith(word):          # "Power runs" -> "Power"; "From" -> ""
+            text = text[: max(0, len(text) - len(word))].rstrip(" :;–—-,")
     return text[:WINDOW_LABEL_MAX]
 
 
@@ -391,7 +400,7 @@ def _is_timeline_head(line):
 
 
 _ISO = r"(\d{4})-(\d{1,2})-(\d{1,2})"
-_ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|–|—|-)\s*{_ISO})?")
+_ISO_RANGE = re.compile(rf"{_ISO}(?:\s*(?:to|through|until|->|→|⟶|–|—|-)\s*{_ISO})?")
 
 
 def _iso_window(line):
@@ -439,41 +448,89 @@ def timeline_windows(text):
     return out[:WINDOWS_MAX]
 
 
+def _next_year(after, m1, d1, m2, d2):
+    """(starts, ends) for a range written without a year: the first one that hasn't ended by
+    the day before the draw, as a reading looks ahead (the decan dates in its prompt are the
+    windows on or after the draw). A window open at the draw keeps the draw's year, and around
+    New Year "Dec 31 to Jan 9" drawn on 5 January is the one running then, not next winter's."""
+    for year in (after.year - 1, after.year, after.year + 1):
+        try:
+            starts = date(year, m1, d1)
+            ends = date(year + (1 if (m2, d2) < (m1, d1) else 0), m2, d2)
+        except ValueError:
+            continue
+        if ends >= after - timedelta(days=1):
+            return starts, ends
+    raise ValueError("no such date")
+
+
+def _prose_window(g, order, after):
+    """(starts, ends) for one prose range's regex groups, read in `order` (start month, day and
+    year, end month, day and year); a year written after either date is used, else the next."""
+    m1, d1, y1, m2, d2, y2 = (g[i] if i is not None else None for i in order)
+    m1 = _month(m1)
+    m2 = _month(m2) if m2 else m1
+    d1, d2 = int(d1), int(d2)
+    if not (y1 or y2):
+        return _next_year(after, m1, d1, m2, d2)
+    wraps = (m2, d2) < (m1, d1)
+    y1 = int(y1) if y1 else int(y2) - (1 if wraps else 0)
+    y2 = int(y2) if y2 else y1 + (1 if wraps else 0)
+    starts, ends = date(y1, m1, d1), date(y2, m2, d2)
+    return min(starts, ends), max(starts, ends)
+
+
+def _no_timeline(text):
+    """Whether the answer's Timeline list says `- none`: the AI was asked to write that when the
+    reading points to no particular time, so dates elsewhere in it are not offered."""
+    inside = False
+    for line in (text or "").splitlines():
+        if len(line) > 1000:
+            continue
+        if _is_timeline_head(line):
+            inside = True
+            continue
+        if inside and line.strip():
+            words = line.strip().lstrip("-*•").strip().rstrip(".")   # string work: no regex to slow
+            if words.lower() == "none":
+                return True
+            if _heading(line) is not None:
+                inside = False
+    return False
+
+
 def find_windows(text, after):
     """Date ranges an AI answer names, as (label, starts, ends). The `## Timeline` list the
-    prompt asks for is used when there is one; otherwise ranges anywhere in the answer are
-    found, with the year filled in: each taken as the next one on or after `after` (the day
-    the cards were drawn). Lines without words before the date get "Window" as their name."""
+    prompt asks for is used when there is one; a list that says `- none` means no dates.
+    Otherwise ranges anywhere in the answer are found, with a year written after a date used,
+    or else the next such range that hasn't ended before `after` (the day the cards were
+    drawn). Lines without words before the date get "Window" as their name."""
     listed = [w for w in timeline_windows(text) if window_near(w[1], w[2], after)]
     if listed:
         return listed
+    if _no_timeline(text):
+        return []
     found, seen = [], set()
     for line in (text or "").splitlines():
-        for pattern in _RANGES:
-            for m in pattern.finditer(line):
-                g = m.groups()
-                try:
-                    if pattern is _RANGES[0]:
-                        m1, d1, m2, d2 = _month(g[0]), int(g[1]), _month(g[2] or g[0]), int(g[3])
-                    elif pattern is _RANGES[1]:
-                        d1, m1, d2, m2 = int(g[0]), _month(g[1]), int(g[2]), _month(g[3])
-                    else:
-                        d1, d2, m1 = int(g[0]), int(g[1]), _month(g[2])
-                        m2 = m1
-                    # The next such range from the draw; a start up to a month before the draw
-                    # (a window already open when the cards were drawn) stays in the draw's year.
-                    year = after.year
-                    if date(year, m1, 1) < date(after.year, after.month, 1) and (after.month - m1) % 12 > 1:
-                        year += 1
-                    starts = date(year, m1, d1)
-                    ends = date(year + (1 if (m2, d2) < (m1, d1) else 0), m2, d2)
-                except ValueError:
-                    continue
-                if (starts, ends) in seen:
-                    continue
-                seen.add((starts, ends))
-                found.append((_label(line, m.start()) or "Window", starts, ends))
-        w = _iso_window(line) if len(line) <= 1000 else None    # 2026-12-01 to 2026-12-21
+        if len(line) > 1000:                   # no line naming a date is this long
+            continue
+        matches = sorted(((m, order) for pattern, order in _RANGES for m in pattern.finditer(line)),
+                         key=lambda x: (x[0].start(), -x[0].end()))
+        prev_end = 0
+        for m, order in matches:
+            if m.start() < prev_end:           # the same dates read by another pattern
+                continue
+            try:
+                starts, ends = _prose_window(m.groups(), order, after)
+            except ValueError:
+                continue
+            label = _label(line, m.start(), prev_end) or "Window"
+            prev_end = m.end()
+            if (starts, ends) in seen or not window_near(starts, ends, after):
+                continue
+            seen.add((starts, ends))
+            found.append((label, starts, ends))
+        w = _iso_window(line)                  # 2026-12-01 to 2026-12-21
         if w and w[1:] not in seen and window_near(w[1], w[2], after):
             seen.add(w[1:])
             found.append(w)
