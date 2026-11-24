@@ -1838,6 +1838,23 @@ def journal_timeline(request: Request):
     return journal_page(request, "journal_timeline.html", timeline=timeline, empty=not entries)
 
 
+def book_t_timing_row(entry):
+    """[(label, starts, ends)] for a Book T entry: the window of the card Book T times the
+    matter by, with the very dates its prompt's Timeline rule gave the AI (report.book_t_timing),
+    for Find dates to offer first and ticked. [] for other spreads, or a reading that can't be
+    redrawn any more."""
+    if entry["spread_key"] != BOOK_T_KEY or not entry["link"]:
+        return []
+    try:
+        timing = saved_reading_parts(entry["link"])[2].get("timing")
+    except HTTPException:
+        return []
+    if not timing:
+        return []
+    label = f"Book T timing: {timing['title'].partition(' - ')[0]}"[:journal.WINDOW_LABEL_MAX]
+    return [(label, date.fromisoformat(timing["start"]), date.fromisoformat(timing["end"]))]
+
+
 @app.get("/journal/entry/{entry_id}", response_class=HTMLResponse)
 def journal_entry(request: Request, entry_id: int):
     """One reading in the journal: its cards, the AI's answer, notes and what happened."""
@@ -1860,12 +1877,16 @@ def journal_entry(request: Request, entry_id: int):
     dates_offered = bool(windows) or bool(entry["answer"])
     found = None
     if "find" in request.query_params:
-        # The "Find dates" button: dates in the answer (ticked) and the drawn small cards'
+        # The "Find dates" button: dates in the answer (ticked), the Book T timing card's window
+        # (ticked, when the answer doesn't already give those days) and the drawn small cards'
         # decan dates (unticked), added under the saved ones for checking before Save.
         have = {(w["starts"], w["ends"]) for w in windows}
-        found = {"answer": 0, "cards": 0}
+        timing = book_t_timing_row(entry)
+        found = {"answer": 0, "timing": 0, "cards": 0,
+                 "book_t": timing and {"label": timing[0][0], "starts": timing[0][1], "ends": timing[0][2]}}
         for source, keep, rows in (
                 ("answer", True, journal.find_windows(entry["answer"], entry["drawn_at"].date()) if entry["answer"] else []),
+                ("timing", True, timing),
                 ("cards", False, journal.card_windows(entry["card_titles"], entry["drawn_at"]))):
             for label, starts, ends in rows:
                 if (starts, ends) not in have:

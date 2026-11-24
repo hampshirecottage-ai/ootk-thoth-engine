@@ -513,3 +513,40 @@ def test_everyday_words_and_other_ways_of_writing_a_range():
     # Two ranges on one line: each is named by its own words.
     assert f("Swiftness Nov 22 to Dec 2 and then Strength Dec 2 to Dec 12.", nov17) == [
         ("Swiftness", date(2026, 11, 22), date(2026, 12, 2)), ("Strength", date(2026, 12, 2), date(2026, 12, 12))]
+
+
+def test_card_windows_start_a_running_decan_at_the_draw():
+    """As in the prompt's Timeline rule: a decan the Sun is already in runs from the draw."""
+    from datetime import datetime, timezone
+    drawn = datetime(2026, 11, 17, 21, 51, tzinfo=timezone.utc)      # the Sun in 7 of Cups' decan
+    assert journal.card_windows(["7 of Cups - Debauch", "8 of Wands - Swiftness"], drawn) == [
+        ("7 of Cups decan", date(2026, 11, 17), date(2026, 11, 22)),
+        ("8 of Wands decan", date(2026, 11, 22), date(2026, 12, 2))]
+
+
+@needs_db
+def test_find_dates_offers_the_book_t_timing_card_first_and_ticked(key):
+    c = TestClient(app_module.app)
+    r = c.post("/generate_report", data={"spread_key": "13", "seed": "12345", "topic": "When?",
+                                         "mapping_system": "thoth", "framework": "auto", "draw_mode": "seed",
+                                         "significator": "Queen of Cups"}, follow_redirects=False)
+    link = r.headers["location"].rsplit("/", 1)[1]
+    timing = app_module.saved_reading_parts(link)[2]["timing"]
+    card = timing["title"].partition(" - ")[0]
+    # The prompt's Timeline rule gives the AI these very dates.
+    assert f"`- the matter turns: {timing['start']} to {timing['end']}`" in c.get(f"/report/{link}").text
+    entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
+    page = c.get(entry_url + "?find=1").text
+    assert f"Book T times this reading by the {card}:" in page
+    rows = [r for r in page.split("<tr") if 'name="w_label"' in r]
+    found = [r for r in rows if 'class="j-found"' in r]
+    first = found[0]                    # nothing saved yet: the timing card's row comes first
+    assert f'value="Book T timing: {card}"' in first and " checked " in first
+    assert f'value="{timing["start"]}"' in first and f'value="{timing["end"]}"' in first
+    assert all(" checked " not in r for r in found[1:])                # the other cards, unticked
+    # Once the answer gives those days, its own (ticked) line stands for them: no second row.
+    answer = f"## Timeline\n- the matter turns: {timing['start']} to {timing['end']}"
+    c.post(entry_url, data={"answer": answer, "windows_shown": "0"})
+    page = c.get(entry_url + "?find=1").text
+    assert f"Book T timing: {card}" not in page and f"Book T times this reading by the {card}:" in page
+    c.post("/journal/delete")
