@@ -1834,7 +1834,7 @@ def journal_timeline(request: Request):
         threads = journal.list_threads(conn, journal_id)
         entries = journal.list_entries(conn, journal_id)
         windows = journal.list_windows(conn, journal_id)
-    timeline = journal.build_timeline(threads, entries, windows, datetime.now(timezone.utc).date(), spread_label)
+    timeline = journal.build_timeline(threads, entries, windows, journal.local_today(entries), spread_label)
     return journal_page(request, "journal_timeline.html", timeline=timeline, empty=not entries)
 
 

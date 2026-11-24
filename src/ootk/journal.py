@@ -15,7 +15,8 @@ import hashlib
 import os
 import re
 import secrets
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from cryptography.fernet import Fernet, InvalidToken
 
@@ -183,15 +184,43 @@ ENTRY_COLUMNS = (
     "e.entry_id, e.thread_id, e.session_id, e.added_at, e.answer, e.answer_ai, e.notes, e.outcome, "
     "e.outcome_at, s.created_at AS drawn_at, s.report_settings->>'link' AS link, "
     "s.report_settings->>'topic' AS question, s.report_settings->>'spread_key' AS spread_key, "
-    "s.report_settings->'card_titles' AS card_titles")
+    "s.report_settings->'card_titles' AS card_titles, s.report_settings->>'tz' AS tz")
+
+
+def _zone(name):
+    """The reading's time zone from the IANA name its browser gave when it was drawn (kept in
+    report_settings 'tz'), or UTC when it gave none or one this machine doesn't know."""
+    if name and len(name) <= 64:
+        try:
+            return ZoneInfo(name)
+        except (KeyError, ValueError, OSError):
+            pass
+    return timezone.utc
 
 
 def _entry(row):
+    """An entry row with its texts decrypted and its times in the reading's own time zone: the
+    database gives them in UTC, so a reading drawn at 5 PM in Vancouver would otherwise be dated
+    the next day, unlike its report."""
     row = dict(row)
     for key in ("answer", "notes", "outcome"):
         row[key] = unseal(row[key])
     row["card_titles"] = list(row["card_titles"] or [])
+    zone = _zone(row.pop("tz", None))
+    for key in ("drawn_at", "added_at", "outcome_at"):
+        if isinstance(row.get(key), datetime) and row[key].tzinfo:
+            row[key] = row[key].astimezone(zone)
     return row
+
+
+def local_today(entries, now=None):
+    """Today's date where the journal's newest reading was drawn (its readings carry their
+    time zone; the journal itself has none), or in UTC for a journal with no readings."""
+    now = now or datetime.now(timezone.utc)
+    if not entries:
+        return now.astimezone(timezone.utc).date()
+    newest = max(entries, key=lambda e: e["drawn_at"])
+    return now.astimezone(newest["drawn_at"].tzinfo).date()
 
 
 def list_entries(conn, journal_id, thread_id=None, unfiled=False):

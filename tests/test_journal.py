@@ -437,3 +437,40 @@ def test_a_60000_character_answer_is_saved(key):
     assert r.status_code == 303
     assert answer.strip()[-40:] in c.get(entry_url).text
     c.post("/journal/delete")
+
+
+def test_entry_times_are_in_the_readings_own_time_zone():
+    """The database gives UTC; an entry's dates are the day where the reading was drawn, as on
+    its report. 17:17 in Vancouver on 17 Nov is 01:17 UTC on 18 Nov."""
+    from datetime import datetime, timezone
+    row = {"answer": None, "notes": None, "outcome": None, "card_titles": [], "tz": "America/Vancouver",
+           "drawn_at": datetime(2026, 11, 18, 1, 17, tzinfo=timezone.utc),
+           "added_at": datetime(2026, 11, 18, 1, 20, tzinfo=timezone.utc), "outcome_at": None}
+    e = journal._entry(row)
+    assert e["drawn_at"].date().isoformat() == "2026-11-17" and e["added_at"].day == 17
+    assert "tz" not in e and e["outcome_at"] is None
+    for zone in ("", None, "Not/AZone", "Europe", "x" * 200):    # unknown or missing: UTC as before
+        assert journal._entry(dict(row, tz=zone))["drawn_at"].date().isoformat() == "2026-11-18"
+    # Today follows the newest reading's zone: 01:17 UTC on 18 Nov is still the 17th in Vancouver.
+    now = datetime(2026, 11, 18, 1, 17, tzinfo=timezone.utc)
+    assert journal.local_today([e], now).isoformat() == "2026-11-17"
+    assert journal.local_today([], now).isoformat() == "2026-11-18"
+
+
+@needs_db
+def test_an_evening_reading_keeps_its_local_date_in_the_journal(key):
+    from ootk import db
+    c = TestClient(app_module.app)
+    r = c.post("/generate_report", data={"spread_key": "3", "seed": "100020", "topic": "Evening?",
+                                         "mapping_system": "thoth", "framework": "auto", "draw_mode": "seed",
+                                         "tz": "America/Vancouver"}, follow_redirects=False)
+    link = r.headers["location"].rsplit("/", 1)[1]
+    with db.get_db_connection() as conn:
+        conn.execute("UPDATE tarot_sessions SET created_at = '2026-11-18T01:17:00Z' "
+                     "WHERE report_settings->>'link' = %s;", (link,))
+        conn.commit()
+    entry_url = c.post("/journal/start", data={"link": link}, follow_redirects=False).headers["location"].split("?")[0]
+    assert "17 Nov 2026" in c.get(entry_url).text
+    assert "17 Nov 2026" in c.get("/journal").text and "18 Nov 2026" not in c.get("/journal").text
+    assert "drawn 17 Nov 2026" in c.get("/journal/timeline").text
+    c.post("/journal/delete")
