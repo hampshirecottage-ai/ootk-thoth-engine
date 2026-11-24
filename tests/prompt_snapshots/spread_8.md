@@ -4,13 +4,15 @@
 **In Plain Words:** 15 cards were drawn. The Significator, Queen of Cups, stands for the querent. Air leads with 6 of 15 cards; Earth is least, with 2.
 **How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
 
-**Operation/Spread:** 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)
+**Operation/Spread:** First Operation variant (15-card heap, not the IHVH four packs)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **Where the Significator Falls:** Book T's key to each operation, worked out from the shuffle each operation was dealt from by laying out the whole deck, not only the cards printed in section 1. For Operation 1 the deck is cut into four packs for I H V H and the pack holding the Significator is named; the printed Operation 1 cards are still the 15-card heap.
   * Operation 1: the Heh final pack (Disks: money and goods)
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
+**Framework Basis:** the default lens: the cards run neither down nor up the Tree clearly enough to pick another, so the cards did not choose it.
+**Against Chance:** Compared with random shuffles of this spread, none of the 7 numbers checked (elemental dignity total, most cards of one element, fewest cards of one element, ill-dignified cards, trumps, ranks falling three or four times, tree lens chosen by the cards) is unusual, so read them as ordinary for this spread.
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 
@@ -33,9 +35,9 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 2: 2. Development of Question (Left Pair A)
 - **Card Drawn**: Prince of Swords
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
 ### Position 3: 3. Development of Question (Left Pair B)
 - **Card Drawn**: 4 of Swords - Truce
@@ -53,7 +55,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 5: 5. Further Outcome (Right Pair B)
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Element (used in scores)**: Earth (via Taurus)
 
@@ -105,7 +107,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 ### Position 13: 13. Final Synthesis / Karma (Top Apex B)
 - **Card Drawn**: XVI - The Tower
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 
@@ -123,7 +125,7 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
 
-**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
+**Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path. A dash means no position in this reading takes that part of the row.
 
 | 777 Row | Yetziratic Title | King Scale | Queen Scale | Prince Scale | Princess Scale | Positions |
 |---|---|---|---|---|---|---|
@@ -133,12 +135,12 @@ Planet Strength is the classical dignity of a pip's planet in its sign, as Crowl
 | Sephira 7 Victory | Hidden (Occult) Intelligence | Amber | Emerald | Bright yellow green | Olive flecked gold | 4, 10 |
 | Sephira 10 Kingdom | Resplendent Intelligence | Yellow | Citrine, olive, russet and black | As Queen scale, but flecked with gold | Black rayed yellow | 11 |
 | Path 12 House | Intelligence of Transparency | Yellow | Purple | Grey | Indigo rayed violet | 15 |
-| Path 15 Window | Constituting Intelligence |  |  |  |  | 2 (title) |
+| Path 15 Window | Constituting Intelligence | — | — | — | — | 2 (title) |
 | Path 16 Nail | Triumphal or Eternal Intelligence | Red orange | Deep indigo | Deep warm olive | Rich brown | 5 |
 | Path 18 Fence | Intelligence of the House of Influence | Amber | Maroon | Rich bright russet | Dark greenish brown | 1 |
 | Path 19 Serpent | Intelligence of all the Activities of the Spiritual Being | Yellow, greenish | Deep purple | Grey | Reddish amber | 6 |
 | Path 27 Mouth | Exciting Intelligence | Scarlet | Red | Venetian red | Bright red, rayed azure or emerald | 13 |
-| Path 28 Fish-hook |  | Violet | Sky blue | Bluish mauve | White tinged purple | 2 (colours) |
+| Path 28 Fish-hook | — | Violet | Sky blue | Bluish mauve | White tinged purple | 2 (colours) |
 | Path 29 Back of head | Corporeal Intelligence | Crimson (ultra violet) | Buff, flecked silver-White | Light translucent pinkish brown | Stone colour | 8 |
 
 **Golden Dawn Titles** (Book T for small and court cards, Liber 777 for Trumps; first title only; a small card's is "Lord of ...", and ones that only repeat the card's name are left out): Queen of Cups: Queen of the Thrones of the Waters; Prince of Swords: Prince of the Chariot of the Winds; 4 of Swords - Truce: Rest from Strife; 7 of Cups - Debauch: Illusionary Success; V - The Hierophant: The Magus of the Eternal; XI - Lust: The Daughter of the Flaming Sword; Knight of Cups: Lord of the Waves and the Waters; 2 of Swords - Peace: Peace Restored; 7 of Swords - Futility: Unstable Effort; 3 of Disks - Works: Material Works; XVI - The Tower: The Lord of the Hosts of the Mighty; I - The Magus: The Magus of Power.

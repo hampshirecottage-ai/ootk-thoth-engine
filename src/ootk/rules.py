@@ -87,6 +87,14 @@ GEOMANTIC_FIGURES = {
     "Aquarius": "Tristitia", "Pisces": "Laetitia",
 }
 
+
+def geomantic_sign(attribution):
+    """The sign a Trump's geomantic figure goes by, or None: its attribution ("Libra"), or the
+    sign after the slash where the French/Egyptian mapping names the old card too
+    ("Justice / Libra")."""
+    sign = str(attribution or "").rpartition("/")[2].strip()
+    return sign if sign in GEOMANTIC_FIGURES else None
+
 # ---------- Planetary dignity (essential dignity of a planet in a sign) ----------
 # The classical scheme with the seven planets of the decans, as Crowley uses it in the Book of
 # Thoth (e.g. 3 of Wands: Sun exalted in Aries). Signs with no classical exaltation or fall

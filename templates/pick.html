@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 {% include "_head_meta.html" %}
     <title>Pick by hand · OOTK Thoth Engine</title>
-    <script>
-        // Saved choice first, otherwise the light (beige) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
@@ -25,6 +18,7 @@
     <header class="band page-head">
         <h1>Pick by hand</h1>
         <p class="tagline">Choose a spread, then tap cards in the order you want them placed.</p>
+{% include "_guide_nav.html" %}
     </header>
 
     <form action="/generate_report" method="POST" id="readingForm" class="container">

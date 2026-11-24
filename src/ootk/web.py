@@ -138,6 +138,20 @@ app.add_middleware(ReadingSlots)
 READINGS_PER_VISITOR = env_int("READINGS_PER_VISITOR", 60)
 READINGS_WINDOW = 10 * 60
 reading_visitors = FailedLogins(attempts=READINGS_PER_VISITOR, window=READINGS_WINDOW)
+# A drawn reading is two requests: POST /generate_report, then the report page it redirects to.
+# The POST is counted; the first visit to the report it just made is that same reading, so it
+# isn't (a reload, or anyone else opening the link, is). Bounded like the lockout tables.
+just_drawn = {}                       # (visitor, "/report/<link>") -> None, oldest first
+JUST_DRAWN_MAX = 10_000
+
+
+def first_view_of_own_draw(visitor: str, path: str) -> bool:
+    """True once for the report page a visitor's own draw just redirected to."""
+    try:
+        del just_drawn[(visitor, path)]
+        return True
+    except KeyError:
+        return False
 
 
 @app.middleware("http")
@@ -145,6 +159,8 @@ async def limit_readings(request: Request, call_next):
     if not builds_a_reading(request.url.path):
         return await call_next(request)
     visitor = visitor_address(request)
+    if request.method == "GET" and first_view_of_own_draw(visitor, request.url.path):
+        return await call_next(request)
     wait = reading_visitors.retry_after(visitor)
     if wait:
         minutes = max(1, (wait + 59) // 60)
@@ -155,19 +171,38 @@ async def limit_readings(request: Request, call_next):
     if reading_visitors.failed(visitor):
         log.warning("reading limit reached for one visitor (%d in %d minutes)",
                     READINGS_PER_VISITOR, READINGS_WINDOW // 60)
-    return await call_next(request)
+    response = await call_next(request)
+    location = response.headers.get("location", "")
+    if request.url.path == "/generate_report" and response.status_code == 303 and location.startswith("/report/"):
+        just_drawn[(visitor, location)] = None
+        while len(just_drawn) > JUST_DRAWN_MAX:
+            del just_drawn[next(iter(just_drawn))]
+    return response
 
 
 # Form posts are a few kilobytes at most (the question is capped at TOPIC_MAX characters), so
-# anything far larger is refused before it is read, rather than parsed into memory.
+# anything far larger is refused before it is read, rather than parsed into memory. The one
+# exception is saving a journal entry, whose pasted AI answer may be up to journal.ANSWER_MAX
+# (200,000) characters: URL-encoded, that is a few hundred kilobytes of plain English, so
+# that form alone may send up to JOURNAL_ENTRY_BODY_BYTES.
 MAX_BODY_BYTES = 64 * 1024
+JOURNAL_ENTRY_BODY_BYTES = 1024 * 1024
+
+
+def body_limit(path: str) -> int:
+    return JOURNAL_ENTRY_BODY_BYTES if path.startswith("/journal/entry/") else MAX_BODY_BYTES
 
 
 @app.middleware("http")
 async def limit_body_size(request: Request, call_next):
     if request.method in ("POST", "PUT", "PATCH"):
         length = request.headers.get("content-length")
-        if length is None or not length.isdigit() or int(length) > MAX_BODY_BYTES:
+        limit = body_limit(request.url.path)
+        if length is None or not length.isdigit() or int(length) > limit:
+            if limit == JOURNAL_ENTRY_BODY_BYTES:
+                return error_page(request, 413, "This entry is too large",
+                                  "The answer and notes sent were larger than a journal entry can hold. "
+                                  "Go back, shorten the answer and try again.")
             return error_page(request, 413, "This form is too large",
                               "The settings sent were far larger than any reading needs. "
                               "Go back, shorten the question and try again.")
@@ -380,8 +415,9 @@ SPREAD_GUIDE = {
     "14": ("Celtic Cross", "The best-known ten-card spread: the matter, what crosses it, its roots "
                            "and aim, past and next, then you, your surroundings, hopes and fears "
                            "and the outcome."),
-    "8": ("First Operation", "Start the Opening of the Key: what the question is really about. "
-                             "Needs a significator."),
+    "8": ("First Operation (15-card heap)", "A shorter first step of the Opening of the Key: what the "
+                                            "question is really about, from 15 cards rather than Book T's "
+                                            "four packs. Needs a significator."),
     "9": ("Second Operation", "Which areas of life are involved: self, money, home, love, work and more."),
     "10": ("Third Operation", "How the matter develops, sign by sign."),
     "11": ("Fourth Operation", "The fine detail, through all 36 decans."),
@@ -423,55 +459,10 @@ def spread_label(key: str) -> str:
     return SPREAD_GUIDE[key][0] if key in SPREAD_GUIDE else spread_name(key)
 # The spread a first visit starts on: three cards, like Start here step 3.
 DEFAULT_SPREAD = "3"
-# Landing pages for search ads and searches: one per keyword theme, its headline worded like the
-# searches it answers so the ad, the query and the page match. Fixed text only; nothing from the
-# query string is echoed onto the page. "spread" is the spread the Draw button opens.
+# Landing pages for searches: one per spread that has its own page, its headline worded like the
+# searches it answers. Fixed text only; nothing from the query string is echoed onto the page.
+# "spread" is the spread the Draw button opens.
 LANDING_PAGES = {
-    "thoth-tarot-reading": {
-        "title": "Thoth Tarot Reading",
-        "tagline": "Draw a Crowley Thoth spread and get every correspondence worked out.",
-        "description": "Free online Thoth tarot reading: draw a Crowley spread and get its dignities, "
-                       "decans and Liber 777 correspondences as a prompt for your AI.",
-        "intro": "Draw a Thoth tarot spread from one card up to the full Opening of the Key. Each "
-                 "card comes with Crowley’s attribution, its Hebrew letter, element and "
-                 "decan, and how it dignifies its neighbours.",
-        "spread": "3"},
-    "ai-tarot-reading": {
-        "title": "AI Tarot Reading",
-        "tagline": "Your AI interprets the cards. OOTK gives it the facts to work from.",
-        "description": "An AI tarot reading with the correspondences done properly: draw your "
-                       "cards, then attach the prompt in ChatGPT, Claude or Gemini.",
-        "intro": "Chatbots are good with meaning but shaky on correspondences. OOTK looks every card up in the Golden "
-                 "Dawn and Liber 777 tables, scores the dignities between them, and writes it all "
-                 "into one prompt you attach in ChatGPT, Claude, Gemini or any other AI.",
-        "spread": "3"},
-    "opening-of-the-key": {
-        "title": "Opening of the Key Tarot Spread",
-        "tagline": "The Golden Dawn’s long method, dealt and tabulated for you.",
-        "description": "Lay out the Golden Dawn Opening of the Key online: significator, houses, "
-                       "signs and the 36 decans, with every card’s correspondences.",
-        "intro": "The Opening of the Key is the Golden Dawn’s longest tarot method: a "
-                 "significator, then the twelve houses, the twelve signs and the 36 decans. OOTK "
-                 "deals each operation from a seed you can repeat and tabulates the result.",
-        "spread": "9"},
-    "elemental-dignities": {
-        "title": "Tarot Elemental Dignities",
-        "tagline": "Which cards strengthen each other, scored by Book T.",
-        "description": "Work out tarot elemental dignities automatically: every neighbouring pair "
-                       "scored as same element, friendly, neutral or contrary by the Golden Dawn’s Book T.",
-        "intro": "Elemental dignities say whether neighbouring cards strengthen or weaken each "
-                 "other. OOTK scores every pair in your spread by the Book T rules, the same way "
-                 "every time, so you can read the pattern instead of working it out by hand.",
-        "spread": "3"},
-    "tree-of-life-spread": {
-        "title": "Tree of Life Tarot Spread",
-        "tagline": "Ten cards on the ten Sephiroth, drawn on the Tree.",
-        "description": "A Tree of Life tarot spread online: ten cards on the Sephiroth, drawn on "
-                       "the Tree with their paths, letters and correspondences.",
-        "intro": "Lay one card on each Sephira from Kether to Malkuth. The report draws them on "
-                 "the Tree of Life with each card’s Hebrew letter, path and King Scale "
-                 "colour, and how each position relates to the others.",
-        "spread": "7"},
     "celtic-cross-spread": {
         "title": "Celtic Cross Tarot Spread",
         "tagline": "Waite’s ten-card Celtic Cross with the Thoth deck.",
@@ -504,6 +495,15 @@ LANDING_PAGES = {
                  "Scale colour.",
         "spread": "16"},
 }
+# The five keyword pages retired in the December 2026 pruning, and where old links and search
+# results now land (a permanent redirect, so search engines drop the old address).
+RETIRED_LANDING_PAGES = {
+    "thoth-tarot-reading": "/",
+    "ai-tarot-reading": "/",
+    "opening-of-the-key": "/",
+    "elemental-dignities": "/method",
+    "tree-of-life-spread": "/maps",
+}
 # Pages search engines may list (the sitemap adds today's card). Saved and shared readings stay out.
 PUBLIC_PAGES = (["/", "/pick", "/start", "/library", "/maps", "/method"]
                 + [f"/tarot/{slug}" for slug in LANDING_PAGES])
@@ -525,27 +525,33 @@ def wants_html(request: Request) -> bool:
 def error_page(request: Request, status: int, heading: str, message: str, retry: bool = False,
                headers: dict | None = None):
     """A readable error page for browsers, with a way back (and a retry when the fault is
-    passing); API clients get the same message as JSON."""
+    passing); API clients get the same message as JSON. The page wears the site's own bar,
+    theme and footer (templates/error.html); if that can't be drawn, a bare page says the same."""
     if not wants_html(request):
         return JSONResponse({"detail": message}, status_code=status, headers=headers)
+    try:
+        return templates.TemplateResponse(request=request, name="error.html", status_code=status,
+                                          headers=headers, context={"heading": heading,
+                                                                    "message": message, "retry": retry})
+    except Exception:   # noqa: BLE001 - an error page must never fail in turn
+        log.exception("error page template failed; sending the bare page")
     retry_link = ('<a href="" onclick="location.reload(); return false;">Try again</a> '
                   if retry else '')
     return HTMLResponse(status_code=status, headers=headers, content=(
         '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
         '<meta name="robots" content="noindex">'
-        f'<title>{html.escape(heading)}</title><style>'
+        f'<title>{html.escape(heading)} · OOTK Thoth Engine</title><style>'
         'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;'
         'background:#2e8a56;color:#ffe0a0;margin:0;padding:24px}'
         'main{max-width:560px;margin:10vh auto}h1{font-size:1.3em}'
         'a{display:inline-block;background:#0d2617;color:#fff;padding:10px 16px;margin:0 6px 6px 0;'
         'border-radius:6px;text-decoration:none;font-weight:600}'
-        '@media (prefers-color-scheme:dark){body{background:#121212;color:#e0e0e0}a{background:#2e8a56}}'
         '.more{font-size:.9em}.more a.plain{background:none;color:inherit;padding:0;'
         'text-decoration:underline;font-weight:normal}</style></head><body><main>'
         f'<h1>{html.escape(heading)}</h1><p>{html.escape(message)}</p><p>{retry_link}'
         '<a href="/" onclick="if (history.length > 1) { history.back(); return false; }">'
-        '&larr; Back to settings</a></p>'
+        '&larr; Go back</a></p>'
         f'<p class="more">Think this is a mistake? <a class="plain" href="{BUG_REPORT_URL}" '
         'target="_blank" rel="noopener">Report a bug</a></p></main></body></html>'))
 
@@ -682,7 +688,7 @@ def get_db_connection():
 
 
 # thoth_cards and correspondences are reference data that change only with a migration, so the
-# pages read them once per process, like the sample and the sign carriers. Drawing and analysing
+# pages read them once per process, like the sign carriers. Drawing and analysing
 # a reading then needs no database round trip; only saving and opening a saved report connect.
 # After running a migration, restart the app to pick it up.
 _reference_cache = {}
@@ -809,186 +815,10 @@ def reading_export(spread_name, settings, significator, framework, framework_bas
     return json.loads(json.dumps(reading, default=str))
 
 
-# The start page shows this reading before asking for any settings: the full Opening of the
-# Key, so a visitor sees every operation at once. The seed is a throwaway number and the
-# significator a fixed card, so the sample holds no personal data, and the same seed always
-# draws the same cards.
-SAMPLE_SETTINGS = {
-    "spread_key": "12", "seed": "12345", "topic": "", "significator": "Queen of Cups",
-    "framework": "auto", "mapping_system": DEFAULT_MAPPING, "draw_mode": "seed",
-}
-_sample_cache = {}
-
-NUMBER_WORDS = ("no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten")
-OP_SHORT_NAMES = {"8": "The heap", "9": "Twelve houses", "10": "Twelve signs", "11": "Thirty-six decans"}
-OP_UNITS = {"8": "in the heap", "9": "houses", "10": "signs", "11": "decans"}
-DIGNITY_KINDS = ((2, "same", ("shares an element", "share an element")),
-                 (1, "friendly", ("is friendly", "are friendly")),
-                 (-2, "contrary", ("is contrary", "are contrary")),
-                 (0, "neutral", ("is neutral", "are neutral")))
-
-
-def _and_list(items):
-    items = list(items)
-    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
-
-
-def _count(n):
-    return NUMBER_WORDS[n] if n < len(NUMBER_WORDS) else str(n)
-
-
-def _the(data):
-    """'the Queen of Cups', 'The Hierophant', 'Art': how a card reads mid-sentence."""
-    name = short_card_name(data["title"])
-    return name if name.startswith("The ") or data.get("arcana_type") == "Major" else f"the {name}"
-
-
-def _position_name(item):
-    """'[Op 1] 2. Development of Question (Left Pair A)' -> 'Development of Question (Left Pair A)'."""
-    return re.sub(r"^(\[Op \d+\]\s*)?\d+\.\s*", "", item["position_name"])
-
-
-def _dignity_totals(pairs):
-    totals = {key: sum(1 for d in pairs if d["score"] == score) for score, key, _ in DIGNITY_KINDS}
-    totals["net"] = sum(d["score"] for d in pairs)
-    totals["pairs"] = len(pairs)
-    return totals
-
-
-def _aspect_totals(pairs):
-    counts = Counter(p.get("aspect_name") or "Unaspected" for p in pairs)
-    return {"strong": sum(1 for p in pairs if abs(p.get("score_modifier") or 0) >= 2),
-            "by_type": [(a, counts[a]) for a in ASPECT_TYPES if counts[a]]}
-
-
-def _sample_card(item, start):
-    d = item["card_data"]
-    idx = item["position_number"] - 1
-    return {
-        "n": idx - start + 1, "position": _position_name(item), "title": d["title"],
-        "short": short_card_name(d["title"]), "element": derive_primary_element(d),
-        "attribution": d.get("attribution") or "", "letter": d.get("hebrew_letter") or "",
-        "place": d.get("spatial_dimension") or "", "place_type": d.get("spatial_type") or "",
-        "img": card_image_url(d["title"], "small"), "art": art_note(d["title"]),
-        "dignities": [],   # filled in by sample_view, which has the whole operation
-    }
-
-
-def sample_summary(r, settings):
-    """Two plain-language paragraphs on what the sample drew and what was calculated.
-    Facts only: the site gives the AI the instructions and never interprets the cards."""
-    items = r["spread_results"]
-    segments = spread_segments(items, settings["spread_key"])
-    heap = items[segments[0][1]:segments[0][2]]
-    sizes = _and_list(f"{e - s} {OP_UNITS.get(k, 'cards')}"
-                      for k, s, e, _ in segments) if len(segments) > 1 else None
-    first = f"Seed {settings['seed']}"
-    if settings["significator"]:
-        first += f", with {_the(heap[0]['card_data'])} as significator,"
-    first += f" dealt {len(items)} cards"
-    first += f" over {_count(len(segments))} operations: {sizes}." if sizes else "."
-    if len(heap) > 2:
-        last = heap[-1]
-        first += (f" The heap opens on {_the(heap[0]['card_data'])} ({_position_name(heap[0]).lower()})"
-                  f" and closes on {_the(last['card_data'])} ({_position_name(last).lower()}).")
-
-    counts = [(e, c) for e, c in r["element_counts"].items() if c]
-    second = [f"Across all {len(items)} cards the elements are "
-              f"{_and_list(f'{c} {e}' for e, c in counts)}."]
-    dig = _dignity_totals(r["dignity_matrix"])
-    if dig["pairs"]:
-        parts = [f"{dig[key]} {phrases[dig[key] != 1]}" for _, key, phrases in DIGNITY_KINDS if dig[key]]
-        second.append(f"Of the {dig['pairs']} scored pairs, {_and_list(parts)}, a net score of {dig['net']:+d}.")
-    on_cube = [i for i in heap if i["card_data"].get("spatial_dimension")]
-    if on_cube:
-        verb = "sits" if len(on_cube) == 1 else "sit"
-        second.append(f"{_count(len(on_cube)).capitalize()} of the heap's cards {verb} on the Cube of Space.")
-    return [first, " ".join(second)]
-
-
-def sample_walkthrough(r, settings):
-    """The figures behind the three "read it yourself" steps on /start, taken from the sample:
-    which elements lead and which are missing, which heap cards are weakened and by whom,
-    and where the significator falls in each operation."""
-    items = r["spread_results"]
-    counts = {e: n for e, n in r["element_counts"].items() if e != "Spirit"}
-    top = max(counts.values(), default=0)
-    _, start, end, _ = spread_segments(items, settings["spread_key"])[0]
-    weak = []
-    for idx in range(start, end):
-        pairs = [d for d in r["dignity_matrix"] if idx in (d["from_index"], d["to_index"])]
-        if sum(d["score"] for d in pairs) >= 0:
-            continue
-        weak.append({"card": short_card_name(items[idx]["card_data"]["title"]),
-                     "by": [short_card_name(items[d["to_index"] if d["from_index"] == idx
-                                                else d["from_index"]]["card_data"]["title"])
-                            for d in pairs if d["score"] < 0]})
-    return {
-        "lead": [e for e, n in counts.items() if n == top and n], "lead_count": top,
-        "total": len(items), "absent": [e for e, n in counts.items() if not n],
-        "heap_size": end - start, "weak": weak,
-        "places": r.get("significator_places") or [],
-    }
-
-
-def sample_view(r, settings):
-    """Everything /start shows of the sample: the summary, the heap and wheel for the
-    diagram, the element breakdown, the cube positions and one summary per operation."""
-    items = r["spread_results"]
-    segments = spread_segments(items, settings["spread_key"])
-    ops = []
-    for key, start, end, name in segments:
-        dignities = [d for d in r["dignity_matrix"] if start <= d["from_index"] < end]
-        cards = []
-        for item in items[start:end]:
-            idx = item["position_number"] - 1
-            card = _sample_card(item, start)
-            card["dignities"] = [
-                {"with": short_card_name(items[d["to_index"] if d["from_index"] == idx else d["from_index"]]
-                                         ["card_data"]["title"]), "score": d["score"]}
-                for d in dignities if idx in (d["from_index"], d["to_index"])]
-            cards.append(card)
-        ops.append({
-            "key": key, "name": OP_SHORT_NAMES.get(key, SPREADS[key]["name"]),
-            "full_name": name or SPREADS[key]["name"], "cards": cards,
-            "dignity": _dignity_totals(dignities),
-            "aspects": _aspect_totals([p for p in r["spatial_matrix"] if start <= p["from_index"] < end]),
-        })
-    total = len(items)
-    top = max(r["element_counts"].values()) or 1      # bars are scaled to the largest count
-    elements = [{"name": e, "count": n, "pct": round(100 * n / top)}
-                for e, n in r["element_counts"].items() if e != "Spirit" or n]
-    by_key = {op["key"]: op for op in ops}
-    heap = by_key.get("8", ops[0])["cards"]
-    wheel = by_key["10"]["cards"] if "10" in by_key else []
-    return {
-        "seed": settings["seed"], "significator": settings["significator"],
-        "spread_name": r["spread_name"], "card_count": total,
-        "summary": sample_summary(r, settings), "walkthrough": sample_walkthrough(r, settings),
-        "elements": elements, "ops": ops,
-        "heap": heap, "wheel": wheel,
-        "cube": [c for c in heap if c["place"]],
-        "prompt": r["analytical_prompt"], "url": share_path(settings),
-    }
-
-
-def sample_reading(deck):
-    """The /start sample: drawn and analysed once per process, then reused. None when
-    the deck can't produce it (an empty or partial database), so the page still renders."""
-    if "sample" in _sample_cache:
-        return _sample_cache["sample"]
-    if len(deck) != 78:            # another deck size would draw other cards for this seed
-        return None
-    try:
-        card_titles, significator_label = seeded_draw(deck, SAMPLE_SETTINGS["seed"],
-                                                      SAMPLE_SETTINGS["spread_key"],
-                                                      SAMPLE_SETTINGS["significator"])
-        r = run_reading(SAMPLE_SETTINGS, card_titles, significator_label, deck)
-    except (HTTPException, LookupError, ValueError):
-        return None
-    sample = sample_view(r, SAMPLE_SETTINGS)
-    _sample_cache["sample"] = sample
-    return sample
+# The example reading the site links to as "See a sample reading": three cards from a fixed,
+# throwaway seed, rebuilt from its share link each time (nothing personal, nothing saved).
+SAMPLE_READING_LINK = "/reading?seed=12345&spread=3"
+templates.env.globals["sample_link"] = SAMPLE_READING_LINK
 
 
 def seeded_draw(deck, seed, spread_key, significator, expect=""):
@@ -1008,7 +838,7 @@ def seeded_draw(deck, seed, spread_key, significator, expect=""):
     if sig_card is None and has_significator_position(positions):
         raise HTTPException(status_code=400,
                             detail=f"{SPREADS[spread_key]['name']} needs a significator. "
-                                   f"Choose one under Significator on the start page.")
+                                   f"Choose one under Significator on the reading form.")
     try:
         card_titles, pinned = draw_spread(deck, seed, positions, sig_card)
     except ValueError as e:                 # a card table that is empty or only partly loaded
@@ -1018,22 +848,23 @@ def seeded_draw(deck, seed, spread_key, significator, expect=""):
     return card_titles, (sig_card["title"] if pinned else "None (spread has no significator position)")
 
 
-def book_t_draw(deck, seed, significator, expect):
+def book_t_draw(deck, seed, significator, expect, cut="near_equal"):
     """Spread 13, exactly as `ootk --spread 13 --seed ... --expect ...` draws it:
-    (card titles, position names, the operations from book_t.opening_of_the_key)."""
+    (card titles, position names, the operations from book_t.opening_of_the_key).
+    `cut` is Operation 1's cut (book_t.CUTS); only saved readings ask for the older one."""
     sig_card = resolve_significator(deck, significator)
     if sig_card is None:
         hint = art_name_hint(significator, [c["title"] for c in deck]) if significator else ""
         raise HTTPException(status_code=400, detail=(
             f"Significator {quoted(significator)} was not found in the deck. " + (hint or "")
             if significator else f"{BOOK_T_SPREAD['name']} needs a significator. "
-                                 f"Choose one under Significator on the start page.").strip())
+                                 f"Choose one under Significator on the reading form.").strip())
     try:
         expected = book_t.parse_expect(expect)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     try:
-        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected)
+        ops = book_t.opening_of_the_key(deck, seed, sig_card, expected, cut=cut)
     except ValueError as e:                 # a card table that is empty or only partly loaded
         log.warning("cannot draw: %s", e)
         raise HTTPException(status_code=503, detail="The card database is incomplete, so no cards "
@@ -1115,7 +946,6 @@ def robots_txt(request: Request):
             "Disallow: /report/\n"
             "Disallow: /generate_report\n"
             "Disallow: /reading\n"
-            "Disallow: /sample/\n"
             "Disallow: /journal\n"
             f"\nSitemap: {site_url(request)}/sitemap.xml\n")
 
@@ -1169,16 +999,6 @@ def main_gui(request: Request):
     return settings_page(request, "index.html", "seed")
 
 
-@app.get("/sample/prompt", response_class=PlainTextResponse)
-def sample_prompt():
-    """The /start sample's whole AI prompt (about 72 KB), fetched when the folded sample is
-    opened rather than sent with every visit to /start."""
-    sample = sample_reading(reference_deck())
-    if sample is None:
-        raise HTTPException(status_code=404, detail="The sample reading isn't available.")
-    return PlainTextResponse(sample["prompt"], headers={"Cache-Control": "public, max-age=3600"})
-
-
 @app.get("/pick", response_class=HTMLResponse)
 def pick_gui(request: Request):
     """Pick by hand: the same settings plus the spread board and card catalog."""
@@ -1206,14 +1026,9 @@ def guide_page(request: Request, name: str, **context):
 
 @app.get("/start", response_class=HTMLResponse)
 def start_here(request: Request):
-    """Start here: a path for newcomers, the sample Opening of the Key, then the spreads grouped
-    into learning stages. Without the database the page still shows, just without the sample."""
-    try:
-        sample = sample_reading(reference_deck())
-    except psycopg.OperationalError as e:
-        log.warning("Start here without the sample: %s", e)
-        sample = None
-    return guide_page(request, "start.html", sample=sample,
+    """Start here: a path for newcomers, then the spreads grouped into learning stages. The
+    75-card sample Opening of the Key that sat here was removed in November 2026."""
+    return guide_page(request, "start.html",
                       sizes={key: spread_size_text(key) for key in list(SPREADS) + [BOOK_T_KEY]})
 
 
@@ -1226,9 +1041,9 @@ def history_page():
 
 @app.get("/examples")
 def examples_page():
-    """The Examples page was retired in November 2026; the sample reading on Start here
-    stands in for it. Old links and search results land there."""
-    return RedirectResponse("/start#sample", status_code=301)
+    """The Examples page was retired in November 2026. Old links and search results land on
+    the three-card sample reading."""
+    return RedirectResponse(SAMPLE_READING_LINK, status_code=301)
 
 
 @app.get("/library", response_class=HTMLResponse)
@@ -1264,7 +1079,9 @@ def method_page(request: Request):
 
 @app.get("/tarot/{slug}", response_class=HTMLResponse)
 def landing_page(request: Request, slug: str):
-    """A landing page for one keyword theme (LANDING_PAGES), ending in the Draw button."""
+    """A landing page for one spread (LANDING_PAGES), ending in the Draw button."""
+    if slug in RETIRED_LANDING_PAGES:
+        return RedirectResponse(RETIRED_LANDING_PAGES[slug], status_code=301)
     page = LANDING_PAGES.get(slug)
     if page is None:
         raise HTTPException(status_code=404, detail="There is no page at this address.")
@@ -1452,9 +1269,18 @@ def chosen_parts(include, parts_shown):
     return cli_switches(set(COMPONENTS) - set(include))
 
 
+# A share link's with= or without= names prompt parts, so it can be longer than FIELD_MAX: a
+# reading with most of the main parts switched off writes about 80 characters there. This is
+# every part named once, the longest list share_path() can write.
+PARTS_MAX = len(",".join(COMPONENTS))
+
+
 def parts_params(with_, without):
     """A share link's with= and without= values, tidied to what cli_switches() writes, or 400."""
-    check_lengths(**{"with": with_, "without": without})
+    for name, value in (("with", with_), ("without", without)):
+        if len(value) > PARTS_MAX:
+            raise HTTPException(status_code=400, detail=f"The {name} field is too long "
+                                                        f"(at most {PARTS_MAX} characters).")
     try:
         return cli_switches(choose_components(with_, without))
     except ValueError as e:
@@ -1723,8 +1549,11 @@ def send_contact(request: Request, background: BackgroundTasks, body: str = Form
 # A journal is opened by a secret link; the browser keeps its key in this cookie. SameSite=Lax
 # means another site can't post a form to the journal with the visitor's cookie attached, and
 # same_site_form() also turns away a post whose Origin names another site.
+# Browsers cap a cookie's life at 400 days (Chrome cuts a longer Max-Age to that), so the
+# cookie asks for 400 days and refresh_journal_cookie() renews it on every journal page shown:
+# a visitor who opens the journal at least once in 400 days never loses it in that browser.
 JOURNAL_COOKIE = "ootk_journal"
-JOURNAL_COOKIE_AGE = 2 * 365 * 24 * 3600
+JOURNAL_COOKIE_AGE = 400 * 24 * 3600
 JOURNAL_KEY_RE = re.compile(journal.KEY_PATTERN)
 # New journals: at most 5 an hour from one address, and 100 an hour across the site.
 journal_starters = FailedLogins(attempts=5, window=3600)
@@ -1750,6 +1579,23 @@ def journal_cookie_key(request: Request):
 def set_journal_cookie(response, request: Request, key):
     response.set_cookie(JOURNAL_COOKIE, key, max_age=JOURNAL_COOKIE_AGE, httponly=True, samesite="lax",
                         secure=request.url.scheme == "https", path="/")
+    return response
+
+
+@app.middleware("http")
+async def refresh_journal_cookie(request: Request, call_next):
+    """Renews the journal cookie, unchanged, on each journal page shown with it. A journal page
+    answers 200 only once the cookie's journal has opened (without one it redirects, or the
+    home page deletes the cookie, and a response that sets or deletes it is left alone)."""
+    response = await call_next(request)
+    path = request.url.path
+    if (request.method == "GET" and response.status_code == 200
+            and (path == "/journal" or path.startswith("/journal/"))
+            and not any(name == b"set-cookie" and value.startswith(JOURNAL_COOKIE.encode() + b"=")
+                        for name, value in response.raw_headers)):
+        key = journal_cookie_key(request)
+        if key:
+            set_journal_cookie(response, request, key)
     return response
 
 
@@ -1900,6 +1746,11 @@ def journal_add(request: Request, link: str = Form(""), thread: str = Form(""), 
         journal_id = current_journal(conn, request)
         if not journal_id:
             return journal_or_start(request)
+        if thread == "new":
+            # The name comes prefilled from the reading's question: a long question is cut to
+            # fit, and a reading with no question (or a cleared name) goes in no question yet.
+            new_thread = (new_thread or "").strip()[:journal.NAME_MAX].strip()
+            thread = "new" if new_thread else ""
         entry_id = file_reading(conn, journal_id, link, thread, new_thread)
     return RedirectResponse(f"/journal/entry/{entry_id}", status_code=303)
 
@@ -1949,9 +1800,10 @@ def journal_thread_change(request: Request, thread_id: int, name: str = Form("")
     return RedirectResponse(f"/journal/thread/{thread_id}", status_code=303)
 
 
-def form_windows(labels, starts, ends, keep):
+def form_windows(labels, starts, ends, keep, drawn):
     """The entry form's timing windows that are ticked and have a start date, as (label, starts,
-    ends); a missing end is the start day, and dates given the wrong way round are swapped."""
+    ends); a missing end is the start day, and dates given the wrong way round are swapped.
+    400 for a date more than journal.WINDOW_YEARS from `drawn`, the day the cards were drawn."""
     windows = []
     kept = {k for k in keep if k.isdigit()}
     for i, (label, s, e) in enumerate(zip(labels, starts, ends)):
@@ -1962,6 +1814,10 @@ def form_windows(labels, starts, ends, keep):
             last = date.fromisoformat(e) if e else first
         except ValueError:
             raise HTTPException(status_code=400, detail="A date on the timeline isn't a real date.") from None
+        if not journal.window_near(first, last, drawn):
+            raise HTTPException(status_code=400, detail=f"A date on the timeline is more than "
+                                                        f"{journal.WINDOW_YEARS} years from the reading. "
+                                                        f"Check the year.")
         label = journal_text(label, journal.WINDOW_LABEL_MAX, "date's name") or "Window"
         windows.append((label, min(first, last), max(first, last)))
     return windows[:journal.WINDOWS_MAX]
@@ -1978,8 +1834,25 @@ def journal_timeline(request: Request):
         threads = journal.list_threads(conn, journal_id)
         entries = journal.list_entries(conn, journal_id)
         windows = journal.list_windows(conn, journal_id)
-    timeline = journal.build_timeline(threads, entries, windows, datetime.now(timezone.utc).date(), spread_label)
+    timeline = journal.build_timeline(threads, entries, windows, journal.local_today(entries), spread_label)
     return journal_page(request, "journal_timeline.html", timeline=timeline, empty=not entries)
+
+
+def book_t_timing_row(entry):
+    """[(label, starts, ends)] for a Book T entry: the window of the card Book T times the
+    matter by, with the very dates its prompt's Timeline rule gave the AI (report.book_t_timing),
+    for Find dates to offer first and ticked. [] for other spreads, or a reading that can't be
+    redrawn any more."""
+    if entry["spread_key"] != BOOK_T_KEY or not entry["link"]:
+        return []
+    try:
+        timing = saved_reading_parts(entry["link"])[2].get("timing")
+    except HTTPException:
+        return []
+    if not timing:
+        return []
+    label = f"Book T timing: {timing['title'].partition(' - ')[0]}"[:journal.WINDOW_LABEL_MAX]
+    return [(label, date.fromisoformat(timing["start"]), date.fromisoformat(timing["end"]))]
 
 
 @app.get("/journal/entry/{entry_id}", response_class=HTMLResponse)
@@ -1996,29 +1869,38 @@ def journal_entry(request: Request, entry_id: int):
         threads = journal.list_threads(conn, journal_id)
         saved = journal.list_windows(conn, journal_id, entry_id)
     windows = [dict(w, keep=True) for w in saved]
-    if not windows and entry["answer"] and "find" not in request.query_params:
-        windows = [{"label": label, "starts": starts, "ends": ends, "keep": True, "found": True}
-                   for label, starts, ends in journal.find_windows(entry["answer"], entry["drawn_at"].date())]
+    # An entry with a saved answer has had its dates offered already: the Save that first
+    # brought the answer (windows_shown=0) put the answer's dates on the timeline, and Find
+    # dates showed them for ticking. So no saved dates here means the visitor saved it with
+    # none (unticked them all, or there were none), and it stays that way, through later
+    # Saves too; Find dates offers them again on request.
+    dates_offered = bool(windows) or bool(entry["answer"])
     found = None
     if "find" in request.query_params:
-        # The "Find dates" button: dates in the answer (ticked) and the drawn small cards'
+        # The "Find dates" button: dates in the answer (ticked), the Book T timing card's window
+        # (ticked, when the answer doesn't already give those days) and the drawn small cards'
         # decan dates (unticked), added under the saved ones for checking before Save.
         have = {(w["starts"], w["ends"]) for w in windows}
-        found = {"answer": 0, "cards": 0}
+        timing = book_t_timing_row(entry)
+        found = {"answer": 0, "timing": 0, "cards": 0,
+                 "book_t": timing and {"label": timing[0][0], "starts": timing[0][1], "ends": timing[0][2]}}
         for source, keep, rows in (
                 ("answer", True, journal.find_windows(entry["answer"], entry["drawn_at"].date()) if entry["answer"] else []),
+                ("timing", True, timing),
                 ("cards", False, journal.card_windows(entry["card_titles"], entry["drawn_at"]))):
             for label, starts, ends in rows:
                 if (starts, ends) not in have:
                     have.add((starts, ends))
                     windows.append({"label": label, "starts": starts, "ends": ends, "keep": keep, "found": True})
                     found[source] += 1
-    shown = bool(windows)
+    shown = dates_offered or bool(windows)
     windows += [{"label": "", "starts": None, "ends": None, "keep": True}] * 2
     return journal_page(request, "journal_entry.html", entry=entry, threads=threads, windows=windows,
                         windows_shown=shown, found=found,
                         thread=next((t for t in threads if t["thread_id"] == entry["thread_id"]), None),
                         new="new" in request.query_params, saved="saved" in request.query_params,
+                        journal_link=(f"{site_url(request)}/journal/k/{journal_cookie_key(request)}"
+                                      if "new" in request.query_params else None),
                         limits={"answer": journal.ANSWER_MAX, "note": journal.NOTE_MAX, "name": journal.NAME_MAX})
 
 
@@ -2045,7 +1927,10 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
         notes = journal_text(notes, journal.NOTE_MAX, "notes")
         outcome = journal_text(outcome, journal.NOTE_MAX, "outcome")
         answer_ai = answer_ai if answer_ai in journal.AI_NAMES else ""
-        windows = form_windows(w_label, w_starts, w_ends, w_keep)
+        entry = journal.get_entry(conn, journal_id, entry_id)
+        if not entry:
+            raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
+        windows = form_windows(w_label, w_starts, w_ends, w_keep, entry["drawn_at"].date())
         thread_id = entry_thread(conn, journal_id, thread, new_thread)
         if not journal.update_entry(conn, journal_id, entry_id, answer, answer_ai, notes, outcome, thread_id):
             raise HTTPException(status_code=404, detail="There is no such entry in this journal.")
@@ -2056,7 +1941,6 @@ def journal_entry_save(request: Request, entry_id: int, answer: str = Form(""), 
             return RedirectResponse("?find=1#windowsTitle", status_code=303)
         if windows_shown == "0" and not windows and answer:
             # First answer pasted: the dates it names go on the timeline, shown for checking next.
-            entry = journal.get_entry(conn, journal_id, entry_id)
             windows = journal.find_windows(answer, entry["drawn_at"].date())
         journal.replace_windows(conn, journal_id, entry_id, windows)
     return RedirectResponse(f"/journal/entry/{entry_id}?saved=1", status_code=303)
@@ -2076,17 +1960,18 @@ def journal_export(request: Request):
                     headers={"Content-Disposition": 'attachment; filename="my_reading_journal.md"'})
 
 
-def report_journal_box(request: Request, session_id, link):
+def report_journal_box(request: Request, session_id, link, conn):
     """What the report's journal panel shows: nothing when journals are off or the reading has no
     link; a "start a journal" offer; or this browser's journal threads and whether the reading
-    is already in it."""
+    is already in it. `conn` is the connection the report itself was loaded on, so a report
+    view opens one connection, not two (each costs a TLS and sign-in round trip)."""
     if not (journal.enabled() and session_id and link):
         return None
     box = {"link": link, "has_journal": False, "threads": [], "entry_id": None}
     if not journal_cookie_key(request):
         return box
     try:
-        with get_db_connection() as conn:
+        with conn.transaction():        # a savepoint: a failure here undoes only the journal part
             journal_id = current_journal(conn, request)
             if journal_id:
                 entry = journal.entry_for_session(conn, journal_id, session_id)
@@ -2100,12 +1985,16 @@ def report_journal_box(request: Request, session_id, link):
 # ---------- admin: saved readings ----------
 
 # /admin is linked from nowhere and only works when ADMIN_PASSWORD is set; without it the page
-# doesn't exist (404). Signing in sets a cookie derived from the password, so changing the
-# password signs every browser out. The cookie is SameSite=Strict, so another site can't make a
-# signed-in browser press the buttons.
+# doesn't exist (404). Signing in sets a cookie holding the sign-in time and a signature made
+# from the password, so the server itself refuses a cookie older than ADMIN_MAX_AGE (a copied
+# cookie stops working too, not just the browser's copy), and changing the password signs every
+# browser out. Signing out also refuses every cookie issued before it, until the app restarts.
+# The cookie is SameSite=Strict, so another site can't make a signed-in browser press the buttons.
 ADMIN_COOKIE = "ootk_admin"
-ADMIN_MAX_AGE = 7 * 24 * 3600
+ADMIN_SESSION_HOURS = 12                 # how long one admin sign-in lasts; change it here
+ADMIN_MAX_AGE = ADMIN_SESSION_HOURS * 3600
 admin_logins = FailedLogins()
+admin_signed_out_at = 0                  # cookies issued at or before this time no longer work
 
 
 def admin_password() -> str:
@@ -2115,13 +2004,25 @@ def admin_password() -> str:
     return password
 
 
-def admin_token(password: str) -> str:
-    return hmac.new(password.encode(), b"ootk-admin-session", hashlib.sha256).hexdigest()
+def admin_signature(password: str, issued: int) -> str:
+    return hmac.new(password.encode(), f"ootk-admin-session|{issued}".encode(), hashlib.sha256).hexdigest()
+
+
+def admin_token(password: str, issued: int | None = None) -> str:
+    issued = int(time.time()) if issued is None else issued
+    return f"{issued}.{admin_signature(password, issued)}"
 
 
 def is_admin(request: Request) -> bool:
-    given = request.cookies.get(ADMIN_COOKIE, "")
-    return secrets.compare_digest(given.encode(), admin_token(admin_password()).encode())
+    password = admin_password()          # no ADMIN_PASSWORD: every /admin page is a 404
+    issued, _, signature = request.cookies.get(ADMIN_COOKIE, "").partition(".")
+    if not issued.isdigit() or len(issued) > 12:
+        return False                     # missing, malformed, or the old never-expiring kind
+    issued = int(issued)
+    if not secrets.compare_digest(signature.encode(), admin_signature(password, issued).encode()):
+        return False
+    now = time.time()
+    return admin_signed_out_at < issued <= now + 60 and now - issued < ADMIN_MAX_AGE
 
 
 def admin_page(request: Request, status: int = 200, **context):
@@ -2206,30 +2107,37 @@ def admin_login(request: Request, password: str = Form("")):
         return admin_page(request, status=401, signed_in=False, error="That password isn't right.")
     admin_logins.succeeded(visitor)
     response = RedirectResponse("/admin", status_code=303)
-    response.set_cookie(ADMIN_COOKIE, admin_token(expected), max_age=ADMIN_MAX_AGE, httponly=True,
+    issued = max(int(time.time()), admin_signed_out_at + 1)   # never land on a signed-out second
+    response.set_cookie(ADMIN_COOKIE, admin_token(expected, issued), max_age=ADMIN_MAX_AGE, httponly=True,
                         samesite="strict", secure=request.url.scheme == "https", path="/admin")
     return response
 
 
 @app.post("/admin/logout")
 def admin_logout(request: Request):
+    global admin_signed_out_at
     admin_password()
+    if is_admin(request):                # only a signed-in browser can sign everyone out
+        admin_signed_out_at = int(time.time())
     response = RedirectResponse("/admin", status_code=303)
     response.delete_cookie(ADMIN_COOKIE, path="/admin")
     return response
 
 
-NO_SUCH_REPORT = ("No reading has this link. Check that the whole address was copied; readings "
-                  "saved before links were random get theirs from "
-                  "database/migrations/add_report_links.sql.")
+NO_SUCH_REPORT = "No reading has this link. Check that the whole address was copied."
 
 
 @app.get("/report/{link}", response_class=HTMLResponse)
 def show_report(request: Request, link: str):
     """A saved reading's report, rebuilt from the cards and settings stored with the session."""
-    session_id, stored, reading, seed_redraws = saved_reading_parts(link)
-    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json", link=link,
-                         seed_redraws=seed_redraws)
+    if not REPORT_LINK.fullmatch(link):
+        raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
+    with get_db_connection() as conn:   # one connection for the reading and the journal panel
+        found = load_saved_reading(conn, link)
+        journal_box = report_journal_box(request, found[0], link, conn)
+    session_id, stored, reading, seed_redraws = finish_saved_reading(*found)
+    return render_report(request, session_id, stored, reading, json_url=f"/report/{link}/json",
+                         seed_redraws=seed_redraws, journal_box=journal_box)
 
 
 @app.get("/report/{link}/json")
@@ -2245,23 +2153,39 @@ def saved_reading_parts(link):
     if not REPORT_LINK.fullmatch(link):
         raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
     with get_db_connection() as conn:
-        found = load_report_by_link(conn, link)
-        if not found:
-            raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
-        session_id, stored = found
-        stored.pop("link", None)
-        if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
-            stored["mapping_system"] = "thoth"
-        saved_at = stored.pop("saved_at", None)
-        if not stored.get("drawn_at") and saved_at is not None:
-            # Saved before the draw time was kept: the save is the same moment, to the second.
-            stored["drawn_at"] = time_stamp(saved_at)
-        seed_redraws = (stored.pop("draw_version", 1) >= DRAW_VERSION
-                        or not reshuffles(stored["spread_key"])
-                        or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
-        card_titles = stored.pop("card_titles")
-        significator_label = stored.pop("significator_label")
-    return session_id, stored, run_reading(stored, card_titles, significator_label), seed_redraws
+        found = load_saved_reading(conn, link)
+    return finish_saved_reading(*found)
+
+
+def load_saved_reading(conn, link):
+    """The database half of saved_reading_parts: (session_id, settings, card titles,
+    significator label, whether the seed still draws the cards); 404 if unknown. The callers
+    check the link's form first, so a malformed one never reaches the database."""
+    found = load_report_by_link(conn, link)
+    if not found:
+        raise HTTPException(status_code=404, detail=NO_SUCH_REPORT)
+    session_id, stored = found
+    stored.pop("link", None)
+    if stored.pop("mapping_version", 1) < 2 and stored.get("mapping_system") == "golden_dawn":
+        stored["mapping_system"] = "thoth"
+    saved_at = stored.pop("saved_at", None)
+    if not stored.get("drawn_at") and saved_at is not None:
+        # Saved before the draw time was kept: the save is the same moment, to the second.
+        stored["drawn_at"] = time_stamp(saved_at)
+    seed_redraws = (stored.pop("draw_version", 1) >= DRAW_VERSION
+                    or not reshuffles(stored["spread_key"])
+                    or (saved_at is not None and saved_at >= RESHUFFLE_SINCE))
+    card_titles = stored.pop("card_titles")
+    significator_label = stored.pop("significator_label")
+    return session_id, stored, card_titles, significator_label, seed_redraws
+
+
+def finish_saved_reading(session_id, stored, card_titles, significator_label, seed_redraws):
+    """The rest of saved_reading_parts, which needs no database: the reading itself."""
+    reading = run_reading(stored, card_titles, significator_label)
+    # Drawn with Operation 1's older cut: the seed now draws other cards, so no share link.
+    seed_redraws = seed_redraws and not reading.pop("older_cut")
+    return session_id, stored, reading, seed_redraws
 
 
 # Which Major carries each sign, per mapping system, for the card panel's small maps. Reference
@@ -2296,6 +2220,11 @@ def seeded_significator_places(settings, card_titles, deck):
     return significator_places(deck, settings["seed"], positions, sig_card)
 
 
+# The years a draw time may fall in. Every reading the site makes is drawn now; a hand-edited
+# link outside these years got a 500 (year 9999 runs the decan dates past year 10000).
+DRAWN_YEARS = (1900, 2199)
+
+
 def parse_drawn_at(text):
     """settings['drawn_at'] or a link's drawn= ('20261029T2200Z') as an aware UTC datetime;
     None if blank. Any ISO 8601 form is accepted; one without a zone is read as UTC."""
@@ -2303,10 +2232,14 @@ def parse_drawn_at(text):
         return None
     try:
         when = datetime.fromisoformat(str(text))
-    except ValueError:
+        when = (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    except (ValueError, OverflowError):
         raise HTTPException(status_code=400, detail=f"{quoted(text)} is not a date and time. "
                                                     f"Use the form 20261029T2200Z.")
-    return (when if when.tzinfo else when.replace(tzinfo=timezone.utc)).astimezone(timezone.utc)
+    if not DRAWN_YEARS[0] <= when.year <= DRAWN_YEARS[1]:
+        raise HTTPException(status_code=400, detail=f"A draw time must fall between {DRAWN_YEARS[0]} "
+                                                    f"and {DRAWN_YEARS[1]}.")
+    return when
 
 
 def time_zone(name):
@@ -2326,11 +2259,19 @@ def run_reading(settings, card_titles, significator_label, deck=None):
     selected_spread = {"name": spread_name(spread_key)}
     deck = deck or reference_deck()
     ops = None
+    older_cut = False
     if spread_key == BOOK_T_KEY:
         # Position names and counts depend on the draw; the seed always gives the same ones.
-        titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
-                                             settings.get("expect", ""))
-        if titles != list(card_titles):
+        # A reading saved before Operation 1's cut changed (book_t.CUTS) redraws its cards only
+        # with the older cut, so that is tried before giving up.
+        for cut in book_t.CUTS:
+            titles, positions, ops = book_t_draw(deck, settings["seed"], settings["significator"],
+                                                 settings.get("expect", ""), cut=cut)
+            if titles == list(card_titles):
+                older_cut = cut != book_t.CUTS[0]
+                break
+        else:
+            log.warning("a saved Book T reading no longer redraws its cards")
             raise HTTPException(status_code=500, detail="This Book T reading no longer redraws its cards.")
     else:
         positions = spread_positions(spread_key)
@@ -2364,6 +2305,7 @@ def run_reading(settings, card_titles, significator_label, deck=None):
         "spread_name": selected_spread["name"], "significator_label": significator_label,
         "spread_results": spread_results, "withheld": withheld,
         "sign_carriers": load_sign_carriers(deck, mapping_system), **reading,
+        "older_cut": older_cut,
     }
 
 
@@ -2415,7 +2357,7 @@ def reading_json_response(settings, r):
 
 
 def render_report(request, session_id, settings, r, shared=False, json_url=None, unsaved=False,
-                  seed_redraws=True, link=None):
+                  seed_redraws=True, journal_box=None):
     """The visual report for a reading from run_reading().
 
     A full Opening of the Key export is about 300 KB, so a report that has an address of its
@@ -2460,7 +2402,7 @@ def render_report(request, session_id, settings, r, shared=False, json_url=None,
             "withheld": withheld_view(r["withheld"]),
             "view": view,
             "json_url": json_url,
-            "journal_box": report_journal_box(request, session_id, link),
+            "journal_box": journal_box,
             "reading": None if json_url else export_reading(settings, r, view),
         }
     )

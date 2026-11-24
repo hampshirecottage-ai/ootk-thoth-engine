@@ -1,6 +1,7 @@
 """Analysis of a drawn spread: elements, dignities, geometry, topology and macro framework."""
 import functools
 import math
+from functools import lru_cache
 import re
 
 from ootk.rules import (
@@ -568,6 +569,27 @@ def evaluate_macro_framework(spread_results, forced_framework="auto"):
                        f"(Sephirothic rank), so the default Life Path lens is used; the "
                        f"cards did not choose it - {stats}")
 
+def framework_basis_short(basis):
+    """The framework basis in one plain clause, without the trend numbers: whether the cards
+    chose the lens, it is the default, or the querent chose it. The prompt gives this when the
+    statistics are left out, so the AI never reads a default lens as something the cards said.
+    Follows the wording evaluate_macro_framework() writes; None for no basis."""
+    if not basis:
+        return None
+    if basis.startswith("forced by"):
+        return "chosen by the querent, not by the cards."
+    if basis.startswith("auto: rank rises"):
+        return ("chosen by the cards: their places on the Tree run down towards Malkuth across "
+                "the draw, more steadily than most random shuffles.")
+    if basis.startswith("auto: rank falls"):
+        return ("chosen by the cards: their places on the Tree run up towards Kether across the "
+                "draw, more steadily than most random shuffles.")
+    if basis.startswith("auto: only") or basis.startswith("auto: no cards"):
+        return (f"the default lens: fewer than {FRAMEWORK_MIN_CARDS} cards have a place on the "
+                "Tree, too few to test, so the cards did not choose it.")
+    return ("the default lens: the cards run neither down nor up the Tree clearly enough to pick "
+            "another, so the cards did not choose it.")
+
 # Own-place check. On the house, sign and decan wheels a card can land on its own place: a pip
 # on its own decan, a sign Trump on its own sign, a card in the house of its sign (Aries the
 # 1st house ... Pisces the 12th). Each wheel draws from the whole 78-card deck, so the chance of
@@ -759,6 +781,85 @@ def card_is_dignified(index, dignity_matrix):
         if index in (d["from_index"], d["to_index"])
     ]
     return sum(touching) >= 0 if touching else True
+
+
+# What a random shuffle gives. The scores are not centred on zero (+2 same, +1 friendly, -2
+# contrary, and half of all pairs are friendly), so a positive total is the usual result, not a
+# sign of anything. The deck's own elements (14 per suit plus the Trumps' MAJOR_ELEMENTS) fix
+# the score of a pair of two cards drawn at random from it.
+DECK_ELEMENTS = {e: 14 + sum(1 for m in MAJOR_ELEMENTS.values() if m == e)
+                 for e in ("Fire", "Water", "Air", "Earth")}
+
+CHANCE_UNUSUAL_P = 0.05      # the same bar as a share of random shuffles reaching a number
+
+def _pair_score_probs():
+    """{score: chance} for one pair when both cards are drawn at random from the deck."""
+    total = sum(DECK_ELEMENTS.values())
+    ways, probs = 0, {}
+    for a, na in DECK_ELEMENTS.items():
+        for b, nb in DECK_ELEMENTS.items():
+            n = na * (na - 1) if a == b else na * nb
+            score, _ = element_dignity(a, b)
+            ways += n
+            probs[score] = probs.get(score, 0) + n
+    assert ways == total * (total - 1)
+    return {k: v / ways for k, v in sorted(probs.items())}
+
+PAIR_SCORE_PROBS = _pair_score_probs()
+
+def _pair_score_moments():
+    """(mean, sd) of one pair's dignity score when both cards are drawn at random from the deck."""
+    mean = sum(k * p for k, p in PAIR_SCORE_PROBS.items())
+    return mean, math.sqrt(sum(k * k * p for k, p in PAIR_SCORE_PROBS.items()) - mean * mean)
+
+PAIR_SCORE_MEAN, PAIR_SCORE_SD = _pair_score_moments()    # about +0.48 and 1.50
+
+@lru_cache(maxsize=256)
+def _net_distribution(pairs):
+    """{total: chance} for the sum of `pairs` independent random pair scores."""
+    dist = {0: 1.0}
+    for _ in range(pairs):
+        nxt = {}
+        for total, p in dist.items():
+            for k, q in PAIR_SCORE_PROBS.items():
+                nxt[total + k] = nxt.get(total + k, 0.0) + p * q
+        dist = nxt
+    return dist
+
+@lru_cache(maxsize=256)
+def _usual_totals(pairs):
+    """(lowest, highest) total that random draws reach, and go beyond, more than
+    CHANCE_UNUSUAL_P of the time each way."""
+    dist = _net_distribution(pairs)
+    totals = sorted(dist)
+    usual = [t for t in totals if sum(dist[u] for u in totals if u >= t) > CHANCE_UNUSUAL_P
+             and sum(dist[u] for u in totals if u <= t) > CHANCE_UNUSUAL_P]
+    return (usual[0], usual[-1]) if usual else (0, 0)
+
+def dignity_chance(pairs, net):
+    """How a dignity total compares with a random shuffle of the same number of pairs.
+
+    Returns {"mean", "sd", "z", "p_high", "p_low", "low", "high", "lean"}: the average and spread a
+    random draw gives, the share of random draws at or above `net` and at or below it, the usual
+    range (the totals that are not unusual either way) and "above", "below" or "usual" (unusual
+    when random draws reach `net`, or go further, CHANCE_UNUSUAL_P of the time or less). The
+    shares come from the exact sum of the pair scores, so a short spread is judged right: one
+    contrary pair happens in about a quarter of random two-card draws and is not unusual. The
+    pairs are treated as independent, which is close (measured on 400 random Book T and full
+    Opening of the Key draws, 2026-11-14: sd 8.2 and 12.7 against 8.9 and 12.4 from this); a
+    pinned Significator and a Book T pile are not quite a random draw from the whole deck, so
+    the figures are "about"."""
+    mean = pairs * PAIR_SCORE_MEAN
+    sd = math.sqrt(pairs) * PAIR_SCORE_SD
+    z = (net - mean) / sd if sd else 0.0
+    dist = _net_distribution(pairs)
+    p_high = sum(p for t, p in dist.items() if t >= net)
+    p_low = sum(p for t, p in dist.items() if t <= net)
+    low, high = _usual_totals(pairs)
+    lean = ("above" if p_high <= CHANCE_UNUSUAL_P else "below" if p_low <= CHANCE_UNUSUAL_P
+            else "usual")
+    return {"mean": mean, "sd": sd, "z": z, "p_high": p_high, "p_low": p_low,
+            "low": low, "high": high, "lean": lean}
 
 
 def _suit_rank(suit):

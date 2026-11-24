@@ -1,10 +1,10 @@
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 75 positions and its very last line is `END OF OOTK PROMPT (75 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
-**In Plain Words:** 75 cards were drawn, in 4 operations, each dealt from its own shuffle. The Significator, Queen of Cups, stands for the querent. Air leads with 27 of 75 cards; Earth is least, with 12. Book T would note Three Queens and Four Princes in Operation 4 (section 2).
-**How This Prompt Is Laid Out:** 1 the cards, position by position; 2 the balance of elements; 3 how neighbouring cards get on; 4 the angles between positions; 5 how to write the reading.
+**In Plain Words:** 75 positions were dealt in 4 operations, each from its own shuffle of the whole deck, so some cards fall more than once: 49 different cards in all. The Significator, Queen of Cups, stands for the querent. Air leads with 27 of 75 positions; Earth is least, with 12. Book T would note Three Queens and Four Princes in Operation 4 (section 3).
+**How This Prompt Is Laid Out:** 1 which card fell in each position; 2 how neighbouring cards get on; 3 the balance of elements; 4 the angles between positions; 5 each card's correspondences, once per card; 6 how to write the reading.
 
-**Operation/Spread:** Complete Opening of the Key (OOTK) - 4-Operation Master Pipeline
+**Operation/Spread:** Full Opening of the Key (all four operations)
 **Query/Intent Topic:** Should I change jobs this year?
 **Significator:** Queen of Cups
 **Where the Significator Falls:** Book T's key to each operation, worked out from the shuffle each operation was dealt from by laying out the whole deck, not only the cards printed in section 1. For Operation 1 the deck is cut into four packs for I H V H and the pack holding the Significator is named; the printed Operation 1 cards are still the 15-card heap. Later operations deal the whole deck round into one pile per house, sign or decan, and section 1 prints only the top card of each pile, so the Significator usually lies inside its pile, under the card printed there, and is not one of the printed cards. That is expected, not a mismatch.
@@ -14,12 +14,262 @@
   * Operation 4: Decan 10: Mars in Scorpio (5 of Cups), the Significator is the card printed at position 49
 **PRNG Seed:** 408850
 **Macro Cabbalistic Framework:** 3. Incarnational Life Path & Psychological Evolution
+**Framework Basis:** the default lens: the cards run neither down nor up the Tree clearly enough to pick another, so the cards did not choose it.
+**Against Chance:** Compared with random shuffles of this spread, these stand out: most cards of one element, 27 (Air), unusually high (about 1 in 25 random shuffles go this far); ill-dignified cards, 14, unusually low (about 1 in 21 random shuffles go this far). The other 8 numbers checked (elemental dignity total, fewest cards of one element, trumps, ranks falling three or four times, tree lens chosen by the cards, cards in their natural house, op 2, cards on their own sign, op 3, cards on their own decan, op 4) are in the usual range. Random shuffles show at least one unusual number 38% of the time, so weigh a single one lightly.
 **Active Mapping System:** Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh)
 **Mapping Note:** Crowley swapped the letters Tzaddi and Heh, not the signs: the Emperor and the Queen of Wands stay Aries and the Star and the Prince of Swords stay Aquarius. Their colour scales follow the sign.
 
 ---
 
-## 1. CARD-BY-CARD CORRESPONDENCE MATRIX
+## 1. THE CARDS, POSITION BY POSITION
+
+A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do). A decan's name ends with its own pip in brackets, for example "Saturn in Leo (5 of Wands)"; that pip is part of the place's name too.
+
+Each operation is dealt from its own fresh shuffle of the whole deck, so a card can appear in more than one operation, but never twice in the same one.
+
+Each card's correspondences are in section 5, once per card, however often it falls.
+
+**Operation 1**
+- Pos 1, 1. Significator / Core Nature of Question: Queen of Cups
+- Pos 2, 2. Development of Question (Left Pair A): Prince of Swords
+- Pos 3, 3. Development of Question (Left Pair B): 4 of Swords - Truce
+- Pos 4, 4. Further Outcome (Right Pair A): 7 of Cups - Debauch
+- Pos 5, 5. Further Outcome (Right Pair B): V - The Hierophant
+- Pos 6, 6. Unexpected / External Factors (Center Pair A): XI - Lust
+- Pos 7, 7. Unexpected / External Factors (Center Pair B): 2 of Wands - Dominion
+- Pos 8, 8. Psychological / Subconscious Basis (Base Left A): Knight of Cups
+- Pos 9, 9. Psychological / Subconscious Basis (Base Left B): 2 of Swords - Peace
+- Pos 10, 10. Environmental / Material Basis (Base Right A): 7 of Swords - Futility
+- Pos 11, 11. Environmental / Material Basis (Base Right B): 10 of Wands - Oppression
+- Pos 12, 12. Final Synthesis / Karma (Top Apex A): 3 of Disks - Works
+- Pos 13, 13. Final Synthesis / Karma (Top Apex B): XVI - The Tower
+- Pos 14, 14. Key Counter-Balance / Receptivity: 3 of Swords - Sorrow
+- Pos 15, 15. Ultimate Climax / Resolution: I - The Magus
+
+**Operation 2**
+- Pos 16, 1. First House (Ascendant / Physical Self): 8 of Swords - Interference
+- Pos 17, 2. Second House (Finances & Values): 5 of Swords - Defeat
+- Pos 18, 3. Third House (Local Mind & Travel): Knight of Cups
+- Pos 19, 4. Fourth House (Home & Roots): X - Fortune
+- Pos 20, 5. Fifth House (Creativity & Will): 6 of Cups - Pleasure
+- Pos 21, 6. Sixth House (Health & Work): 2 of Disks - Change
+- Pos 22, 7. Seventh House (Partnerships): VI - The Lovers
+- Pos 23, 8. Eighth House (Shared Assets & Death): 10 of Swords - Ruin
+- Pos 24, 9. Ninth House (Philosophy & Higher Mind): VII - The Chariot
+- Pos 25, 10. Tenth House (Career & Public Standing): 7 of Disks - Failure
+- Pos 26, 11. Eleventh House (Alliances & Hopes): 9 of Swords - Cruelty
+- Pos 27, 12. Twelfth House (Subconscious & Hidden): Queen of Disks
+
+**Operation 3**
+- Pos 28, 1. Aries: 5 of Disks - Worry
+- Pos 29, 2. Taurus: XVII - The Star
+- Pos 30, 3. Gemini: Prince of Swords
+- Pos 31, 4. Cancer: XIV - Art
+- Pos 32, 5. Leo: XVI - The Tower
+- Pos 33, 6. Virgo: Ace of Cups
+- Pos 34, 7. Libra: 4 of Wands - Completion
+- Pos 35, 8. Scorpio: Knight of Disks
+- Pos 36, 9. Sagittarius: 4 of Swords - Truce
+- Pos 37, 10. Capricorn: 10 of Swords - Ruin
+- Pos 38, 11. Aquarius: I - The Magus
+- Pos 39, 12. Pisces: 6 of Disks - Success
+
+**Operation 4**
+- Pos 40, Decan 1: Saturn in Leo (5 of Wands): Prince of Wands
+- Pos 41, Decan 2: Jupiter in Leo (6 of Wands): 5 of Disks - Worry
+- Pos 42, Decan 3: Mars in Leo (7 of Wands): VI - The Lovers
+- Pos 43, Decan 4: Sun in Virgo (8 of Disks): VIII - Adjustment
+- Pos 44, Decan 5: Venus in Virgo (9 of Disks): Prince of Cups
+- Pos 45, Decan 6: Mercury in Virgo (10 of Disks): 3 of Swords - Sorrow
+- Pos 46, Decan 7: Moon in Libra (2 of Swords): 6 of Cups - Pleasure
+- Pos 47, Decan 8: Saturn in Libra (3 of Swords): Ace of Wands
+- Pos 48, Decan 9: Jupiter in Libra (4 of Swords): Princess of Cups
+- Pos 49, Decan 10: Mars in Scorpio (5 of Cups): Queen of Cups
+- Pos 50, Decan 11: Sun in Scorpio (6 of Cups): 2 of Swords - Peace
+- Pos 51, Decan 12: Venus in Scorpio (7 of Cups): VII - The Chariot
+- Pos 52, Decan 13: Mercury in Sagittarius (8 of Wands): 8 of Swords - Interference
+- Pos 53, Decan 14: Moon in Sagittarius (9 of Wands): XIX - The Sun
+- Pos 54, Decan 15: Saturn in Sagittarius (10 of Wands): 9 of Swords - Cruelty
+- Pos 55, Decan 16: Jupiter in Capricorn (2 of Disks): XVI - The Tower
+- Pos 56, Decan 17: Mars in Capricorn (3 of Disks): XX - The Aeon
+- Pos 57, Decan 18: Sun in Capricorn (4 of Disks): XII - The Hanged Man
+- Pos 58, Decan 19: Venus in Aquarius (5 of Swords): 3 of Disks - Works
+- Pos 59, Decan 20: Mercury in Aquarius (6 of Swords): IV - The Emperor
+- Pos 60, Decan 21: Moon in Aquarius (7 of Swords): 4 of Wands - Completion
+- Pos 61, Decan 22: Saturn in Pisces (8 of Cups): Prince of Swords
+- Pos 62, Decan 23: Jupiter in Pisces (9 of Cups): 10 of Wands - Oppression
+- Pos 63, Decan 24: Mars in Pisces (10 of Cups): Prince of Disks
+- Pos 64, Decan 25: Mars in Aries (2 of Wands): Princess of Wands
+- Pos 65, Decan 26: Sun in Aries (3 of Wands): X - Fortune
+- Pos 66, Decan 27: Venus in Aries (4 of Wands): 0 - The Fool
+- Pos 67, Decan 28: Mercury in Taurus (5 of Disks): XVIII - The Moon
+- Pos 68, Decan 29: Moon in Taurus (6 of Disks): Queen of Swords
+- Pos 69, Decan 30: Saturn in Taurus (7 of Disks): 10 of Swords - Ruin
+- Pos 70, Decan 31: Jupiter in Gemini (8 of Swords): 9 of Cups - Happiness
+- Pos 71, Decan 32: Mars in Gemini (9 of Swords): 2 of Disks - Change
+- Pos 72, Decan 33: Sun in Gemini (10 of Swords): XIV - Art
+- Pos 73, Decan 34: Venus in Cancer (2 of Cups): XI - Lust
+- Pos 74, Decan 35: Mercury in Cancer (3 of Cups): Queen of Wands
+- Pos 75, Decan 36: Moon in Cancer (4 of Cups): 5 of Swords - Defeat
+
+---
+
+## 2. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
+
+**Operation 1: First Operation variant (15-card heap, not the IHVH four packs)**
+
+* **Pos 2 (Prince of Swords) <-> Pos 3 (4 of Swords - Truce)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 4 (7 of Cups - Debauch) <-> Pos 5 (V - The Hierophant)**: `Score: +1` | Friendly (Water + Earth)
+* **Pos 6 (XI - Lust) <-> Pos 7 (2 of Wands - Dominion)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 8 (Knight of Cups) <-> Pos 9 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 10 (7 of Swords - Futility) <-> Pos 11 (10 of Wands - Oppression)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 12 (3 of Disks - Works) <-> Pos 13 (XVI - The Tower)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 1 (Queen of Cups) <-> Pos 14 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 1 (Queen of Cups) <-> Pos 15 (I - The Magus)**: `Score: +1` | Friendly (Water + Air)
+
+**Operation 2: Second Operation (the 12 houses)**
+
+* **Pos 16 (8 of Swords - Interference) <-> Pos 17 (5 of Swords - Defeat)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 17 (5 of Swords - Defeat) <-> Pos 18 (Knight of Cups)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 18 (Knight of Cups) <-> Pos 19 (X - Fortune)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
+* **Pos 19 (X - Fortune) <-> Pos 20 (6 of Cups - Pleasure)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
+* **Pos 20 (6 of Cups - Pleasure) <-> Pos 21 (2 of Disks - Change)**: `Score: +1` | Friendly (Water + Earth)
+* **Pos 21 (2 of Disks - Change) <-> Pos 22 (VI - The Lovers)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 22 (VI - The Lovers) <-> Pos 23 (10 of Swords - Ruin)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 23 (10 of Swords - Ruin) <-> Pos 24 (VII - The Chariot)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 24 (VII - The Chariot) <-> Pos 25 (7 of Disks - Failure)**: `Score: +1` | Friendly (Water + Earth)
+* **Pos 25 (7 of Disks - Failure) <-> Pos 26 (9 of Swords - Cruelty)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 26 (9 of Swords - Cruelty) <-> Pos 27 (Queen of Disks)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
+* **Pos 27 (Queen of Disks) <-> Pos 16 (8 of Swords - Interference)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+
+**Operation 3: Third Operation (the 12 signs)**
+
+* **Pos 28 (5 of Disks - Worry) <-> Pos 29 (XVII - The Star)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 29 (XVII - The Star) <-> Pos 30 (Prince of Swords)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 30 (Prince of Swords) <-> Pos 31 (XIV - Art)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 31 (XIV - Art) <-> Pos 32 (XVI - The Tower)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 32 (XVI - The Tower) <-> Pos 33 (Ace of Cups)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
+* **Pos 33 (Ace of Cups) <-> Pos 34 (4 of Wands - Completion)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
+* **Pos 34 (4 of Wands - Completion) <-> Pos 35 (Knight of Disks)**: `Score: +1` | Friendly (Fire + Earth)
+* **Pos 35 (Knight of Disks) <-> Pos 36 (4 of Swords - Truce)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 36 (4 of Swords - Truce) <-> Pos 37 (10 of Swords - Ruin)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 37 (10 of Swords - Ruin) <-> Pos 38 (I - The Magus)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 38 (I - The Magus) <-> Pos 39 (6 of Disks - Success)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
+* **Pos 39 (6 of Disks - Success) <-> Pos 28 (5 of Disks - Worry)**: `Score: +2` | Strong / Same Element (Earth + Earth)
+
+**Operation 4: Fourth Operation (the 36 decans)**
+
+* **Pos 40 (Prince of Wands) <-> Pos 41 (5 of Disks - Worry)**: `Score: +1` | Friendly (Fire + Earth)
+* **Pos 41 (5 of Disks - Worry) <-> Pos 42 (VI - The Lovers)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
+* **Pos 42 (VI - The Lovers) <-> Pos 43 (VIII - Adjustment)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 43 (VIII - Adjustment) <-> Pos 44 (Prince of Cups)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 44 (Prince of Cups) <-> Pos 45 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 45 (3 of Swords - Sorrow) <-> Pos 46 (6 of Cups - Pleasure)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 46 (6 of Cups - Pleasure) <-> Pos 47 (Ace of Wands)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
+* **Pos 47 (Ace of Wands) <-> Pos 48 (Princess of Cups)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
+* **Pos 48 (Princess of Cups) <-> Pos 49 (Queen of Cups)**: `Score: +2` | Strong / Same Element (Water + Water)
+* **Pos 49 (Queen of Cups) <-> Pos 50 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 50 (2 of Swords - Peace) <-> Pos 51 (VII - The Chariot)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 51 (VII - The Chariot) <-> Pos 52 (8 of Swords - Interference)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 52 (8 of Swords - Interference) <-> Pos 53 (XIX - The Sun)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 53 (XIX - The Sun) <-> Pos 54 (9 of Swords - Cruelty)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 54 (9 of Swords - Cruelty) <-> Pos 55 (XVI - The Tower)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 55 (XVI - The Tower) <-> Pos 56 (XX - The Aeon)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 56 (XX - The Aeon) <-> Pos 57 (XII - The Hanged Man)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
+* **Pos 57 (XII - The Hanged Man) <-> Pos 58 (3 of Disks - Works)**: `Score: +1` | Friendly (Water + Earth)
+* **Pos 58 (3 of Disks - Works) <-> Pos 59 (IV - The Emperor)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 59 (IV - The Emperor) <-> Pos 60 (4 of Wands - Completion)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 60 (4 of Wands - Completion) <-> Pos 61 (Prince of Swords)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 61 (Prince of Swords) <-> Pos 62 (10 of Wands - Oppression)**: `Score: +1` | Friendly (Air + Fire)
+* **Pos 62 (10 of Wands - Oppression) <-> Pos 63 (Prince of Disks)**: `Score: +1` | Friendly (Fire + Earth)
+* **Pos 63 (Prince of Disks) <-> Pos 64 (Princess of Wands)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 64 (Princess of Wands) <-> Pos 65 (X - Fortune)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 65 (X - Fortune) <-> Pos 66 (0 - The Fool)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 66 (0 - The Fool) <-> Pos 67 (XVIII - The Moon)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 67 (XVIII - The Moon) <-> Pos 68 (Queen of Swords)**: `Score: +1` | Friendly (Water + Air)
+* **Pos 68 (Queen of Swords) <-> Pos 69 (10 of Swords - Ruin)**: `Score: +2` | Strong / Same Element (Air + Air)
+* **Pos 69 (10 of Swords - Ruin) <-> Pos 70 (9 of Cups - Happiness)**: `Score: +1` | Friendly (Air + Water)
+* **Pos 70 (9 of Cups - Happiness) <-> Pos 71 (2 of Disks - Change)**: `Score: +1` | Friendly (Water + Earth)
+* **Pos 71 (2 of Disks - Change) <-> Pos 72 (XIV - Art)**: `Score: +1` | Friendly (Earth + Fire)
+* **Pos 72 (XIV - Art) <-> Pos 73 (XI - Lust)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 73 (XI - Lust) <-> Pos 74 (Queen of Wands)**: `Score: +2` | Strong / Same Element (Fire + Fire)
+* **Pos 74 (Queen of Wands) <-> Pos 75 (5 of Swords - Defeat)**: `Score: +1` | Friendly (Fire + Air)
+* **Pos 75 (5 of Swords - Defeat) <-> Pos 40 (Prince of Wands)**: `Score: +1` | Friendly (Air + Fire)
+
+---
+
+## 3. ELEMENTAL VECTOR DISTRIBUTION
+* **Fire  **: ██████████████████████████████████████████ 21 (28.0%)
+* **Water **: ██████████████████████████████ 15 (20.0%)
+* **Air   **: ██████████████████████████████████████████████████████ 27 (36.0%)
+* **Earth **: ████████████████████████ 12 (16.0%)
+* **Spirit**: secondary quality only, on 1: Pos 56 (XX - The Aeon)
+
+**Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
+* Operation 1: 15 cards: 4 Trumps, 3 court cards, 0 Aces | Wands 2, Cups 3, Swords 5, Disks 1 | no rank three or more times
+* Operation 2: 12 cards: 3 Trumps, 2 court cards, 0 Aces | Wands 0, Cups 2, Swords 4, Disks 3 | no rank three or more times
+* Operation 3: 12 cards: 4 Trumps, 2 court cards, 1 Ace | Wands 1, Cups 1, Swords 3, Disks 3 | no rank three or more times
+* Operation 4: 36 cards: 13 Trumps, 9 court cards, 1 Ace | Wands 6, Cups 5, Swords 8, Disks 4 | Three Queens (Wands, Cups, Swords); Four Princes (Wands, Cups, Swords, Disks)
+
+---
+
+## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS
+
+On the house, sign and decan wheels the aspect between two positions is fixed by the layout and is the same in every reading; the `cards:` part (the elemental dignity of the two cards drawn there) is this reading's.
+Only the oppositions are listed: the positions straight across the wheel from each other.
+
+**Operation 1: First Operation variant (15-card heap, not the IHVH four packs)**
+
+* A heap is not a wheel: its cards make no angles. Its named pairs are scored in section 2.
+
+**Operation 2: Second Operation (the 12 houses)**
+
+_Opposition (180°) - Polar Complement / Axis Tension_
+
+* Pos 16 (8 of Swords - Interference) <-> Pos 22 (VI - The Lovers) | cards: +2 Strong / Same Element (Air + Air)
+* Pos 17 (5 of Swords - Defeat) <-> Pos 23 (10 of Swords - Ruin) | cards: +2 Strong / Same Element (Air + Air)
+* Pos 18 (Knight of Cups) <-> Pos 24 (VII - The Chariot) | cards: +2 Strong / Same Element (Water + Water)
+* Pos 19 (X - Fortune) <-> Pos 25 (7 of Disks - Failure) | cards: +1 Friendly (Fire + Earth)
+* Pos 20 (6 of Cups - Pleasure) <-> Pos 26 (9 of Swords - Cruelty) | cards: +1 Friendly (Water + Air)
+* Pos 21 (2 of Disks - Change) <-> Pos 27 (Queen of Disks) | cards: +2 Strong / Same Element (Earth + Earth)
+
+**Operation 3: Third Operation (the 12 signs)**
+
+_Opposition (180°) - Polar Complement / Axis Tension_
+
+* Pos 28 (5 of Disks - Worry) <-> Pos 34 (4 of Wands - Completion) | cards: +1 Friendly (Earth + Fire)
+* Pos 29 (XVII - The Star) <-> Pos 35 (Knight of Disks) | cards: -2 Contrary / Ill-Dignified (Air + Earth)
+* Pos 30 (Prince of Swords) <-> Pos 36 (4 of Swords - Truce) | cards: +2 Strong / Same Element (Air + Air)
+* Pos 31 (XIV - Art) <-> Pos 37 (10 of Swords - Ruin) | cards: +1 Friendly (Fire + Air)
+* Pos 32 (XVI - The Tower) <-> Pos 38 (I - The Magus) | cards: +1 Friendly (Fire + Air)
+* Pos 33 (Ace of Cups) <-> Pos 39 (6 of Disks - Success) | cards: +1 Friendly (Water + Earth)
+
+**Operation 4: Fourth Operation (the 36 decans)**
+
+_Opposition (180°) - Polar Complement / Axis Tension_
+
+* Pos 40 (Prince of Wands) <-> Pos 58 (3 of Disks - Works) | cards: +1 Friendly (Fire + Earth)
+* Pos 41 (5 of Disks - Worry) <-> Pos 59 (IV - The Emperor) | cards: +1 Friendly (Earth + Fire)
+* Pos 42 (VI - The Lovers) <-> Pos 60 (4 of Wands - Completion) | cards: +1 Friendly (Air + Fire)
+* Pos 43 (VIII - Adjustment) <-> Pos 61 (Prince of Swords) | cards: +2 Strong / Same Element (Air + Air)
+* Pos 44 (Prince of Cups) <-> Pos 62 (10 of Wands - Oppression) | cards: -2 Contrary / Ill-Dignified (Water + Fire)
+* Pos 45 (3 of Swords - Sorrow) <-> Pos 63 (Prince of Disks) | cards: -2 Contrary / Ill-Dignified (Air + Earth)
+* Pos 46 (6 of Cups - Pleasure) <-> Pos 64 (Princess of Wands) | cards: -2 Contrary / Ill-Dignified (Water + Fire)
+* Pos 47 (Ace of Wands) <-> Pos 65 (X - Fortune) | cards: +2 Strong / Same Element (Fire + Fire)
+* Pos 48 (Princess of Cups) <-> Pos 66 (0 - The Fool) | cards: +1 Friendly (Water + Air)
+* Pos 49 (Queen of Cups) <-> Pos 67 (XVIII - The Moon) | cards: +2 Strong / Same Element (Water + Water)
+* Pos 50 (2 of Swords - Peace) <-> Pos 68 (Queen of Swords) | cards: +2 Strong / Same Element (Air + Air)
+* Pos 51 (VII - The Chariot) <-> Pos 69 (10 of Swords - Ruin) | cards: +1 Friendly (Water + Air)
+* Pos 52 (8 of Swords - Interference) <-> Pos 70 (9 of Cups - Happiness) | cards: +1 Friendly (Air + Water)
+* Pos 53 (XIX - The Sun) <-> Pos 71 (2 of Disks - Change) | cards: +1 Friendly (Fire + Earth)
+* Pos 54 (9 of Swords - Cruelty) <-> Pos 72 (XIV - Art) | cards: +1 Friendly (Air + Fire)
+* Pos 55 (XVI - The Tower) <-> Pos 73 (XI - Lust) | cards: +2 Strong / Same Element (Fire + Fire)
+* Pos 56 (XX - The Aeon) <-> Pos 74 (Queen of Wands) | cards: +2 Strong / Same Element (Fire + Fire)
+* Pos 57 (XII - The Hanged Man) <-> Pos 75 (5 of Swords - Defeat) | cards: +1 Friendly (Water + Air)
+
+---
+
+## 5. CARD CORRESPONDENCES, ONCE PER CARD
 
 Minor (pip) cards sit on the same Sephira in every mapping system, so their entries name the Sephira once.
 
@@ -27,503 +277,279 @@ Court cards take their Hebrew letter through their sign (a Princess through her 
 
 Planet Strength is the classical dignity of a pip's planet in its sign, as Crowley reads the small cards; pips without the line have none.
 
-A house, sign or decan position's name is the place on the wheel, not the card: the card that fell there is the Card Drawn, and it usually does not belong to that house, sign or decan (the Own-Place Check in the header counts the ones that do). A decan's name ends with its own pip in brackets, for example "Saturn in Leo (5 of Wands)"; that pip is part of the place's name too.
-
-Each operation is dealt from its own fresh shuffle of the whole deck, so a card can appear in more than one operation, but never twice in the same one.
-
-### Position 1: [Op 1] 1. Significator / Core Nature of Question
-- **Card Drawn**: Queen of Cups
+### Queen of Cups (Pos 1, 49)
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Cancer)**: Fence (ח (Cheth))
 - **Attribution**: Water of Water - 20° Gemini to 20° Cancer
 
-### Position 2: [Op 1] 2. Development of Question (Left Pair A)
-- **Card Drawn**: Prince of Swords
+### Prince of Swords (Pos 2, 30, 61)
 - **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
+- **Letter via Sign (Aquarius)**: Window (ה (Heh))
 - **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
-### Position 3: [Op 1] 3. Development of Question (Left Pair B)
-- **Card Drawn**: 4 of Swords - Truce
+### 4 of Swords - Truce (Pos 3, 36)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Jupiter in Libra
 
-### Position 4: [Op 1] 4. Further Outcome (Right Pair A)
-- **Card Drawn**: 7 of Cups - Debauch
+### 7 of Cups - Debauch (Pos 4)
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Venus in Scorpio
 - **Planet Strength**: in detriment (weakened)
 
-### Position 5: [Op 1] 5. Further Outcome (Right Pair B)
-- **Card Drawn**: V - The Hierophant
+### V - The Hierophant (Pos 5)
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
 - **Element (used in scores)**: Earth (via Taurus)
 
-### Position 6: [Op 1] 6. Unexpected / External Factors (Center Pair A)
-- **Card Drawn**: XI - Lust
+### XI - Lust (Pos 6, 73)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Serpent (ט (Teth))
 - **Attribution**: Leo
 - **Element (used in scores)**: Fire (via Leo)
 
-### Position 7: [Op 1] 7. Unexpected / External Factors (Center Pair B)
-- **Card Drawn**: 2 of Wands - Dominion
+### 2 of Wands - Dominion (Pos 7)
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Mars in Aries
 - **Planet Strength**: rules this sign (strong)
 
-### Position 8: [Op 1] 8. Psychological / Subconscious Basis (Base Left A)
-- **Card Drawn**: Knight of Cups
+### Knight of Cups (Pos 8, 18)
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
 - **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
 
-### Position 9: [Op 1] 9. Psychological / Subconscious Basis (Base Left B)
-- **Card Drawn**: 2 of Swords - Peace
+### 2 of Swords - Peace (Pos 9, 50)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Moon in Libra
 
-### Position 10: [Op 1] 10. Environmental / Material Basis (Base Right A)
-- **Card Drawn**: 7 of Swords - Futility
+### 7 of Swords - Futility (Pos 10)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Moon in Aquarius
 
-### Position 11: [Op 1] 11. Environmental / Material Basis (Base Right B)
-- **Card Drawn**: 10 of Wands - Oppression
+### 10 of Wands - Oppression (Pos 11, 62)
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Saturn in Sagittarius
 
-### Position 12: [Op 1] 12. Final Synthesis / Karma (Top Apex A)
-- **Card Drawn**: 3 of Disks - Works
+### 3 of Disks - Works (Pos 12, 58)
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Mars in Capricorn
 - **Planet Strength**: exalted (strong)
 
-### Position 13: [Op 1] 13. Final Synthesis / Karma (Top Apex B)
-- **Card Drawn**: XVI - The Tower
+### XVI - The Tower (Pos 13, 32, 55)
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
+- **Path/Sephira**: Mouth (פ (Peh))
 - **Attribution**: Mars
 - **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
 
-### Position 14: [Op 1] 14. Key Counter-Balance / Receptivity
-- **Card Drawn**: 3 of Swords - Sorrow
+### 3 of Swords - Sorrow (Pos 14, 45)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Understanding (בינה (Binah))
 - **Attribution**: Saturn in Libra
 - **Planet Strength**: exalted (strong)
 
-### Position 15: [Op 1] 15. Ultimate Climax / Resolution
-- **Card Drawn**: I - The Magus
+### I - The Magus (Pos 15, 38)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: House (ב (Beth))
 - **Attribution**: Mercury
 - **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
 
-### Position 16: [Op 2] 1. First House (Ascendant / Physical Self)
-- **Card Drawn**: 8 of Swords - Interference
+### 8 of Swords - Interference (Pos 16, 52)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Splendour (הוד (Hod))
 - **Attribution**: Jupiter in Gemini
 - **Planet Strength**: in detriment (weakened)
 
-### Position 17: [Op 2] 2. Second House (Finances & Values)
-- **Card Drawn**: 5 of Swords - Defeat
+### 5 of Swords - Defeat (Pos 17, 75)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Venus in Aquarius
 
-### Position 18: [Op 2] 3. Third House (Local Mind & Travel)
-- **Card Drawn**: Knight of Cups
-- **Arcana/Suit**: Court | Cups
-- **Letter via Sign (Pisces)**: Back of head (ק (Qoph))
-- **Attribution**: Fire of Water - 20° Aquarius to 20° Pisces
-
-### Position 19: [Op 2] 4. Fourth House (Home & Roots)
-- **Card Drawn**: X - Fortune
+### X - Fortune (Pos 19, 65)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Palm (כ (Kaph))
 - **Attribution**: Jupiter
 - **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
 
-### Position 20: [Op 2] 5. Fifth House (Creativity & Will)
-- **Card Drawn**: 6 of Cups - Pleasure
+### 6 of Cups - Pleasure (Pos 20, 46)
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Sun in Scorpio
 
-### Position 21: [Op 2] 6. Sixth House (Health & Work)
-- **Card Drawn**: 2 of Disks - Change
+### 2 of Disks - Change (Pos 21, 71)
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Wisdom (חכמה (Chokmah))
 - **Attribution**: Jupiter in Capricorn
 - **Planet Strength**: in fall (weakest)
 
-### Position 22: [Op 2] 7. Seventh House (Partnerships)
-- **Card Drawn**: VI - The Lovers
+### VI - The Lovers (Pos 22, 42)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Sword (ז (Zain))
 - **Attribution**: Gemini
 - **Element (used in scores)**: Air (via Gemini)
 
-### Position 23: [Op 2] 8. Eighth House (Shared Assets & Death)
-- **Card Drawn**: 10 of Swords - Ruin
+### 10 of Swords - Ruin (Pos 23, 37, 69)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Kingdom (מלכות (Malkuth))
 - **Attribution**: Sun in Gemini
 
-### Position 24: [Op 2] 9. Ninth House (Philosophy & Higher Mind)
-- **Card Drawn**: VII - The Chariot
+### VII - The Chariot (Pos 24, 51)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fence (ח (Cheth))
 - **Attribution**: Cancer
 - **Element (used in scores)**: Water (via Cancer)
 
-### Position 25: [Op 2] 10. Tenth House (Career & Public Standing)
-- **Card Drawn**: 7 of Disks - Failure
+### 7 of Disks - Failure (Pos 25)
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Victory (נצח (Netzach))
 - **Attribution**: Saturn in Taurus
 
-### Position 26: [Op 2] 11. Eleventh House (Alliances & Hopes)
-- **Card Drawn**: 9 of Swords - Cruelty
+### 9 of Swords - Cruelty (Pos 26, 54)
 - **Arcana/Suit**: Minor | Swords
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Mars in Gemini
 
-### Position 27: [Op 2] 12. Twelfth House (Subconscious & Hidden)
-- **Card Drawn**: Queen of Disks
+### Queen of Disks (Pos 27)
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Capricorn)**: Eye (ע (Ayin))
 - **Attribution**: Water of Earth - 20° Sagittarius to 20° Capricorn
 
-### Position 28: [Op 3] 1. Aries
-- **Card Drawn**: 5 of Disks - Worry
+### 5 of Disks - Worry (Pos 28, 41)
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Strength (גבורה (Geburah))
 - **Attribution**: Mercury in Taurus
 
-### Position 29: [Op 3] 2. Taurus
-- **Card Drawn**: XVII - The Star
+### XVII - The Star (Pos 29)
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Window (ה (Hé))
+- **Path/Sephira**: Window (ה (Heh))
 - **Attribution**: Aquarius
 - **Element (used in scores)**: Air (via Aquarius)
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
+- **Comparative Hebrew Mapping**: Thoth: `ה (Heh)` | Golden Dawn: `צ (Tzaddi)`
 
-### Position 30: [Op 3] 3. Gemini
-- **Card Drawn**: Prince of Swords
-- **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
-- **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
-
-### Position 31: [Op 3] 4. Cancer
-- **Card Drawn**: XIV - Art
+### XIV - Art (Pos 31, 72)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Prop (ס (Samekh))
 - **Attribution**: Sagittarius
 - **Element (used in scores)**: Fire (via Sagittarius)
 
-### Position 32: [Op 3] 5. Leo
-- **Card Drawn**: XVI - The Tower
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
-- **Attribution**: Mars
-- **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-
-### Position 33: [Op 3] 6. Virgo
-- **Card Drawn**: Ace of Cups
+### Ace of Cups (Pos 33)
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Crown (כתר (Kether))
 - **Attribution**: Root of the Powers of Water
 
-### Position 34: [Op 3] 7. Libra
-- **Card Drawn**: 4 of Wands - Completion
+### 4 of Wands - Completion (Pos 34, 60)
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Mercy (חסד (Chesed))
 - **Attribution**: Venus in Aries
 - **Planet Strength**: in detriment (weakened)
 
-### Position 35: [Op 3] 8. Scorpio
-- **Card Drawn**: Knight of Disks
+### Knight of Disks (Pos 35)
 - **Arcana/Suit**: Court | Disks
 - **Letter via Sign (Virgo)**: Hand (י (Yod))
 - **Attribution**: Fire of Earth - 20° Leo to 20° Virgo
 
-### Position 36: [Op 3] 9. Sagittarius
-- **Card Drawn**: 4 of Swords - Truce
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Mercy (חסד (Chesed))
-- **Attribution**: Jupiter in Libra
-
-### Position 37: [Op 3] 10. Capricorn
-- **Card Drawn**: 10 of Swords - Ruin
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Kingdom (מלכות (Malkuth))
-- **Attribution**: Sun in Gemini
-
-### Position 38: [Op 3] 11. Aquarius
-- **Card Drawn**: I - The Magus
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: House (ב (Beth))
-- **Attribution**: Mercury
-- **Element (used in scores)**: Air (Mercury via Gemini; Virgo would make it Earth)
-
-### Position 39: [Op 3] 12. Pisces
-- **Card Drawn**: 6 of Disks - Success
+### 6 of Disks - Success (Pos 39)
 - **Arcana/Suit**: Minor | Disks
 - **Path/Sephira**: Beauty (תפארת (Tiphareth))
 - **Attribution**: Moon in Taurus
 - **Planet Strength**: exalted (strong)
 
-### Position 40: [Op 4] Decan 1: Saturn in Leo (5 of Wands)
-- **Card Drawn**: Prince of Wands
+### Prince of Wands (Pos 40)
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Leo)**: Serpent (ט (Teth))
 - **Attribution**: Air of Fire - 20° Cancer to 20° Leo
 
-### Position 41: [Op 4] Decan 2: Jupiter in Leo (6 of Wands)
-- **Card Drawn**: 5 of Disks - Worry
-- **Arcana/Suit**: Minor | Disks
-- **Path/Sephira**: Strength (גבורה (Geburah))
-- **Attribution**: Mercury in Taurus
-
-### Position 42: [Op 4] Decan 3: Mars in Leo (7 of Wands)
-- **Card Drawn**: VI - The Lovers
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Sword (ז (Zain))
-- **Attribution**: Gemini
-- **Element (used in scores)**: Air (via Gemini)
-
-### Position 43: [Op 4] Decan 4: Sun in Virgo (8 of Disks)
-- **Card Drawn**: VIII - Adjustment
+### VIII - Adjustment (Pos 43)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox Goad (ל (Lamed))
 - **Attribution**: Libra
 - **Element (used in scores)**: Air (via Libra)
 
-### Position 44: [Op 4] Decan 5: Venus in Virgo (9 of Disks)
-- **Card Drawn**: Prince of Cups
+### Prince of Cups (Pos 44)
 - **Arcana/Suit**: Court | Cups
 - **Letter via Sign (Scorpio)**: Fish (נ (Nun))
 - **Attribution**: Air of Water - 20° Libra to 20° Scorpio
 
-### Position 45: [Op 4] Decan 6: Mercury in Virgo (10 of Disks)
-- **Card Drawn**: 3 of Swords - Sorrow
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Understanding (בינה (Binah))
-- **Attribution**: Saturn in Libra
-- **Planet Strength**: exalted (strong)
-
-### Position 46: [Op 4] Decan 7: Moon in Libra (2 of Swords)
-- **Card Drawn**: 6 of Cups - Pleasure
-- **Arcana/Suit**: Minor | Cups
-- **Path/Sephira**: Beauty (תפארת (Tiphareth))
-- **Attribution**: Sun in Scorpio
-
-### Position 47: [Op 4] Decan 8: Saturn in Libra (3 of Swords)
-- **Card Drawn**: Ace of Wands
+### Ace of Wands (Pos 47)
 - **Arcana/Suit**: Minor | Wands
 - **Path/Sephira**: Crown (כתר (Kether))
 - **Attribution**: Root of the Powers of Fire
 
-### Position 48: [Op 4] Decan 9: Jupiter in Libra (4 of Swords)
-- **Card Drawn**: Princess of Cups
+### Princess of Cups (Pos 48)
 - **Arcana/Suit**: Court | Cups
 - **Letter via Element (Water)**: Water (מ (Mem))
 - **Attribution**: Earth of Water - Libra, Scorpio, Sagittarius quadrant
 
-### Position 49: [Op 4] Decan 10: Mars in Scorpio (5 of Cups)
-- **Card Drawn**: Queen of Cups
-- **Arcana/Suit**: Court | Cups
-- **Letter via Sign (Cancer)**: Fence (ח (Cheth))
-- **Attribution**: Water of Water - 20° Gemini to 20° Cancer
-
-### Position 50: [Op 4] Decan 11: Sun in Scorpio (6 of Cups)
-- **Card Drawn**: 2 of Swords - Peace
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Wisdom (חכמה (Chokmah))
-- **Attribution**: Moon in Libra
-
-### Position 51: [Op 4] Decan 12: Venus in Scorpio (7 of Cups)
-- **Card Drawn**: VII - The Chariot
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Fence (ח (Cheth))
-- **Attribution**: Cancer
-- **Element (used in scores)**: Water (via Cancer)
-
-### Position 52: [Op 4] Decan 13: Mercury in Sagittarius (8 of Wands)
-- **Card Drawn**: 8 of Swords - Interference
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Splendour (הוד (Hod))
-- **Attribution**: Jupiter in Gemini
-- **Planet Strength**: in detriment (weakened)
-
-### Position 53: [Op 4] Decan 14: Moon in Sagittarius (9 of Wands)
-- **Card Drawn**: XIX - The Sun
+### XIX - The Sun (Pos 53)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Head (ר (Resh))
 - **Attribution**: Sun
 - **Element (used in scores)**: Fire (the Sun via Leo, its only sign)
 
-### Position 54: [Op 4] Decan 15: Saturn in Sagittarius (10 of Wands)
-- **Card Drawn**: 9 of Swords - Cruelty
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Foundation (יסוד (Yesod))
-- **Attribution**: Mars in Gemini
-
-### Position 55: [Op 4] Decan 16: Jupiter in Capricorn (2 of Disks)
-- **Card Drawn**: XVI - The Tower
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Mouth (פ (Pé))
-- **Attribution**: Mars
-- **Element (used in scores)**: Fire (Mars via Aries; Scorpio would make it Water)
-
-### Position 56: [Op 4] Decan 17: Mars in Capricorn (3 of Disks)
-- **Card Drawn**: XX - The Aeon
+### XX - The Aeon (Pos 56)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Tooth (ש (Shin))
 - **Attribution**: Fire / Spirit
 - **Element (used in scores)**: Fire (the element Fire itself; Spirit is a secondary quality only)
 
-### Position 57: [Op 4] Decan 18: Sun in Capricorn (4 of Disks)
-- **Card Drawn**: XII - The Hanged Man
+### XII - The Hanged Man (Pos 57)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Water (מ (Mem))
 - **Attribution**: Water
 - **Element (used in scores)**: Water (the element Water itself)
 
-### Position 58: [Op 4] Decan 19: Venus in Aquarius (5 of Swords)
-- **Card Drawn**: 3 of Disks - Works
-- **Arcana/Suit**: Minor | Disks
-- **Path/Sephira**: Understanding (בינה (Binah))
-- **Attribution**: Mars in Capricorn
-- **Planet Strength**: exalted (strong)
-
-### Position 59: [Op 4] Decan 20: Mercury in Aquarius (6 of Swords)
-- **Card Drawn**: IV - The Emperor
+### IV - The Emperor (Pos 59)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Aries
 - **Element (used in scores)**: Fire (via Aries)
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 
-### Position 60: [Op 4] Decan 21: Moon in Aquarius (7 of Swords)
-- **Card Drawn**: 4 of Wands - Completion
-- **Arcana/Suit**: Minor | Wands
-- **Path/Sephira**: Mercy (חסד (Chesed))
-- **Attribution**: Venus in Aries
-- **Planet Strength**: in detriment (weakened)
-
-### Position 61: [Op 4] Decan 22: Saturn in Pisces (8 of Cups)
-- **Card Drawn**: Prince of Swords
-- **Arcana/Suit**: Court | Swords
-- **Letter via Sign (Aquarius)**: Window (ה (Hé))
-- **Attribution**: Air of Air - 20° Capricorn to 20° Aquarius
-- **Comparative Hebrew Mapping**: Thoth: `ה (Hé)` | Golden Dawn: `צ (Tzaddi)`
-
-### Position 62: [Op 4] Decan 23: Jupiter in Pisces (9 of Cups)
-- **Card Drawn**: 10 of Wands - Oppression
-- **Arcana/Suit**: Minor | Wands
-- **Path/Sephira**: Kingdom (מלכות (Malkuth))
-- **Attribution**: Saturn in Sagittarius
-
-### Position 63: [Op 4] Decan 24: Mars in Pisces (10 of Cups)
-- **Card Drawn**: Prince of Disks
+### Prince of Disks (Pos 63)
 - **Arcana/Suit**: Court | Disks
-- **Letter via Sign (Taurus)**: Nail (ו (Vau))
+- **Letter via Sign (Taurus)**: Nail (ו (Vav))
 - **Attribution**: Air of Earth - 20° Aries to 20° Taurus
 
-### Position 64: [Op 4] Decan 25: Mars in Aries (2 of Wands)
-- **Card Drawn**: Princess of Wands
+### Princess of Wands (Pos 64)
 - **Arcana/Suit**: Court | Wands
 - **Letter via Element (Fire)**: Tooth (ש (Shin))
 - **Attribution**: Earth of Fire - Cancer, Leo, Virgo quadrant
 
-### Position 65: [Op 4] Decan 26: Sun in Aries (3 of Wands)
-- **Card Drawn**: X - Fortune
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Palm (כ (Kaph))
-- **Attribution**: Jupiter
-- **Element (used in scores)**: Fire (Jupiter via Sagittarius; Pisces would make it Water)
-
-### Position 66: [Op 4] Decan 27: Venus in Aries (4 of Wands)
-- **Card Drawn**: 0 - The Fool
+### 0 - The Fool (Pos 66)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Ox (א (Aleph))
 - **Attribution**: Air
 - **Element (used in scores)**: Air (the element Air itself)
 
-### Position 67: [Op 4] Decan 28: Mercury in Taurus (5 of Disks)
-- **Card Drawn**: XVIII - The Moon
+### XVIII - The Moon (Pos 67)
 - **Arcana/Suit**: Major | N/A
 - **Path/Sephira**: Back of head (ק (Qoph))
 - **Attribution**: Pisces
 - **Element (used in scores)**: Water (via Pisces)
 
-### Position 68: [Op 4] Decan 29: Moon in Taurus (6 of Disks)
-- **Card Drawn**: Queen of Swords
+### Queen of Swords (Pos 68)
 - **Arcana/Suit**: Court | Swords
 - **Letter via Sign (Libra)**: Ox Goad (ל (Lamed))
 - **Attribution**: Water of Air - 20° Virgo to 20° Libra
 
-### Position 69: [Op 4] Decan 30: Saturn in Taurus (7 of Disks)
-- **Card Drawn**: 10 of Swords - Ruin
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Kingdom (מלכות (Malkuth))
-- **Attribution**: Sun in Gemini
-
-### Position 70: [Op 4] Decan 31: Jupiter in Gemini (8 of Swords)
-- **Card Drawn**: 9 of Cups - Happiness
+### 9 of Cups - Happiness (Pos 70)
 - **Arcana/Suit**: Minor | Cups
 - **Path/Sephira**: Foundation (יסוד (Yesod))
 - **Attribution**: Jupiter in Pisces
 - **Planet Strength**: rules this sign (strong)
 
-### Position 71: [Op 4] Decan 32: Mars in Gemini (9 of Swords)
-- **Card Drawn**: 2 of Disks - Change
-- **Arcana/Suit**: Minor | Disks
-- **Path/Sephira**: Wisdom (חכמה (Chokmah))
-- **Attribution**: Jupiter in Capricorn
-- **Planet Strength**: in fall (weakest)
-
-### Position 72: [Op 4] Decan 33: Sun in Gemini (10 of Swords)
-- **Card Drawn**: XIV - Art
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Prop (ס (Samekh))
-- **Attribution**: Sagittarius
-- **Element (used in scores)**: Fire (via Sagittarius)
-
-### Position 73: [Op 4] Decan 34: Venus in Cancer (2 of Cups)
-- **Card Drawn**: XI - Lust
-- **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Serpent (ט (Teth))
-- **Attribution**: Leo
-- **Element (used in scores)**: Fire (via Leo)
-
-### Position 74: [Op 4] Decan 35: Mercury in Cancer (3 of Cups)
-- **Card Drawn**: Queen of Wands
+### Queen of Wands (Pos 74)
 - **Arcana/Suit**: Court | Wands
 - **Letter via Sign (Aries)**: Fish-hook (צ (Tzaddi))
 - **Attribution**: Water of Fire - 20° Pisces to 20° Aries
-- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Hé)`
-
-### Position 75: [Op 4] Decan 36: Moon in Cancer (4 of Cups)
-- **Card Drawn**: 5 of Swords - Defeat
-- **Arcana/Suit**: Minor | Swords
-- **Path/Sephira**: Strength (גבורה (Geburah))
-- **Attribution**: Venus in Aquarius
+- **Comparative Hebrew Mapping**: Thoth: `צ (Tzaddi)` | Golden Dawn: `ה (Heh)`
 
 **Liber 777 Rows:** each card's four colour scales and Yetziratic title (Sepher Yetzirah, 32 Paths of Wisdom), given once per 777 row with the positions on it. The four scales go with the four worlds and court ranks: King (Atziluth), Queen (Briah), Prince or Emperor (Yetzirah), Princess or Empress (Assiah). A court takes the row of its sign or element, as its letter does. A position marked (colours) takes only the colours from that row, one marked (title) only the title: the colours follow the sign and the title follows the card's path.
 
@@ -566,175 +592,20 @@ Each operation is dealt from its own fresh shuffle of the whole deck, so a card 
 
 ---
 
-## 2. ELEMENTAL VECTOR DISTRIBUTION
-* **Fire  **: ██████████████████████████████████████████ 21 (28.0%)
-* **Water **: ██████████████████████████████ 15 (20.0%)
-* **Air   **: ██████████████████████████████████████████████████████ 27 (36.0%)
-* **Earth **: ████████████████████████ 12 (16.0%)
-* **Spirit**: secondary quality only, on 1: Pos 56 (XX - The Aeon)
-
-**Book T Counts** (Book T reads three or four cards of one rank, and a lead of Trumps, court cards, Aces or one suit; suits count the small and court cards):
-* Operation 1: 15 cards: 4 Trumps, 3 court cards, 0 Aces | Wands 2, Cups 3, Swords 5, Disks 1 | no rank three or more times
-* Operation 2: 12 cards: 3 Trumps, 2 court cards, 0 Aces | Wands 0, Cups 2, Swords 4, Disks 3 | no rank three or more times
-* Operation 3: 12 cards: 4 Trumps, 2 court cards, 1 Ace | Wands 1, Cups 1, Swords 3, Disks 3 | no rank three or more times
-* Operation 4: 36 cards: 13 Trumps, 9 court cards, 1 Ace | Wands 6, Cups 5, Swords 8, Disks 4 | Three Queens (Wands, Cups, Swords); Four Princes (Wands, Cups, Swords, Disks)
-
----
-
-## 3. PAIRWISE ELEMENTAL DIGNITY INTERACTIONS
-
-**Operation 1: 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)**
-
-* **Pos 2 (Prince of Swords) <-> Pos 3 (4 of Swords - Truce)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 4 (7 of Cups - Debauch) <-> Pos 5 (V - The Hierophant)**: `Score: +1` | Friendly (Water + Earth)
-* **Pos 6 (XI - Lust) <-> Pos 7 (2 of Wands - Dominion)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 8 (Knight of Cups) <-> Pos 9 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 10 (7 of Swords - Futility) <-> Pos 11 (10 of Wands - Oppression)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 12 (3 of Disks - Works) <-> Pos 13 (XVI - The Tower)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 1 (Queen of Cups) <-> Pos 14 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 1 (Queen of Cups) <-> Pos 15 (I - The Magus)**: `Score: +1` | Friendly (Water + Air)
-
-**Operation 2: OOTK - Second Operation (12 Astrological Houses)**
-
-* **Pos 16 (8 of Swords - Interference) <-> Pos 17 (5 of Swords - Defeat)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 17 (5 of Swords - Defeat) <-> Pos 18 (Knight of Cups)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 18 (Knight of Cups) <-> Pos 19 (X - Fortune)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
-* **Pos 19 (X - Fortune) <-> Pos 20 (6 of Cups - Pleasure)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
-* **Pos 20 (6 of Cups - Pleasure) <-> Pos 21 (2 of Disks - Change)**: `Score: +1` | Friendly (Water + Earth)
-* **Pos 21 (2 of Disks - Change) <-> Pos 22 (VI - The Lovers)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 22 (VI - The Lovers) <-> Pos 23 (10 of Swords - Ruin)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 23 (10 of Swords - Ruin) <-> Pos 24 (VII - The Chariot)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 24 (VII - The Chariot) <-> Pos 25 (7 of Disks - Failure)**: `Score: +1` | Friendly (Water + Earth)
-* **Pos 25 (7 of Disks - Failure) <-> Pos 26 (9 of Swords - Cruelty)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 26 (9 of Swords - Cruelty) <-> Pos 27 (Queen of Disks)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
-* **Pos 27 (Queen of Disks) <-> Pos 16 (8 of Swords - Interference)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-
-**Operation 3: OOTK - Third Operation (12 Zodiacal Signs)**
-
-* **Pos 28 (5 of Disks - Worry) <-> Pos 29 (XVII - The Star)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 29 (XVII - The Star) <-> Pos 30 (Prince of Swords)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 30 (Prince of Swords) <-> Pos 31 (XIV - Art)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 31 (XIV - Art) <-> Pos 32 (XVI - The Tower)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 32 (XVI - The Tower) <-> Pos 33 (Ace of Cups)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
-* **Pos 33 (Ace of Cups) <-> Pos 34 (4 of Wands - Completion)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
-* **Pos 34 (4 of Wands - Completion) <-> Pos 35 (Knight of Disks)**: `Score: +1` | Friendly (Fire + Earth)
-* **Pos 35 (Knight of Disks) <-> Pos 36 (4 of Swords - Truce)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 36 (4 of Swords - Truce) <-> Pos 37 (10 of Swords - Ruin)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 37 (10 of Swords - Ruin) <-> Pos 38 (I - The Magus)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 38 (I - The Magus) <-> Pos 39 (6 of Disks - Success)**: `Score: -2` | Contrary / Ill-Dignified (Air + Earth)
-* **Pos 39 (6 of Disks - Success) <-> Pos 28 (5 of Disks - Worry)**: `Score: +2` | Strong / Same Element (Earth + Earth)
-
-**Operation 4: OOTK - Fourth Operation (36 Zodiacal Decans)**
-
-* **Pos 40 (Prince of Wands) <-> Pos 41 (5 of Disks - Worry)**: `Score: +1` | Friendly (Fire + Earth)
-* **Pos 41 (5 of Disks - Worry) <-> Pos 42 (VI - The Lovers)**: `Score: -2` | Contrary / Ill-Dignified (Earth + Air)
-* **Pos 42 (VI - The Lovers) <-> Pos 43 (VIII - Adjustment)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 43 (VIII - Adjustment) <-> Pos 44 (Prince of Cups)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 44 (Prince of Cups) <-> Pos 45 (3 of Swords - Sorrow)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 45 (3 of Swords - Sorrow) <-> Pos 46 (6 of Cups - Pleasure)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 46 (6 of Cups - Pleasure) <-> Pos 47 (Ace of Wands)**: `Score: -2` | Contrary / Ill-Dignified (Water + Fire)
-* **Pos 47 (Ace of Wands) <-> Pos 48 (Princess of Cups)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
-* **Pos 48 (Princess of Cups) <-> Pos 49 (Queen of Cups)**: `Score: +2` | Strong / Same Element (Water + Water)
-* **Pos 49 (Queen of Cups) <-> Pos 50 (2 of Swords - Peace)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 50 (2 of Swords - Peace) <-> Pos 51 (VII - The Chariot)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 51 (VII - The Chariot) <-> Pos 52 (8 of Swords - Interference)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 52 (8 of Swords - Interference) <-> Pos 53 (XIX - The Sun)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 53 (XIX - The Sun) <-> Pos 54 (9 of Swords - Cruelty)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 54 (9 of Swords - Cruelty) <-> Pos 55 (XVI - The Tower)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 55 (XVI - The Tower) <-> Pos 56 (XX - The Aeon)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 56 (XX - The Aeon) <-> Pos 57 (XII - The Hanged Man)**: `Score: -2` | Contrary / Ill-Dignified (Fire + Water)
-* **Pos 57 (XII - The Hanged Man) <-> Pos 58 (3 of Disks - Works)**: `Score: +1` | Friendly (Water + Earth)
-* **Pos 58 (3 of Disks - Works) <-> Pos 59 (IV - The Emperor)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 59 (IV - The Emperor) <-> Pos 60 (4 of Wands - Completion)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 60 (4 of Wands - Completion) <-> Pos 61 (Prince of Swords)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 61 (Prince of Swords) <-> Pos 62 (10 of Wands - Oppression)**: `Score: +1` | Friendly (Air + Fire)
-* **Pos 62 (10 of Wands - Oppression) <-> Pos 63 (Prince of Disks)**: `Score: +1` | Friendly (Fire + Earth)
-* **Pos 63 (Prince of Disks) <-> Pos 64 (Princess of Wands)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 64 (Princess of Wands) <-> Pos 65 (X - Fortune)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 65 (X - Fortune) <-> Pos 66 (0 - The Fool)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 66 (0 - The Fool) <-> Pos 67 (XVIII - The Moon)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 67 (XVIII - The Moon) <-> Pos 68 (Queen of Swords)**: `Score: +1` | Friendly (Water + Air)
-* **Pos 68 (Queen of Swords) <-> Pos 69 (10 of Swords - Ruin)**: `Score: +2` | Strong / Same Element (Air + Air)
-* **Pos 69 (10 of Swords - Ruin) <-> Pos 70 (9 of Cups - Happiness)**: `Score: +1` | Friendly (Air + Water)
-* **Pos 70 (9 of Cups - Happiness) <-> Pos 71 (2 of Disks - Change)**: `Score: +1` | Friendly (Water + Earth)
-* **Pos 71 (2 of Disks - Change) <-> Pos 72 (XIV - Art)**: `Score: +1` | Friendly (Earth + Fire)
-* **Pos 72 (XIV - Art) <-> Pos 73 (XI - Lust)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 73 (XI - Lust) <-> Pos 74 (Queen of Wands)**: `Score: +2` | Strong / Same Element (Fire + Fire)
-* **Pos 74 (Queen of Wands) <-> Pos 75 (5 of Swords - Defeat)**: `Score: +1` | Friendly (Fire + Air)
-* **Pos 75 (5 of Swords - Defeat) <-> Pos 40 (Prince of Wands)**: `Score: +1` | Friendly (Air + Fire)
-
----
-
-## 4. SPATIAL & GEOMETRIC VECTOR ANALYSIS
-
-On the house, sign and decan wheels the aspect between two positions is fixed by the layout and is the same in every reading; the `cards:` part (the elemental dignity of the two cards drawn there) is this reading's.
-Only the oppositions are listed: the positions straight across the wheel from each other.
-
-**Operation 1: 15-Card Heap (OOTK Op 1 variant, not the IHVH four-pile split)**
-
-* A heap is not a wheel: its cards make no angles. Its named pairs are scored in section 3.
-
-**Operation 2: OOTK - Second Operation (12 Astrological Houses)**
-
-_Opposition (180°) - Polar Complement / Axis Tension_
-
-* Pos 16 (8 of Swords - Interference) <-> Pos 22 (VI - The Lovers) | cards: +2 Strong / Same Element (Air + Air)
-* Pos 17 (5 of Swords - Defeat) <-> Pos 23 (10 of Swords - Ruin) | cards: +2 Strong / Same Element (Air + Air)
-* Pos 18 (Knight of Cups) <-> Pos 24 (VII - The Chariot) | cards: +2 Strong / Same Element (Water + Water)
-* Pos 19 (X - Fortune) <-> Pos 25 (7 of Disks - Failure) | cards: +1 Friendly (Fire + Earth)
-* Pos 20 (6 of Cups - Pleasure) <-> Pos 26 (9 of Swords - Cruelty) | cards: +1 Friendly (Water + Air)
-* Pos 21 (2 of Disks - Change) <-> Pos 27 (Queen of Disks) | cards: +2 Strong / Same Element (Earth + Earth)
-
-**Operation 3: OOTK - Third Operation (12 Zodiacal Signs)**
-
-_Opposition (180°) - Polar Complement / Axis Tension_
-
-* Pos 28 (5 of Disks - Worry) <-> Pos 34 (4 of Wands - Completion) | cards: +1 Friendly (Earth + Fire)
-* Pos 29 (XVII - The Star) <-> Pos 35 (Knight of Disks) | cards: -2 Contrary / Ill-Dignified (Air + Earth)
-* Pos 30 (Prince of Swords) <-> Pos 36 (4 of Swords - Truce) | cards: +2 Strong / Same Element (Air + Air)
-* Pos 31 (XIV - Art) <-> Pos 37 (10 of Swords - Ruin) | cards: +1 Friendly (Fire + Air)
-* Pos 32 (XVI - The Tower) <-> Pos 38 (I - The Magus) | cards: +1 Friendly (Fire + Air)
-* Pos 33 (Ace of Cups) <-> Pos 39 (6 of Disks - Success) | cards: +1 Friendly (Water + Earth)
-
-**Operation 4: OOTK - Fourth Operation (36 Zodiacal Decans)**
-
-_Opposition (180°) - Polar Complement / Axis Tension_
-
-* Pos 40 (Prince of Wands) <-> Pos 58 (3 of Disks - Works) | cards: +1 Friendly (Fire + Earth)
-* Pos 41 (5 of Disks - Worry) <-> Pos 59 (IV - The Emperor) | cards: +1 Friendly (Earth + Fire)
-* Pos 42 (VI - The Lovers) <-> Pos 60 (4 of Wands - Completion) | cards: +1 Friendly (Air + Fire)
-* Pos 43 (VIII - Adjustment) <-> Pos 61 (Prince of Swords) | cards: +2 Strong / Same Element (Air + Air)
-* Pos 44 (Prince of Cups) <-> Pos 62 (10 of Wands - Oppression) | cards: -2 Contrary / Ill-Dignified (Water + Fire)
-* Pos 45 (3 of Swords - Sorrow) <-> Pos 63 (Prince of Disks) | cards: -2 Contrary / Ill-Dignified (Air + Earth)
-* Pos 46 (6 of Cups - Pleasure) <-> Pos 64 (Princess of Wands) | cards: -2 Contrary / Ill-Dignified (Water + Fire)
-* Pos 47 (Ace of Wands) <-> Pos 65 (X - Fortune) | cards: +2 Strong / Same Element (Fire + Fire)
-* Pos 48 (Princess of Cups) <-> Pos 66 (0 - The Fool) | cards: +1 Friendly (Water + Air)
-* Pos 49 (Queen of Cups) <-> Pos 67 (XVIII - The Moon) | cards: +2 Strong / Same Element (Water + Water)
-* Pos 50 (2 of Swords - Peace) <-> Pos 68 (Queen of Swords) | cards: +2 Strong / Same Element (Air + Air)
-* Pos 51 (VII - The Chariot) <-> Pos 69 (10 of Swords - Ruin) | cards: +1 Friendly (Water + Air)
-* Pos 52 (8 of Swords - Interference) <-> Pos 70 (9 of Cups - Happiness) | cards: +1 Friendly (Air + Water)
-* Pos 53 (XIX - The Sun) <-> Pos 71 (2 of Disks - Change) | cards: +1 Friendly (Fire + Earth)
-* Pos 54 (9 of Swords - Cruelty) <-> Pos 72 (XIV - Art) | cards: +1 Friendly (Air + Fire)
-* Pos 55 (XVI - The Tower) <-> Pos 73 (XI - Lust) | cards: +2 Strong / Same Element (Fire + Fire)
-* Pos 56 (XX - The Aeon) <-> Pos 74 (Queen of Wands) | cards: +2 Strong / Same Element (Fire + Fire)
-* Pos 57 (XII - The Hanged Man) <-> Pos 75 (5 of Swords - Defeat) | cards: +1 Friendly (Water + Air)
-
----
-
-## 5. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
+## 6. SYNTHESIS & INTERPRETATION INSTRUCTIONS FOR LLM
 
 Act as an expert Hermetic scholar and Tarot authority. Interpret the reading from the calculations above, following these rules:
 
 1. **The question:** Relate the reading to the querent's question, given as the Query/Intent Topic in the header. Before reading any card, restate it in one or two sentences as an open question framed in this spread's terms: its positions (section 1) and the Incarnational Life Path & Psychological Evolution lens. If it asks yes or no, or whether something will happen, turn it toward what the querent can understand or do. Keep the querent's subject and intent and change only the wording; show the reframed question first so the querent can correct it, then read each position as answering part of it.
 2. **Use only this data:** Work from the correspondences listed here, under the Thoth / Crowley (Liber 777; Emperor on Tzaddi, Star on Heh) system. Do not swap in meanings or attributions from another deck or system; if something here looks inconsistent, say so rather than correcting it silently.
 3. **Macro Conceptual Framework:** Read the spread through the lens of **3. Incarnational Life Path & Psychological Evolution**.
-4. **Suggested order:** First the overall balance of elements in section 2; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 3 and the aspects in section 4). Take the operations one at a time, in order, then draw them together. Where the Significator Falls (in the header) is the Golden Dawn's key to each operation: read the pack, house, sign or decan it falls in as where the matter turns, alongside the cards drawn. It names a place, not a printed card: unless a line says the Significator is the card printed there, do not look for it among the cards at that place.
+4. **Suggested order:** First the overall balance of elements in section 3; then each position in turn (its name says what it stands for, and section 1 says which card fell there); then the strongest and most strained pairs (section 2 and the aspects in section 4). Take the operations one at a time, in order, then draw them together. Where the Significator Falls (in the header) is the Golden Dawn's key to each operation: read the pack, house, sign or decan it falls in as where the matter turns, alongside the cards drawn. It names a place, not a printed card: unless a line says the Significator is the card printed there, do not look for it among the cards at that place.
 5. **Closing Summary:** Conclude with a summary that draws each part of the reading above together, then the outcome they lean toward and which findings point there. Answer the reframed question directly. Offer it as a likely outcome to weigh, not a certainty, and leave the decision to the querent.
 6. **Plain-Language Recap:** Then give a short recap in simple everyday words, free of technical terms, that someone new to tarot could follow: what the cards show and the likely outcome.
 7. **Timeline:** After the recap, add a heading `## Timeline` with one line per time the reading points to, as `- what it is: YYYY-MM-DD to YYYY-MM-DD` (a single day: `- what it is: YYYY-MM-DD`), dated from the reading's own timing and the draw date. If it points to no particular time, write `- none`.
 
 **How to read the numbers:**
-* `Score` in section 3 (and `cards:` in section 4) is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
-* Section 2 counts each card once, under its primary element. Its Book T Counts are per operation, never across one.
+* `Score` in section 2 (and `cards:` in section 4) is the pair's Book T elemental dignity: +2 same element (strong), +1 friendly, 0 neutral (Spirit), -2 contrary (ill-dignified: each card weakens the other). As Book T says, each element is contrary only to its opposite (Fire-Water, Air-Earth) and friendly with both others, so Fire-Earth and Air-Water count as fully friendly here, not as the weaker pairs some later writers make them.
+* Section 3 counts each position once, under its card's primary element, so a card that falls in more than one operation (the Significator among them) counts each time it falls. Its Book T Counts are per operation, never across one.
 
 END OF OOTK PROMPT (75 positions)

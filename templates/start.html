@@ -1,11 +1,11 @@
 {% extends "_guide_base.html" %}
 {% set page_title = "Start here" %}
-{% set page_description = "New to OOTK? Four short steps from your question to your AI: shape it, draw the cards, save the prompt as Markdown and attach it, plus what each spread teaches." %}
-{% set tagline = "New here? Four steps from your question to your AI." %}
+{% set page_description = "New to OOTK? Three short steps from your question to your AI: ask your question and draw, save the prompt, and attach it in your AI, plus what each spread teaches." %}
+{% set tagline = "New here? Three steps from your question to your AI." %}
 {% set active = "/start" %}
 {% block head %}
     <style>
-        /* Each section folds away under its heading, like the sample; the arrow shows whether it is open. */
+        /* Each section folds away under its heading; the arrow shows whether it is open. */
         .fold-toggle { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; }
         .fold-toggle::-webkit-details-marker { display: none; }
         .fold-toggle::before { content: "\25B8"; font-size: 1.3em; line-height: 1; color: var(--accent-2); transition: transform 0.15s; }
@@ -34,6 +34,10 @@
         .stage-anim img { display: block; height: 340px; width: auto; margin: 0 auto; }
         .stage-anim figcaption { margin: 6px auto 0; max-width: 200px; font-size: 0.85em; color: var(--muted); }
         .stage::after { content: ""; display: block; clear: both; }
+        /* The journal animation (a GIF of the real pages) fills the fold's width. */
+        .journal-anim { margin: 8px 0 16px; text-align: center; }
+        .journal-anim img { display: block; width: 100%; max-width: 900px; height: auto; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
+        .journal-anim figcaption { margin: 6px auto 0; font-size: 0.85em; color: var(--muted); }
         @media (max-width: 640px) { .stage-anim { float: none; margin: 8px 0 12px; } .stage-anim img { width: min(100%, 320px); height: auto; } }
     </style>
     <script src="{{ static_url('js/fold.js') }}" defer></script>
@@ -41,38 +45,44 @@
 {% block content %}
         <figure class="panel hero-anim">
             <img src="{{ static_url('site/question-to-ai.svg') }}" width="160" height="294" alt="An example question about a job, from start to finish. In Help me shape my question: Work and career is picked; Should I take the new job? is typed and flagged as a yes/no question; Help me weigh a decision suggests the Dyad; the question is mine, over the next three months; under Anything your AI should know? the situation and what I am unsure about are added. The finished question reads: What is drawing me toward the job offer, and what in me or the situation is resisting it, over the next three months? Two cards are drawn, Save the prompt for your AI saves the prompt as a file, and in your AI the + button attaches it and your AI replies.">
-            <figcaption>Your first reading in four steps: shape your question, draw the cards, save the prompt as Markdown, and attach it in your AI.</figcaption>
+            <figcaption>Your first reading in three steps: ask your question and draw, save the prompt, and attach it in your AI.</figcaption>
         </figure>
 
         <details class="panel fold" open>
             <summary class="fold-toggle"><h2 id="pathTitle">Your first reading, step by step</h2></summary>
             <ol class="path">
                 <li>
-                    <h3>Shape your question</h3>
+                    <h3>Ask your question and draw</h3>
                     <p>On the reading form, open <strong>Help me shape my question</strong> under the Question box. It asks which part of life the question touches, how you&rsquo;d put it in your own words, what the reading should do (this picks the spread), whose question it is and over what span, and <strong>anything your AI should know</strong>. Then press <strong>Use this question</strong>. A question is optional: you can leave it blank.</p>
-                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Shape a question</a></div>
+                    <p>Your question rides along with the cards but doesn&rsquo;t change which cards come up. For a first try, three cards (past, present and future) or the card of the day, which is the same for everyone, are easy places to start.</p>
+                    <div class="actions"><a class="btn" href="/?spread=3#readingForm">Shape a question</a> <a class="btn secondary" href="/?spread=3#readingForm">Draw three cards</a> <a class="btn secondary" href="/today">Card of the day</a> <a class="btn secondary" href="{{ sample_link }}">See a sample reading</a></div>
                 </li>
                 <li>
-                    <h3>Draw the cards</h3>
-                    <p>Your question rides along with the cards but doesn&rsquo;t change which cards come up. For a first try, three cards (past, present and future) or today&rsquo;s card, which is the same for everyone, are easy places to start.</p>
-                    <div class="actions"><a class="btn secondary" href="/?spread=3#readingForm">Draw three cards</a> <a class="btn secondary" href="/today">Today&rsquo;s card</a>{% if sample %} <a class="btn secondary" href="#sample">See the sample</a>{% endif %}</div>
-                </li>
-                <li>
-                    <h3>Save the prompt as Markdown</h3>
-                    <p>On the report, press <strong>Save the prompt for your AI</strong>. The one file holds the cards, every calculation and your question.</p>
+                    <h3>Save the prompt for your AI</h3>
+                    <p>On the report, press the button of that name. It downloads one Markdown (.md) file holding the cards, the calculations that are switched on and your question.</p>
                 </li>
                 <li>
                     <h3>Attach it in your AI</h3>
                     <p>In Claude, ChatGPT or another AI, press its <strong>+</strong> button and add the file. Your AI writes the interpretation from the cards and calculations in the prompt.</p>
                 </li>
             </ol>
-            <p>To learn what the numbers mean, the <a href="/library">Library</a> explains each term in the report, and <a href="/method">How it works</a> shows how it is all worked out.</p>
+            <p>To learn what the numbers mean, <a href="/method">How it works</a> shows how it is all worked out.</p>
         </details>
 
         {% if journal_enabled() %}
         <details class="panel fold" id="journalHelp">
             <summary class="fold-toggle"><h2 id="journalHelpTitle">Keep a journal of your readings</h2></summary>
             <p>The journal keeps your readings, what your AI said about them, and what actually happened, so you can look back over weeks and months. It is optional and needs no account.</p>
+            {# Recorded on a local copy of the site with made-up readings and a masked journal link
+               (capture script: reviews/journal-howto-2026-11-15/ in the project files). Visitors who
+               ask for reduced motion see one still frame instead. #}
+            <figure class="journal-anim" id="journal-how-to">
+                <picture>
+                    <source media="(prefers-reduced-motion: reduce)" srcset="{{ static_url('site/journal-how-to-still.webp') }}">
+                    <img src="{{ static_url('site/journal-how-to.gif') }}" width="900" height="640" loading="lazy" alt="The journal, step by step, with a made-up question about moving house. At the bottom of a report, Start a journal with this reading is pressed and the reading is added to the journal. On My journal, Show my journal link shows the secret link with a Copy link button. In the journal entry, an AI's answer is pasted in, ending with a Timeline list of three dates. Find dates finds those three, ticked, and two decan dates from the cards, unticked. The reading is filed under a new question, The house move, and saved. A later reading is added to the same question from its report. The Timeline shows the question's dates under the zodiac signs and the months, and hovering a marker shows the reading's details. Later, what actually happened is written in the entry.">
+                </picture>
+                <figcaption>How the journal works, with a made-up reading about moving house.</figcaption>
+            </figure>
             <ol class="path">
                 <li>
                     <h3>Start it from a report</h3>
@@ -88,7 +98,7 @@
                 </li>
                 <li>
                     <h3>Find dates, then Save</h3>
-                    <p>Under <strong>Dates on the timeline</strong>, press <strong>Find dates</strong>. It reads the answer&rsquo;s Timeline list (or any dates in the answer if there is none) and adds, unticked, the decan dates of the small cards you drew. Tick the ones you want, change any name or date, and press <strong>Save</strong>.</p>
+                    <p>Under <strong>Dates on the timeline</strong>, press <strong>Find dates</strong>. It reads the answer&rsquo;s Timeline list (or any dates in the answer if there is no list; a list that says <em>none</em> means none) and adds the window of the card a Book T reading is timed by (ticked), then the decan dates of the small cards you drew (unticked). Tick the ones you want, change any name or date, and press <strong>Save</strong>.</p>
                 </li>
                 <li>
                     <h3>Watch the timeline, note what happened</h3>
@@ -100,38 +110,29 @@
         </details>
         {% endif %}
 
-        {% if sample %}
-{% include "_sample_reading.html" %}
-        {% set w = sample.walkthrough %}
         <details class="panel fold" id="readYourself">
             <summary class="fold-toggle"><h2 id="readYourselfTitle">Reading a report yourself</h2></summary>
-            <p>Your AI writes the full interpretation, but you can read the main lines of any report yourself in three steps. Each step uses the sample above.</p>
+            <p>Your AI writes the full interpretation, but you can read the main lines of any report yourself in three steps.</p>
             <ol class="path">
                 <li>
                     <h3>Look at the element balance</h3>
                     <p>The leading element sets the tone: Fire for will and drive, Water for feeling, Air for thought, Earth for practical and material things. An element that is missing matters too: the cards say nothing through it.</p>
-                    <p class="muted">In the sample: {{ w.lead | join(' and ') }} {{ 'lead' if w.lead | length > 1 else 'leads' }} with {{ w.lead_count }} of {{ w.total }} cards{% if w.absent %}, and {{ w.absent | join(' and ') }} {{ 'are' if w.absent | length > 1 else 'is' }} missing{% endif %}.</p>
                 </li>
                 <li>
                     <h3>Find the weakened cards</h3>
                     <p>A card is ill-dignified when the elemental dignities with its neighbours add up to less than zero. In Book&nbsp;T a weakened card speaks with less force, or from its harder side; a well-dignified card speaks at full strength.</p>
-                    <p class="muted">In the sample: {% if w.weak %}{{ w.weak | length }} of the {{ w.heap_size }} heap cards {{ 'are' if w.weak | length > 1 else 'is' }} weakened: {% for c in w.weak %}{{ c.card }} (by {{ c.by | join(' and ') }}){{ '; ' if not loop.last else '.' }}{% endfor %}{% else %}none of the {{ w.heap_size }} heap cards is weakened, so every card speaks at full strength.{% endif %}</p>
                 </li>
-                {% if w.places %}
                 <li>
                     <h3>Follow the significator</h3>
                     <p>The significator stands for you, or for whoever the question is about. Where it falls in each operation shows where the matter turns: the pack names the side of life it starts from, then the house, sign and decan narrow it down.</p>
-                    <p class="muted">In the sample: {% for p in w.places %}Operation {{ p.op }}, {{ p.place }}{{ '; ' if not loop.last else '.' }}{% endfor %}</p>
                 </li>
-                {% endif %}
             </ol>
             <p>Every report shows the same things near the top: the element bar and the ill-dignified count in the Summary, and, when there is a significator, where it falls in each operation.</p>
         </details>
-        {% endif %}
 
         <details class="panel fold">
             <summary class="fold-toggle"><h2 id="stagesTitle">Learning stages</h2></summary>
-            <p class="muted">The twelve spreads, grouped from first steps to the full Opening of the Key. Each stage adds one new idea.</p>
+            <p class="muted">The spreads, grouped from first steps to the full Opening of the Key. Each stage adds one new idea.</p>
             <div class="stages">
                 {% for level, name, keys, learn in spread_stages %}
                 <div class="stage">
@@ -141,7 +142,7 @@
                     {# Drawing the Full Opening of the Key with every part of the prompt on, step by step
                        through the start page's form (scripts/make_full_spread_animation.py). #}
                     <figure class="stage-anim" id="full-spread">
-                        <img src="{{ static_url('site/full-spread.svg') }}" width="160" height="294" loading="lazy" alt="Drawing a full Opening of the Key on the start page, step by step. Under Question, I know what I want to ask, and the question is typed. Under Spread, How deep do you want to go? is set to The Opening of the Key, and the Full Opening of the Key, 75 cards, is picked. Under Significator, Describe: the reading is about me, the card stands for me, the person asking, I feel first (Cups) and am young and driving things forward (Prince), which gives the Prince of Cups. Under Options the defaults stay: new cards, Thoth, let the cards decide. In Parts of the AI prompt the ten main parts are already on, and all seven extra layers are ticked one by one. The review lists the choices and Draw my cards is pressed. The report shows four operations of 15, 12, 12 and 36 cards. Save the prompt for your AI saves one file; with every layer on, a full Opening of the Key comes close to the most some AIs will read, and if one runs over, the prompt drops the gods first, then the angels and decan dates, and names them under Left Out to Fit. Then attach it in your AI with +.">
+                        <img src="{{ static_url('site/full-spread.svg') }}" width="160" height="294" loading="lazy" alt="Drawing a full Opening of the Key on the front page, step by step. Under Question, I know what I want to ask, and the question is typed. Under Spread, How deep do you want to go? is set to The Opening of the Key, and the Full Opening of the Key, 75 cards, is picked. Under Significator, Describe: the reading is about me, the card stands for me, the person asking, I feel first (Cups) and am young and driving things forward (Prince), which gives the Prince of Cups. Under Options the defaults stay: new cards, Thoth, let the cards decide. In Parts of the AI prompt the ten main parts are already on, and all seven extra layers are ticked one by one. The review lists the choices and Draw my cards is pressed. The report shows four operations of 15, 12, 12 and 36 cards. Save the prompt for your AI saves one file; with every layer on, a full Opening of the Key comes close to the most some AIs will read, and if one runs over, the prompt drops the gods first, then the angels and decan dates, and names them under Left Out to Fit. Then attach it in your AI with +.">
                         <figcaption>A full Opening of the Key with every correspondence switched on.</figcaption>
                     </figure>
                     {% endif %}

@@ -23,6 +23,15 @@
 {% block content %}
         <p class="note"><a href="/journal">&larr; My journal</a>{% if thread %} · <a href="/journal/thread/{{ thread.thread_id }}">{{ thread.name }}</a>{% endif %} · <a href="/journal/timeline">Timeline</a></p>
         {% if new %}<p class="panel j-ok" role="status">Added to your journal. Paste your AI&rsquo;s answer below when you have it.</p>{% endif %}
+        {% if new and journal_link %}
+        {# A journal started from a report lands here, so the link to save is shown here too. #}
+        <section class="panel j-key" aria-labelledby="keyTitle">
+            <h2 id="keyTitle">Save your journal link</h2>
+            <p>This link is the only way back into your journal on another device, or if this browser forgets it. Bookmark it or email it to yourself. Anyone who has it can open the journal.</p>
+            <div class="j-copy"><code id="journalLink">{{ journal_link }}</code><button type="button" class="btn-small" onclick="ootkCopyButton(this, document.getElementById('journalLink').textContent, document.getElementById('journalLink'))">Copy link</button></div>
+        </section>
+        <script src="{{ static_url('js/copy.js') }}" defer></script>
+        {% endif %}
         {% if saved %}<p class="panel j-ok" role="status">Saved.</p>{% endif %}
         <section class="panel" aria-labelledby="cardsTitle">
             <div class="j-head"><h2 id="cardsTitle">The cards</h2>{% if entry.link %}<a class="btn secondary" href="/report/{{ entry.link }}">Open the report</a>{% endif %}</div>
@@ -43,9 +52,9 @@
         </section>
         <section class="panel" aria-labelledby="windowsTitle">
             <h2 id="windowsTitle">Dates on the timeline</h2>
-            <p class="note">Each line becomes a dot or bar on your timeline. <b>Find dates</b> reads the answer&rsquo;s <b>Timeline</b> list (the prompt asks the AI for one), or any dates in the answer if it has no list, and adds the decan dates of the small cards you drew, unticked. Tick the ones you want and press Save.</p>
+            <p class="note">Each line becomes a dot or bar on your timeline. <b>Find dates</b> reads the answer&rsquo;s <b>Timeline</b> list (the prompt asks the AI for one), or any dates in the answer if it has no list (a list that says <i>none</i> means none), adds, ticked, the window of the card a Book T reading is timed by, and the decan dates of the other small cards you drew, unticked. Tick the ones you want and press Save.</p>
             <div class="actions"><button type="submit" name="action" value="find" class="btn secondary">Find dates</button></div>
-            {% if found is not none %}<p class="j-ok" role="status">{% if found.answer or found.cards %}Found {{ found.answer }} date{{ '' if found.answer == 1 else 's' }} in the answer and {{ found.cards }} from the cards (shown lighter below). Check them, then press Save.{% else %}No new dates found{% if not entry.answer %}: paste the answer first{% endif %}.{% endif %}</p>{% endif %}
+            {% if found is not none %}<p class="j-ok" role="status">{% if found.answer or found.timing or found.cards %}Found {{ found.answer }} date{{ '' if found.answer == 1 else 's' }} in the answer{% if found.timing %}, the Book T timing card's{% endif %} and {{ found.cards }} from the cards (shown lighter below). Check them, then press Save.{% else %}No new dates found{% if not entry.answer %}: paste the answer first{% endif %}.{% endif %}{% if found.book_t %} Book T times this reading by the {{ found.book_t.label.partition(': ')[2] }}: {{ found.book_t.starts.strftime('%-d %b') }} to {{ found.book_t.ends.strftime('%-d %b %Y') }}.{% endif %}</p>{% endif %}
             <table class="j-windows">
                 <thead><tr><th>Name</th><th>From</th><th>To</th><th>Keep</th></tr></thead>
                 <tbody>

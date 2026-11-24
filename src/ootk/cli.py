@@ -9,7 +9,7 @@ import psycopg
 from ootk.db import (
     CardNotFound, DEFAULT_MAPPING, MAPPING_SYSTEMS, DatabaseOutdated, fetch_all_cards, get_db_connection, load_cards_data, load_withheld, save_spread_session,
 )
-from ootk.report import (COMPONENTS, DEFAULT_OFF, analyze_reading, choose_components, drawn_now,
+from ootk.report import (COMPONENTS, DEFAULT_OFF, LAYOUTS, analyze_reading, choose_components, drawn_now,
                          generate_html_output, this_computer_zone)
 from ootk.shuffle import (
     draw_spread, duplicate_in_operation, has_significator_position, operation_number, resolve_significator,
@@ -37,6 +37,9 @@ def parse_args():
     parser.add_argument("--framework", type=str, choices=["auto", "light_descent", "soul_formation", "life_path", "post_mortem"], default="auto", help="Override Macro Conceptual Framework (auto picks light_descent, post_mortem or life_path from the draw; soul_formation is manual only)")
     parser.add_argument("--mapping", type=str, choices=MAPPING_SYSTEMS, default=DEFAULT_MAPPING, help="Tarot-Kabbalah mapping scheme: thoth keeps Crowley's swap (Emperor on Tzaddi, Star on Heh), golden_dawn undoes it")
     parser.add_argument("--html", action="store_true", help="Auto-generate HTML report in output/")
+    parser.add_argument("--layout", choices=LAYOUTS, default="lean",
+                        help="Prompt layout: lean (the default) gives each card's correspondences once; "
+                             "full writes them out at every position, as before 16 Nov 2026")
     parser.add_argument("--without", type=str, default=None, metavar="PARTS",
                         help="Leave parts out of the AI prompt, to test what each adds: a "
                              f"comma-separated list of {', '.join(k for k in COMPONENTS if k not in DEFAULT_OFF)}. "
@@ -211,6 +214,7 @@ def run_spread_session():
             spread_results, framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             significator_places=significator_places(cards, args.seed, target_positions, sig_card),
             drawn_at=drawn_now(), local_zone=this_computer_zone(), without=args.without,
+            layout=args.layout,
         )
         analytical_prompt = reading["analytical_prompt"]
 
@@ -258,7 +262,7 @@ def run_book_t_session(args, cards):
             BOOK_T_SPREAD["name"], BOOK_T_KEY, query_prompt, sig_card["title"], seed, spread_results,
             framework=args.framework, mapping_system=args.mapping, withheld=withheld,
             drawn_at=drawn_now(), local_zone=this_computer_zone(), book_t_ops=ops,
-            without=args.without,
+            without=args.without, layout=args.layout,
         )
         analytical_prompt = reading["analytical_prompt"]
         print("\n" + analytical_prompt)

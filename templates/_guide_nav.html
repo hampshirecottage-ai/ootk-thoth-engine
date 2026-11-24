@@ -1,0 +1,8 @@
+{# The menu under each page's banner: the guide pages, then the way to draw. A page sets `active`
+   to its own address to mark it. Styles are in _brand_styles.html. #}
+        <nav class="guide-nav" aria-label="Guide">
+            {% for href, label in [("/start", "Start here"), ("/maps", "Card maps"), ("/method", "How it works")] %}
+            <a href="{{ href }}"{% if href == active %} aria-current="page"{% endif %}>{{ label }}</a>
+            {% endfor %}
+            <a href="/#readingForm" class="guide-draw">Draw a reading</a>
+        </nav>

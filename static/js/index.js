@@ -305,12 +305,6 @@ form.addEventListener("submit", e => {
     rememberSettings();
 });
 
-$("themeToggle").addEventListener("click", () => {
-    const root = document.documentElement;
-    root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
-    try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
-});
-
 // A link such as /?spread=3#readingForm (from the Start here page) picks that spread.
 const linkedSpread = new URLSearchParams(location.search).get("spread");
 applySettings(Object.assign(readStore(LAST_KEY, {}),
