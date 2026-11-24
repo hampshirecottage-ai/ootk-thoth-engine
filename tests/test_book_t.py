@@ -64,6 +64,16 @@ def test_four_packs_are_ihvh_from_right_to_left():
     assert [len(p) for p in packs] == [19, 20, 19, 20]
 
 
+def test_older_quarters_cut_is_kept_for_saved_readings():
+    """Book T readings saved before 2026-11-10 were cut 19, 19, 19, 21 from the top."""
+    deck = [{"card_id": i} for i in range(78)]
+    packs = book_t.four_packs(deck, cut="quarters")
+    assert [(p[0]["card_id"], p[-1]["card_id"]) for p in packs] == [(57, 77), (38, 56), (19, 37), (0, 18)]
+    assert [len(p) for p in packs] == [21, 19, 19, 19]
+    with pytest.raises(ValueError):
+        book_t.four_packs(deck, cut="thirds")
+
+
 def test_four_packs_agree_with_significator_places():
     """The Book T reading (spread 13) and the significator's place on spreads 8 and 12 name
     the same pack for the same shuffle, wherever the significator lies."""

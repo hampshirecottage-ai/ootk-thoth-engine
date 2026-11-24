@@ -41,7 +41,7 @@ RAIL = ["Question", "Spread", "Significator", "Options", "Draw"]
 ASK = ["Help me find my question", "I know what I want to ask", "No question, a general reading"]
 DEPTHS = ["A quick look", "How forces meet", "The whole picture", "The Opening of the Key"]
 # Stage 4's spreads as the picker's small print names them: (spread key, name, size).
-STAGE4 = [("8", "First Operation", "15 cards"), ("9", "Second Operation", "12 cards"),
+STAGE4 = [("8", "First Operation (15-card heap)", "15 cards"), ("9", "Second Operation", "12 cards"),
           ("10", "Third Operation", "12 cards"), ("11", "Fourth Operation", "36 cards"),
           ("12", "Full Opening of the Key", "75 cards"), ("13", "Book T Opening of the Key", "about 78 cards")]
 FULL = "12"

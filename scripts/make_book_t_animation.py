@@ -3,7 +3,7 @@ How it works page (templates/method.html, "The Book T Opening of the Key").
 
 One scene per operation, cross-fading into the next, then round again:
 
-    1  the deck cut into four packs, Yod, Heh, Vau and Heh final, from right to left
+    1  the deck cut into four packs, Yod, Heh, Vav and Heh final, from right to left
     2  dealt into twelve stacks for the houses (1st house on the left, counter-clockwise)
     3  dealt into twelve stacks for the signs, in their King Scale colours
     4  the significator set down with the 36 cards after it in a ring round him

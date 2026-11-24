@@ -2,7 +2,7 @@
 """Sanity-checks a saved OOTK 4-operation (spread 12) run against the fixes made so far.
 
 Usage:
-    ootk --spread 12 --seed 12345 --mapping french_egyptian \
+    ootk --spread 12 --seed 12345 --mapping french_egyptian --layout full \
         --significator "Knight of Swords" --topic "Is everything working correctly?" | tee run.txt
     python scripts/check_run.py run.txt
 

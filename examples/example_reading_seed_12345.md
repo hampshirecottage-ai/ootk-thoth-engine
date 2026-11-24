@@ -14,7 +14,7 @@ The same command with the same database always draws the same cards. Everything 
        THOTH TAROT & LIBER 777 ENGINE           
 ==================================================
 
----> Selected Spread: Triad (Timeline & Motion)
+---> Selected Spread: Triad (past, present, future)
 
 
 [Position 1: Past / Root Cause]
@@ -29,7 +29,7 @@ The same command with the same database always draws the same cards. Everything 
 # HERMETIC ANALYTICAL REPORT & SYSTEM PROMPT
 > **Before you start:** this prompt lists 3 positions and its very last line is `END OF OOTK PROMPT (3 positions)`. If you cannot see that line, the prompt was cut off: tell the user the last position you can see and that the rest is missing, ask them to send the rest, and do not interpret the reading until you have all of it.
 
-**Operation/Spread:** Triad (Timeline & Motion)
+**Operation/Spread:** Triad (past, present, future)
 **Query/Intent Topic:** Example reading
 **Significator:** None (spread has no significator position)
 **PRNG Seed:** 12345
@@ -56,9 +56,9 @@ Minor (pip) cards sit on the same Sephira in every mapping system and are nodal 
 ### Position 2: Present / Active Dynamics
 - **Card Drawn**: V - The Hierophant
 - **Arcana/Suit**: Major | N/A
-- **Path/Sephira**: Nail (ו (Vau))
+- **Path/Sephira**: Nail (ו (Vav))
 - **Attribution**: Taurus
-- **Comparative Hebrew Mapping**: Thoth: `ו (Vau)` | Golden Dawn: `ו (Vau)` | French/Egyptian: `Heh (ה)`
+- **Comparative Hebrew Mapping**: Thoth: `ו (Vav)` | Golden Dawn: `ו (Vav)` | French/Egyptian: `Heh (ה)`
 - **Spatial Dimension**: `Simple_Edge` (South-East Edge)
 - **Platonic Solid**: `Hexahedron (Cube)`
 - **King Scale Color**: Red orange

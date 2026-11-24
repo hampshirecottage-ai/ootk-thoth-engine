@@ -31,8 +31,9 @@ with open(os.path.join(HERE, "fixtures", "reference_cards.json"), encoding="utf-
     REFERENCE = json.load(f)
 
 
-def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
-    """The same steps as cli.run_spread_session, from the saved card rows."""
+def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF, **settings):
+    """The same steps as cli.run_spread_session, from the saved card rows. `settings` go to
+    analyze_reading as they are (drawn_at, layout...)."""
     deck = REFERENCE["deck"]
     positions = spread_positions(spread_key)
     sig_card = resolve_significator(deck, SIGNIFICATOR)
@@ -46,7 +47,7 @@ def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
     reading = analyze_reading(SPREADS[spread_key]["name"], spread_key, TOPIC, significator, SEED,
                               spread_results, withheld=withheld, mapping_system=mapping_system,
                               significator_places=significator_places(deck, SEED, positions, sig_card),
-                              without=without)
+                              without=without, **settings)
     return reading["analytical_prompt"]
 
 
@@ -56,11 +57,11 @@ def build_prompt(spread_key, mapping_system="thoth", without=DEFAULT_OFF):
 BOOK_T_EXPECT = "1,10/6,10,6"
 
 
-def build_book_t_prompt(without=DEFAULT_OFF):
+def build_book_t_prompt(without=DEFAULT_OFF, seed=SEED, **settings):
     """The same steps as cli.run_book_t_session, from the saved card rows."""
     deck = REFERENCE["deck"]
     sig_card = resolve_significator(deck, SIGNIFICATOR)
-    ops = book_t.opening_of_the_key(deck, SEED, sig_card, book_t.parse_expect(BOOK_T_EXPECT))
+    ops = book_t.opening_of_the_key(deck, seed, sig_card, book_t.parse_expect(BOOK_T_EXPECT))
     placed = book_t.positions(ops)
     titles = [c["title"] for _, c in placed]
     spread_results = [
@@ -68,8 +69,9 @@ def build_book_t_prompt(without=DEFAULT_OFF):
         for i, (name, c) in enumerate(placed, start=1)
     ]
     withheld = withheld_summary([REFERENCE["rows"][c["title"]] for c in deck], titles)
-    reading = analyze_reading(BOOK_T_SPREAD["name"], BOOK_T_KEY, TOPIC, sig_card["title"], SEED,
-                              spread_results, withheld=withheld, book_t_ops=ops, without=without)
+    reading = analyze_reading(BOOK_T_SPREAD["name"], BOOK_T_KEY, TOPIC, sig_card["title"], seed,
+                              spread_results, withheld=withheld, book_t_ops=ops, without=without,
+                              **settings)
     return reading["analytical_prompt"]
 
 
@@ -133,7 +135,7 @@ def test_every_major_states_its_element():
         assert major_element_note({"arcana_type": "Major", "title": f"X - {name}"}).startswith(MAJOR_ELEMENTS[name] + " (")
     assert major_element_note({"arcana_type": "Major", "title": "IV - The Emperor"}) == "Fire (via Aries)"
     assert major_element_note({"arcana_type": "Major", "title": "0 - The Fool"}) == "Air (the element Air itself)"
-    prompt = build_prompt("12")
+    prompt = build_prompt("12", layout="full")
     assert prompt.count("- **Element (used in scores)**:") == sum(
         1 for line in prompt.splitlines()
         if line.startswith("- **Card Drawn**:") and line.split(" - ", 1)[-1] in MAJOR_ELEMENTS)
@@ -184,6 +186,17 @@ def test_liber_777_rows_list_every_card_once_per_part():
     assert "King Scale Color" not in prompt         # the King Scale is in the table now
 
 
+def test_an_aquarius_card_alone_dashes_the_parts_no_card_takes():
+    """With no Aries card drawn, Path 15 is used only for the Star's title and Path 28 only for
+    its colours: the parts no position takes show a dash, not a blank that reads as missing."""
+    item = {"position_number": 1, "position_name": "Card",
+            "card_data": copy.deepcopy(REFERENCE["rows"]["XVII - The Star"])}
+    md = liber_777_markdown([item])
+    assert "| Path 15 Window | Constituting Intelligence | — | — | — | — | 1 (title) |" in md
+    assert "| Path 28 Fish-hook | — | Violet | Sky blue | Bluish mauve | White tinged purple | 1 (colours) |" in md
+    assert "A dash means no position in this reading takes that part of the row." in md
+
+
 def test_a_card_on_one_row_has_no_split_note():
     """A pip takes its colours and title from its Sephira's row, so it needs no (colours)/(title) mark."""
     item = {"position_number": 1, "position_name": "Card",
@@ -215,3 +228,29 @@ def test_ootk_prompt_with_every_layer_matches_saved_copy():
             f.write(prompt)
     with open(path, encoding="utf-8") as f:
         assert prompt == f.read()
+
+
+
+@pytest.mark.parametrize("system", ["golden_dawn", "french_egyptian"])
+def test_every_sign_trump_has_its_geomantic_figure(system):
+    """French/Egyptian gives VIII and XI as "Justice / Libra" and "Strength / Leo"; the figure
+    goes by the sign after the slash, so those two keep their line like the other sign Trumps."""
+    from ootk.rules import geomantic_sign
+    assert geomantic_sign("Justice / Libra") == "Libra" and geomantic_sign("Libra") == "Libra"
+    assert geomantic_sign("Mars") is None and geomantic_sign(None) is None
+
+    def figures(prompt):
+        blocks = {b.split(" (Pos")[0]: b for b in prompt.split("\n### ")[1:]}
+        return {t: b.split("- **Geomantic Figure**: ")[1].split("\n")[0]
+                for t, b in blocks.items() if "- **Geomantic Figure**: " in b}
+
+    thoth = figures(build_prompt("12", "thoth", without=()))
+    other = figures(build_prompt("12", system, without=()))
+    assert "VIII - Adjustment" in thoth and "XI - Lust" in thoth
+    assert other == thoth
+    assert other["VIII - Adjustment"] == "Puella (Golden Dawn, by Libra)"
+    assert other["XI - Lust"] == "Fortuna Major and Fortuna Minor (Golden Dawn, by Leo)"
+    # The report's card panel goes by the same sign.
+    from ootk.visual import picture_fields
+    row = {"arcana_type": "Major", "attribution": "Justice / Libra", "title": "VIII - Adjustment"}
+    assert ["Geomantic figure", "Puella"] in picture_fields(row)

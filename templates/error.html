@@ -1,0 +1,18 @@
+{% extends "_guide_base.html" %}
+{#- Every error a browser sees (a missing page, a form that can't be read, the database asleep,
+   too many readings): the site's own bar, theme, menu and footer, then the message and a way back.
+   web.error_page falls back to a bare page if this one can't be drawn. #}
+{% set page_title = heading %}
+{% set tagline = "" %}
+{% set noindex = true %}
+{% set active = "" %}
+{% block content %}
+        <section class="panel" role="alert">
+            <p>{{ message }}</p>
+            <div class="actions">
+                {% if retry %}<a class="btn" href="" onclick="location.reload(); return false;">Try again</a>{% endif %}
+                <a class="btn{% if retry %} secondary{% endif %}" href="/" onclick="if (history.length > 1) { history.back(); return false; }">&larr; Go back</a>
+            </div>
+            <p class="note">Think this is a mistake? <a href="{{ bug_report_url }}" target="_blank" rel="noopener">Report a bug</a></p>
+        </section>
+{% endblock %}

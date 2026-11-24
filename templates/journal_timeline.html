@@ -27,6 +27,8 @@
         .mk button { all: unset; cursor: pointer; display: block; box-sizing: border-box; width: 100%; height: 14px; border-radius: 999px; background: currentColor; box-shadow: 0 0 0 2px var(--panel); }
         .mk.dot, .mk.reading { width: 14px; margin-left: -7px; }
         .mk.bar { min-width: 14px; }
+        .mk.cut-l button { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+        .mk.cut-r button { border-top-right-radius: 0; border-bottom-right-radius: 0; }
         .mk button:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
         .mk.reading button { background: var(--panel); border: 3px solid currentColor; }
         .mk .when { position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); font-size: 0.78em; white-space: nowrap; color: var(--muted); }
@@ -55,7 +57,7 @@
                 <div class="tl-label tl-head muted">Zodiac</div>
                 <div class="tl-track tl-head">{% for z in T.signs %}<span class="tl-sign el-{{ z.element }}" style="left:{{ '%.3f' % z.left }}%;width:{{ '%.3f' % z.width }}%" title="{{ z.name }}, {{ z.dates }}">{{ z.glyph }}&#xFE0E;<span class="nm">&nbsp;{{ z.short }}</span></span>{% endfor %}</div>
                 <div class="tl-label tl-head muted">{{ T.start.year }}{% if T.end.year - 1 > T.start.year or (T.end.year > T.start.year and T.end.month > 1) %}&ndash;{{ T.end.year if T.end.month > 1 else T.end.year - 1 }}{% endif %}</div>
-                <div class="tl-track tl-head">{% for m in T.months %}<span class="tl-month" style="left:{{ '%.3f' % m.left }}%;width:{{ '%.3f' % m.width }}%">{{ m.label }}{% if m.year and not loop.first %}&nbsp;{{ m.year }}{% endif %}</span>{% endfor %}<span class="tl-today" style="left:{{ '%.3f' % T.today }}%" title="Today"></span></div>
+                <div class="tl-track tl-head">{% for m in T.months %}<span class="tl-month" style="left:{{ '%.3f' % m.left }}%;width:{{ '%.3f' % m.width }}%">{{ m.label }}{% if m.year and not loop.first %}&nbsp;{{ m.year }}{% endif %}</span>{% endfor %}<span class="tl-today" id="tlToday" style="left:{{ '%.3f' % T.today }}%" title="Today"></span></div>
                 {% for g in T.groups %}
                 <div class="tl-label tl-group">{% if g.thread_id %}<a href="/journal/thread/{{ g.thread_id }}">{{ g.name }}</a>{% else %}{{ g.name }}{% endif %}&nbsp;<span class="muted">· {{ g.rows | length }}</span></div>
                 <div class="tl-track"><span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span></div>
@@ -64,12 +66,13 @@
                 <div class="tl-track">
                     <span class="tl-today" style="left:{{ '%.3f' % T.today }}%"></span>
                     {% set flip = r.left + r.width > 72 %}
-                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
+                    <div class="mk {{ r.kind }}{{ ' flip' if flip }}{{ ' cut-l' if r.cut_left }}{{ ' cut-r' if r.cut_right }}" style="left:{{ '%.3f' % r.left }}%;{% if r.kind == 'bar' %}width:{{ '%.3f' % r.width }}%;{% endif %}color:var(--{{ r.element }})">
                         <button type="button" aria-label="{{ r.label }}, {{ r.when }}" aria-haspopup="dialog" aria-expanded="false"></button>
                         <span class="when">{{ r.when }}</span>
                         <div class="tip">
                             <b>{{ r.label }}</b>
                             <p>{{ r.when }}</p>
+                            {% if r.cut %}<p class="muted">{{ r.cut }}</p>{% endif %}
                             {% if r.question %}<p>{{ r.question }}</p>{% endif %}
                             <p class="muted">{{ r.spread }} · drawn {{ r.drawn }}{% if r.ai %} · {{ r.ai }}{% endif %}</p>
                             <p class="muted">{{ r.cards }}</p>
@@ -82,6 +85,18 @@
             </div>
         </div>
         <div id="tlTip" role="dialog" aria-label="Reading details" hidden><button type="button" class="x" aria-label="Close">&times;</button><div class="body"></div></div>
+        <script>
+            // Open the timeline at today rather than at its oldest month: when it is wider than
+            // the screen, today sits a third of the way across the dates, so the weeks ahead show.
+            (() => {
+                const tl = document.querySelector(".tl"), today = document.getElementById("tlToday");
+                const label = tl && tl.querySelector(".tl-label");
+                if (!tl || !today || !label || tl.scrollWidth <= tl.clientWidth) return;
+                const x = today.getBoundingClientRect().left - tl.getBoundingClientRect().left + tl.scrollLeft;
+                const dates = tl.clientWidth - label.offsetWidth;
+                tl.scrollLeft = Math.max(0, x - label.offsetWidth - dates / 3);
+            })();
+        </script>
         <script>
             // One shared balloon outside the scrolling timeline, so it is never clipped.
             // Hover shows it and it stays while the pointer moves into it; a click or tap pins it.

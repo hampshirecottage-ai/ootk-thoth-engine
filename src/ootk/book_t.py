@@ -30,7 +30,7 @@ from ootk.analysis import ELEMENT_MAJOR_NOTES, PLANETARY_MAJORS, major_name
 IHVH_PACKS = (
     {"letter": "Yod", "suit": "Wands", "subject": "work, business"},
     {"letter": "Heh", "suit": "Cups", "subject": "love, marriage, pleasure"},
-    {"letter": "Vau", "suit": "Swords", "subject": "trouble, loss, scandal, quarrelling"},
+    {"letter": "Vav", "suit": "Swords", "subject": "trouble, loss, scandal, quarrelling"},
     {"letter": "Heh final", "suit": "Disks", "subject": "money, goods, purely material matters"},
 )
 
@@ -132,13 +132,25 @@ def _read_pile(op, place, pile, sig_card, facing, **extra):
             "stopped_on": stopped_on, "pairs": pairs, "leftover": leftover, **extra}
 
 
-def four_packs(deck):
+# Operation 1's cut points. "near_equal" (20, 19, 20, 19 from the top) is the site's rule since
+# 2026-11-10 21:13 UTC (PR #221). "quarters" (19, 19, 19, 21) is the rule Book T readings saved
+# before then were drawn with; it is kept only so those saved reports still open.
+CUTS = ("near_equal", "quarters")
+
+
+def four_packs(deck, cut="near_equal"):
     """Operation 1's packs as Book T lays them: the deck is cut and the top half put to the
     left, then each half cut and its top put to the left; the four stacks are I H V H from
     right to left. Returns the packs in I H V H order, each top card first. The cut points
-    come from shuffle.ihvh_pack_index, which significator_places uses too."""
+    come from shuffle.ihvh_pack_index, which significator_places uses too; cut="quarters"
+    is the older rule (see CUTS)."""
     from ootk.shuffle import ihvh_pack_index                  # shuffle imports nothing from here
 
+    if cut == "quarters":
+        q = len(deck) // 4
+        return list(reversed([deck[:q], deck[q:2 * q], deck[2 * q:3 * q], deck[3 * q:]]))
+    if cut != "near_equal":
+        raise ValueError(f"Unknown cut {cut!r}; use one of {CUTS}.")
     packs = [[], [], [], []]
     for at, card in enumerate(deck):
         packs[ihvh_pack_index(at, len(deck))].append(card)
@@ -154,11 +166,11 @@ def _holds(pile, sig_card):
     return any(c["card_id"] == sig_card["card_id"] for c in pile)
 
 
-def operation_one(deck, sig_card, expected_pack, facing=None, strict=True):
-    """Operation 1. `expected_pack` is 0-3 (Yod, Heh, Vau, Heh final): the subject the
+def operation_one(deck, sig_card, expected_pack, facing=None, strict=True, cut="near_equal"):
+    """Operation 1. `expected_pack` is 0-3 (Yod, Heh, Vav, Heh final): the subject the
     querent came about. Wrong pack -> status 'abandoned', as Book T says; with strict=False
     the significator's pack is read anyway, with status 'missed'."""
-    packs = four_packs(deck)
+    packs = four_packs(deck, cut)
     found = next(i for i, p in enumerate(packs) if _holds(p, sig_card))
     place = dict(IHVH_PACKS[found], index=found)
     if found != expected_pack and not strict:
@@ -199,7 +211,7 @@ def operation_four(deck, sig_card, facing=None):
                       wrapped=at + OP4_RING >= len(deck))
 
 
-def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=False):
+def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=False, cut="near_equal"):
     """All five operations, each from its own shuffle of the whole deck (the same shuffles
     as shuffle.draw_spread's master pipeline). By default (the owner's choice, 2026-11-01) no
     operation stops the reading: a missed place reads the pile that holds the significator
@@ -207,7 +219,8 @@ def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=Fals
     after an abandoned operation, as Book T does.
 
     `expected` = {"pack": 0-3, "house": (expected, cognate or None), "sign": (expected,
-    cognate or None), "sephira": 0-9}, all 0-based. Returns the operations read, in order."""
+    cognate or None), "sephira": 0-9}, all 0-based. `cut` is Operation 1's cut (see CUTS).
+    Returns the operations read, in order."""
     from ootk.shuffle import operation_seed, shuffle_deck     # shuffle imports nothing from here
 
     if not any(c["card_id"] == sig_card["card_id"] for c in cards):
@@ -216,7 +229,7 @@ def opening_of_the_key(cards, seed, sig_card, expected, facing=None, strict=Fals
     for op in range(1, 6):
         deck = shuffle_deck(cards, operation_seed(seed, op))
         if op == 1:
-            result = operation_one(deck, sig_card, expected["pack"], facing, strict)
+            result = operation_one(deck, sig_card, expected["pack"], facing, strict, cut)
         elif op == 4:
             result = operation_four(deck, sig_card, facing)
         elif op == 5:
@@ -309,7 +322,7 @@ def status_line(o):
             f"this site reads on with {found}, where it is, so treat this operation with caution.")
 
 
-EXPECT_HELP = ("pack,house,sign,sephira, counted from 1: pack 1-4 (Yod fire/work, Heh love, Vau "
+EXPECT_HELP = ("pack,house,sign,sephira, counted from 1: pack 1-4 (Yod fire/work, Heh love, Vav "
                "trouble/loss, Heh final money), house 1-12, sign 1-12 (1 = Aries), Sephira 1-10 "
                "(1 = Kether); a house or sign may add a related one to try next after a slash, "
                "e.g. '1,10/6,10,6'")

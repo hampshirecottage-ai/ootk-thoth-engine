@@ -7,14 +7,7 @@
 {% set page_description %}The tarot card of the day for {{ day.strftime('%-d %B %Y') }} is {{ name }} ({{ card.attribution }}), with its Liber 777 correspondences and a ready-made prompt for your AI.{% endset -%}
 {% include "_head_meta.html" %}
     <title>Card of the day, {{ day.strftime('%-d %B %Y') }}: {{ name }} · OOTK Thoth Engine</title>
-    <script>
-        // Saved choice first, otherwise the light (beige) theme.
-        (function () {
-            let t = null;
-            try { t = localStorage.getItem("ootk.theme"); } catch (e) {}
-            document.documentElement.dataset.theme = t || "light";
-        })();
-    </script>
+    <script src="{{ static_url('js/theme.js') }}"></script>
 {% include "_reading_styles.html" %}
 {% include "_brand_styles.html" %}
     <style>
@@ -61,6 +54,7 @@
     <header class="band page-head">
         <h1>Card of the day</h1>
         <p class="tagline">The same card for everyone today, with its correspondences and a prompt for your AI.</p>
+{% include "_guide_nav.html" %}
     </header>
 
     <main class="day">
@@ -80,7 +74,7 @@
                     {% if card.king_scale_color %}<dt>King Scale</dt><dd>{{ card.king_scale_color }}</dd>{% endif %}
                 </dl>
                 <div class="actions">
-                    <button class="btn" type="button" id="savePrompt" title="Download the prompt as a .md file to attach in your AI">Save prompt as Markdown (.md)</button>
+                    <button class="btn" type="button" id="savePrompt" title="Download the prompt as a .md file to attach in your AI">Save the prompt for your AI</button>
                     <a class="btn secondary" href="{{ reading_url }}">Full report</a>
                 </div>
             </div>
@@ -114,11 +108,6 @@
     </main>
 
     <script>
-        document.getElementById("themeToggle").addEventListener("click", () => {
-            const root = document.documentElement;
-            root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
-            try { localStorage.setItem("ootk.theme", root.dataset.theme); } catch (e) {}
-        });
         document.getElementById("savePrompt").addEventListener("click", () => {
             const blob = new Blob([document.getElementById("promptText").textContent], {type: "text/markdown"});
             const a = Object.assign(document.createElement("a"), {href: URL.createObjectURL(blob), download: "attach_this_to_your_ai_{{ day.isoformat() }}.md"});
