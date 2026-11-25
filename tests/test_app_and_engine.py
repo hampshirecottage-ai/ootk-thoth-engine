@@ -466,6 +466,32 @@ def test_static_cache_headers(client):
     assert "content-encoding" not in image.headers                         # already compressed
 
 
+def test_static_version_follows_content_not_mtime(tmp_path, monkeypatch):
+    """A deploy re-checks every file out with a new mtime; unchanged files keep their URL
+    (so Cloudflare's copy stays good) and a changed file gets a new one."""
+    import os
+    from ootk import assets
+    monkeypatch.setattr(assets, "STATIC_DIR", tmp_path)
+    monkeypatch.setattr(assets, "_url_cache", {})
+    monkeypatch.setattr(assets, "_hash_cache", {})
+    f = tmp_path / "a.css"
+    f.write_text("body{}")
+    first = assets.static_url("a.css")
+    os.utime(f, ns=(1, 1))
+    assets._url_cache.clear()
+    assert assets.static_url("a.css") == first
+    f.write_text("body{color:red}")
+    assets._url_cache.clear()
+    assert assets.static_url("a.css") != first
+
+
+def test_pages_are_never_kept_by_shared_caches(client):
+    for path in ("/", "/method", "/start"):
+        assert client.get(path).headers["cache-control"] == "private, no-cache", path
+    assert client.get("/healthz").headers["cache-control"] == "no-store"
+    assert client.get("/favicon.ico").headers["cache-control"] == "public, max-age=86400"
+
+
 def test_report_happy_path_and_raw_storage(client):
     r = post(client, topic="Love & War <3", significator="O'Brien")
     assert r.status_code == 200
