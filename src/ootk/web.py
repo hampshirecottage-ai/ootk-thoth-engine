@@ -27,7 +27,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ootk import PROJECT_ROOT as BASE_DIR
 from ootk.analysis import WITHHELD_MAX, derive_primary_element, king_scale_hex, withheld_summary
-from ootk.assets import CachedStaticFiles, CompressionMiddleware, static_url
+from ootk.assets import DYNAMIC, CachedStaticFiles, CompressionMiddleware, static_url
 from ootk.db import (
     DEFAULT_MAPPING, DatabaseOutdated, MAPPING_SYSTEMS, env_int, fetch_all_cards, fetch_cards_correspondences,
     connect, delete_contact_message, list_contact_messages, list_sessions, load_report_by_link,
@@ -290,6 +290,10 @@ async def security_headers(request: Request, call_next):
         response.headers.setdefault(name, value)
     if request.url.scheme == "https":
         response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    if not request.url.path.startswith("/static/"):
+        # Static files carry their own long cache (assets.CachedStaticFiles); anything the
+        # app builds says plainly that Cloudflare must not keep it, unless it chose otherwise.
+        response.headers.setdefault("Cache-Control", DYNAMIC)
     if is_private_path(request.url.path):
         # A saved reading carries the querent's question: no copies in shared caches or the
         # browser's back-forward store, and never in search results.

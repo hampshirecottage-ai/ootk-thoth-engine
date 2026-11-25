@@ -1,6 +1,7 @@
 """Static files for the web GUI: versioned URLs, long cache headers and response compression."""
 import functools
 import gzip
+import hashlib
 import time
 
 import anyio.to_thread
@@ -18,6 +19,10 @@ STATIC_DIR = PROJECT_ROOT / "static"
 # Versioned static URLs never change content, so browsers may keep them for a year.
 IMMUTABLE = "public, max-age=31536000, immutable"
 UNVERSIONED = "public, max-age=3600"
+# Pages, form answers and everything else the app builds: the browser checks back each time
+# and shared caches (Cloudflare) never keep a copy, since a page can carry a visitor's own
+# question, journal or password-gated content.
+DYNAMIC = "private, no-cache"
 
 
 # A report page asks for a few hundred static URLs (every card image in every size); each
@@ -25,21 +30,37 @@ UNVERSIONED = "public, max-age=3600"
 URL_TTL = 2.0
 URL_CACHE_MAX = 4096       # well above the ~250 files under static/
 _url_cache = {}
+# Content hash per file, worked out again only when the file's mtime or size changes.
+_hash_cache = {}
+
+
+def _content_version(path):
+    stat = path.stat()
+    key = (stat.st_mtime_ns, stat.st_size)
+    hit = _hash_cache.get(path)
+    if hit and hit[0] == key:
+        return hit[1]
+    version = hashlib.blake2b(path.read_bytes(), digest_size=5).hexdigest()
+    if len(_hash_cache) >= URL_CACHE_MAX:
+        _hash_cache.clear()
+    _hash_cache[path] = (key, version)
+    return version
 
 
 def static_url(relpath):
-    """'/static/<relpath>?v=<mtime>', or None when the file is missing.
+    """'/static/<relpath>?v=<content hash>', or None when the file is missing.
 
-    The version changes whenever the file does, so the long cache never serves a stale copy.
-    An edited file gets its new version within URL_TTL seconds.
+    The version is a hash of the file's bytes, so it changes exactly when the content does:
+    an edited file gets a new URL at once (within URL_TTL seconds), and a deploy that leaves a
+    file alone keeps its old URL, so browsers and Cloudflare go on serving their cached copy.
+    (An mtime version changed on every deploy, because each build checks the files out anew.)
     """
     now = time.monotonic()
     hit = _url_cache.get(relpath)
     if hit and now - hit[0] < URL_TTL:
         return hit[1]
     try:
-        mtime = (STATIC_DIR / relpath).stat().st_mtime_ns
-        url = f"/static/{relpath}?v={mtime // 1_000_000:x}"
+        url = f"/static/{relpath}?v={_content_version(STATIC_DIR / relpath)}"
     except OSError:
         url = None
     if len(_url_cache) >= URL_CACHE_MAX:
